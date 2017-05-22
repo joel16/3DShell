@@ -276,10 +276,7 @@ void mainMenu(int clearindex)
 				
 			if (dirExists(cwd))
 			{
-				// Update List
 				updateList(CLEAR);
-
-				// Display file list
 				displayFiles(CLEAR);
 			}
 				
@@ -287,7 +284,7 @@ void mainMenu(int clearindex)
 				displayFiles(KEEP);
 		}
 		
-		if (kPress & KEY_START) //exit
+		if (kPress & KEY_START) // exit
 			break;
 		
 		if(fileCount > 0)
@@ -504,13 +501,10 @@ void updateList(int clearindex)
 		}
 		
 		struct dirent * info;
-		struct stat d_stat;
 
 		// Iterate Files
 		while ((info = readdir(directory)) != NULL)
-		{
-			stat(cwd, &d_stat);
-			
+		{	
 			// Ingore null filename
 			if(info->d_name[0] == '\0') 
 				continue;
@@ -533,7 +527,7 @@ void updateList(int clearindex)
 			strcpy(item->name, info->d_name);
 
 			// Set Folder Flag
-			item->isFolder = S_ISDIR(d_stat.st_mode);
+			item->isFolder = info->d_type == DT_DIR;
 
 			// New List
 			if(files == NULL) 
@@ -712,7 +706,7 @@ void displayFiles(int withclear)
 			
 			//char * ext = strrchr(file->name, '.');
 
-			if (strcmp(get_filename_ext(file->name), "") == 0)
+			if (file->isFolder)
 				sf2d_draw_texture(folderIcon, 30, 58 + (38 * printed));
 			else if ((strcmp(get_filename_ext(file->name), "mp3") == 0) || (strcmp(get_filename_ext(file->name), "MP3") == 0))
 				sf2d_draw_texture(audioIcon, 30, 58 + (38 * printed));
@@ -744,7 +738,7 @@ void displayFiles(int withclear)
 			strcpy(path, cwd);
 			strcpy(path + strlen(path), file->name);
 			
-			if ((strcmp(get_filename_ext(file->name), "") == 0) && (strcmp(file->name, "..") != 0))
+			if ((file->isFolder) && (strcmp(file->name, "..") != 0))
 				sftd_draw_text(font2, 70, 75 + (38 * printed), RGBA8(95, 95, 95, 255), 10, "drwxr-x---");
 			else if (strcmp(file->name, "..") == 0)
 				sftd_draw_text(font2, 70, 75 + (38 * printed), RGBA8(95, 95, 95, 255), 10, "Parent folder");
@@ -780,7 +774,7 @@ void open(void)
 	
 	//char * ext = strrchr(path, '.');
 	
-	if (strcmp(get_filename_ext(file->name), "") == 0)
+	if (file->isFolder)
 	{
 		// Attempt to navigate to Target
 		if(navigate(0) == 0)
@@ -929,7 +923,7 @@ int displayProperties()
 	strcpy(fullPath, cwd);
 	strcpy(fullPath + strlen(fullPath), file->name);
 	
-	if ((strcmp(get_filename_ext(file->name), "") == 0))
+	if (file->isFolder)
 		strcpy(type, "Folder");
 	else if ((strcmp(get_filename_ext(file->name), "CIA") == 0) || (strcmp(get_filename_ext(file->name), "cia") == 0) || (strcmp(get_filename_ext(file->name), "3DSX") == 0) || (strcmp(get_filename_ext(file->name), "3dsx") == 0))
 		strcpy(type, "APP");
@@ -977,7 +971,7 @@ int displayProperties()
 		sftd_draw_text(font2, 42, 114, RGBA8(0, 0, 0, 255), 10, "Type:");
 			sftd_draw_textf(font2, 100, 114, RGBA8(100, 100, 100, 255), 10, "%s", type);
 			
-		if (!(strcmp(get_filename_ext(file->name), "") == 0))
+		if (!(file->isFolder))
 		{
 			sftd_draw_text(font2, 42, 134, RGBA8(0, 0, 0, 255), 10, "Size:");
 				sftd_draw_textf(font2, 100, 134, RGBA8(100, 100, 100, 255), 10, "%s", size);
@@ -1030,7 +1024,7 @@ int renameF()
 	strcat(oldPath, file->name);
 	strcpy(ext, ""); // Set ext to NULL
 	
-	if (strcmp(get_filename_ext(file->name), "") != 0) // If it's not a folder preserve its extension to avoid file corruption.
+	if (!(file->isFolder)) // If it's not a folder preserve its extension to avoid file corruption.
 	{
 		strcat(ext, ".");
 		strcat(ext, get_filename_ext(file->name));
@@ -1061,12 +1055,9 @@ int delete_folder_recursive(char * path)
 	if(directory)
 	{
 		struct dirent * info;
-		struct stat d_stat;
 
 		while ((info = readdir(directory)) != NULL)
-		{
-			stat(path, &d_stat);
-			
+		{	
 			// Valid Filename
 			if(strlen(info->d_name) > 0)
 			{
@@ -1083,7 +1074,7 @@ int delete_folder_recursive(char * path)
 				strcpy(item->name, info->d_name);
 
 				// Set Folder Flag
-				item->isFolder = S_ISDIR(d_stat.st_mode);
+				item->isFolder = info->d_type == DT_DIR;
 
 				// New List
 				if(filelist == NULL) 
@@ -1185,7 +1176,7 @@ int delete(void)
 	strcpy(path + strlen(path), file->name);
 
 	// Delete Folder
-	if (strcmp(get_filename_ext(file->name), "") == 0)
+	if (file->isFolder)
 	{
 		// Add Trailing Slash
 		path[strlen(path) + 1] = 0;
@@ -1215,7 +1206,7 @@ void copy(int flag)
 	strcpy(copysource + strlen(copysource), file->name);
 
 	// Add Recursive Folder Flag
-	if (strcmp(get_filename_ext(file->name), "") == 0)
+	if (file->isFolder)
 		flag |= COPY_FOLDER_RECURSIVE;
 
 	// Set Copy Flags
