@@ -2,6 +2,7 @@
 #define MAIN_H
 
 #include <3ds.h>
+#include <fcntl.h>
 #include <dirent.h>
 #include <sf2d.h>
 #include <sfil.h>
@@ -9,7 +10,7 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <string.h>
-#include <malloc.h>
+#include <unistd.h>
 
 #include "Roboto_ttf.h"
 
@@ -72,6 +73,8 @@ int selectionX, selectionY, BROWSE_STATE, DEFAULT_STATE;
 #define STATE_SD 0
 #define STATE_NAND 1
 #define IF_OPTIONS ((DEFAULT_STATE != STATE_HOME) && (DEFAULT_STATE != STATE_SETTINGS))
+#define CAN_COPY (((copyF == false) && (cutF != true) && (deleteDialog == false)))
+#define CAN_CUT (((cutF == false) && (copyF != true) && (deleteDialog == false)))
 
 #define wait(nanoSec) svcSleepThread(nanoSec);
 
@@ -101,7 +104,7 @@ void mainMenu(int clearindex);
 void updateList(int clearindex);
 void displayFiles(int withclear);
 void recursiveFree(File * node);
-void open(void);
+void openFile(void);
 int navigate(int _case);
 File * findindex(int index);
 int drawDeletionDialog();

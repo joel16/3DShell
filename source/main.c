@@ -349,7 +349,7 @@ void mainMenu(int clearindex)
 			{
 				wait(1000000);
 				
-				open(); // Open file/dir
+				openFile(); // Open file/dir
 			}
 			
 			else if ((strcmp(cwd, ROOT_PATH) != 0) && (kPress & KEY_B))
@@ -410,7 +410,7 @@ void mainMenu(int clearindex)
 				renameF();
 			}
 
-			if (((copyF == false) && (deleteDialog == false)) && (kPress & KEY_TOUCH) && (touchInRect(161, 284, 94, 130)) && (IF_OPTIONS))
+			if ((CAN_COPY) && (kPress & KEY_TOUCH) && (touchInRect(161, 284, 94, 130)) && (IF_OPTIONS))
 			{
 				selectionX = 1;
 				selectionY = 1; 
@@ -433,7 +433,7 @@ void mainMenu(int clearindex)
 				}	
 			}	
 			
-			if (((cutF == false) && (deleteDialog == false)) && (kPress & KEY_TOUCH) && (touchInRect(161, 284, 131, 167)) && (IF_OPTIONS))
+			if ((CAN_CUT) && (kPress & KEY_TOUCH) && (touchInRect(161, 284, 131, 167)) && (IF_OPTIONS))
 			{
 				selectionX = 1;
 				selectionY = 2;
@@ -758,7 +758,7 @@ void displayFiles(int withclear)
 	endDrawing();
 }
 
-void open(void)
+void openFile(void)
 {
 	File * file = findindex(position);
 
@@ -1232,7 +1232,7 @@ int copy_file(char * a, char * b)
 	int result = 0;
 
 	// Open File for Reading
-	FILE * in = fopen(a, "rb");
+	int in = open(a, O_RDONLY, 0777);
 
 	// Opened File for Reading
 	if(in >= 0)
@@ -1241,26 +1241,26 @@ int copy_file(char * a, char * b)
 		remove(b);
 
 		// Open File for Writing
-		FILE * out = fopen(a, "wb+");
+		int out = open(b, O_WRONLY | O_CREAT | O_TRUNC, 0777);
 
 		// Opened File for Writing
 		if(out >= 0)
 		{
 			// Read Byte Count
-			int read = 0;
+			int b_read = 0;
 
 			// Copy Loop (512KB at a time)
-			while((read = fread(buffer, 1, chunksize, in)) > 0)
+			while((b_read = read(in, buffer, chunksize)) > 0)
 			{
 				// Accumulate Read Data
-				totalread += read;
+				totalread += b_read;
 
 				// Write Data
-				totalwrite += fwrite(buffer, 1, sizeof(buffer), out);
+				totalwrite += write(out, buffer, b_read);
 			}
 
 			// Close Output File
-			fclose(out);
+			close(out);
 
 			// Insufficient Copy
 			if(totalread != totalwrite) 
@@ -1272,7 +1272,7 @@ int copy_file(char * a, char * b)
 			result = -2;
 
 		// Close Input File
-		fclose(in);
+		close(in);
 	}
 
 	// Input Open Error
@@ -1299,13 +1299,10 @@ int copy_folder_recursive(char * a, char * b)
 		mkdir(b, 0777);
 		
 		struct dirent * info;
-		struct stat d_stat;
 
 		// Iterate Files
 		while ((info = readdir(directory)) != NULL)
 		{
-			stat(a, &d_stat);
-
 			// Valid Filename
 			if(strlen(info->d_name) > 0)
 			{
@@ -1330,7 +1327,7 @@ int copy_folder_recursive(char * a, char * b)
 				strcpy(outbuffer + strlen(outbuffer), info->d_name);
 
 				// Another Folder
-				if(S_ISDIR(d_stat.st_mode))
+				if(info->d_type == DT_DIR)
 					copy_folder_recursive(inbuffer, outbuffer); // Copy Folder (via recursion)
 
 				// Simple File
