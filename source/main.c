@@ -8,6 +8,7 @@
 #include "power.h"
 #include "screenshot.h"
 #include "text.h"
+#include "updater.h"
 #include "utils.h"
 
 /*
@@ -79,7 +80,6 @@ void initServices()
 {
 	fsInit();
 	sdmcInit();
-	amInit();
 	openSdArchive();
 	mcuInit();
 	hidInit();
@@ -88,10 +88,10 @@ void initServices()
 	romfsInit();
 	sf2d_init();
 	sftd_init();
-	
-	ndspInit();
-	ndspSetOutputMode(NDSP_OUTPUT_STEREO);
-	
+	httpcInit(0);
+	amInit();
+	AM_InitializeExternalTitleDatabase(false);
+
 	sf2d_set_clear_color(RGBA8(0, 0, 0, 255));
 	sf2d_set_vblank_wait(0);
 	
@@ -115,11 +115,13 @@ void initServices()
 	sdIcon = sfil_load_PNG_file("romfs:/res/sd.png", SF2D_PLACE_RAM); setBilinearFilter(sdIcon);
 	nandIcon = sfil_load_PNG_file("romfs:/res/nand.png", SF2D_PLACE_RAM); setBilinearFilter(nandIcon);
 	settingsIcon = sfil_load_PNG_file("romfs:/res/settings.png", SF2D_PLACE_RAM); setBilinearFilter(settingsIcon);
-	selectedHomeIcon = sfil_load_PNG_file("romfs:/res/s_home.png", SF2D_PLACE_RAM); setBilinearFilter(selectedHomeIcon);
-	selectedOptionsIcon = sfil_load_PNG_file("romfs:/res/s_options_icon.png", SF2D_PLACE_RAM); setBilinearFilter(selectedOptionsIcon);
-	selectedSdIcon = sfil_load_PNG_file("romfs:/res/s_sd.png", SF2D_PLACE_RAM); setBilinearFilter(selectedSdIcon);
-	selectedSettingsIcon = sfil_load_PNG_file("romfs:/res/s_settings.png", SF2D_PLACE_RAM); setBilinearFilter(selectedSettingsIcon);
-	selectedNandIcon = sfil_load_PNG_file("romfs:/res/s_nand.png", SF2D_PLACE_RAM); setBilinearFilter(selectedNandIcon);
+	updateIcon = sfil_load_PNG_file("romfs:/res/update.png", SF2D_PLACE_RAM); setBilinearFilter(updateIcon);
+	s_HomeIcon = sfil_load_PNG_file("romfs:/res/s_home.png", SF2D_PLACE_RAM); setBilinearFilter(s_HomeIcon);
+	s_OptionsIcon = sfil_load_PNG_file("romfs:/res/s_options_icon.png", SF2D_PLACE_RAM); setBilinearFilter(s_OptionsIcon);
+	s_SdIcon = sfil_load_PNG_file("romfs:/res/s_sd.png", SF2D_PLACE_RAM); setBilinearFilter(s_SdIcon);
+	s_SettingsIcon = sfil_load_PNG_file("romfs:/res/s_settings.png", SF2D_PLACE_RAM); setBilinearFilter(s_SettingsIcon);
+	s_NandIcon = sfil_load_PNG_file("romfs:/res/s_nand.png", SF2D_PLACE_RAM); setBilinearFilter(s_NandIcon);
+	s_UpdateIcon = sfil_load_PNG_file("romfs:/res/s_update.png", SF2D_PLACE_RAM); setBilinearFilter(s_UpdateIcon);
 	searchIcon = sfil_load_PNG_file("romfs:/res/search.png", SF2D_PLACE_RAM); setBilinearFilter(searchIcon);
 	
 	_0 = sfil_load_PNG_file("romfs:/res/battery/0.png", SF2D_PLACE_RAM); setBilinearFilter(_0);
@@ -168,11 +170,13 @@ void termServices()
 	sf2d_free_texture(sdIcon);
 	sf2d_free_texture(nandIcon);
 	sf2d_free_texture(settingsIcon);
-	sf2d_free_texture(selectedHomeIcon);
-	sf2d_free_texture(selectedOptionsIcon);
-	sf2d_free_texture(selectedSdIcon);
-	sf2d_free_texture(selectedSettingsIcon);
-	sf2d_free_texture(selectedNandIcon);
+	sf2d_free_texture(updateIcon);
+	sf2d_free_texture(s_HomeIcon);
+	sf2d_free_texture(s_OptionsIcon);
+	sf2d_free_texture(s_SdIcon);
+	sf2d_free_texture(s_SettingsIcon);
+	sf2d_free_texture(s_NandIcon);
+	sf2d_free_texture(s_UpdateIcon);
 	sf2d_free_texture(searchIcon);
 	
 	sf2d_free_texture(background);
@@ -190,7 +194,8 @@ void termServices()
 	sf2d_free_texture(imgIcon);
 	sf2d_free_texture(uncheck);
 	
-	ndspExit();
+	amExit();
+	httpcExit();
 	sftd_fini();
 	sf2d_fini();
 	romfsExit();
@@ -198,7 +203,6 @@ void termServices()
 	hidExit();
 	mcuExit();
 	closeSdArchive();
-	amExit();
 	sdmcExit();
 	fsExit();
 }
@@ -212,12 +216,6 @@ void mainMenu(int clearindex)
 		updateList(CLEAR);
 	
 	touchPosition touch;
-	
-	/*if (fileExists("/3ds/3DShell/bgm.ogg"))
-	{
-		struct sound *bgm = sound_create(BGM);
-		audio_load_ogg("/3ds/3DShell/bgm.ogg", bgm);
-	}*/
 	
 	while (aptMainLoop())
     {
@@ -242,8 +240,13 @@ void mainMenu(int clearindex)
 			wait(100000000);
 			DEFAULT_STATE = STATE_OPTIONS;
 		}
+		/*else if ((kPress & KEY_TOUCH) && (touchInRect(74, 97, 0, 20)))
+		{
+			wait(100000000);
+			DEFAULT_STATE = STATE_UPDATE;
+		}*/
 		
-		if ((kPress & KEY_TOUCH) && (touchInRect(74, 97, 0, 20)))
+		if ((kPress & KEY_TOUCH) && (touchInRect(98, 123, 0, 20)))
 		{
 			wait(100000000);
 			char buf[250];
@@ -261,7 +264,7 @@ void mainMenu(int clearindex)
 			updateList(CLEAR);
 			displayFiles(CLEAR);
 		}
-		/*else if ((kPress & KEY_TOUCH) && (touchInRect(98, 123, 0, 20))) //Mount stuff goes here
+		/*else if ((kPress & KEY_TOUCH) && (touchInRect(124, 157, 0, 20))) //Mount stuff goes here
 		{
 			wait(100000000);
 			strcpy(cwd, "nand:/");
@@ -323,7 +326,7 @@ void mainMenu(int clearindex)
 			
 			if (kHeld & KEY_CPAD_UP)
 			{
-				wait(100000000 / 1.5);
+				wait(66666666);
 				
 				if(position > 0) 
 					position--;
@@ -335,7 +338,7 @@ void mainMenu(int clearindex)
 
 			else if (kHeld & KEY_CPAD_DOWN)
 			{
-				wait(100000000 / 1.5);
+				wait(66666666);
 				
 				if(position < (fileCount - 1)) 
 					position++;
@@ -459,7 +462,7 @@ void mainMenu(int clearindex)
 	}
 }
 
-int main(int argc, char *argv[])
+int main()
 {
 	initServices();
 	
@@ -582,7 +585,7 @@ void recursiveFree(File * node)
 	free(node);
 }
 
-void displayFiles(int withclear)
+void displayFiles()
 {
 	// Bottom screen options
 	sf2d_start_frame(GFX_BOTTOM, GFX_LEFT);
@@ -590,11 +593,9 @@ void displayFiles(int withclear)
 	sf2d_draw_rectangle(0, 0, 320, 240, RGBA8(30, 136, 229, 255));
 	sf2d_draw_rectangle(0, 0, 320, 20, RGBA8(25, 118, 210, 255));
 	
-	//sf2d_draw_rectangle(20, 1, 19, 19, RGBA8(251, 251, 251, 255));
-	
 	if (DEFAULT_STATE == STATE_HOME)
 	{
-		sf2d_draw_texture(selectedHomeIcon, -2, -2);
+		sf2d_draw_texture(s_HomeIcon, -2, -2);
 		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, welcomeMsg)) / 2), 40, RGBA8(251, 251, 251, 255), 11, welcomeMsg);
 		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, currDate)) / 2), 60, RGBA8(251, 251, 251, 255), 11, currDate);
 		sftd_draw_textf(font, 2, 225, RGBA8(251, 251, 251, 255), 11, "3DShell v%i.%i", VERSION_MAJOR, VERSION_MINOR);
@@ -603,25 +604,40 @@ void displayFiles(int withclear)
 		sf2d_draw_texture(homeIcon, -2, -2);
 	
 	if (DEFAULT_STATE == STATE_SETTINGS)
-		sf2d_draw_texture(selectedSettingsIcon, 50, 0);
+		sf2d_draw_texture(s_SettingsIcon, 50, 0);
 	else
 		sf2d_draw_texture(settingsIcon, 50, 0);
 	
-	if (BROWSE_STATE == STATE_SD)
-		sf2d_draw_texture(selectedSdIcon, 75, 0);
+	if (DEFAULT_STATE == STATE_UPDATE)
+	{
+		sf2d_draw_texture(s_UpdateIcon, 75, 0);
+		sftd_draw_text(font, ((320 - (sftd_get_text_width(font, 11, "Checking for updates..."))) / 2), 40, RGBA8(251, 251, 251, 255), 11, "Checking for updates...");
+		wait(100000000);
+		
+		if (strcmp(checkForUpdate(), "Update found") == 0)
+		{
+			wait(100000000);
+			downloadUpdate();
+		}
+	}
 	else
-		sf2d_draw_texture(sdIcon, 75, 0);
+		sf2d_draw_texture(updateIcon, 75, 0);
+	
+	if (BROWSE_STATE == STATE_SD)
+		sf2d_draw_texture(s_SdIcon, 100, 0);
+	else
+		sf2d_draw_texture(sdIcon, 100, 0);
 	
 	if (BROWSE_STATE == STATE_NAND)
-		sf2d_draw_texture(selectedNandIcon, 100, 0);
+		sf2d_draw_texture(s_NandIcon, 125, 0);
 	else
-		sf2d_draw_texture(nandIcon, 100, 0);
+		sf2d_draw_texture(nandIcon, 125, 0);
 	
 	sf2d_draw_texture(searchIcon, (320 - searchIcon->width), -2);
 	
 	if (DEFAULT_STATE == STATE_OPTIONS)
 	{
-		sf2d_draw_texture(selectedOptionsIcon, 25, 0);
+		sf2d_draw_texture(s_OptionsIcon, 25, 0);
 		
 		sf2d_draw_texture(options, 37, 20);
 	
@@ -894,12 +910,13 @@ int drawDeletionDialog()
 			
 		if ((kPress & KEY_A) || (touchInRect(240, 320, 142, 185)))
 		{
-			deleteDialog = false;
 			if(delete() == 0)
 			{
 				updateList(CLEAR);
 				displayFiles(CLEAR);
 			}
+			
+			deleteDialog = false;
 		}
 		else if ((kPress & KEY_B) || (touchInRect(136, 239, 142, 185)))
 			deleteDialog = false;
@@ -1206,7 +1223,7 @@ void copy(int flag)
 	strcpy(copysource + strlen(copysource), file->name);
 
 	// Add Recursive Folder Flag
-	if (file->isFolder)
+	if ((file->isFolder) && (strcmp(file->name, "..") != 0))
 		flag |= COPY_FOLDER_RECURSIVE;
 
 	// Set Copy Flags

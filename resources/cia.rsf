@@ -169,15 +169,16 @@ AccessControlInfo:
    - cfg:s
    - dlp:FKCL
    - dlp:SRVR
+   - csnd:SND
    - dsp::DSP
    - frd:u
    - fs:USER
    - gsp::Gpu
    - gsp::Lcd
    - hid:USER
+   - http:C
    - mcu::HWC
    - ndm:u
-   - news:s
    - nwm::UDS
    - ptm:u
    - pxi:dev
@@ -186,7 +187,6 @@ AccessControlInfo:
    - y2r:u
    - ldr:ro
    - ir:USER
-   - csnd:SND
    - am:u
    - ns:s
 
