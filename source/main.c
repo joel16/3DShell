@@ -145,7 +145,7 @@ void initServices()
 	installDirectories();
 	
 	strcpy(userName, (char*)getNNID());
-	sprintf(welcomeMsg, "Hello there %s! how are you today?", userName);
+	sprintf(welcomeMsg, "Hello there %s! How are you today?", userName);
 	
 	sprintf(currDate, "Today is %s %s.", getDayOfWeek(0), getMonthOfYear(0));
 	
