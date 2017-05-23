@@ -7,6 +7,7 @@
 #include "mcu.h"
 #include "power.h"
 #include "screenshot.h"
+#include "sound.h"
 #include "text.h"
 #include "updater.h"
 #include "utils.h"
@@ -91,7 +92,9 @@ void initServices()
 	httpcInit(0);
 	amInit();
 	AM_InitializeExternalTitleDatabase(false);
-
+	
+	audio_init();
+	
 	sf2d_set_clear_color(RGBA8(0, 0, 0, 255));
 	sf2d_set_vblank_wait(0);
 	
@@ -194,6 +197,7 @@ void termServices()
 	sf2d_free_texture(imgIcon);
 	sf2d_free_texture(uncheck);
 	
+	audio_stop();
 	amExit();
 	httpcExit();
 	sftd_fini();

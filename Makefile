@@ -58,20 +58,20 @@ APP_ROMFS_DIR		:= $(TOPDIR)/romfs
 # options for code generation
 #---------------------------------------------------------------------------------
 
-ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard
+ARCH    := -march=armv6k -mtune=mpcore -mfloat-abi=hard
 
 CFLAGS	:=	-g -Wall -O2 -mword-relocations -Werror -DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR)\
 			-fomit-frame-pointer -ffast-math \
 			$(ARCH)
 
-CFLAGS	+=	$(INCLUDE) -DARM11 -D_3DS
+CFLAGS 	+= $(INCLUDE) -DARM11 -D_3DS
 
-CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
+CXXFLAGS:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 
 ASFLAGS	:=	-g $(ARCH)
-LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
+LDFLAGS  := -specs=3dsx.specs -flto -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:= 	-lsftd -lsfil -lfreetype -lpng16 -ljpeg -lz -lsf2d -lcitro3d -lctru -lm
+LIBS	:= 	-lvorbisidec -logg -lsftd -lsfil -lfreetype -lpng16 -ljpeg -lz -lsf2d -lcitro3d -lctru -lm
 
 OS := $(shell uname)
 
