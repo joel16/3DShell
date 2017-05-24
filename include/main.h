@@ -65,7 +65,7 @@ char currDate[100];
 /*
 *	Generic definitions
 */
-bool copyF, cutF, properties, deleteDialog, bgmEnable, hideInfo;
+bool copyF, cutF, properties, deleteDialog, bgmEnable, sysProtection;
 int selectionX, selectionY, BROWSE_STATE, DEFAULT_STATE;
 
 #define STATE_HOME 0
@@ -74,10 +74,13 @@ int selectionX, selectionY, BROWSE_STATE, DEFAULT_STATE;
 #define STATE_UPDATE 3
 #define STATE_SD 0
 #define STATE_NAND 1
-#define IF_OPTIONS ((DEFAULT_STATE != STATE_HOME) && (DEFAULT_STATE != STATE_UPDATE) && (DEFAULT_STATE != STATE_SETTINGS))
+#define IF_OPTIONS	((DEFAULT_STATE != STATE_HOME) && (DEFAULT_STATE != STATE_UPDATE) && (DEFAULT_STATE != STATE_SETTINGS))
 #define IF_SETTINGS ((DEFAULT_STATE != STATE_HOME) && (DEFAULT_STATE != STATE_UPDATE) && (DEFAULT_STATE != STATE_OPTIONS))
-#define CAN_COPY (((copyF == false) && (cutF != true) && (deleteDialog == false)))
-#define CAN_CUT (((cutF == false) && (copyF != true) && (deleteDialog == false)))
+#define CAN_COPY 	(((copyF == false) && (cutF != true) && (deleteDialog == false)))
+#define CAN_CUT 	(((cutF == false) && (copyF != true) && (deleteDialog == false)))
+#define SYS_FILES 	((strcmp(file->name, "boot.firm") == 0) || (strcmp(file->name, "boot9strap") == 0) || \
+					(strcmp(getLastNChars(file->name, 12), "Nintendo 3DS") == 0) || \
+					(strcmp(file->name, "arm9loaderhax.bin") == 0))
 
 #define wait(nanoSec) svcSleepThread(nanoSec);
 

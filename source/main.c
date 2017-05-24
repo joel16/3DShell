@@ -94,27 +94,23 @@ void installDirectories()
 			bgmEnable = true;
 	}*/
 	
-	if (!fileExists("/3ds/3DShell/hideInfo.txt"))
+	if (!fileExists("/3ds/3DShell/sysProtection.txt")) // Initially set it to true
 	{
-		int info = 0;
-		FILE * write = fopen("/3ds/3DShell/hideInfo.txt", "w");
-		fprintf(write, "%d", info);
-		fclose(write);
-		
-		hideInfo = false;
+		setConfig("/3ds/3DShell/sysProtection.txt", true);
+		sysProtection = true;
 	}
 	else
 	{
 		int info = 0;
 		
-		FILE * read = fopen("/3ds/3DShell/hideInfo.txt", "r");
+		FILE * read = fopen("/3ds/3DShell/sysProtection.txt", "r");
 		fscanf(read, "%d", &info);
 		fclose(read);
 		
 		if (info == 0)
-			hideInfo = false;
+			sysProtection = false;
 		else 
-			hideInfo = true;
+			sysProtection = true;
 	}
 }
 
@@ -342,10 +338,16 @@ turnOffBGM:
 		if ((kPress & KEY_TOUCH) && (touchInRect(0, 320, 90, 112)) && (IF_SETTINGS))
 		{
 			wait(100000000);
-			if (hideInfo == false)
-				hideInfo = true;
+			if (sysProtection == false)
+			{
+				setConfig("/3ds/3DShell/sysProtection.txt", true);
+				sysProtection = true;
+			}
 			else 
-				hideInfo = false;
+			{
+				setConfig("/3ds/3DShell/sysProtection.txt", false);
+				sysProtection = false;
+			}
 		}
 		
 		if ((kPress & KEY_TOUCH) && (touchInRect(98, 123, 0, 20)))
@@ -723,15 +725,15 @@ void displayFiles()
 		sftd_draw_text(font, 10, 50, RGBA8(120, 120, 120, 255), 11, "BGM"); // Grey'd out - cannot be accessed yet.
 		sftd_draw_text(font2, 10, 62, RGBA8(120, 120, 120, 255), 10, "Enable BGM upon start up. (/3ds/3DShell/bgm.ogg)");
 		
-		sftd_draw_text(font, 10, 90, RGBA8(32, 32, 32, 255), 11, "Hide file info");
-		sftd_draw_text(font2, 10, 102, RGBA8(120, 120, 120, 255), 10, "Disables file info in dir list.");
+		sftd_draw_text(font, 10, 90, RGBA8(32, 32, 32, 255), 11, "System file protection");
+		sftd_draw_text(font2, 10, 102, RGBA8(120, 120, 120, 255), 10, "Prevents deletion of system files.");
 		
 		if (bgmEnable)
 			sf2d_draw_texture(toggleOn, 280, 50);
 		else 
 			sf2d_draw_texture(toggleOff, 280, 50);
 		
-		if (hideInfo)
+		if (sysProtection)
 			sf2d_draw_texture(toggleOn, 280, 90);
 		else 
 			sf2d_draw_texture(toggleOff, 280, 90);
@@ -882,22 +884,18 @@ void displayFiles()
 			
 			sftd_draw_textf(font, 70, 60 + (38 * printed), RGBA8(0, 0, 0, 255), 11, "%.52s", buf); // Display file name
 			
+			strcpy(path, cwd);
+			strcpy(path + strlen(path), file->name);
 			
-			if (!hideInfo)
+			if ((file->isFolder) && (strcmp(file->name, "..") != 0))
+				sftd_draw_text(font2, 70, 75 + (38 * printed), RGBA8(95, 95, 95, 255), 10, "drwxr-x---");
+			else if (strcmp(file->name, "..") == 0)
+				sftd_draw_text(font2, 70, 75 + (38 * printed), RGBA8(95, 95, 95, 255), 10, "Parent folder");
+			else
 			{
-				strcpy(path, cwd);
-				strcpy(path + strlen(path), file->name);
-			
-				if ((file->isFolder) && (strcmp(file->name, "..") != 0))
-					sftd_draw_text(font2, 70, 75 + (38 * printed), RGBA8(95, 95, 95, 255), 10, "drwxr-x---");
-				else if (strcmp(file->name, "..") == 0)
-					sftd_draw_text(font2, 70, 75 + (38 * printed), RGBA8(95, 95, 95, 255), 10, "Parent folder");
-				else
-				{
-					getSizeString(size, getFileSize(path));
-					sftd_draw_text(font2, 70, 75 + (38 * printed), RGBA8(95, 95, 95, 255), 10, "-rw-rw----");
-					sftd_draw_textf(font2, 395 - sftd_get_text_width(font2, 10, size), 75 + (38 * printed), RGBA8(0, 0, 0, 255), 10, "%s", size);
-				}
+				getSizeString(size, getFileSize(path));
+				sftd_draw_text(font2, 70, 75 + (38 * printed), RGBA8(95, 95, 95, 255), 10, "-rw-rw----");
+				sftd_draw_textf(font2, 395 - sftd_get_text_width(font2, 10, size), 75 + (38 * printed), RGBA8(0, 0, 0, 255), 10, "%s", size);
 			}
 			
 			printed++; // Increase printed counter
@@ -1316,8 +1314,16 @@ int delete(void)
 	if(file == NULL) 
 		return -1;
 
-	if(strcmp(file->name, "..") == 0) 
-		return -2;
+	if (sysProtection)
+	{
+		if((strcmp(file->name, "..") == 0) || (SYS_FILES)) 
+			return -2;
+	}
+	else
+	{
+		if(strcmp(file->name, "..") == 0) 
+			return -2;
+	}
 
 	// File Path
 	char path[1024];

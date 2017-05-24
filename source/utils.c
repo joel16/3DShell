@@ -75,24 +75,27 @@ int extractZip(const char * zipFile, const char * path)
 	return result;
 }
 
-void setBgm(bool set)
+void setConfig(char * path, bool set) //using individual txt files for configs for now (plan to change this later when there's more options)
 {
 	if (set == true)
 	{
-		int initBgm = 1;
-		FILE * write = fopen("/3ds/3DShell/bgm.txt", "w");
-		fprintf(write, "%d", initBgm);
+		int config = 1;
+		FILE * write = fopen(path, "w");
+		fprintf(write, "%d", config);
 		fclose(write);
-		
-		bgmEnable = true;
 	}
 	else
 	{
-		int initBgm = 0;
-		FILE * write = fopen("/3ds/3DShell/bgm.txt", "w");
-		fprintf(write, "%d", initBgm);
+		int config = 0;
+		FILE * write = fopen(path, "w");
+		fprintf(write, "%d", config);
 		fclose(write);
-		
-		bgmEnable = false;
 	}
+}
+
+const char * getLastNChars(char * str, int n)
+{
+	int len = strlen(str);
+	const char *last_n = &str[len - n];
+	return last_n;
 }
