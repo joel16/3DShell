@@ -24,6 +24,12 @@ void drawBatteryStatus(int x, int y)
 	else if(batteryPercent == 100)
 		sf2d_draw_texture(_100, x, y);
 	
+	u8 batteryState; // boolean that represnets charging state
+	PTMU_GetBatteryChargeState(&batteryState);
+	
+	if (batteryState == 1)
+		sf2d_draw_texture(_charge, x, y);
+	
 	if(batteryPercent == 100)
 		sftd_draw_textf(font, x + 15, y - 1, RGBA8(255, 255, 255, 255), 11, "100%%");
 	else
