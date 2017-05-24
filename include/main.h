@@ -79,8 +79,8 @@ int selectionX, selectionY, BROWSE_STATE, DEFAULT_STATE;
 #define CAN_COPY 	(((copyF == false) && (cutF != true) && (deleteDialog == false)))
 #define CAN_CUT 	(((cutF == false) && (copyF != true) && (deleteDialog == false)))
 #define SYS_FILES 	((strcmp(file->name, "boot.firm") == 0) || (strcmp(file->name, "boot9strap") == 0) || \
-					(strcmp(getLastNChars(file->name, 12), "Nintendo 3DS") == 0) || \
-					(strcmp(file->name, "arm9loaderhax.bin") == 0))
+					(strcmp(getLastNChars(file->name, 12), "Nintendo 3DS") == 0) || (strcmp(file->name, "arm9loaderhax.bin") == 0) || \
+					(strcmp(cwd, "/Nintendo 3DS/") == 0) || (strcmp(cwd, "/boot9strap/") == 0))
 
 #define wait(nanoSec) svcSleepThread(nanoSec);
 
