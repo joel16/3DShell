@@ -439,6 +439,14 @@ turnOffBGM:
 				decodeQr();
 			}*/
 			
+			if ((kPress & KEY_TOUCH) && (touchInRect(37, 282, 179, 217)) && (IF_OPTIONS)) // Cancel
+			{	
+				wait(100000000);
+				copyF = false;
+				cutF = false;
+				DEFAULT_STATE = STATE_HOME;
+			}
+			
 			else if ((kHeld & KEY_TOUCH) && (touchInRect(37, 160, 56, 93)) && (IF_OPTIONS))
 			{
 				selectionX = 0;
