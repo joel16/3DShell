@@ -15,5 +15,6 @@ void getSizeString(char * string, uint64_t size);
 int touchGetX();
 int touchGetY();
 int extractZip(const char * zipFile, const char * path);
+void setBgm(bool set);
 
 #endif

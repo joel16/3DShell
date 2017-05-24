@@ -1,12 +1,18 @@
 #ifndef SOUND_H
 #define SOUND_H
 
+/*
+	Code from undertale_techdemo by  Xavyrr and kitling. 
+*/
+
 #include <3ds.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <tremor/ivorbiscodec.h>
 #include <tremor/ivorbisfile.h>
+
+extern bool isPlaying;
 
 struct sound {
     const char* filename;

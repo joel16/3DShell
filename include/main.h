@@ -20,7 +20,7 @@
 sf2d_texture	*background, *options, *_properties, *selector, *deletion, *folderIcon, *fileIcon, *uncheck,
 				*audioIcon, *appIcon, *txtIcon, *systemIcon, *zipIcon, *imgIcon, *homeIcon, *optionsIcon, *sdIcon, *nandIcon,
 				*s_HomeIcon, *s_OptionsIcon, *s_SdIcon, *s_NandIcon, *settingsIcon, *s_SettingsIcon, 
-				*searchIcon, *updateIcon, *s_UpdateIcon;
+				*searchIcon, *updateIcon, *s_UpdateIcon, *toggleOn, *toggleOff;
 
 sftd_font	*font, *font2;
 
@@ -65,7 +65,7 @@ char currDate[100];
 /*
 *	Generic definitions
 */
-bool copyF, cutF, properties, deleteDialog;
+bool copyF, cutF, properties, deleteDialog, bgmEnable;
 int selectionX, selectionY, BROWSE_STATE, DEFAULT_STATE;
 
 #define STATE_HOME 0
@@ -75,6 +75,7 @@ int selectionX, selectionY, BROWSE_STATE, DEFAULT_STATE;
 #define STATE_SD 0
 #define STATE_NAND 1
 #define IF_OPTIONS ((DEFAULT_STATE != STATE_HOME) && (DEFAULT_STATE != STATE_UPDATE) && (DEFAULT_STATE != STATE_SETTINGS))
+#define IF_SETTINGS ((DEFAULT_STATE != STATE_HOME) && (DEFAULT_STATE != STATE_UPDATE) && (DEFAULT_STATE != STATE_OPTIONS))
 #define CAN_COPY (((copyF == false) && (cutF != true) && (deleteDialog == false)))
 #define CAN_CUT (((cutF == false) && (copyF != true) && (deleteDialog == false)))
 

@@ -75,7 +75,27 @@ void installDirectories()
 		
 		strcpy(cwd, buf); // Set Start Path to "sdmc:/" if lastDir.txt hasn't been created.
 	}
+	
+	/*if (!fileExists("/3ds/3DShell/bgm.txt"))
+	{
+		setBgm(true);
+	}
+	else
+	{
+		int initBgm = 0;
+		
+		FILE * read = fopen("/3ds/3DShell/bgm.txt", "r");
+		fscanf(read, "%d", &initBgm);
+		fclose(read);
+		
+		if (initBgm == 0)
+			bgmEnable = false;
+		else 
+			bgmEnable = true;
+	}*/
 }
+
+//static struct sound *bgm;
 
 void initServices()
 {
@@ -127,6 +147,9 @@ void initServices()
 	s_UpdateIcon = sfil_load_PNG_file("romfs:/res/s_update.png", SF2D_PLACE_RAM); setBilinearFilter(s_UpdateIcon);
 	searchIcon = sfil_load_PNG_file("romfs:/res/search.png", SF2D_PLACE_RAM); setBilinearFilter(searchIcon);
 	
+	toggleOn = sfil_load_PNG_file("romfs:/res/toggleOn.png", SF2D_PLACE_RAM); setBilinearFilter(toggleOn);
+	toggleOff = sfil_load_PNG_file("romfs:/res/toggleOff.png", SF2D_PLACE_RAM); setBilinearFilter(toggleOff);
+	
 	_0 = sfil_load_PNG_file("romfs:/res/battery/0.png", SF2D_PLACE_RAM); setBilinearFilter(_0);
 	_15 = sfil_load_PNG_file("romfs:/res/battery/15.png", SF2D_PLACE_RAM); setBilinearFilter(_15);
 	_28 = sfil_load_PNG_file("romfs:/res/battery/28.png", SF2D_PLACE_RAM); setBilinearFilter(_28);
@@ -151,6 +174,9 @@ void initServices()
 	
 	DEFAULT_STATE = STATE_HOME;
 	BROWSE_STATE = STATE_SD;
+	
+	/*if (fileExists("/3ds/3DShell/bgm.ogg")) // Initally create this to avoid crashes
+		bgm = sound_create(BGM);*/
 }
 
 void termServices()
@@ -167,6 +193,9 @@ void termServices()
 	sf2d_free_texture(_85);
 	sf2d_free_texture(_100);
 	sf2d_free_texture(_charge);
+	
+	sf2d_free_texture(toggleOn);
+	sf2d_free_texture(toggleOff);
 	
 	sf2d_free_texture(homeIcon);
 	sf2d_free_texture(optionsIcon);
@@ -218,8 +247,22 @@ void mainMenu(int clearindex)
 	
 	if (clearindex != 0)
 		updateList(CLEAR);
-	
+		
 	touchPosition touch;
+	
+/*turnOnBGM:
+	if(fileExists("/3ds/dspfirm.cdc"))
+	{
+		if (fileExists("/3ds/3DShell/bgm.ogg"))
+		{
+			if((!(isPlaying)) && (bgmEnable == true))
+				audio_load_ogg("/3ds/3DShell/bgm.ogg");
+		}
+	}
+
+turnOffBGM:
+	if ((isPlaying) && (bgmEnable == false))
+		sound_stop(bgm);*/
 	
 	while (aptMainLoop())
     {
@@ -244,10 +287,31 @@ void mainMenu(int clearindex)
 			wait(100000000);
 			DEFAULT_STATE = STATE_OPTIONS;
 		}
+		else if ((kPress & KEY_TOUCH) && (touchInRect(48, 73, 0, 20)))
+		{
+			wait(100000000);
+			DEFAULT_STATE = STATE_SETTINGS;
+		}
 		/*else if ((kPress & KEY_TOUCH) && (touchInRect(74, 97, 0, 20)))
 		{
 			wait(100000000);
 			DEFAULT_STATE = STATE_UPDATE;
+		}*/
+		
+		/*else if ((kPress & KEY_TOUCH) && (touchInRect(0, 320, 50, 72)) && (IF_SETTINGS))
+		{
+			if (bgmEnable == false)
+			{
+				setBgm(true);
+				bgmEnable = true;
+				goto turnOnBGM;
+			}
+			else if (bgmEnable == true)
+			{
+				setBgm(false);
+				bgmEnable = false;
+				goto turnOffBGM;
+			}
 		}*/
 		
 		if ((kPress & KEY_TOUCH) && (touchInRect(98, 123, 0, 20)))
@@ -386,7 +450,7 @@ void mainMenu(int clearindex)
 				displayProperties();
 			}
 			
-			else if (kPress & KEY_TOUCH && (touchInRect(37, 160, 94, 130)) && (IF_OPTIONS))
+			else if ((kPress & KEY_TOUCH) && (touchInRect(37, 160, 94, 130)) && (IF_OPTIONS))
 			{
 				selectionX = 0;
 				selectionY = 1;
@@ -608,7 +672,20 @@ void displayFiles()
 		sf2d_draw_texture(homeIcon, -2, -2);
 	
 	if (DEFAULT_STATE == STATE_SETTINGS)
+	{
 		sf2d_draw_texture(s_SettingsIcon, 50, 0);
+		sf2d_draw_rectangle(0, 20, 320, 220, RGBA8(251, 251, 251, 255));
+		
+		sftd_draw_text(font, 10, 30, RGBA8(30, 136, 229, 255), 11, "General");
+		
+		sftd_draw_text(font, 10, 50, RGBA8(32, 32, 32, 255), 11, "BGM");
+		sftd_draw_text(font2, 10, 62, RGBA8(120, 120, 120, 255), 10, "Enable BGM upon start up. (/3ds/3DShell/bgm.ogg)");
+		
+		if (bgmEnable)
+			sf2d_draw_texture(toggleOn, 280, 50);
+		else 
+			sf2d_draw_texture(toggleOff, 280, 50);
+	}
 	else
 		sf2d_draw_texture(settingsIcon, 50, 0);
 	

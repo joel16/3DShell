@@ -1,5 +1,6 @@
 #include "unzip/archive.h"
 
+#include "main.h"
 #include "utils.h"
 
 void setBilinearFilter(sf2d_texture *texture)
@@ -72,4 +73,26 @@ int extractZip(const char * zipFile, const char * path)
 	int result = ZipExtract(handle, NULL);
 	ZipClose(handle);
 	return result;
+}
+
+void setBgm(bool set)
+{
+	if (set == true)
+	{
+		int initBgm = 1;
+		FILE * write = fopen("/3ds/3DShell/bgm.txt", "w");
+		fprintf(write, "%d", initBgm);
+		fclose(write);
+		
+		bgmEnable = true;
+	}
+	else
+	{
+		int initBgm = 0;
+		FILE * write = fopen("/3ds/3DShell/bgm.txt", "w");
+		fprintf(write, "%d", initBgm);
+		fclose(write);
+		
+		bgmEnable = false;
+	}
 }
