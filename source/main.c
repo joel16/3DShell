@@ -93,6 +93,29 @@ void installDirectories()
 		else 
 			bgmEnable = true;
 	}*/
+	
+	if (!fileExists("/3ds/3DShell/hideInfo.txt"))
+	{
+		int info = 0;
+		FILE * write = fopen("/3ds/3DShell/hideInfo.txt", "w");
+		fprintf(write, "%d", info);
+		fclose(write);
+		
+		hideInfo = false;
+	}
+	else
+	{
+		int info = 0;
+		
+		FILE * read = fopen("/3ds/3DShell/hideInfo.txt", "r");
+		fscanf(read, "%d", &info);
+		fclose(read);
+		
+		if (info == 0)
+			hideInfo = false;
+		else 
+			hideInfo = true;
+	}
 }
 
 //static struct sound *bgm;
@@ -103,6 +126,7 @@ void initServices()
 	sdmcInit();
 	openSdArchive();
 	mcuInit();
+	ptmuInit();
 	hidInit();
 	acInit();
 	actInit(SDK(11,2,0,200), 0x20000);
@@ -234,6 +258,7 @@ void termServices()
 	romfsExit();
 	acExit();
 	hidExit();
+	ptmuExit();
 	mcuExit();
 	closeSdArchive();
 	sdmcExit();
@@ -313,6 +338,15 @@ turnOffBGM:
 				goto turnOffBGM;
 			}
 		}*/
+		
+		if ((kPress & KEY_TOUCH) && (touchInRect(0, 320, 90, 112)) && (IF_SETTINGS))
+		{
+			wait(100000000);
+			if (hideInfo == false)
+				hideInfo = true;
+			else 
+				hideInfo = false;
+		}
 		
 		if ((kPress & KEY_TOUCH) && (touchInRect(98, 123, 0, 20)))
 		{
@@ -674,7 +708,7 @@ void displayFiles()
 		sf2d_draw_texture(s_HomeIcon, -2, -2);
 		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, welcomeMsg)) / 2), 40, RGBA8(251, 251, 251, 255), 11, welcomeMsg);
 		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, currDate)) / 2), 60, RGBA8(251, 251, 251, 255), 11, currDate);
-		sftd_draw_textf(font, 2, 225, RGBA8(251, 251, 251, 255), 11, "3DShell v%i.%i", VERSION_MAJOR, VERSION_MINOR);
+		sftd_draw_textf(font, 2, 225, RGBA8(251, 251, 251, 255), 11, "3DShell v%i.%i BETA", VERSION_MAJOR, VERSION_MINOR);
 	}
 	else
 		sf2d_draw_texture(homeIcon, -2, -2);
@@ -686,13 +720,21 @@ void displayFiles()
 		
 		sftd_draw_text(font, 10, 30, RGBA8(30, 136, 229, 255), 11, "General");
 		
-		sftd_draw_text(font, 10, 50, RGBA8(32, 32, 32, 255), 11, "BGM");
+		sftd_draw_text(font, 10, 50, RGBA8(120, 120, 120, 255), 11, "BGM"); // Grey'd out - cannot be accessed yet.
 		sftd_draw_text(font2, 10, 62, RGBA8(120, 120, 120, 255), 10, "Enable BGM upon start up. (/3ds/3DShell/bgm.ogg)");
+		
+		sftd_draw_text(font, 10, 90, RGBA8(32, 32, 32, 255), 11, "Hide file info");
+		sftd_draw_text(font2, 10, 102, RGBA8(120, 120, 120, 255), 10, "Disables file info in dir list.");
 		
 		if (bgmEnable)
 			sf2d_draw_texture(toggleOn, 280, 50);
 		else 
 			sf2d_draw_texture(toggleOff, 280, 50);
+		
+		if (hideInfo)
+			sf2d_draw_texture(toggleOn, 280, 90);
+		else 
+			sf2d_draw_texture(toggleOff, 280, 90);
 	}
 	else
 		sf2d_draw_texture(settingsIcon, 50, 0);
@@ -840,18 +882,22 @@ void displayFiles()
 			
 			sftd_draw_textf(font, 70, 60 + (38 * printed), RGBA8(0, 0, 0, 255), 11, "%.52s", buf); // Display file name
 			
-			strcpy(path, cwd);
-			strcpy(path + strlen(path), file->name);
 			
-			if ((file->isFolder) && (strcmp(file->name, "..") != 0))
-				sftd_draw_text(font2, 70, 75 + (38 * printed), RGBA8(95, 95, 95, 255), 10, "drwxr-x---");
-			else if (strcmp(file->name, "..") == 0)
-				sftd_draw_text(font2, 70, 75 + (38 * printed), RGBA8(95, 95, 95, 255), 10, "Parent folder");
-			else
+			if (!hideInfo)
 			{
-				getSizeString(size, getFileSize(path));
-				sftd_draw_text(font2, 70, 75 + (38 * printed), RGBA8(95, 95, 95, 255), 10, "-rw-rw----");
-				sftd_draw_textf(font2, 395 - sftd_get_text_width(font2, 10, size), 75 + (38 * printed), RGBA8(0, 0, 0, 255), 10, "%s", size);
+				strcpy(path, cwd);
+				strcpy(path + strlen(path), file->name);
+			
+				if ((file->isFolder) && (strcmp(file->name, "..") != 0))
+					sftd_draw_text(font2, 70, 75 + (38 * printed), RGBA8(95, 95, 95, 255), 10, "drwxr-x---");
+				else if (strcmp(file->name, "..") == 0)
+					sftd_draw_text(font2, 70, 75 + (38 * printed), RGBA8(95, 95, 95, 255), 10, "Parent folder");
+				else
+				{
+					getSizeString(size, getFileSize(path));
+					sftd_draw_text(font2, 70, 75 + (38 * printed), RGBA8(95, 95, 95, 255), 10, "-rw-rw----");
+					sftd_draw_textf(font2, 395 - sftd_get_text_width(font2, 10, size), 75 + (38 * printed), RGBA8(0, 0, 0, 255), 10, "%s", size);
+				}
 			}
 			
 			printed++; // Increase printed counter
