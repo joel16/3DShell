@@ -65,7 +65,7 @@ char currDate[100];
 /*
 *	Generic definitions
 */
-bool copyF, cutF, properties, deleteDialog, bgmEnable;
+bool copyF, cutF, properties, deleteDialog, bgmEnable, hideInfo;
 int selectionX, selectionY, BROWSE_STATE, DEFAULT_STATE;
 
 #define STATE_HOME 0
