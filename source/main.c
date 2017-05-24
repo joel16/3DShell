@@ -1067,34 +1067,13 @@ int displayProperties()
 	if(file == NULL) 
 		return -1;
 	
-	char path[500], fullPath[1024], type[7];
+	char path[255], fullPath[500];
 	
 	strcpy(fileName, file->name);
 	
 	strcpy(path, cwd);
 	strcpy(fullPath, cwd);
-	strcpy(fullPath + strlen(fullPath), file->name);
-	
-	if (file->isFolder)
-		strcpy(type, "Folder");
-	else if ((strcmp(get_filename_ext(file->name), "CIA") == 0) || (strcmp(get_filename_ext(file->name), "cia") == 0) || (strcmp(get_filename_ext(file->name), "3DSX") == 0) || (strcmp(get_filename_ext(file->name), "3dsx") == 0))
-		strcpy(type, "APP");
-	else if ((strcmp(get_filename_ext(file->name), "bin") == 0) || (strcmp(get_filename_ext(file->name), "BIN") == 0) || (strcmp(get_filename_ext(file->name), "firm") == 0) || (strcmp(get_filename_ext(file->name), "FIRM") == 0))
-		strcpy(type, "Payload");
-	else if ((strcmp(get_filename_ext(file->name), "zip") == 0) || (strcmp(get_filename_ext(file->name), "ZIP") == 0))
-		strcpy(type, "archive/zip");
-	else if ((strcmp(get_filename_ext(file->name), "rar") == 0) || (strcmp(get_filename_ext(file->name), "RAR") == 0))
-		strcpy(type, "archive/rar");
-	else if ((strcmp(get_filename_ext(file->name), "PNG") == 0) || (strcmp(get_filename_ext(file->name), "png") == 0))
-		strcpy(type, "image/png");
-	else if ((strcmp(get_filename_ext(file->name), "JPG") == 0) || (strcmp(get_filename_ext(file->name), "jpg") == 0))
-		strcpy(type, "image/jpeg");
-	else if ((strcmp(get_filename_ext(file->name), "MP3") == 0) || (strcmp(get_filename_ext(file->name), "mp3") == 0))
-		strcpy(type, "audio/mpeg");
-	else if ((strcmp(get_filename_ext(file->name), "txt") == 0) || (strcmp(get_filename_ext(file->name), "TXT") == 0) || (strcmp(get_filename_ext(file->name), "XML") == 0) || (strcmp(get_filename_ext(file->name), "xml") == 0))
-		strcpy(type, "TEXT");
-	else
-		strcpy(type, "File");
+	strcpy(fullPath + strlen(fullPath), fileName);
 	
 	char size[16];
 	getSizeString(size, getFileSize(fullPath));
@@ -1117,11 +1096,31 @@ int displayProperties()
 		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, "INFO")) / 2), 50, RGBA8(0, 0, 0, 255), 11, "INFO");
 		
 		sftd_draw_text(font2, 42, 74, RGBA8(0, 0, 0, 255), 10, "Name:");
-			sftd_draw_textf(font2, 100, 74, RGBA8(100, 100, 100, 255), 10, "%s", fileName);
+			sftd_draw_textf(font2, 100, 74, RGBA8(100, 100, 100, 255), 10, "%.36s", fileName);
 		sftd_draw_text(font2, 42, 94, RGBA8(0, 0, 0, 255), 10, "Parent:");
 			sftd_draw_textf(font2, 100, 94, RGBA8(100, 100, 100, 255), 10, "%s", path);
-		sftd_draw_text(font2, 42, 114, RGBA8(0, 0, 0, 255), 10, "Type:");
-			sftd_draw_textf(font2, 100, 114, RGBA8(100, 100, 100, 255), 10, "%s", type);
+			
+		sftd_draw_text(font2, 42, 114, RGBA8(0, 0, 0, 255), 10, "Type:");	
+		if (file->isFolder)
+			sftd_draw_textf(font2, 100, 114, RGBA8(100, 100, 100, 255), 10, "Folder");
+		else if ((strcmp(get_filename_ext(fileName), "CIA") == 0) || (strcmp(get_filename_ext(fileName), "cia") == 0) || (strcmp(get_filename_ext(fileName), "3DSX") == 0) || (strcmp(get_filename_ext(fileName), "3dsx") == 0))
+			sftd_draw_textf(font2, 100, 114, RGBA8(100, 100, 100, 255), 10, "APP");
+		else if ((strcmp(get_filename_ext(fileName), "bin") == 0) || (strcmp(get_filename_ext(fileName), "BIN") == 0) || (strcmp(get_filename_ext(fileName), "firm") == 0) || (strcmp(get_filename_ext(fileName), "FIRM") == 0))
+			sftd_draw_textf(font2, 100, 114, RGBA8(100, 100, 100, 255), 10, "Payload");
+		else if ((strcmp(get_filename_ext(fileName), "zip") == 0) || (strcmp(get_filename_ext(fileName), "ZIP") == 0))
+			sftd_draw_textf(font2, 100, 114, RGBA8(100, 100, 100, 255), 10, "archive/zip");
+		else if ((strcmp(get_filename_ext(fileName), "rar") == 0) || (strcmp(get_filename_ext(fileName), "RAR") == 0))
+			sftd_draw_textf(font2, 100, 114, RGBA8(100, 100, 100, 255), 10, "archive/rar");
+		else if ((strcmp(get_filename_ext(fileName), "PNG") == 0) || (strcmp(get_filename_ext(fileName), "png") == 0))
+			sftd_draw_textf(font2, 100, 114, RGBA8(100, 100, 100, 255), 10, "image/png");
+		else if ((strcmp(get_filename_ext(fileName), "JPG") == 0) || (strcmp(get_filename_ext(fileName), "jpg") == 0))
+			sftd_draw_textf(font2, 100, 114, RGBA8(100, 100, 100, 255), 10, "image/jpeg");
+		else if ((strcmp(get_filename_ext(fileName), "MP3") == 0) || (strcmp(get_filename_ext(fileName), "mp3") == 0))
+			sftd_draw_textf(font2, 100, 114, RGBA8(100, 100, 100, 255), 10, "audio/mpeg");
+		else if ((strcmp(get_filename_ext(fileName), "txt") == 0) || (strcmp(get_filename_ext(fileName), "TXT") == 0) || (strcmp(get_filename_ext(fileName), "XML") == 0) || (strcmp(get_filename_ext(fileName), "xml") == 0))
+			sftd_draw_textf(font2, 100, 114, RGBA8(100, 100, 100, 255), 10, "TEXT");
+		else
+			sftd_draw_textf(font2, 100, 114, RGBA8(100, 100, 100, 255), 10, "FILE");
 			
 		if (!(file->isFolder))
 		{
