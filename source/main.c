@@ -637,7 +637,7 @@ void updateList(int clearindex)
 
 			// Clear Memory
 			memset(item, 0, sizeof(File));
-
+			
 			// Copy File Name
 			strcpy(item->name, info->d_name);
 
@@ -888,13 +888,13 @@ void displayFiles()
 			strcpy(path + strlen(path), file->name);
 			
 			if ((file->isFolder) && (strcmp(file->name, "..") != 0))
-				sftd_draw_text(font2, 70, 75 + (38 * printed), RGBA8(95, 95, 95, 255), 10, "drwxr-x---");
+				sftd_draw_textf(font2, 70, 75 + (38 * printed), RGBA8(95, 95, 95, 255), 10, "%s drwxr-x---", getFileModifiedTime(path));
 			else if (strcmp(file->name, "..") == 0)
 				sftd_draw_text(font2, 70, 75 + (38 * printed), RGBA8(95, 95, 95, 255), 10, "Parent folder");
 			else
 			{
 				getSizeString(size, getFileSize(path));
-				sftd_draw_text(font2, 70, 75 + (38 * printed), RGBA8(95, 95, 95, 255), 10, "-rw-rw----");
+				sftd_draw_textf(font2, 70, 75 + (38 * printed), RGBA8(95, 95, 95, 255), 10, "%s -rw-rw----", getFileModifiedTime(path));
 				sftd_draw_textf(font2, 395 - sftd_get_text_width(font2, 10, size), 75 + (38 * printed), RGBA8(0, 0, 0, 255), 10, "%s", size);
 			}
 			

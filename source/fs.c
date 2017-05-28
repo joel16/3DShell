@@ -61,10 +61,30 @@ char* getFileCreationTime(char *path)
 
 char* getFileModifiedTime(char *path) 
 {
-    struct stat attr;
-    stat(path, &attr);
+	static char timeStr[30];
+	u64 mtime;
+    sdmc_getmtime(path, &mtime);
+    time_t mt = mtime;
+    struct tm *timeStruct = gmtime(&mt);
 	
-    return ctime(&attr.st_mtime);
+	int hours = timeStruct->tm_hour;
+	int minutes = timeStruct->tm_min;
+	int amOrPm = 0;
+	
+	if(hours < 12)
+		amOrPm = 1;
+	if(hours == 0)
+		hours = 12;
+	else if(hours > 12)
+		hours = hours - 12;
+	
+	int day = timeStruct->tm_mday;
+	int month = timeStruct->tm_mon + 1; // January being 0
+	int year = timeStruct->tm_year + 1900;
+	
+	sprintf(timeStr, "%d/%d/%d %2i:%02i %s", day, month, year, hours, minutes, amOrPm ? "AM" : "PM");
+	
+	return timeStr;
 }
 
 char* getFileAccessedTime(char *path) 
