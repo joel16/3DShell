@@ -63,9 +63,9 @@ char* getFileModifiedTime(char *path)
 {
 	static char timeStr[30];
 	u64 mtime;
-    sdmc_getmtime(path, &mtime);
-    time_t mt = mtime;
-    struct tm *timeStruct = gmtime(&mt);
+	sdmc_getmtime(path, &mtime);
+	time_t mt = mtime;
+	struct tm *timeStruct = gmtime(&mt);
 	
 	int hours = timeStruct->tm_hour;
 	int minutes = timeStruct->tm_min;
