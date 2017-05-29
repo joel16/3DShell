@@ -1,4 +1,5 @@
 #include "fs.h"
+#include "utils.h"
 
 void openSdArchive()
 {
@@ -82,7 +83,33 @@ char* getFileModifiedTime(char *path)
 	int month = timeStruct->tm_mon + 1; // January being 0
 	int year = timeStruct->tm_year + 1900;
 	
-	sprintf(timeStr, "%d/%d/%d %2i:%02i %s", day, month, year, hours, minutes, amOrPm ? "AM" : "PM");
+	switch(getRegion())
+	{
+		case CFG_REGION_JPN:
+			sprintf(timeStr, "%d/%d/%d %2i:%02i %s", year, month, day, hours, minutes, amOrPm ? "AM" : "PM");
+			break;
+		case CFG_REGION_USA: // This is the worst one
+			sprintf(timeStr, "%d/%d/%d %2i:%02i %s", month, day, year, hours, minutes, amOrPm ? "AM" : "PM");
+			break;
+		case CFG_REGION_EUR:
+			sprintf(timeStr, "%d/%d/%d %2i:%02i %s", day, month, year, hours, minutes, amOrPm ? "AM" : "PM");
+			break;
+		case CFG_REGION_AUS:
+			sprintf(timeStr, "%d/%d/%d %2i:%02i %s", day, month, year, hours, minutes, amOrPm ? "AM" : "PM");
+			break;
+		case CFG_REGION_CHN:
+			sprintf(timeStr, "%d/%d/%d %2i:%02i %s", year, month, day, hours, minutes, amOrPm ? "AM" : "PM");
+			break;
+		case CFG_REGION_KOR:
+			sprintf(timeStr, "%d/%d/%d %2i:%02i %s", year, month, day, hours, minutes, amOrPm ? "AM" : "PM");
+			break;
+		case CFG_REGION_TWN:
+			sprintf(timeStr, "%d/%d/%d %2i:%02i %s", year, month, day, hours, minutes, amOrPm ? "AM" : "PM");
+			break;
+		default:
+			sprintf(timeStr, "%d/%d/%d %2i:%02i %s", day, month, year, hours, minutes, amOrPm ? "AM" : "PM");
+			break;	
+	}
 	
 	return timeStr;
 }

@@ -99,3 +99,19 @@ const char * getLastNChars(char * str, int n)
 	const char *last_n = &str[len - n];
 	return last_n;
 }
+
+u8 getRegion()
+{
+	u8 region;
+	CFGU_SecureInfoGetRegion(&region);
+	
+	return region;
+}
+
+u8 getLanguage()
+{
+	u8 language;
+	CFGU_GetSystemLanguage(&language);
+	
+	return language;
+}

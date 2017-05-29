@@ -17,5 +17,7 @@ int touchGetY();
 int extractZip(const char * zipFile, const char * path);
 void setConfig(char * path, bool set);
 const char * getLastNChars(char * str, int n);
+u8 getRegion();
+u8 getLanguage();
 
 #endif
