@@ -970,12 +970,12 @@ void displayFiles()
 			break;
 
 		if(position < FILES_PER_PAGE || i > (position - FILES_PER_PAGE))
-		{	
-			sf2d_draw_texture(uncheck, 6, 64 + (38 * printed));
-
+		{
 			// Draw selector
 			if(i == position)
 				sf2d_draw_texture(selector, 0, 53 + (38 * printed));
+			
+			sf2d_draw_texture(uncheck, 6, 64 + (38 * printed));
 			
 			//char * ext = strrchr(file->name, '.');
 
