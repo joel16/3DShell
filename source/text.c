@@ -5,6 +5,17 @@
 #include "text.h"
 #include "utils.h"
 
+enum TextMenuEntrys {
+	TEXT_MENU_ENTRY_MARK_UNMARK_ALL,
+	TEXT_MENU_ENTRY_CUT,
+	TEXT_MENU_ENTRY_COPY,
+	TEXT_MENU_ENTRY_PASTE,
+	TEXT_MENU_ENTRY_DELETE,
+	TEXT_MENU_ENTRY_INSERT_EMPTY_LINE,
+	TEXT_MENU_ENTRY_SEARCH,
+	TEXT_MENU_ENTRY_HEX_EDITOR,
+};
+
 char * displayFileContents(const char * filename)
 {
     char * buffer = NULL;
@@ -46,36 +57,6 @@ void displayText(char * path)
 	
 	sf2d_set_clear_color(RGBA8(251, 251, 251, 255));
 	
-	char * buffer = NULL;
-	FILE * file = fopen(path, "r");
-	
-	if (file != NULL) 
-	{
-		if (fseek(file, 0L, SEEK_END) == 0)  // Go to the end of the file.
-		{
-			long bufsize = ftell(file); // Get the size of the file.
-			
-			if (bufsize == -1) 
-				strcpy(buffer, "Unexpected error: Failed to get file size.");
-
-			buffer = malloc(sizeof(char) * (bufsize + 1)); // Allocate buffer
-			
-			if (fseek(file, 0L, SEEK_SET) != 0) // Go back to the start of the file.
-				strcpy(buffer, "Unexpected error: Failed to read start of the file.");
-
-			size_t newLen = fread(buffer, sizeof(char), bufsize, file); // Read the entire file into memory.
-		
-			if (ferror(file) != 0) 
-				strcpy(buffer, "Error reading file");
-			 
-			else 
-				buffer[newLen++] = '\0'; // Null terminate.
-		}	
-		fclose(file);
-	}
-	
-	free(buffer);
-	
 	while (aptMainLoop())
 	{
 		hidScanInput();
@@ -92,7 +73,7 @@ void displayText(char * path)
 		digitalTime(346, 1);
 		
 		sftd_draw_textf(font, 40, 30, RGBA8(251, 251, 251, 255), 11, "%s", fileName);
-		sftd_draw_textf(font, 5, 56, RGBA8(0, 0, 0, 255), 11, "%s\n", buffer);
+		sftd_draw_textf(font, 5, 56, RGBA8(0, 0, 0, 255), 11, "%s\n", displayFileContents(path));
 		
 		endDrawing();
 		

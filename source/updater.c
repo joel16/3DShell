@@ -1,3 +1,4 @@
+#include "fs.h"
 #include "main.h"
 #include "updater.h"
 
@@ -128,8 +129,6 @@ void downloadUpdate()
 	}
 }
 
-static FS_Archive sdmcArchive;
-
 Handle openFileHandle(const char *path, u32 openFlags) 
 {
 	Handle fileHandle = 0;
@@ -145,49 +144,19 @@ void closeFileHandle(const Handle handle)
 	FSFILE_Close(handle);
 }
 
-static char buffer[BUFFERSIZE];
-
-int installTitleFromCIA(const char *path) 
+void installCIA(const u8* ciaData, const size_t ciaSize) 
 {
-	Handle ciaIN, ciaOut;
-	u32 bytesread;
-	u32 byteswritten;
-	u64 totalread;
-  
-	ciaIN = openFileHandle(path, FS_OPEN_READ);
-	
-	if(ciaIN == 0) 
-		return -1;
-
-	AM_StartCiaInstall(MEDIATYPE_SD, &ciaOut);
-  
-	bytesread = BUFFERSIZE;
-	totalread = 0;
-	
-	while(bytesread == BUFFERSIZE) 
-	{
-		FSFILE_Read(ciaIN, &bytesread, totalread, buffer, BUFFERSIZE);
-		FSFILE_Write(ciaOut, &byteswritten, totalread, buffer, bytesread, FS_WRITE_FLUSH);
-    
-		if(byteswritten < bytesread) 
-			return -2;
-    
-		totalread += bytesread;
-	}
-
-	AM_FinishCiaInstall(ciaOut);
-  
-	closeFileHandle(ciaIN);
-	
-	return 0;
+	Handle handle;
+	AM_QueryAvailableExternalTitleDatabase(NULL);
+	AM_StartCiaInstall(MEDIATYPE_SD, &handle);
+	FSFILE_Write(handle, NULL, 0, ciaData, (u32)ciaSize, 0);
+	AM_FinishCiaInstall(handle);
+	//AM_CancelCIAInstall(handle);	// Installation aborted.
 }
 
 void installUpdate()
 {
-	char * ciaData = NULL;
-	strcpy(ciaData, "/3ds/3DShell/3DShell.cia");
-
-	installTitleFromCIA(ciaData);
+	//installCIA(&ciaData, sizeof(ciaData));
 	
 	sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, "Update completed")) / 2), 80, RGBA8(251, 251, 251, 255), 11, "Update completed");
 	

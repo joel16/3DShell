@@ -115,3 +115,14 @@ u8 getLanguage()
 	
 	return language;
 }
+
+bool isN3DS()
+{
+	bool isNew3DS = 0;
+    APT_CheckNew3DS(&isNew3DS);
+    
+	if (isNew3DS)
+		return true;
+	else
+		return false;
+}

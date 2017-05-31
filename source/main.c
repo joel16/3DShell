@@ -1,6 +1,7 @@
 #include "act.h"
 #include "clock.h"
 #include "fs.h"
+#include "ftp.h"
 #include "gallery.h"
 #include "keyboard.h"
 #include "main.h"
@@ -11,6 +12,7 @@
 #include "text.h"
 #include "updater.h"
 #include "utils.h"
+#include "wifi.h"
 
 /*
 *	Menu position
@@ -121,17 +123,20 @@ void initServices()
 	fsInit();
 	sdmcInit();
 	openSdArchive();
+	sdmcWriteSafe(false);
+	aptInit();
 	mcuInit();
 	ptmuInit();
 	hidInit();
+	cfguInit();
 	acInit();
-	actInit(SDK(11,2,0,200), 0x20000);
-	romfsInit();
-	sf2d_init();
-	sftd_init();
+	actInit(SDK(11, 2, 0, 200), 0x20000);
 	httpcInit(0);
 	amInit();
 	AM_InitializeExternalTitleDatabase(false);
+	romfsInit();
+	sf2d_init();
+	sftd_init();
 	
 	audio_init();
 	
@@ -159,12 +164,14 @@ void initServices()
 	nandIcon = sfil_load_PNG_file("romfs:/res/nand.png", SF2D_PLACE_RAM); setBilinearFilter(nandIcon);
 	settingsIcon = sfil_load_PNG_file("romfs:/res/settings.png", SF2D_PLACE_RAM); setBilinearFilter(settingsIcon);
 	updateIcon = sfil_load_PNG_file("romfs:/res/update.png", SF2D_PLACE_RAM); setBilinearFilter(updateIcon);
+	ftpIcon = sfil_load_PNG_file("romfs:/res/ftp.png", SF2D_PLACE_RAM); setBilinearFilter(ftpIcon);
 	s_HomeIcon = sfil_load_PNG_file("romfs:/res/s_home.png", SF2D_PLACE_RAM); setBilinearFilter(s_HomeIcon);
 	s_OptionsIcon = sfil_load_PNG_file("romfs:/res/s_options_icon.png", SF2D_PLACE_RAM); setBilinearFilter(s_OptionsIcon);
 	s_SdIcon = sfil_load_PNG_file("romfs:/res/s_sd.png", SF2D_PLACE_RAM); setBilinearFilter(s_SdIcon);
 	s_SettingsIcon = sfil_load_PNG_file("romfs:/res/s_settings.png", SF2D_PLACE_RAM); setBilinearFilter(s_SettingsIcon);
 	s_NandIcon = sfil_load_PNG_file("romfs:/res/s_nand.png", SF2D_PLACE_RAM); setBilinearFilter(s_NandIcon);
 	s_UpdateIcon = sfil_load_PNG_file("romfs:/res/s_update.png", SF2D_PLACE_RAM); setBilinearFilter(s_UpdateIcon);
+	s_ftpIcon = sfil_load_PNG_file("romfs:/res/s_ftp.png", SF2D_PLACE_RAM); setBilinearFilter(s_ftpIcon);
 	searchIcon = sfil_load_PNG_file("romfs:/res/search.png", SF2D_PLACE_RAM); setBilinearFilter(searchIcon);
 	
 	toggleOn = sfil_load_PNG_file("romfs:/res/toggleOn.png", SF2D_PLACE_RAM); setBilinearFilter(toggleOn);
@@ -180,10 +187,17 @@ void initServices()
 	_100 = sfil_load_PNG_file("romfs:/res/battery/100.png", SF2D_PLACE_RAM); setBilinearFilter(_100);
 	_charge = sfil_load_PNG_file("romfs:/res/battery/charge.png", SF2D_PLACE_RAM); setBilinearFilter(_charge);
 	
+	wifiIcon0 = sfil_load_PNG_file("romfs:/res/wifi/stat_sys_wifi_signal_0.png", SF2D_PLACE_RAM); setBilinearFilter(wifiIcon0);
+	wifiIcon1 = sfil_load_PNG_file("romfs:/res/wifi/stat_sys_wifi_signal_1.png", SF2D_PLACE_RAM); setBilinearFilter(wifiIcon1);
+	wifiIcon2 = sfil_load_PNG_file("romfs:/res/wifi/stat_sys_wifi_signal_2.png", SF2D_PLACE_RAM); setBilinearFilter(wifiIcon2);
+	wifiIcon3 = sfil_load_PNG_file("romfs:/res/wifi/stat_sys_wifi_signal_3.png", SF2D_PLACE_RAM); setBilinearFilter(wifiIcon3);
+	wifiIconNull = sfil_load_PNG_file("romfs:/res/wifi/stat_sys_wifi_signal_null.png", SF2D_PLACE_RAM); setBilinearFilter(wifiIconNull);
+	
 	font = sftd_load_font_mem(Roboto_ttf, Roboto_ttf_size);
 	font2 = sftd_load_font_mem(Roboto_ttf, Roboto_ttf_size);
 	
-	osSetSpeedupEnable(true);
+	if (isN3DS())
+		osSetSpeedupEnable(true);
 	
 	installDirectories();
 	
@@ -201,6 +215,8 @@ void initServices()
 
 void termServices()
 {
+	osSetSpeedupEnable(0);
+	
 	sftd_free_font(font);
 	sftd_free_font(font2);
 	
@@ -247,18 +263,82 @@ void termServices()
 	sf2d_free_texture(uncheck);
 	
 	audio_stop();
-	amExit();
-	httpcExit();
 	sftd_fini();
 	sf2d_fini();
 	romfsExit();
+	amExit();
+	httpcExit();
 	acExit();
+	cfguExit();
 	hidExit();
 	ptmuExit();
 	mcuExit();
+	aptExit();
 	closeSdArchive();
 	sdmcExit();
 	fsExit();
+}
+
+static loop_status_t loop(loop_status_t (*callback)(void))
+{
+	loop_status_t status = LOOP_CONTINUE;
+
+	while(aptMainLoop())
+	{
+		sf2d_start_frame(GFX_BOTTOM, GFX_LEFT);
+		
+		sf2d_draw_rectangle(0, 0, 320, 240, RGBA8(30, 136, 229, 255));
+		sf2d_draw_rectangle(0, 0, 320, 20, RGBA8(25, 118, 210, 255));
+		
+		sf2d_draw_texture(homeIcon, -2, -2);
+		sf2d_draw_texture(optionsIcon, 25, 0);
+		sf2d_draw_texture(settingsIcon, 50, 0);
+		sf2d_draw_texture(updateIcon, 75, 0);
+		sf2d_draw_texture(s_ftpIcon, 100, 0);
+		
+		if (BROWSE_STATE == STATE_SD)
+			sf2d_draw_texture(s_SdIcon, 125, 0);
+		else
+			sf2d_draw_texture(sdIcon, 125, 0);
+	
+		if (BROWSE_STATE == STATE_NAND)
+			sf2d_draw_texture(s_NandIcon, 150, 0);
+		else
+			sf2d_draw_texture(nandIcon, 150, 0);
+		
+		sf2d_draw_texture(searchIcon, (320 - searchIcon->width), -2);
+		
+		char buf[25];
+		
+		u32 wifiStatus = 0;
+		ACU_GetWifiStatus(&wifiStatus);
+		
+		if (wifiStatus == 0)
+		{
+			sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, "Failed to initialize FTP.")) / 2), 40, RGBA8(251, 251, 251, 255), 11, "Failed to initialize FTP.");
+			sprintf(buf, "WiFi not enabled.");
+		}
+		else
+		{
+			sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, "FTP initialized")) / 2), 40, RGBA8(251, 251, 251, 255), 11, "FTP initialized");
+			u32 ip = gethostid();
+			sprintf(buf, "IP: %lu.%lu.%lu.%lu:5000", ip & 0xFF, (ip>>8)&0xFF, (ip>>16)&0xFF, (ip>>24)&0xFF);
+		}
+		
+		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, buf)) / 2), 60, RGBA8(251, 251, 251, 255), 11, buf);
+		
+		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, "File browser cannot be accessed at this time.")) / 2), 80, RGBA8(251, 251, 251, 255), 11, "File browser cannot be accessed at this time.");
+		
+		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, "Tap the FTP icon to disable FTP connection.")) / 2), 100, RGBA8(251, 251, 251, 255), 11, "Tap the FTP icon to disable FTP connection.");
+		
+		endDrawing();
+		
+		status = callback();
+		if(status != LOOP_CONTINUE)
+			return status;
+	}
+
+	return LOOP_EXIT;
 }
 
 void mainMenu(int clearindex)
@@ -285,8 +365,10 @@ turnOffBGM:
 	if ((isPlaying) && (bgmEnable == false))
 		sound_stop(bgm);*/
 	
+	loop_status_t status = LOOP_OFF;
+	
 	while (aptMainLoop())
-    {
+	{
 		// Display file list
 		displayFiles(KEEP);
 		
@@ -351,6 +433,45 @@ turnOffBGM:
 		}
 		
 		if ((kPress & KEY_TOUCH) && (touchInRect(98, 123, 0, 20)))
+		{	
+			wait(100000000);
+			DEFAULT_STATE = STATE_FTP;
+			wait(100000000);
+			status = LOOP_RESTART;
+		}
+		
+		if (DEFAULT_STATE == STATE_FTP)
+		{
+			while (status == LOOP_RESTART)
+			{
+				if(ftp_init() == 0)
+				{
+					// ftp loop
+					status = loop(ftp_loop);
+
+					// done with ftp
+					ftp_exit();
+				}
+				else
+				{
+					wait(100000000);
+					status = LOOP_EXIT;
+					DEFAULT_STATE = STATE_HOME;
+				}
+			}
+		
+			u64 id;
+			APT_GetProgramID(&id);
+
+			if(id != 0x000400000BEEF500)
+			{
+				wait(100000000);
+				status = LOOP_EXIT;
+				DEFAULT_STATE = STATE_HOME;
+			}
+		}
+		
+		if ((kPress & KEY_TOUCH) && (touchInRect(124, 157, 0, 20)))
 		{
 			wait(100000000);
 			char buf[250];
@@ -368,7 +489,7 @@ turnOffBGM:
 			updateList(CLEAR);
 			displayFiles(CLEAR);
 		}
-		/*else if ((kPress & KEY_TOUCH) && (touchInRect(124, 157, 0, 20))) //Mount stuff goes here
+		/*else if ((kPress & KEY_TOUCH) && (touchInRect(158, 173, 0, 20))) //Mount stuff goes here
 		{
 			wait(100000000);
 			strcpy(cwd, "nand:/");
@@ -392,7 +513,7 @@ turnOffBGM:
 		}
 		
 		if (kPress & KEY_START) // exit
-			break;
+			break;			
 		
 		if(fileCount > 0)
 		{
@@ -717,7 +838,7 @@ void displayFiles()
 	
 	if (DEFAULT_STATE == STATE_SETTINGS)
 	{
-		sf2d_draw_texture(s_SettingsIcon, 50, 0);
+		sf2d_draw_texture(s_SettingsIcon, 50, 1);
 		sf2d_draw_rectangle(0, 20, 320, 220, RGBA8(251, 251, 251, 255));
 		
 		sftd_draw_text(font, 10, 30, RGBA8(30, 136, 229, 255), 11, "General");
@@ -739,7 +860,7 @@ void displayFiles()
 			sf2d_draw_texture(toggleOff, 280, 90);
 	}
 	else
-		sf2d_draw_texture(settingsIcon, 50, 0);
+		sf2d_draw_texture(settingsIcon, 50, 1);
 	
 	if (DEFAULT_STATE == STATE_UPDATE)
 	{
@@ -756,15 +877,17 @@ void displayFiles()
 	else
 		sf2d_draw_texture(updateIcon, 75, 0);
 	
+	sf2d_draw_texture(ftpIcon, 100, 0);
+			
 	if (BROWSE_STATE == STATE_SD)
-		sf2d_draw_texture(s_SdIcon, 100, 0);
+		sf2d_draw_texture(s_SdIcon, 125, 0);
 	else
-		sf2d_draw_texture(sdIcon, 100, 0);
+		sf2d_draw_texture(sdIcon, 125, 0);
 	
 	if (BROWSE_STATE == STATE_NAND)
-		sf2d_draw_texture(s_NandIcon, 125, 0);
+		sf2d_draw_texture(s_NandIcon, 150, 0);
 	else
-		sf2d_draw_texture(nandIcon, 125, 0);
+		sf2d_draw_texture(nandIcon, 150, 0);
 	
 	sf2d_draw_texture(searchIcon, (320 - searchIcon->width), -2);
 	
@@ -814,6 +937,7 @@ void displayFiles()
 	
 	sftd_draw_textf(font, 84, 28, RGBA8(255, 255, 255, 255), 11, "%.35s", cwd); // Display current path
 	
+	drawWifiStatus(270, 2);
 	drawBatteryStatus(295, 2);
 	digitalTime(346, 1);
 	

@@ -19,7 +19,7 @@
 
 sf2d_texture	*background, *options, *_properties, *selector, *deletion, *folderIcon, *fileIcon, *uncheck,
 				*audioIcon, *appIcon, *txtIcon, *systemIcon, *zipIcon, *imgIcon, *homeIcon, *optionsIcon, *sdIcon, *nandIcon,
-				*s_HomeIcon, *s_OptionsIcon, *s_SdIcon, *s_NandIcon, *settingsIcon, *s_SettingsIcon, 
+				*ftpIcon, *s_HomeIcon, *s_OptionsIcon, *s_SdIcon, *s_NandIcon, *settingsIcon, *s_SettingsIcon, *s_ftpIcon,
 				*searchIcon, *updateIcon, *s_UpdateIcon, *toggleOn, *toggleOff;
 
 sftd_font	*font, *font2;
@@ -72,6 +72,7 @@ int selectionX, selectionY, BROWSE_STATE, DEFAULT_STATE;
 #define STATE_OPTIONS 1
 #define STATE_SETTINGS 2
 #define STATE_UPDATE 3
+#define STATE_FTP 4
 #define STATE_SD 0
 #define STATE_NAND 1
 #define IF_OPTIONS	((DEFAULT_STATE != STATE_HOME) && (DEFAULT_STATE != STATE_UPDATE) && (DEFAULT_STATE != STATE_SETTINGS))

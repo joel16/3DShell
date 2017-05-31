@@ -19,5 +19,6 @@ void setConfig(char * path, bool set);
 const char * getLastNChars(char * str, int n);
 u8 getRegion();
 u8 getLanguage();
+bool isN3DS();
 
 #endif
