@@ -1,5 +1,8 @@
 #include "clock.h"
 #include "main.h"
+#include "theme.h"
+
+struct topScreen_bar_colour TopScreen_bar_colour;
 
 void digitalTime()
 {
@@ -17,9 +20,9 @@ void digitalTime()
 		hours = hours - 12;
 
 	if (hours >= 1 && hours < 10)  
-		sftd_draw_textf(font, 395 - sftd_get_text_width(font, 11, "0:00 XM"), 1, RGBA8(255, 255, 255, 255), 11, "%2i:%02i %s", hours, minutes, amOrPm ? "AM" : "PM");
+		sftd_draw_textf(font, 395 - sftd_get_text_width(font, 11, "0:00 XM"), 1, RGBA8(TopScreen_bar_colour.r, TopScreen_bar_colour.g, TopScreen_bar_colour.b, 255), 11, "%2i:%02i %s", hours, minutes, amOrPm ? "AM" : "PM");
 	else
-		sftd_draw_textf(font, 395 - sftd_get_text_width(font, 11, "00:00 XM"), 1, RGBA8(255, 255, 255, 255), 11, "%2i:%02i %s", hours, minutes, amOrPm ? "AM" : "PM");
+		sftd_draw_textf(font, 395 - sftd_get_text_width(font, 11, "00:00 XM"), 1, RGBA8(TopScreen_bar_colour.r, TopScreen_bar_colour.g, TopScreen_bar_colour.b, 255), 11, "%2i:%02i %s", hours, minutes, amOrPm ? "AM" : "PM");
 }
 
 char * getDayOfWeek(int type)

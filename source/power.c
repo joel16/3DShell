@@ -1,6 +1,9 @@
 #include "main.h"
 #include "mcu.h"
 #include "power.h"
+#include "theme.h"
+
+struct topScreen_bar_colour TopScreen_bar_colour;
 
 void drawBatteryStatus(int x, int y)
 {
@@ -31,7 +34,7 @@ void drawBatteryStatus(int x, int y)
 		sf2d_draw_texture(_charge, x, y);
 	
 	if(batteryPercent == 100)
-		sftd_draw_textf(font, x + 15, y - 1, RGBA8(255, 255, 255, 255), 11, "100%%");
+		sftd_draw_textf(font, x + 15, y - 1, RGBA8(TopScreen_bar_colour.r, TopScreen_bar_colour.g, TopScreen_bar_colour.b, 255), 11, "100%%");
 	else
-		sftd_draw_textf(font, x + 20, y - 1, RGBA8(255, 255, 255, 255), 11, "%3d%%", batteryPercent);
+		sftd_draw_textf(font, x + 20, y - 1, RGBA8(TopScreen_bar_colour.r, TopScreen_bar_colour.g, TopScreen_bar_colour.b, 255), 11, "%3d%%", batteryPercent);
 }

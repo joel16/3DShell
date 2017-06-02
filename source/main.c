@@ -10,9 +10,25 @@
 #include "screenshot.h"
 #include "sound.h"
 #include "text.h"
+#include "theme.h"
 #include "updater.h"
 #include "utils.h"
 #include "wifi.h"
+
+struct storage_colour Storage_colour;
+struct topScreen_colour TopScreen_colour;
+struct topScreen_min_colour TopScreen_min_colour;
+struct topScreen_bar_colour TopScreen_bar_colour;
+struct bottomScreen_colour BottomScreen_colour;
+struct bottomScreen_bar_colour BottomScreen_bar_colour;
+struct bottomScreen_text_colour BottomScreen_text_colour;
+struct options_select_colour Options_select_colour;
+struct options_text_colour Options_text_colour;
+struct options_title_text_colour Options_title_text_colour;
+struct settings_colour Settings_colour;
+struct settings_title_text_colour Settings_title_text_colour;
+struct settings_text_colour Settings_text_colour;
+struct settings_text_min_colour Settings_text_min_colour;
 
 /*
 *	Menu position
@@ -53,6 +69,13 @@ void installDirectories()
 		makeDir("/3ds");
 	if (!(dirExists("/3ds/3DShell/")))
 		makeDir("/3ds/3DShell");
+	if (!(dirExists("/3ds/3DShell/themes/")))
+		makeDir("/3ds/3DShell/themes");
+	if (!(dirExists("/3ds/3DShell/themes/default/")))
+		makeDir("/3ds/3DShell/themes/default");
+	if (!(dirExists("/3ds/3DShell/fonts/")))
+		makeDir("/3ds/3DShell/fonts");
+	
 	if (fileExists("/3ds/3DShell/lastdir.txt"))
 	{
 		char buf[250];
@@ -143,20 +166,24 @@ void initServices()
 	sf2d_set_clear_color(RGBA8(0, 0, 0, 255));
 	sf2d_set_vblank_wait(0);
 	
-	background = sfil_load_PNG_file("romfs:/res/background.png", SF2D_PLACE_RAM); setBilinearFilter(background);
-	options = sfil_load_PNG_file("romfs:/res/options.png", SF2D_PLACE_RAM); setBilinearFilter(options);
-	_properties = sfil_load_PNG_file("romfs:/res/properties.png", SF2D_PLACE_RAM); setBilinearFilter(_properties);
-	deletion = sfil_load_PNG_file("romfs:/res/delete.png", SF2D_PLACE_RAM); setBilinearFilter(deletion);
-	selector = sfil_load_PNG_file("romfs:/res/selector.png", SF2D_PLACE_RAM); setBilinearFilter(selector);
-	folderIcon = sfil_load_PNG_file("romfs:/res/folder.png", SF2D_PLACE_RAM); setBilinearFilter(folderIcon);
-	fileIcon = sfil_load_PNG_file("romfs:/res/file.png", SF2D_PLACE_RAM); setBilinearFilter(fileIcon); 
-	audioIcon = sfil_load_PNG_file("romfs:/res/audio.png", SF2D_PLACE_RAM); setBilinearFilter(audioIcon);
-	appIcon = sfil_load_PNG_file("romfs:/res/app.png", SF2D_PLACE_RAM); setBilinearFilter(appIcon);
-	txtIcon = sfil_load_PNG_file("romfs:/res/txt.png", SF2D_PLACE_RAM); setBilinearFilter(txtIcon);
-	systemIcon = sfil_load_PNG_file("romfs:/res/system.png", SF2D_PLACE_RAM); setBilinearFilter(systemIcon);
-	zipIcon = sfil_load_PNG_file("romfs:/res/zip.png", SF2D_PLACE_RAM); setBilinearFilter(zipIcon);
-	imgIcon = sfil_load_PNG_file("romfs:/res/img.png", SF2D_PLACE_RAM); setBilinearFilter(imgIcon);
-	uncheck = sfil_load_PNG_file("romfs:/res/uncheck.png", SF2D_PLACE_RAM); setBilinearFilter(uncheck);
+	installDirectories();
+	
+	loadTheme();
+	
+	background = sfil_load_PNG_file(background_path, SF2D_PLACE_RAM); setBilinearFilter(background);
+	options = sfil_load_PNG_file(options_path, SF2D_PLACE_RAM); setBilinearFilter(options);
+	_properties = sfil_load_PNG_file(properties_path, SF2D_PLACE_RAM); setBilinearFilter(_properties);
+	deletion = sfil_load_PNG_file(deletion_path, SF2D_PLACE_RAM); setBilinearFilter(deletion);
+	selector = sfil_load_PNG_file(selector_path, SF2D_PLACE_RAM); setBilinearFilter(selector);
+	folderIcon = sfil_load_PNG_file(folder_path, SF2D_PLACE_RAM); setBilinearFilter(folderIcon);
+	fileIcon = sfil_load_PNG_file(file_path, SF2D_PLACE_RAM); setBilinearFilter(fileIcon); 
+	audioIcon = sfil_load_PNG_file(audio_path, SF2D_PLACE_RAM); setBilinearFilter(audioIcon);
+	appIcon = sfil_load_PNG_file(app_path, SF2D_PLACE_RAM); setBilinearFilter(appIcon);
+	txtIcon = sfil_load_PNG_file(txt_path, SF2D_PLACE_RAM); setBilinearFilter(txtIcon);
+	systemIcon = sfil_load_PNG_file(system_path, SF2D_PLACE_RAM); setBilinearFilter(systemIcon);
+	zipIcon = sfil_load_PNG_file(zip_path, SF2D_PLACE_RAM); setBilinearFilter(zipIcon);
+	imgIcon = sfil_load_PNG_file(img_path, SF2D_PLACE_RAM); setBilinearFilter(imgIcon);
+	uncheck = sfil_load_PNG_file(uncheck_path, SF2D_PLACE_RAM); setBilinearFilter(uncheck);
 	
 	homeIcon = sfil_load_PNG_file("romfs:/res/home.png", SF2D_PLACE_RAM); setBilinearFilter(homeIcon);
 	optionsIcon = sfil_load_PNG_file("romfs:/res/options_icon.png", SF2D_PLACE_RAM); setBilinearFilter(optionsIcon);
@@ -165,6 +192,7 @@ void initServices()
 	settingsIcon = sfil_load_PNG_file("romfs:/res/settings.png", SF2D_PLACE_RAM); setBilinearFilter(settingsIcon);
 	updateIcon = sfil_load_PNG_file("romfs:/res/update.png", SF2D_PLACE_RAM); setBilinearFilter(updateIcon);
 	ftpIcon = sfil_load_PNG_file("romfs:/res/ftp.png", SF2D_PLACE_RAM); setBilinearFilter(ftpIcon);
+	themeIcon = sfil_load_PNG_file("romfs:/res/theme.png", SF2D_PLACE_RAM); setBilinearFilter(themeIcon);
 	s_HomeIcon = sfil_load_PNG_file("romfs:/res/s_home.png", SF2D_PLACE_RAM); setBilinearFilter(s_HomeIcon);
 	s_OptionsIcon = sfil_load_PNG_file("romfs:/res/s_options_icon.png", SF2D_PLACE_RAM); setBilinearFilter(s_OptionsIcon);
 	s_SdIcon = sfil_load_PNG_file("romfs:/res/s_sd.png", SF2D_PLACE_RAM); setBilinearFilter(s_SdIcon);
@@ -198,8 +226,6 @@ void initServices()
 	
 	if (isN3DS())
 		osSetSpeedupEnable(true);
-	
-	installDirectories();
 	
 	strcpy(userName, (char*)getNNID());
 	sprintf(welcomeMsg, "Hello there %s! How are you today?", userName);
@@ -239,12 +265,15 @@ void termServices()
 	sf2d_free_texture(nandIcon);
 	sf2d_free_texture(settingsIcon);
 	sf2d_free_texture(updateIcon);
+	sf2d_free_texture(ftpIcon);
+	sf2d_free_texture(themeIcon);
 	sf2d_free_texture(s_HomeIcon);
 	sf2d_free_texture(s_OptionsIcon);
 	sf2d_free_texture(s_SdIcon);
 	sf2d_free_texture(s_SettingsIcon);
 	sf2d_free_texture(s_NandIcon);
 	sf2d_free_texture(s_UpdateIcon);
+	sf2d_free_texture(s_ftpIcon);
 	sf2d_free_texture(searchIcon);
 	
 	sf2d_free_texture(background);
@@ -315,21 +344,21 @@ static loop_status_t loop(loop_status_t (*callback)(void))
 		
 		if (wifiStatus == 0)
 		{
-			sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, "Failed to initialize FTP.")) / 2), 40, RGBA8(251, 251, 251, 255), 11, "Failed to initialize FTP.");
+			sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, "Failed to initialize FTP.")) / 2), 40, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), 11, "Failed to initialize FTP.");
 			sprintf(buf, "WiFi not enabled.");
 		}
 		else
 		{
-			sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, "FTP initialized")) / 2), 40, RGBA8(251, 251, 251, 255), 11, "FTP initialized");
+			sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, "FTP initialized")) / 2), 40, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), 11, "FTP initialized");
 			u32 ip = gethostid();
 			sprintf(buf, "IP: %lu.%lu.%lu.%lu:5000", ip & 0xFF, (ip>>8)&0xFF, (ip>>16)&0xFF, (ip>>24)&0xFF);
 		}
 		
-		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, buf)) / 2), 60, RGBA8(251, 251, 251, 255), 11, buf);
+		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, buf)) / 2), 60, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), 11, buf);
 		
-		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, "File browser cannot be accessed at this time.")) / 2), 80, RGBA8(251, 251, 251, 255), 11, "File browser cannot be accessed at this time.");
+		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, "File browser cannot be accessed at this time.")) / 2), 80, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), 11, "File browser cannot be accessed at this time.");
 		
-		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, "Tap the FTP icon to disable FTP connection.")) / 2), 100, RGBA8(251, 251, 251, 255), 11, "Tap the FTP icon to disable FTP connection.");
+		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, "Tap the FTP icon to disable FTP connection.")) / 2), 100, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), 11, "Tap the FTP icon to disable FTP connection.");
 		
 		endDrawing();
 		
@@ -432,6 +461,15 @@ turnOffBGM:
 			}
 		}
 		
+		else if ((kPress & KEY_TOUCH) && (touchInRect(283, 303, 125, 145)) && (IF_SETTINGS))
+		{
+			wait(100000000);
+			DEFAULT_STATE = STATE_THEME;
+			strcpy(cwd, "/3ds/3DShell/themes/");
+			updateList(CLEAR);
+			displayFiles(CLEAR);
+		}
+		
 		if ((kPress & KEY_TOUCH) && (touchInRect(98, 123, 0, 20)))
 		{	
 			wait(100000000);
@@ -471,7 +509,7 @@ turnOffBGM:
 			}
 		}
 		
-		if ((kPress & KEY_TOUCH) && (touchInRect(124, 157, 0, 20)))
+		if ((kPress & KEY_TOUCH) && (touchInRect(124, 147, 0, 20)))
 		{
 			wait(100000000);
 			char buf[250];
@@ -489,7 +527,7 @@ turnOffBGM:
 			updateList(CLEAR);
 			displayFiles(CLEAR);
 		}
-		/*else if ((kPress & KEY_TOUCH) && (touchInRect(158, 173, 0, 20))) //Mount stuff goes here
+		/*else if ((kPress & KEY_TOUCH) && (touchInRect(148, 173, 0, 20))) //Mount stuff goes here
 		{
 			wait(100000000);
 			strcpy(cwd, "nand:/");
@@ -577,16 +615,84 @@ turnOffBGM:
 			{
 				wait(1000000);
 				
-				openFile(); // Open file/dir
+				if (IF_THEME)
+				{
+					File * file = findindex(position);
+					
+					strcpy(fileName, file->name);
+					
+					if ((strcmp(fileName, "default") == 0))
+					{
+						strcpy(theme_dir, "romfs:/res");
+						strcpy(font_dir, "/3ds/3DShell");
+						FILE * file = fopen("/3ds/3DShell/theme.bin", "w");
+						fprintf(file, "%s", theme_dir);
+						fclose(file);
+						
+						file = fopen("/3ds/3DShell/font.bin", "w");
+						fprintf(file, "%s", font_dir);
+						fclose(file);
+						
+						wait(1000000);
+						
+						loadTheme();
+						reloadTheme();
+					}
+					else if ((strcmp(fileName, "..") != 0))
+					{
+						strcpy(theme_dir, cwd);
+						strcpy(font_dir, cwd);
+						strcat(theme_dir, fileName);
+						strcat(font_dir, fileName);
+						
+						FILE * file = fopen("/3ds/3DShell/theme.bin", "w");
+						fprintf(file, "%s", theme_dir);
+						fclose(file);
+						
+						file = fopen("/3ds/3DShell/font.bin", "w");
+						fprintf(file, "%s", font_dir);
+						fclose(file);
+						
+						wait(1000000);
+						
+						loadTheme();
+						reloadTheme();
+					}
+				}
+				else
+					openFile(); // Open file/dir
 			}
 			
 			else if ((strcmp(cwd, ROOT_PATH) != 0) && (kPress & KEY_B))
 			{
 				wait(1000000);
 				
-				navigate(-1);
-				updateList(CLEAR);
-				displayFiles(CLEAR);
+				if (IF_THEME)
+				{
+					char buf[250];
+		
+					FILE * read = fopen("/3ds/3DShell/lastdir.txt", "r");
+					fscanf(read, "%s", buf);
+					fclose(read);
+			
+					if (dirExists(buf)) // Incase a directory previously visited had been deleted, set start path to sdmc:/ to avoid errors.
+						strcpy(cwd, buf);
+					else 
+						strcpy(cwd, START_PATH);
+					
+					wait(1000000);
+					
+					DEFAULT_STATE = STATE_SETTINGS;
+					updateList(CLEAR);
+					displayFiles(CLEAR);
+				}
+				
+				else
+				{
+					navigate(-1);
+					updateList(CLEAR);
+					displayFiles(CLEAR);
+				}
 			}
 			
 			/*else if ((strcmp(cwd, ROOT_PATH) != 0) && (kPress & KEY_X))
@@ -823,15 +929,15 @@ void displayFiles()
 	// Bottom screen options
 	sf2d_start_frame(GFX_BOTTOM, GFX_LEFT);
 		
-	sf2d_draw_rectangle(0, 0, 320, 240, RGBA8(30, 136, 229, 255));
-	sf2d_draw_rectangle(0, 0, 320, 20, RGBA8(25, 118, 210, 255));
+	sf2d_draw_rectangle(0, 0, 320, 240, RGBA8(BottomScreen_colour.r, BottomScreen_colour.g, BottomScreen_colour.b, 255));
+	sf2d_draw_rectangle(0, 0, 320, 20, RGBA8(BottomScreen_bar_colour.r, BottomScreen_bar_colour.g, BottomScreen_bar_colour.b, 255));
 	
 	if (DEFAULT_STATE == STATE_HOME)
 	{
 		sf2d_draw_texture(s_HomeIcon, -2, -2);
-		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, welcomeMsg)) / 2), 40, RGBA8(251, 251, 251, 255), 11, welcomeMsg);
-		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, currDate)) / 2), 60, RGBA8(251, 251, 251, 255), 11, currDate);
-		sftd_draw_textf(font, 2, 225, RGBA8(251, 251, 251, 255), 11, "3DShell v%i.%i BETA", VERSION_MAJOR, VERSION_MINOR);
+		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, welcomeMsg)) / 2), 40, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), 11, welcomeMsg);
+		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, currDate)) / 2), 60, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), 11, currDate);
+		sftd_draw_textf(font, 2, 225, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), 11, "3DShell v%i.%i BETA", VERSION_MAJOR, VERSION_MINOR);
 	}
 	else
 		sf2d_draw_texture(homeIcon, -2, -2);
@@ -839,15 +945,18 @@ void displayFiles()
 	if (DEFAULT_STATE == STATE_SETTINGS)
 	{
 		sf2d_draw_texture(s_SettingsIcon, 50, 1);
-		sf2d_draw_rectangle(0, 20, 320, 220, RGBA8(251, 251, 251, 255));
+		sf2d_draw_rectangle(0, 20, 320, 220, RGBA8(Settings_colour.r, Settings_colour.g, Settings_colour.b, 255));
 		
-		sftd_draw_text(font, 10, 30, RGBA8(30, 136, 229, 255), 11, "General");
+		sftd_draw_text(font, 10, 30, RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255), 11, "General");
 		
-		sftd_draw_text(font, 10, 50, RGBA8(120, 120, 120, 255), 11, "BGM"); // Grey'd out - cannot be accessed yet.
-		sftd_draw_text(font2, 10, 62, RGBA8(120, 120, 120, 255), 10, "Enable BGM upon start up. (/3ds/3DShell/bgm.ogg)");
+		sftd_draw_text(font, 10, 50, RGBA8(Settings_text_min_colour.r, Settings_text_min_colour.g, Settings_text_min_colour.b, 255), 11, "BGM"); // Grey'd out - cannot be accessed yet.
+		sftd_draw_text(font2, 10, 62, RGBA8(Settings_text_min_colour.r, Settings_text_min_colour.g, Settings_text_min_colour.b, 255), 10, "Enable BGM upon start up. (/3ds/3DShell/bgm.ogg)");
 		
-		sftd_draw_text(font, 10, 90, RGBA8(32, 32, 32, 255), 11, "System file protection");
-		sftd_draw_text(font2, 10, 102, RGBA8(120, 120, 120, 255), 10, "Prevents deletion of system files.");
+		sftd_draw_text(font, 10, 90, RGBA8(Settings_text_colour.r, Settings_text_colour.g, Settings_text_colour.b, 255), 11, "System file protection");
+		sftd_draw_text(font2, 10, 102, RGBA8(Settings_text_min_colour.r, Settings_text_min_colour.g, Settings_text_min_colour.b, 255), 10, "Prevents deletion of system files.");
+		
+		sftd_draw_text(font, 10, 130, RGBA8(Settings_text_colour.r, Settings_text_colour.g, Settings_text_colour.b, 255), 11, "Custom themes");
+		sftd_draw_textf(font2, 10, 142, RGBA8(Settings_text_min_colour.r, Settings_text_min_colour.g, Settings_text_min_colour.b, 255), 10, "Current: %s", theme_dir);
 		
 		if (bgmEnable)
 			sf2d_draw_texture(toggleOn, 280, 50);
@@ -858,6 +967,8 @@ void displayFiles()
 			sf2d_draw_texture(toggleOn, 280, 90);
 		else 
 			sf2d_draw_texture(toggleOff, 280, 90);
+		
+		sf2d_draw_texture(themeIcon, 283, 125);
 	}
 	else
 		sf2d_draw_texture(settingsIcon, 50, 1);
@@ -865,7 +976,7 @@ void displayFiles()
 	if (DEFAULT_STATE == STATE_UPDATE)
 	{
 		sf2d_draw_texture(s_UpdateIcon, 75, 0);
-		sftd_draw_text(font, ((320 - (sftd_get_text_width(font, 11, "Checking for updates..."))) / 2), 40, RGBA8(251, 251, 251, 255), 11, "Checking for updates...");
+		sftd_draw_text(font, ((320 - (sftd_get_text_width(font, 11, "Checking for updates..."))) / 2), 40, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), 11, "Checking for updates...");
 		wait(100000000);
 		
 		if (strcmp(checkForUpdate(), "Update found") == 0)
@@ -878,6 +989,9 @@ void displayFiles()
 		sf2d_draw_texture(updateIcon, 75, 0);
 	
 	sf2d_draw_texture(ftpIcon, 100, 0);
+	
+	if (DEFAULT_STATE == STATE_THEME)
+		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, "Select a theme")) / 2), 40, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), 11, "Select a theme");
 			
 	if (BROWSE_STATE == STATE_SD)
 		sf2d_draw_texture(s_SdIcon, 125, 0);
@@ -907,23 +1021,26 @@ void displayFiles()
 		if (selectionX == -1)
 			selectionX = 1;
 	
-		sf2d_draw_rectangle(37 + (selectionX * 123), 56 + (selectionY * 37), 123, 37, RGBA8(237, 237, 237, 255));
+		sf2d_draw_rectangle(37 + (selectionX * 123), 56 + (selectionY * 37), 123, 37, RGBA8(Options_select_colour.r, Options_select_colour.g, Options_select_colour.b, 255));
 			
-		sftd_draw_text(font, 47, 72, RGBA8(100, 100, 100, 255), 11, "Properties");
-		sftd_draw_text(font, 47, 109, RGBA8(100, 100, 100, 255), 11, "New folder");
-		sftd_draw_text(font, 47, 146, RGBA8(100, 100, 100, 255), 11, "Delete");
+		sftd_draw_text(font, 42, 36, RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255), 11, "Actions");
+		sftd_draw_text(font2, 232, 196, RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255), 10, "CANCEL");
 		
-		sftd_draw_text(font, 170, 72, RGBA8(100, 100, 100, 255), 11, "Rename");
+		sftd_draw_text(font, 47, 72, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 11, "Properties");
+		sftd_draw_text(font, 47, 109,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 11, "New folder");
+		sftd_draw_text(font, 47, 146,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 11, "Delete");
+		
+		sftd_draw_text(font, 170, 72,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 11, "Rename");
 	
 		if(copyF == false)
-			sftd_draw_text(font, 170, 109, RGBA8(100, 100, 100, 255), 11, "Copy");
+			sftd_draw_text(font, 170, 109,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 11, "Copy");
 		else
-			sftd_draw_text(font, 170, 109, RGBA8(100, 100, 100, 255), 11, "Paste");
+			sftd_draw_text(font, 170, 109,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 11, "Paste");
 	
 		if(cutF == false)
-			sftd_draw_text(font, 170, 146, RGBA8(100, 100, 100, 255), 11, "Cut");
+			sftd_draw_text(font, 170, 146,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 11, "Cut");
 		else
-			sftd_draw_text(font, 170, 146, RGBA8(100, 100, 100, 255), 11, "Paste");
+			sftd_draw_text(font, 170, 146,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 11, "Paste");
 	}
 	else
 		sf2d_draw_texture(optionsIcon, 25, 0);
@@ -935,7 +1052,7 @@ void displayFiles()
         		
 	sf2d_draw_texture(background, 0, 0);
 	
-	sftd_draw_textf(font, 84, 28, RGBA8(255, 255, 255, 255), 11, "%.35s", cwd); // Display current path
+	sftd_draw_textf(font, 84, 28, RGBA8(TopScreen_bar_colour.r, TopScreen_bar_colour.g, TopScreen_bar_colour.b, 255), 11, "%.35s", cwd); // Display current path
 	
 	drawWifiStatus(270, 2);
 	drawBatteryStatus(295, 2);
@@ -952,7 +1069,7 @@ void displayFiles()
 	double usedStorage = (totalStorage - (((u64) resource.freeClusters * (u64) resource.clusterSize) / 1024.0 / 1024.0));
 	double fill = ((usedStorage / totalStorage) * 208.0);
 	
-	sf2d_draw_rectangle(83, 47, fill, 2, RGBA8(48, 174, 222, 255)); // Draw storage bar
+	sf2d_draw_rectangle(83, 47, fill, 2, RGBA8(Storage_colour.r, Storage_colour.g, Storage_colour.b, 255)); // Draw storage bar
 
 	// File Iterator Variable
 	int i = 0;
@@ -1006,20 +1123,20 @@ void displayFiles()
 			while(len -- > 0)
 				strcat(buf, " ");
 			
-			sftd_draw_textf(font, 70, 60 + (38 * printed), RGBA8(0, 0, 0, 255), 11, "%.52s", buf); // Display file name
+			sftd_draw_textf(font, 70, 60 + (38 * printed), RGBA8(TopScreen_colour.r ,TopScreen_colour.g, TopScreen_colour.b, 255), 11, "%.52s", buf); // Display file name
 			
 			strcpy(path, cwd);
 			strcpy(path + strlen(path), file->name);
 			
 			if ((file->isFolder) && (strcmp(file->name, "..") != 0))
-				sftd_draw_textf(font2, 70, 75 + (38 * printed), RGBA8(95, 95, 95, 255), 10, "%s drwxr-x---", getFileModifiedTime(path));
+				sftd_draw_textf(font2, 70, 75 + (38 * printed), RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), 10, "%s drwxr-x---", getFileModifiedTime(path));
 			else if (strcmp(file->name, "..") == 0)
-				sftd_draw_text(font2, 70, 75 + (38 * printed), RGBA8(95, 95, 95, 255), 10, "Parent folder");
+				sftd_draw_text(font2, 70, 75 + (38 * printed), RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), 10, "Parent folder");
 			else
 			{
 				getSizeString(size, getFileSize(path));
-				sftd_draw_textf(font2, 70, 75 + (38 * printed), RGBA8(95, 95, 95, 255), 10, "%s -rw-rw----", getFileModifiedTime(path));
-				sftd_draw_textf(font2, 395 - sftd_get_text_width(font2, 10, size), 75 + (38 * printed), RGBA8(0, 0, 0, 255), 10, "%s", size);
+				sftd_draw_textf(font2, 70, 75 + (38 * printed), RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), 10, "%s -rw-rw----", getFileModifiedTime(path));
+				sftd_draw_textf(font2, 395 - sftd_get_text_width(font2, 10, size), 75 + (38 * printed), RGBA8(TopScreen_colour.r, TopScreen_colour.g, TopScreen_colour.b, 255), 10, "%s", size);
 			}
 			
 			printed++; // Increase printed counter
@@ -1156,9 +1273,15 @@ int drawDeletionDialog()
 		sf2d_draw_rectangle(0, 0, 320, 240, RGBA8(30, 136, 229, 255));
 
 		sf2d_draw_texture(deletion, 20, 55);
+		
+		
+		sftd_draw_text(font, 27, 72, RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255), 11, "Confirm deletion");
+		
+		sftd_draw_text(font2, 206, 159, RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255), 10, "NO");
+		sftd_draw_text(font2, 255, 159, RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255), 10, "YES");
 	
-		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, "This action cannot be undone.")) / 2), 100, RGBA8(0, 0, 0, 255), 11, "This action cannot be undone.");
-		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, "Do you want to continue?")) / 2), 115, RGBA8(0, 0, 0, 255), 11, "Do you want to continue?");
+		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, "This action cannot be undone.")) / 2), 100, RGBA8(Options_title_text_colour.r, Options_title_text_colour.g, Options_title_text_colour.b, 255), 11, "This action cannot be undone.");
+		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, "Do you want to continue?")) / 2), 115, RGBA8(Options_title_text_colour.r, Options_title_text_colour.g, Options_title_text_colour.b, 255), 11, "Do you want to continue?");
 			
 		endDrawing();
 		
@@ -1211,43 +1334,47 @@ int displayProperties()
 		
 		sf2d_start_frame(GFX_BOTTOM, GFX_LEFT);
 		
-		sf2d_draw_rectangle(0, 0, 320, 240, RGBA8(30, 136, 229, 255));
+		sf2d_draw_rectangle(0, 0, 320, 240, RGBA8(BottomScreen_colour.r, BottomScreen_colour.g, BottomScreen_colour.b, 255));
 		
 		sf2d_draw_texture(_properties, 36, 20);
-	
-		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, "INFO")) / 2), 50, RGBA8(0, 0, 0, 255), 11, "INFO");
 		
-		sftd_draw_text(font2, 42, 74, RGBA8(0, 0, 0, 255), 10, "Name:");
-			sftd_draw_textf(font2, 100, 74, RGBA8(100, 100, 100, 255), 10, "%.36s", fileName);
-		sftd_draw_text(font2, 42, 94, RGBA8(0, 0, 0, 255), 10, "Parent:");
-			sftd_draw_textf(font2, 100, 94, RGBA8(100, 100, 100, 255), 10, "%s", path);
+		sftd_draw_text(font, 41, 33, RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255), 11, "Properties");
+		
+		sftd_draw_text(font2, 247, 201, RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255), 10, "OK");
+	
+		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, "INFO")) / 2), 50,RGBA8(Options_title_text_colour.r, Options_title_text_colour.g, Options_title_text_colour.b, 255), 11, "INFO");
+		
+		sftd_draw_text(font2, 42, 74, RGBA8(Options_title_text_colour.r, Options_title_text_colour.g, Options_title_text_colour.b, 255), 10, "Name:");
+			sftd_draw_textf(font2, 100, 74,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "%.36s", fileName);
+		sftd_draw_text(font2, 42, 94,RGBA8(Options_title_text_colour.r, Options_title_text_colour.g, Options_title_text_colour.b, 255), 10, "Parent:");
+			sftd_draw_textf(font2, 100, 94,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "%s", path);
 			
-		sftd_draw_text(font2, 42, 114, RGBA8(0, 0, 0, 255), 10, "Type:");	
+		sftd_draw_text(font2, 42, 114,RGBA8(Options_title_text_colour.r, Options_title_text_colour.g, Options_title_text_colour.b, 255), 10, "Type:");	
 		if (file->isFolder)
-			sftd_draw_textf(font2, 100, 114, RGBA8(100, 100, 100, 255), 10, "Folder");
+			sftd_draw_textf(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "Folder");
 		else if ((strcmp(get_filename_ext(fileName), "CIA") == 0) || (strcmp(get_filename_ext(fileName), "cia") == 0) || (strcmp(get_filename_ext(fileName), "3DSX") == 0) || (strcmp(get_filename_ext(fileName), "3dsx") == 0))
-			sftd_draw_textf(font2, 100, 114, RGBA8(100, 100, 100, 255), 10, "APP");
+			sftd_draw_textf(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "APP");
 		else if ((strcmp(get_filename_ext(fileName), "bin") == 0) || (strcmp(get_filename_ext(fileName), "BIN") == 0) || (strcmp(get_filename_ext(fileName), "firm") == 0) || (strcmp(get_filename_ext(fileName), "FIRM") == 0))
-			sftd_draw_textf(font2, 100, 114, RGBA8(100, 100, 100, 255), 10, "Payload");
+			sftd_draw_textf(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "Payload");
 		else if ((strcmp(get_filename_ext(fileName), "zip") == 0) || (strcmp(get_filename_ext(fileName), "ZIP") == 0))
-			sftd_draw_textf(font2, 100, 114, RGBA8(100, 100, 100, 255), 10, "archive/zip");
+			sftd_draw_textf(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "archive/zip");
 		else if ((strcmp(get_filename_ext(fileName), "rar") == 0) || (strcmp(get_filename_ext(fileName), "RAR") == 0))
-			sftd_draw_textf(font2, 100, 114, RGBA8(100, 100, 100, 255), 10, "archive/rar");
+			sftd_draw_textf(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "archive/rar");
 		else if ((strcmp(get_filename_ext(fileName), "PNG") == 0) || (strcmp(get_filename_ext(fileName), "png") == 0))
-			sftd_draw_textf(font2, 100, 114, RGBA8(100, 100, 100, 255), 10, "image/png");
+			sftd_draw_textf(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "image/png");
 		else if ((strcmp(get_filename_ext(fileName), "JPG") == 0) || (strcmp(get_filename_ext(fileName), "jpg") == 0))
-			sftd_draw_textf(font2, 100, 114, RGBA8(100, 100, 100, 255), 10, "image/jpeg");
+			sftd_draw_textf(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "image/jpeg");
 		else if ((strcmp(get_filename_ext(fileName), "MP3") == 0) || (strcmp(get_filename_ext(fileName), "mp3") == 0))
-			sftd_draw_textf(font2, 100, 114, RGBA8(100, 100, 100, 255), 10, "audio/mpeg");
+			sftd_draw_textf(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "audio/mpeg");
 		else if ((strcmp(get_filename_ext(fileName), "txt") == 0) || (strcmp(get_filename_ext(fileName), "TXT") == 0) || (strcmp(get_filename_ext(fileName), "XML") == 0) || (strcmp(get_filename_ext(fileName), "xml") == 0))
-			sftd_draw_textf(font2, 100, 114, RGBA8(100, 100, 100, 255), 10, "TEXT");
+			sftd_draw_textf(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "TEXT");
 		else
-			sftd_draw_textf(font2, 100, 114, RGBA8(100, 100, 100, 255), 10, "FILE");
+			sftd_draw_textf(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "FILE");
 			
 		if (!(file->isFolder))
 		{
-			sftd_draw_text(font2, 42, 134, RGBA8(0, 0, 0, 255), 10, "Size:");
-				sftd_draw_textf(font2, 100, 134, RGBA8(100, 100, 100, 255), 10, "%s", size);
+			sftd_draw_text(font2, 42, 134,RGBA8(Options_title_text_colour.r, Options_title_text_colour.g, Options_title_text_colour.b, 255), 10, "Size:");
+				sftd_draw_textf(font2, 100, 134,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "%s", size);
 		}
 		
 		endDrawing();
