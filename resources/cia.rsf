@@ -171,7 +171,6 @@ AccessControlInfo:
    - dlp:SRVR
    - csnd:SND
    - dsp::DSP
-   - frd:u
    - fs:USER
    - gsp::Gpu
    - gsp::Lcd
