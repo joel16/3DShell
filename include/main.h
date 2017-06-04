@@ -84,8 +84,7 @@ int selectionX, selectionY, BROWSE_STATE, DEFAULT_STATE;
 #define IF_SETTINGS ((DEFAULT_STATE != STATE_HOME) && (DEFAULT_STATE != STATE_UPDATE) && (DEFAULT_STATE != STATE_OPTIONS) && \
 					(DEFAULT_STATE != STATE_FTP) && (DEFAULT_STATE != STATE_THEME))
 
-#define IF_THEME ((DEFAULT_STATE != STATE_HOME) && (DEFAULT_STATE != STATE_UPDATE) && (DEFAULT_STATE != STATE_OPTIONS) && \
-					(DEFAULT_STATE != STATE_FTP) && (DEFAULT_STATE != STATE_SETTINGS))
+#define IF_THEME 	(DEFAULT_STATE == STATE_THEME)
 					
 #define CAN_COPY 	(((copyF == false) && (cutF != true) && (deleteDialog == false)))
 #define CAN_CUT 	(((cutF == false) && (copyF != true) && (deleteDialog == false)))

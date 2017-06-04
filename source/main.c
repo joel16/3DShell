@@ -613,7 +613,7 @@ turnOffBGM:
 			
 			else if (kPress & KEY_A)
 			{
-				wait(1000000);
+				wait(66666666);
 				
 				if (IF_THEME)
 				{
@@ -665,7 +665,7 @@ turnOffBGM:
 			
 			else if ((strcmp(cwd, ROOT_PATH) != 0) && (kPress & KEY_B))
 			{
-				wait(1000000);
+				wait(66666666);
 				
 				if (IF_THEME)
 				{
@@ -1270,7 +1270,7 @@ int drawDeletionDialog()
 		
 		sf2d_start_frame(GFX_BOTTOM, GFX_LEFT);
 		
-		sf2d_draw_rectangle(0, 0, 320, 240, RGBA8(30, 136, 229, 255));
+		sf2d_draw_rectangle(0, 0, 320, 240, RGBA8(BottomScreen_colour.r, BottomScreen_colour.g, BottomScreen_colour.b, 255));
 
 		sf2d_draw_texture(deletion, 20, 55);
 		
