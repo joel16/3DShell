@@ -4,6 +4,9 @@
 #include <3ds.h>
 #include <sf2d.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+#include <png.h>
 
 #define SDK(a,b,c,d) ((a<<24)|(b<<16)|(c<<8)|d)
 
@@ -14,6 +17,7 @@ void endDrawing();
 void getSizeString(char * string, uint64_t size);
 int touchGetX();
 int touchGetY();
+sf2d_texture *sfil_load_IMG_file(const char *filename, sf2d_place place);
 int extractZip(const char * zipFile, const char * path);
 void setConfig(char * path, bool set);
 const char * getLastNChars(char * str, int n);

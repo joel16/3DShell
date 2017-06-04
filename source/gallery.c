@@ -18,6 +18,11 @@ void displayImage(char * path, int ext)
 		image = sfil_load_JPEG_file(path, SF2D_PLACE_RAM);
 		setBilinearFilter(image);
 	}
+	else if (ext == 2)
+	{
+		image = sfil_load_IMG_file(path, SF2D_PLACE_RAM);
+		//setBilinearFilter(image);
+	}
 	
 	sf2d_set_clear_color(RGBA8(33, 39, 43, 255));
 	
