@@ -4,6 +4,7 @@
  */
 #include "ftp.h"
 #include "utils.h"
+
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <dirent.h>
@@ -24,6 +25,7 @@
 #include <sys/statvfs.h>
 #include <time.h>
 #include <unistd.h>
+
 #ifdef _3DS
 #include <3ds.h>
 #define lstat stat

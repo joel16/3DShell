@@ -15,20 +15,20 @@
 #include "utils.h"
 #include "wifi.h"
 
-struct storage_colour Storage_colour;
-struct topScreen_colour TopScreen_colour;
-struct topScreen_min_colour TopScreen_min_colour;
-struct topScreen_bar_colour TopScreen_bar_colour;
-struct bottomScreen_colour BottomScreen_colour;
-struct bottomScreen_bar_colour BottomScreen_bar_colour;
-struct bottomScreen_text_colour BottomScreen_text_colour;
-struct options_select_colour Options_select_colour;
-struct options_text_colour Options_text_colour;
-struct options_title_text_colour Options_title_text_colour;
-struct settings_colour Settings_colour;
-struct settings_title_text_colour Settings_title_text_colour;
-struct settings_text_colour Settings_text_colour;
-struct settings_text_min_colour Settings_text_min_colour;
+struct colour Storage_colour;
+struct colour TopScreen_colour;
+struct colour TopScreen_min_colour;
+struct colour TopScreen_bar_colour;
+struct colour BottomScreen_colour;
+struct colour BottomScreen_bar_colour;
+struct colour BottomScreen_text_colour;
+struct colour Options_select_colour;
+struct colour Options_text_colour;
+struct colour Options_title_text_colour;
+struct colour Settings_colour;
+struct colour Settings_title_text_colour;
+struct colour Settings_text_colour;
+struct colour Settings_text_min_colour;
 
 /*
 *	Menu position
@@ -73,8 +73,8 @@ void installDirectories()
 		makeDir("/3ds/3DShell/themes");
 	if (!(dirExists("/3ds/3DShell/themes/default/")))
 		makeDir("/3ds/3DShell/themes/default");
-	if (!(dirExists("/3ds/3DShell/fonts/")))
-		makeDir("/3ds/3DShell/fonts");
+	if (!(dirExists("/3ds/3DShell/colours/")))
+		makeDir("/3ds/3DShell/colours");
 	
 	if (fileExists("/3ds/3DShell/lastdir.txt"))
 	{
@@ -143,6 +143,7 @@ void installDirectories()
 
 void initServices()
 {
+	srvInit();
 	fsInit();
 	sdmcInit();
 	openSdArchive();
@@ -221,8 +222,8 @@ void initServices()
 	wifiIcon3 = sfil_load_PNG_file("romfs:/res/wifi/stat_sys_wifi_signal_3.png", SF2D_PLACE_RAM); setBilinearFilter(wifiIcon3);
 	wifiIconNull = sfil_load_PNG_file("romfs:/res/wifi/stat_sys_wifi_signal_null.png", SF2D_PLACE_RAM); setBilinearFilter(wifiIconNull);
 	
-	font = sftd_load_font_mem(Roboto_ttf, Roboto_ttf_size);
-	font2 = sftd_load_font_mem(Roboto_ttf, Roboto_ttf_size);
+	font = sftd_load_font_file(font_path);
+	font2 = sftd_load_font_file(font_path);
 	
 	if (isN3DS())
 		osSetSpeedupEnable(true);
@@ -306,6 +307,7 @@ void termServices()
 	closeSdArchive();
 	sdmcExit();
 	fsExit();
+	srvExit();
 }
 
 static loop_status_t loop(loop_status_t (*callback)(void))
@@ -316,8 +318,8 @@ static loop_status_t loop(loop_status_t (*callback)(void))
 	{
 		sf2d_start_frame(GFX_BOTTOM, GFX_LEFT);
 		
-		sf2d_draw_rectangle(0, 0, 320, 240, RGBA8(30, 136, 229, 255));
-		sf2d_draw_rectangle(0, 0, 320, 20, RGBA8(25, 118, 210, 255));
+		sf2d_draw_rectangle(0, 0, 320, 240, RGBA8(BottomScreen_colour.r, BottomScreen_colour.g, BottomScreen_colour.b, 255));
+		sf2d_draw_rectangle(0, 0, 320, 20, RGBA8(BottomScreen_bar_colour.r, BottomScreen_bar_colour.g, BottomScreen_bar_colour.b, 255));
 		
 		sf2d_draw_texture(homeIcon, -2, -2);
 		sf2d_draw_texture(optionsIcon, 25, 0);
@@ -624,9 +626,15 @@ turnOffBGM:
 					if ((strcmp(fileName, "default") == 0))
 					{
 						strcpy(theme_dir, "romfs:/res");
-						strcpy(font_dir, "/3ds/3DShell");
+						strcpy(font_dir, "romfs:/font");
+						strcpy(colour_dir, "/3ds/3DShell");
+						
 						FILE * file = fopen("/3ds/3DShell/theme.bin", "w");
 						fprintf(file, "%s", theme_dir);
+						fclose(file);
+						
+						file = fopen("/3ds/3DShell/colours.bin", "w");
+						fprintf(file, "%s", colour_dir);
 						fclose(file);
 						
 						file = fopen("/3ds/3DShell/font.bin", "w");
@@ -641,12 +649,19 @@ turnOffBGM:
 					else if ((strcmp(fileName, "..") != 0))
 					{
 						strcpy(theme_dir, cwd);
+						strcpy(colour_dir, cwd);
 						strcpy(font_dir, cwd);
+						
 						strcat(theme_dir, fileName);
+						strcat(colour_dir, fileName);
 						strcat(font_dir, fileName);
 						
 						FILE * file = fopen("/3ds/3DShell/theme.bin", "w");
 						fprintf(file, "%s", theme_dir);
+						fclose(file);
+						
+						file = fopen("/3ds/3DShell/colours.bin", "w");
+						fprintf(file, "%s", colour_dir);
 						fclose(file);
 						
 						file = fopen("/3ds/3DShell/font.bin", "w");
@@ -1102,13 +1117,18 @@ void displayFiles()
 				sf2d_draw_texture(audioIcon, 30, 58 + (38 * printed));
 			else if ((strcmp(get_filename_ext(file->name), "txt") == 0) || (strcmp(get_filename_ext(file->name), "TXT") == 0))
 				sf2d_draw_texture(txtIcon, 30, 58 + (38 * printed));
-			else if ((strcmp(get_filename_ext(file->name), "bin") == 0) || (strcmp(get_filename_ext(file->name), "BIN") == 0) || (strcmp(get_filename_ext(file->name), "firm") == 0) || (strcmp(get_filename_ext(file->name), "FIRM") == 0))
+			else if ((strcmp(get_filename_ext(file->name), "bin") == 0) || (strcmp(get_filename_ext(file->name), "BIN") == 0) || 
+					(strcmp(get_filename_ext(file->name), "firm") == 0) || (strcmp(get_filename_ext(file->name), "FIRM") == 0))
 				sf2d_draw_texture(systemIcon, 30, 58 + (38 * printed));
-			else if ((strcmp(get_filename_ext(file->name), "rar") == 0) || (strcmp(get_filename_ext(file->name), "RAR") == 0) || (strcmp(get_filename_ext(file->name), "zip") == 0) || (strcmp(get_filename_ext(file->name), "ZIP") == 0))
+			else if ((strcmp(get_filename_ext(file->name), "rar") == 0) || (strcmp(get_filename_ext(file->name), "RAR") == 0) || 
+					(strcmp(get_filename_ext(file->name), "zip") == 0) || (strcmp(get_filename_ext(file->name), "ZIP") == 0))
 				sf2d_draw_texture(zipIcon, 30, 58 + (38 * printed));
-			else if ((strcmp(get_filename_ext(file->name), "jpg") == 0) || (strcmp(get_filename_ext(file->name), "JPG") == 0) || (strcmp(get_filename_ext(file->name), "png") == 0) || (strcmp(get_filename_ext(file->name), "PNG") == 0))
+			else if ((strcmp(get_filename_ext(file->name), "jpg") == 0) || (strcmp(get_filename_ext(file->name), "JPG") == 0) || 
+					(strcmp(get_filename_ext(file->name), "png") == 0) || (strcmp(get_filename_ext(file->name), "PNG") == 0) || 
+					(strcmp(get_filename_ext(file->name), "gif") == 0) || (strcmp(get_filename_ext(file->name), "GIF") == 0))
 				sf2d_draw_texture(imgIcon, 30, 58 + (38 * printed));
-			else if ((strcmp(get_filename_ext(file->name), "3dsx") == 0) || (strcmp(get_filename_ext(file->name), "3DSX") == 0) || (strcmp(get_filename_ext(file->name), "cia") == 0) || (strcmp(get_filename_ext(file->name), "CIA") == 0))
+			else if ((strcmp(get_filename_ext(file->name), "3dsx") == 0) || (strcmp(get_filename_ext(file->name), "3DSX") == 0) || 
+					(strcmp(get_filename_ext(file->name), "cia") == 0) || (strcmp(get_filename_ext(file->name), "CIA") == 0))
 				sf2d_draw_texture(appIcon, 30, 58 + (38 * printed));
 			else
 				sf2d_draw_texture(fileIcon, 30, 58 + (38 * printed));
@@ -1179,9 +1199,11 @@ void openFile(void)
 		displayImage(path, 0);
 	else if ((strcmp(get_filename_ext(file->name), "jpg") == 0) || (strcmp(get_filename_ext(file->name), "JPG") == 0))
 		displayImage(path, 1);		
-	/*else if ((strcmp(get_filename_ext(file->name), "txt") == 0) || (strcmp(get_filename_ext(file->name), "TXT") == 0))
-		displayText(path);*/
-	/*else if ((strcmp(get_filename_ext(file->name), "cia") == 0) || (strcmp(get_filename_ext(file->name), "CIA") == 0))
+	/*else if ((strcmp(get_filename_ext(file->name), "gif") == 0) || (strcmp(get_filename_ext(file->name), "GIF") == 0))
+		displayImage(path, 2);
+	else if ((strcmp(get_filename_ext(file->name), "txt") == 0) || (strcmp(get_filename_ext(file->name), "TXT") == 0))
+		displayText(path);
+	else if ((strcmp(get_filename_ext(file->name), "cia") == 0) || (strcmp(get_filename_ext(file->name), "CIA") == 0))
 		installCIA(path);*/
 	else if ((strcmp(get_filename_ext(file->name), "zip") == 0) || (strcmp(get_filename_ext(file->name), "ZIP") == 0))
 	{

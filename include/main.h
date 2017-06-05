@@ -12,8 +12,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "Roboto_ttf.h"
-
 #define ROOT_PATH "/"
 #define START_PATH ROOT_PATH
 

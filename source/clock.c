@@ -2,7 +2,7 @@
 #include "main.h"
 #include "theme.h"
 
-struct topScreen_bar_colour TopScreen_bar_colour;
+struct colour TopScreen_bar_colour;
 
 void digitalTime()
 {

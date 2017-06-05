@@ -3,20 +3,20 @@
 #include "theme.h"
 #include "utils.h"
 
-struct storage_colour Storage_colour;
-struct topScreen_colour TopScreen_colour;
-struct topScreen_min_colour TopScreen_min_colour;
-struct topScreen_bar_colour TopScreen_bar_colour;
-struct bottomScreen_colour BottomScreen_colour;
-struct bottomScreen_bar_colour BottomScreen_bar_colour;
-struct bottomScreen_text_colour BottomScreen_text_colour;
-struct options_select_colour Options_select_colour;
-struct options_text_colour Options_text_colour;
-struct options_title_text_colour Options_title_text_colour;
-struct settings_colour Settings_colour;
-struct settings_title_text_colour Settings_title_text_colour;
-struct settings_text_colour Settings_text_colour;
-struct settings_text_min_colour Settings_text_min_colour;
+struct colour Storage_colour;
+struct colour TopScreen_colour;
+struct colour TopScreen_min_colour;
+struct colour TopScreen_bar_colour;
+struct colour BottomScreen_colour;
+struct colour BottomScreen_bar_colour;
+struct colour BottomScreen_text_colour;
+struct colour Options_select_colour;
+struct colour Options_text_colour;
+struct colour Options_title_text_colour;
+struct colour Settings_colour;
+struct colour Settings_title_text_colour;
+struct colour Settings_text_colour;
+struct colour Settings_text_min_colour;
 
 char * setFileDefaultsChar(char path[], char data[], char var[])
 {
@@ -58,7 +58,8 @@ void createFontColours(char * path, int r, int g, int b)
 void loadTheme()
 {	
 	strcpy(theme_dir, setFileDefaultsChar("/3ds/3DShell/theme.bin", "romfs:/res", theme_dir));
-	strcpy(font_dir, setFileDefaultsChar("/3ds/3DShell/font.bin", "/3ds/3DShell", font_dir));
+	strcpy(font_dir, setFileDefaultsChar("/3ds/3DShell/font.bin", "romfs:/font", font_dir));
+	strcpy(colour_dir, setFileDefaultsChar("/3ds/3DShell/colours.bin", "/3ds/3DShell", colour_dir));
 
 	char background_res[100] = "/background.png";
 	char selector_res[100] = "/selector.png";
@@ -75,20 +76,22 @@ void loadTheme()
 	char properties_res[100] = "/properties.png";
 	char deletion_res[100] = "/delete.png";
 	
-	char storage_res[100] = "/fonts/storage.txt";
-	char topScreen_res[100] = "/fonts/topScreen.txt";
-	char topScreen_min_res[100] = "/fonts/topScreenMin.txt";
-	char topScreen_bar_res[100] = "/fonts/topScreenBar.txt";
-	char bottomScreen_res[100] = "/fonts/bottomScreen.txt";
-	char bottomScreen_bar_res[100] = "/fonts/bottomScreenBar.txt";
-	char bottomScreen_text_res[100] = "/fonts/bottomScreenText.txt";
-	char options_select_res[100] = "/fonts/optionsSelect.txt";
-	char options_text_res[100] = "/fonts/optionsText.txt";
-	char options_title_text_res[100] = "/fonts/optionsTitleText.txt";
-	char settings_colour_res[100] = "/fonts/settingsColour.txt";
-	char settings_title_text_res[100] = "/fonts/settingsTitleText.txt";
-	char settings_text_res[100] = "/fonts/settingsText.txt";
-	char settings_text_min_res[100] = "/fonts/settingsTextMin.txt";
+	char storage_res[100] = "/colours/storage.txt";
+	char topScreen_res[100] = "/colours/topScreen.txt";
+	char topScreen_min_res[100] = "/colours/topScreenMin.txt";
+	char topScreen_bar_res[100] = "/colours/topScreenBar.txt";
+	char bottomScreen_res[100] = "/colours/bottomScreen.txt";
+	char bottomScreen_bar_res[100] = "/colours/bottomScreenBar.txt";
+	char bottomScreen_text_res[100] = "/colours/bottomScreenText.txt";
+	char options_select_res[100] = "/colours/optionsSelect.txt";
+	char options_text_res[100] = "/colours/optionsText.txt";
+	char options_title_text_res[100] = "/colours/optionsTitleText.txt";
+	char settings_colour_res[100] = "/colours/settingsColour.txt";
+	char settings_title_text_res[100] = "/colours/settingsTitleText.txt";
+	char settings_text_res[100] = "/colours/settingsText.txt";
+	char settings_text_min_res[100] = "/colours/settingsTextMin.txt";
+	
+	char font_res[100] = "/font.ttf";
 	
 	replaceAsset(temp_arr, theme_dir, background_res, background_path);
 	replaceAsset(temp_arr, theme_dir, selector_res, selector_path);
@@ -105,20 +108,22 @@ void loadTheme()
 	replaceAsset(temp_arr, theme_dir, properties_res, properties_path);
 	replaceAsset(temp_arr, theme_dir, deletion_res, deletion_path);
 	
-	replaceAsset(temp_arr, font_dir, storage_res, storage_path);
-	replaceAsset(temp_arr, font_dir, topScreen_res, topScreen_path);
-	replaceAsset(temp_arr, font_dir, topScreen_min_res, topScreen_min_path);
-	replaceAsset(temp_arr, font_dir, topScreen_bar_res, topScreen_bar_path);
-	replaceAsset(temp_arr, font_dir, bottomScreen_res, bottomScreen_path);
-	replaceAsset(temp_arr, font_dir, bottomScreen_bar_res, bottomScreen_bar_path);
-	replaceAsset(temp_arr, font_dir, bottomScreen_text_res, bottomScreen_text_path);
-	replaceAsset(temp_arr, font_dir, options_select_res, options_select_path);
-	replaceAsset(temp_arr, font_dir, options_text_res, options_text_path);
-	replaceAsset(temp_arr, font_dir, options_title_text_res, options_title_text_path);
-	replaceAsset(temp_arr, font_dir, settings_colour_res, settings_colour_path);
-	replaceAsset(temp_arr, font_dir, settings_title_text_res, settings_title_text_path);
-	replaceAsset(temp_arr, font_dir, settings_text_res, settings_text_path);
-	replaceAsset(temp_arr, font_dir, settings_text_min_res, settings_text_min_path);
+	replaceAsset(temp_arr, colour_dir, storage_res, storage_path);
+	replaceAsset(temp_arr, colour_dir, topScreen_res, topScreen_path);
+	replaceAsset(temp_arr, colour_dir, topScreen_min_res, topScreen_min_path);
+	replaceAsset(temp_arr, colour_dir, topScreen_bar_res, topScreen_bar_path);
+	replaceAsset(temp_arr, colour_dir, bottomScreen_res, bottomScreen_path);
+	replaceAsset(temp_arr, colour_dir, bottomScreen_bar_res, bottomScreen_bar_path);
+	replaceAsset(temp_arr, colour_dir, bottomScreen_text_res, bottomScreen_text_path);
+	replaceAsset(temp_arr, colour_dir, options_select_res, options_select_path);
+	replaceAsset(temp_arr, colour_dir, options_text_res, options_text_path);
+	replaceAsset(temp_arr, colour_dir, options_title_text_res, options_title_text_path);
+	replaceAsset(temp_arr, colour_dir, settings_colour_res, settings_colour_path);
+	replaceAsset(temp_arr, colour_dir, settings_title_text_res, settings_title_text_path);
+	replaceAsset(temp_arr, colour_dir, settings_text_res, settings_text_path);
+	replaceAsset(temp_arr, colour_dir, settings_text_min_res, settings_text_min_path);
+	
+	replaceAsset(temp_arr, font_dir, font_res, font_path);
 	
 	FILE * file;
 	
@@ -196,6 +201,9 @@ void loadTheme()
 
 void reloadTheme()
 {	
+	sftd_free_font(font);
+	sftd_free_font(font2);
+
 	sf2d_free_texture(background);
 	sf2d_free_texture(selector);
 	sf2d_free_texture(folderIcon);
@@ -225,6 +233,9 @@ void reloadTheme()
 	zipIcon = sfil_load_PNG_file(zip_path, SF2D_PLACE_RAM); setBilinearFilter(zipIcon);
 	imgIcon = sfil_load_PNG_file(img_path, SF2D_PLACE_RAM); setBilinearFilter(imgIcon);
 	uncheck = sfil_load_PNG_file(uncheck_path, SF2D_PLACE_RAM); setBilinearFilter(uncheck);
+	
+	font = sftd_load_font_file(font_path);
+	font2 = sftd_load_font_file(font_path);
 	
 	FILE * file;
 	
