@@ -351,7 +351,14 @@ ftp_closesocket(int  fd,
     pollinfo.revents = 0;
     poll(&pollinfo, 1, 250);
   }
-
+  
+  /* set linger to 0 */
+  struct linger linger;
+  linger.l_onoff  = 1;
+  linger.l_linger = 0;
+  setsockopt(fd, SOL_SOCKET, SO_LINGER,
+                  &linger, sizeof(linger));
+				  
   /* close socket */
   close(fd);
 }
@@ -1477,6 +1484,7 @@ ftp_init(void)
   {
     ret = 0;
 
+	// MODIFIED HERE (Start)
     touchPosition touch;
 	
 	// update button state
@@ -1491,7 +1499,8 @@ ftp_init(void)
       loop = false;
       break;
     }
-
+	// MODIFIED HERE (End)
+	
     /* update the wifi status */
     ret = ACU_GetWifiStatus(&wifi);
     if(ret != 0)
@@ -1673,6 +1682,7 @@ ftp_loop(void)
   /* check if the user wants to exit */
   touchPosition touch;
 	
+  // MODIFIED HERE (Start)
   // update button state
   hidScanInput();
   hidTouchRead(&touch);
@@ -1680,6 +1690,7 @@ ftp_loop(void)
 
   if ((kPress & KEY_TOUCH) && (touchInRect(98, 123, 0, 20))) 
     return LOOP_EXIT;
+  // MODIFIED HERE (End)
 
   /* check if the user wants to toggle the LCD power */
   if(kPress & KEY_START)

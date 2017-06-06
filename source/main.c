@@ -499,16 +499,6 @@ turnOffBGM:
 					DEFAULT_STATE = STATE_HOME;
 				}
 			}
-		
-			u64 id;
-			APT_GetProgramID(&id);
-
-			if(id != 0x000400000BEEF500)
-			{
-				wait(100000000);
-				status = LOOP_EXIT;
-				DEFAULT_STATE = STATE_HOME;
-			}
 		}
 		
 		if ((kPress & KEY_TOUCH) && (touchInRect(124, 147, 0, 20)))
@@ -816,7 +806,7 @@ turnOffBGM:
 	}
 }
 
-int main()
+int main(int argc, char *argv[])
 {
 	initServices();
 	
@@ -1198,7 +1188,7 @@ void openFile(void)
 	else if ((strcmp(get_filename_ext(file->name), "png") == 0) || (strcmp(get_filename_ext(file->name), "PNG") == 0))
 		displayImage(path, 0);
 	else if ((strcmp(get_filename_ext(file->name), "jpg") == 0) || (strcmp(get_filename_ext(file->name), "JPG") == 0))
-		displayImage(path, 1);		
+		displayImage(path, 1);
 	/*else if ((strcmp(get_filename_ext(file->name), "gif") == 0) || (strcmp(get_filename_ext(file->name), "GIF") == 0))
 		displayImage(path, 2);
 	else if ((strcmp(get_filename_ext(file->name), "txt") == 0) || (strcmp(get_filename_ext(file->name), "TXT") == 0))
