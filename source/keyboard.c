@@ -3,6 +3,8 @@
 char * keyboard_3ds_get(int maxTextLength, const char* hintText)
 {
 	static SwkbdState swkbd;
+	static SwkbdStatusData swkbdStatus;
+	static SwkbdLearningData swkbdLearning;
 	
 	char * str = malloc(maxTextLength);
 	memset(str, 0, maxTextLength);
@@ -17,6 +19,7 @@ char * keyboard_3ds_get(int maxTextLength, const char* hintText)
 	swkbdSetFeatures(&swkbd, SWKBD_ALLOW_HOME);
 	swkbdSetFeatures(&swkbd, SWKBD_ALLOW_RESET);
 	swkbdSetFeatures(&swkbd, SWKBD_ALLOW_POWER);
+	swkbdSetFeatures(&swkbd, SWKBD_PREDICTIVE_INPUT);
 	
 	swkbdSetValidation(&swkbd, SWKBD_NOTEMPTY_NOTBLANK, 0, 0);
 	
@@ -28,8 +31,11 @@ char * keyboard_3ds_get(int maxTextLength, const char* hintText)
 	swkbdSetDictWord(&words[4], "https://", "https://");
 	swkbdSetDictWord(&words[5], "releases", "releases");
 	swkbdSetDictWord(&words[6], "/3ds/", "/3ds/");
-	
 	swkbdSetDictionary(&swkbd, words, sizeof(words)/sizeof(SwkbdDictWord));
+	static bool reload = false;
+	swkbdSetStatusData(&swkbd, &swkbdStatus, reload, true);
+	swkbdSetLearningData(&swkbd, &swkbdLearning, reload, true);
+	reload = true;
 	
 	swkbdInputText(&swkbd, str, maxTextLength);
 	
