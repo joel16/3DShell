@@ -6,7 +6,6 @@
 void displayImage(char * path, int ext)
 {
 	sf2d_texture * image = NULL;
-	sf2d_texture * galleryBar = sfil_load_PNG_file("romfs:/res/gallery/bar.png", SF2D_PLACE_RAM); setBilinearFilter(galleryBar);
 
 	if (ext == 0)
 	{
@@ -21,7 +20,7 @@ void displayImage(char * path, int ext)
 	else if (ext == 2)
 	{
 		image = sfil_load_IMG_file(path, SF2D_PLACE_RAM);
-		//setBilinearFilter(image);
+		setBilinearFilter(image);
 	}
 	
 	sf2d_set_clear_color(RGBA8(33, 39, 43, 255));
@@ -85,7 +84,6 @@ void displayImage(char * path, int ext)
 		{
 			wait(100000000);
 			sf2d_free_texture(image);
-			sf2d_free_texture(galleryBar);
 			mainMenu(KEEP);
 		}
 		
@@ -95,5 +93,4 @@ void displayImage(char * path, int ext)
 	
 	//delete image
 	sf2d_free_texture(image);
-	sf2d_free_texture(galleryBar);
 }

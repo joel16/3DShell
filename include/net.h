@@ -8,6 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+char dl_url[255];
+u32 dl_size;
 Result downloadFile(const char * url, const char * path);
 
 #endif

@@ -5,6 +5,8 @@
 #include <sf2d.h>
 #include <sfil.h>
 
+sf2d_texture * galleryBar;
+
 void displayImage(char * path, int ext);
 
 #endif

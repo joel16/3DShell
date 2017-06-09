@@ -1691,13 +1691,6 @@ ftp_loop(void)
   if ((kPress & KEY_TOUCH) && (touchInRect(98, 123, 0, 20))) 
     return LOOP_EXIT;
   // MODIFIED HERE (End)
-
-  /* check if the user wants to toggle the LCD power */
-  if(kPress & KEY_START)
-  {
-    lcd_power = !lcd_power;
-    apt_hook(APTHOOK_ONRESTORE, NULL);
-  }
 #endif
 
   return LOOP_CONTINUE;

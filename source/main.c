@@ -6,6 +6,7 @@
 #include "keyboard.h"
 #include "main.h"
 #include "mcu.h"
+#include "net.h"
 #include "power.h"
 #include "screenshot.h"
 #include "sound.h"
@@ -193,6 +194,7 @@ void initServices()
 	settingsIcon = sfil_load_PNG_file("romfs:/res/settings.png", SF2D_PLACE_RAM); setBilinearFilter(settingsIcon);
 	updateIcon = sfil_load_PNG_file("romfs:/res/update.png", SF2D_PLACE_RAM); setBilinearFilter(updateIcon);
 	ftpIcon = sfil_load_PNG_file("romfs:/res/ftp.png", SF2D_PLACE_RAM); setBilinearFilter(ftpIcon);
+	dlIcon = sfil_load_PNG_file("romfs:/res/url.png", SF2D_PLACE_RAM); setBilinearFilter(dlIcon);
 	themeIcon = sfil_load_PNG_file("romfs:/res/theme.png", SF2D_PLACE_RAM); setBilinearFilter(themeIcon);
 	s_HomeIcon = sfil_load_PNG_file("romfs:/res/s_home.png", SF2D_PLACE_RAM); setBilinearFilter(s_HomeIcon);
 	s_OptionsIcon = sfil_load_PNG_file("romfs:/res/s_options_icon.png", SF2D_PLACE_RAM); setBilinearFilter(s_OptionsIcon);
@@ -201,6 +203,7 @@ void initServices()
 	s_NandIcon = sfil_load_PNG_file("romfs:/res/s_nand.png", SF2D_PLACE_RAM); setBilinearFilter(s_NandIcon);
 	s_UpdateIcon = sfil_load_PNG_file("romfs:/res/s_update.png", SF2D_PLACE_RAM); setBilinearFilter(s_UpdateIcon);
 	s_ftpIcon = sfil_load_PNG_file("romfs:/res/s_ftp.png", SF2D_PLACE_RAM); setBilinearFilter(s_ftpIcon);
+	s_dlIcon = sfil_load_PNG_file("romfs:/res/s_url.png", SF2D_PLACE_RAM); setBilinearFilter(s_dlIcon);
 	searchIcon = sfil_load_PNG_file("romfs:/res/search.png", SF2D_PLACE_RAM); setBilinearFilter(searchIcon);
 	
 	toggleOn = sfil_load_PNG_file("romfs:/res/toggleOn.png", SF2D_PLACE_RAM); setBilinearFilter(toggleOn);
@@ -221,6 +224,8 @@ void initServices()
 	wifiIcon2 = sfil_load_PNG_file("romfs:/res/wifi/stat_sys_wifi_signal_2.png", SF2D_PLACE_RAM); setBilinearFilter(wifiIcon2);
 	wifiIcon3 = sfil_load_PNG_file("romfs:/res/wifi/stat_sys_wifi_signal_3.png", SF2D_PLACE_RAM); setBilinearFilter(wifiIcon3);
 	wifiIconNull = sfil_load_PNG_file("romfs:/res/wifi/stat_sys_wifi_signal_null.png", SF2D_PLACE_RAM); setBilinearFilter(wifiIconNull);
+	
+	galleryBar = sfil_load_PNG_file("romfs:/res/gallery/bar.png", SF2D_PLACE_RAM); setBilinearFilter(galleryBar);
 	
 	font = sftd_load_font_file(font_path);
 	font2 = sftd_load_font_file(font_path);
@@ -504,6 +509,27 @@ turnOffBGM:
 		if ((kPress & KEY_TOUCH) && (touchInRect(124, 147, 0, 20)))
 		{
 			wait(100000000);
+			DEFAULT_STATE = STATE_DOWNLOAD;
+		}
+		
+		if (DEFAULT_STATE == STATE_DOWNLOAD)
+		{
+			bool downloadReady = false;
+			
+			if ((kPress & KEY_TOUCH) && (touchInRect(0, 320, 40, 54)))
+			{
+				strcpy(dl_url, keyboard_3ds_get(255, "Enter URL"));
+				if (strcmp(dl_url, "") != 0)
+					downloadReady = true;
+			}
+			
+			if (downloadReady == true)
+				downloadFile(dl_url, "/");
+		}
+	
+		if ((kPress & KEY_TOUCH) && (touchInRect(148, 173, 0, 20)))
+		{
+			wait(100000000);
 			char buf[250];
 		
 			FILE * read = fopen("/3ds/3DShell/lastdir.txt", "r");
@@ -519,7 +545,7 @@ turnOffBGM:
 			updateList(CLEAR);
 			displayFiles(CLEAR);
 		}
-		/*else if ((kPress & KEY_TOUCH) && (touchInRect(148, 173, 0, 20))) //Mount stuff goes here
+		/*else if ((kPress & KEY_TOUCH) && (touchInRect(174, 199, 0, 20))) //Mount stuff goes here
 		{
 			wait(100000000);
 			strcpy(cwd, "nand:/");
@@ -997,16 +1023,29 @@ void displayFiles()
 	
 	if (DEFAULT_STATE == STATE_THEME)
 		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, "Select a theme")) / 2), 40, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), 11, "Select a theme");
-			
-	if (BROWSE_STATE == STATE_SD)
-		sf2d_draw_texture(s_SdIcon, 125, 0);
+	
+	if (DEFAULT_STATE == STATE_DOWNLOAD)
+	{
+		sf2d_draw_texture(s_dlIcon, 125, 0);
+		
+		sf2d_draw_rectangle(0, 20, 320, 220, RGBA8(Settings_colour.r, Settings_colour.g, Settings_colour.b, 255));
+		
+		sftd_draw_textf(font, 10, 40, RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255), 11, "Enter URL: %s", dl_url);	
+	
+		sftd_draw_textf(font, 10, 60, RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255), 11, "%lu", dl_size);	
+	}
 	else
-		sf2d_draw_texture(sdIcon, 125, 0);
+		sf2d_draw_texture(dlIcon, 125, 0);
+	
+	if (BROWSE_STATE == STATE_SD)
+		sf2d_draw_texture(s_SdIcon, 150, 0);
+	else
+		sf2d_draw_texture(sdIcon, 150, 0);
 	
 	if (BROWSE_STATE == STATE_NAND)
-		sf2d_draw_texture(s_NandIcon, 150, 0);
+		sf2d_draw_texture(s_NandIcon, 175, 0);
 	else
-		sf2d_draw_texture(nandIcon, 150, 0);
+		sf2d_draw_texture(nandIcon, 175, 0);
 	
 	sf2d_draw_texture(searchIcon, (320 - searchIcon->width), -2);
 	
@@ -1015,16 +1054,6 @@ void displayFiles()
 		sf2d_draw_texture(s_OptionsIcon, 25, 0);
 		
 		sf2d_draw_texture(options, 37, 20);
-	
-		if (selectionY == 3)
-			selectionY = 0;
-		if (selectionY == -1)
-			selectionY = 2;
-		
-		if (selectionX == 2)
-			selectionX = 0;
-		if (selectionX == -1)
-			selectionX = 1;
 	
 		sf2d_draw_rectangle(37 + (selectionX * 123), 56 + (selectionY * 37), 123, 37, RGBA8(Options_select_colour.r, Options_select_colour.g, Options_select_colour.b, 255));
 			
