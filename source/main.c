@@ -1,3 +1,4 @@
+#include "compile_date.h"
 #include "clock.h"
 #include "fs.h"
 #include "ftp.h"
@@ -967,7 +968,7 @@ void displayFiles()
 		sf2d_draw_texture(s_HomeIcon, -2, -2);
 		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, welcomeMsg)) / 2), 40, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), 11, welcomeMsg);
 		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, currDate)) / 2), 60, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), 11, currDate);
-		sftd_draw_textf(font, 2, 225, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), 11, "3DShell v%i.%i BETA", VERSION_MAJOR, VERSION_MINOR);
+		sftd_draw_textf(font, 2, 225, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), 11, "3DShell v%i.%i Beta - %d%02d%02d", VERSION_MAJOR, VERSION_MINOR, YEAR, MONTH, DAY);
 	}
 	else
 		sf2d_draw_texture(homeIcon, -2, -2);
