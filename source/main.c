@@ -1,4 +1,3 @@
-#include "act.h"
 #include "clock.h"
 #include "fs.h"
 #include "ftp.h"
@@ -155,7 +154,6 @@ void initServices()
 	hidInit();
 	cfguInit();
 	acInit();
-	actInit(SDK(11, 2, 0, 200), 0x20000);
 	httpcInit(0);
 	amInit();
 	AM_InitializeExternalTitleDatabase(false);
@@ -233,8 +231,9 @@ void initServices()
 	if (isN3DS())
 		osSetSpeedupEnable(true);
 	
-	strcpy(userName, (char*)getNNID());
-	sprintf(welcomeMsg, "Hello there %s! How are you today?", userName);
+	APT_SetAppCpuTimeLimit(80);
+	
+	sprintf(welcomeMsg, "Hello there %s! How are you today?", getUsername());
 	
 	sprintf(currDate, "Today is %s %s.", getDayOfWeek(0), getMonthOfYear(0));
 	

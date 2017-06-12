@@ -136,6 +136,24 @@ u8 getLanguage()
 	return language;
 }
 
+const char * getUsername() 
+{
+	int i;
+	size_t size = 0x16;
+	u8 * temp = (u8*)malloc(size);
+	char * username = (char*)malloc(size / 2);
+	
+	for(i = 0; i < (size / 2); i++)
+		username[i] = 0;
+	
+	CFGU_GetConfigInfoBlk2(0x1C, 0xA0000, temp);
+	
+	for(i = 0; i < (size / 2); i++)
+		username[i] = (char)((u16*)temp)[i];
+	
+	return username;
+}
+
 bool isN3DS()
 {
 	bool isNew3DS = 0;
