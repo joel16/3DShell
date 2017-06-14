@@ -10,6 +10,13 @@
 
 FS_Archive sdmcArchive;
 
+typedef struct 
+{
+    Handle handle;
+    u64 offset;
+	u64 size;
+} FSFILE;
+
 void openSdArchive();
 void closeSdArchive();
 const char *get_filename_ext(const char *filename);
@@ -19,6 +26,8 @@ bool dirExists(const char * path);
 char* getFileCreationTime(char *path);
 char* getFileModifiedTime(char *path);
 char* getFileAccessedTime(char *path);
-int getFileSize(const char *path);
+u64 getFileSize(FS_Archive archive, const char *path);
+int fsRemove(FS_Archive archive, const char *filename);
+int fsRename(FS_Archive archive, const char *old_filename, const char *new_filename);
 
 #endif

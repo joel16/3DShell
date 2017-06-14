@@ -232,7 +232,7 @@ void initServices()
 	if (isN3DS())
 		osSetSpeedupEnable(true);
 	
-	APT_SetAppCpuTimeLimit(80);
+	//APT_SetAppCpuTimeLimit(80);
 	
 	sprintf(welcomeMsg, "Hello there %s! How are you today?", getUsername());
 	
@@ -1173,7 +1173,7 @@ void displayFiles()
 				sftd_draw_text(font2, 70, 75 + (38 * printed), RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), 10, "Parent folder");
 			else
 			{
-				getSizeString(size, getFileSize(path));
+				getSizeString(size, getFileSize(sdmcArchive, path));
 				sftd_draw_textf(font2, 70, 75 + (38 * printed), RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), 10, "%s -rw-rw----", getFileModifiedTime(path));
 				sftd_draw_textf(font2, 395 - sftd_get_text_width(font2, 10, size), 75 + (38 * printed), RGBA8(TopScreen_colour.r, TopScreen_colour.g, TopScreen_colour.b, 255), 10, "%s", size);
 			}
@@ -1218,10 +1218,10 @@ void openFile(void)
 		displayImage(path, 0);
 	else if ((strcmp(get_filename_ext(file->name), "jpg") == 0) || (strcmp(get_filename_ext(file->name), "JPG") == 0))
 		displayImage(path, 1);
-	/*else if ((strcmp(get_filename_ext(file->name), "gif") == 0) || (strcmp(get_filename_ext(file->name), "GIF") == 0))
-		displayImage(path, 2);
-	else if ((strcmp(get_filename_ext(file->name), "txt") == 0) || (strcmp(get_filename_ext(file->name), "TXT") == 0))
+	/*else if ((strcmp(get_filename_ext(file->name), "txt") == 0) || (strcmp(get_filename_ext(file->name), "TXT") == 0))
 		displayText(path);
+	else if ((strcmp(get_filename_ext(file->name), "gif") == 0) || (strcmp(get_filename_ext(file->name), "GIF") == 0))
+		displayImage(path, 2);
 	else if ((strcmp(get_filename_ext(file->name), "cia") == 0) || (strcmp(get_filename_ext(file->name), "CIA") == 0))
 		installCIA(path);*/
 	else if ((strcmp(get_filename_ext(file->name), "zip") == 0) || (strcmp(get_filename_ext(file->name), "ZIP") == 0))
@@ -1315,7 +1315,6 @@ int drawDeletionDialog()
 
 		sf2d_draw_texture(deletion, 20, 55);
 		
-		
 		sftd_draw_text(font, 27, 72, RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255), 11, "Confirm deletion");
 		
 		sftd_draw_text(font2, 206, 159, RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255), 10, "NO");
@@ -1362,7 +1361,7 @@ int displayProperties()
 	strcpy(fullPath + strlen(fullPath), fileName);
 	
 	char size[16];
-	getSizeString(size, getFileSize(fullPath));
+	getSizeString(size, getFileSize(sdmcArchive, fullPath));
 	
 	touchPosition touch;
 	
@@ -1477,7 +1476,7 @@ int renameF()
 	if (strcmp(get_filename_ext(name), "") == 0) // Second check for ext, this is if the user does not specify a file extension.
 		strcat(newPath, ext);
 	
-	rename(oldPath, newPath);
+	fsRename(sdmcArchive, oldPath, newPath);
 	
 	mainMenu(CLEAR);
 	
@@ -1583,7 +1582,7 @@ int delete_folder_recursive(char * path)
 			strcpy(buffer + strlen(buffer), node->name);
 
 			// Delete File
-			remove(buffer);
+			fsRemove(sdmcArchive, buffer);
 
 			// Free Memory
 			free(buffer);
@@ -1637,7 +1636,7 @@ int delete(void)
 
 	// Delete File
 	else 
-		return remove(path);
+		return fsRemove(sdmcArchive, path);
 }
 
 // Copy File or Folder
@@ -1687,7 +1686,7 @@ int copy_file(char * a, char * b)
 	if(in >= 0)
 	{
 		// Delete Output File (if existing)
-		remove(b);
+		fsRemove(sdmcArchive, b);
 
 		// Open File for Writing
 		int out = open(b, O_WRONLY | O_CREAT | O_TRUNC, 0777);
@@ -1874,7 +1873,7 @@ int paste(void)
 
 		// Source Delete
 		if(result == 0 && (copymode & COPY_DELETE_ON_FINISH) == COPY_DELETE_ON_FINISH)
-			remove(copysource); // Delete File
+			fsRemove(sdmcArchive, copysource); // Delete File
 	}
 
 	// Paste Success

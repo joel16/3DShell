@@ -122,10 +122,28 @@ char* getFileAccessedTime(char *path)
     return ctime(&attr.st_atime);
 }
 
-int getFileSize(const char *path)
+u64 getFileSize(FS_Archive archive, const char *path)
 {
-	struct stat st;
-	stat(path, &st);
+	u64 st_size;
+	Handle handle;
+
+	FSUSER_OpenFile(&handle, archive, fsMakePath(PATH_ASCII, path), FS_OPEN_READ, 0);
+	FSFILE_GetSize(handle, &st_size);
+	FSFILE_Close(handle);
 	
-	return st.st_size;
+	return st_size;
+}
+
+int fsRemove(FS_Archive archive, const char *filename)
+{
+    Result ret = FSUSER_DeleteFile(archive, fsMakePath(PATH_ASCII, filename));
+
+    return ret == 0 ? 0 : -1;
+}
+
+int fsRename(FS_Archive archive, const char *old_filename, const char *new_filename)
+{
+    Result ret = FSUSER_RenameFile(archive, fsMakePath(PATH_ASCII, old_filename), archive, fsMakePath(PATH_ASCII, new_filename));
+
+    return ret == 0 ? 0 : -1;
 }
