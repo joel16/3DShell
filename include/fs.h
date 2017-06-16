@@ -15,14 +15,15 @@ typedef struct
     Handle handle;
     u64 offset;
 	u64 size;
+	unsigned int error;
 } FSFILE;
 
 void openSdArchive();
 void closeSdArchive();
 const char *get_filename_ext(const char *filename);
-int makeDir(const char * path);
-bool fileExists(char * path);
-bool dirExists(const char * path);
+int makeDir(FS_Archive archive, const char *path);
+bool fileExists(FS_Archive archive, char * path);
+bool dirExists(FS_Archive archive, const char * path);
 char* getFileCreationTime(char *path);
 char* getFileModifiedTime(char *path);
 char* getFileAccessedTime(char *path);

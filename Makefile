@@ -42,17 +42,24 @@ APP_AUTHOR		:= Joel16
 VERSION_MAJOR := 1
 VERSION_MINOR := 0
 
+#---------------------------------------------------------------------------------
+# CIA
+#---------------------------------------------------------------------------------
+
+APP_PRODUCT_CODE 	:= CTR-3D-SHEL
+APP_UNIQUE_ID 		:= 0x16200
+
+APP_SYSTEM_MODE 	:= 64MB
+APP_SYSTEM_MODE_EXT := Legacy
+APP_CPU_SPEED 		:= 804MHz
+
+APP_VERSION_MAJOR 	:= VERSION_MAJOR
+APP_ROMFS_DIR		:= $(TOPDIR)/romfs
+
 ICON 		:= $(RESOURCES)/icon.png
 BANNER 		:= $(RESOURCES)/banner.png
 JINGLE 		:= $(RESOURCES)/banner.wav
 LOGO 		:= resources/logo.bcma.lz
-
-# CIA
-APP_PRODUCT_CODE 	:= 3DSGS
-APP_UNIQUE_ID 		:= 0x16200
-APP_SYSTEM_MODE 	:= 64MB
-APP_SYSTEM_MODE_EXT := Legacy
-APP_ROMFS_DIR		:= $(TOPDIR)/romfs
 
 #---------------------------------------------------------------------------------
 # options for code generation

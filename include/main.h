@@ -12,8 +12,12 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <setjmp.h>
+
 #define ROOT_PATH "/"
 #define START_PATH ROOT_PATH
+
+jmp_buf exitJmp; 
 
 sf2d_texture	*background, *options, *_properties, *selector, *deletion, *folderIcon, *fileIcon, *uncheck,
 				*audioIcon, *appIcon, *txtIcon, *systemIcon, *zipIcon, *imgIcon, *homeIcon, *optionsIcon, *sdIcon, *nandIcon,

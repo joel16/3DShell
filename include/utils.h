@@ -25,5 +25,6 @@ u8 getRegion();
 u8 getLanguage();
 const char * getUsername();
 bool isN3DS();
+int fastStrcmp(const char *ptr0, const char *ptr1, int len);
 
 #endif

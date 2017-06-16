@@ -1,3 +1,4 @@
+#include "cia.h"
 #include "fs.h"
 #include "main.h"
 #include "net.h"
@@ -39,36 +40,11 @@ void downloadUpdate()
 	}
 }
 
-Handle openFileHandle(const char *path, u32 openFlags) 
-{
-	Handle fileHandle = 0;
-  
-	FS_Path filePath = fsMakePath(PATH_ASCII, path);
-	FSUSER_OpenFile(&fileHandle, sdmcArchive, filePath, openFlags, 0);
-	
-	return(fileHandle);
-}
-
-void closeFileHandle(const Handle handle) 
-{
-	FSFILE_Close(handle);
-}
-
-void installCIA(const u8* ciaData, const size_t ciaSize) 
-{
-	Handle handle;
-	AM_QueryAvailableExternalTitleDatabase(NULL);
-	AM_StartCiaInstall(MEDIATYPE_SD, &handle);
-	FSFILE_Write(handle, NULL, 0, ciaData, (u32)ciaSize, 0);
-	AM_FinishCiaInstall(handle);
-	//AM_CancelCIAInstall(handle);	// Installation aborted.
-}
-
 void installUpdate()
-{
-	//installCIA(&ciaData, sizeof(ciaData));
-	
+{	
 	sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, "Update completed")) / 2), 80, RGBA8(251, 251, 251, 255), 11, "Update completed");
+	
+	//installCIA("/3ds/3DShell/3DShell.cia");
 	
 	wait(200000000);
 	

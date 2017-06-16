@@ -1,3 +1,4 @@
+#include "cia.h"
 #include "compile_date.h"
 #include "clock.h"
 #include "fs.h"
@@ -66,18 +67,18 @@ void saveLastDirectory()
 
 void installDirectories()
 {
-	if (!(dirExists("/3ds/")))
-		makeDir("/3ds");
-	if (!(dirExists("/3ds/3DShell/")))
-		makeDir("/3ds/3DShell");
-	if (!(dirExists("/3ds/3DShell/themes/")))
-		makeDir("/3ds/3DShell/themes");
-	if (!(dirExists("/3ds/3DShell/themes/default/")))
-		makeDir("/3ds/3DShell/themes/default");
-	if (!(dirExists("/3ds/3DShell/colours/")))
-		makeDir("/3ds/3DShell/colours");
+	if (!(dirExists(sdmcArchive, "/3ds/")))
+		makeDir(sdmcArchive, "/3ds");
+	if (!(dirExists(sdmcArchive, "/3ds/3DShell/")))
+		makeDir(sdmcArchive, "/3ds/3DShell");
+	if (!(dirExists(sdmcArchive, "/3ds/3DShell/themes/")))
+		makeDir(sdmcArchive, "/3ds/3DShell/themes");
+	if (!(dirExists(sdmcArchive, "/3ds/3DShell/themes/default/")))
+		makeDir(sdmcArchive, "/3ds/3DShell/themes/default");
+	if (!(dirExists(sdmcArchive, "/3ds/3DShell/colours/")))
+		makeDir(sdmcArchive, "/3ds/3DShell/colours");
 	
-	if (fileExists("/3ds/3DShell/lastdir.txt"))
+	if (fileExists(sdmcArchive, "/3ds/3DShell/lastdir.txt"))
 	{
 		char buf[250];
 		
@@ -85,7 +86,7 @@ void installDirectories()
 		fscanf(read, "%s", buf);
 		fclose(read);
 		
-		if (dirExists(buf)) // Incase a directory previously visited had been deleted, set start path to sdmc:/ to avoid errors.
+		if (dirExists(sdmcArchive, buf)) // Incase a directory previously visited had been deleted, set start path to sdmc:/ to avoid errors.
 			strcpy(cwd, buf);
 		else 
 			strcpy(cwd, START_PATH);
@@ -102,7 +103,7 @@ void installDirectories()
 		strcpy(cwd, buf); // Set Start Path to "sdmc:/" if lastDir.txt hasn't been created.
 	}
 	
-	/*if (!fileExists("/3ds/3DShell/bgm.txt"))
+	/*if (!fileExists(sdmcArchive, "/3ds/3DShell/bgm.txt"))
 	{
 		setBgm(true);
 	}
@@ -120,7 +121,7 @@ void installDirectories()
 			bgmEnable = true;
 	}*/
 	
-	if (!fileExists("/3ds/3DShell/sysProtection.txt")) // Initially set it to true
+	if (!fileExists(sdmcArchive, "/3ds/3DShell/sysProtection.txt")) // Initially set it to true
 	{
 		setConfig("/3ds/3DShell/sysProtection.txt", true);
 		sysProtection = true;
@@ -156,8 +157,6 @@ void initServices()
 	cfguInit();
 	acInit();
 	httpcInit(0);
-	amInit();
-	AM_InitializeExternalTitleDatabase(false);
 	romfsInit();
 	sf2d_init();
 	sftd_init();
@@ -241,7 +240,7 @@ void initServices()
 	DEFAULT_STATE = STATE_HOME;
 	BROWSE_STATE = STATE_SD;
 	
-	/*if (fileExists("/3ds/3DShell/bgm.ogg")) // Initally create this to avoid crashes
+	/*if (fileExists(sdmcArchive, "/3ds/3DShell/bgm.ogg")) // Initally create this to avoid crashes
 		bgm = sound_create(BGM);*/
 }
 
@@ -301,7 +300,6 @@ void termServices()
 	sftd_fini();
 	sf2d_fini();
 	romfsExit();
-	amExit();
 	httpcExit();
 	acExit();
 	cfguExit();
@@ -388,9 +386,9 @@ void mainMenu(int clearindex)
 	touchPosition touch;
 	
 /*turnOnBGM:
-	if(fileExists("/3ds/dspfirm.cdc"))
+	if(fileExists(sdmcArchive, "/3ds/dspfirm.cdc"))
 	{
-		if (fileExists("/3ds/3DShell/bgm.ogg"))
+		if (fileExists(sdmcArchive, "/3ds/3DShell/bgm.ogg"))
 		{
 			if((!(isPlaying)) && (bgmEnable == true))
 				audio_load_ogg("/3ds/3DShell/bgm.ogg");
@@ -431,11 +429,11 @@ turnOffBGM:
 			wait(100000000);
 			DEFAULT_STATE = STATE_SETTINGS;
 		}
-		/*else if ((kPress & KEY_TOUCH) && (touchInRect(74, 97, 0, 20)))
+		else if ((kPress & KEY_TOUCH) && (touchInRect(74, 97, 0, 20)))
 		{
 			wait(100000000);
 			DEFAULT_STATE = STATE_UPDATE;
-		}*/
+		}
 		
 		/*else if ((kPress & KEY_TOUCH) && (touchInRect(0, 320, 50, 72)) && (IF_SETTINGS))
 		{
@@ -536,7 +534,7 @@ turnOffBGM:
 			fscanf(read, "%s", buf);
 			fclose(read);
 		
-			if (dirExists(buf)) // Incase a directory previously visited had been deleted, set start path to sdmc:/ to avoid errors.
+			if (dirExists(sdmcArchive, buf)) // Incase a directory previously visited had been deleted, set start path to sdmc:/ to avoid errors.
 				strcpy(cwd, buf);
 			else 
 				strcpy(cwd, START_PATH);
@@ -558,7 +556,7 @@ turnOffBGM:
 		{
 			strcpy(cwd, keyboard_3ds_get(250, "Enter path"));
 				
-			if (dirExists(cwd))
+			if (dirExists(sdmcArchive, cwd))
 			{
 				updateList(CLEAR);
 				displayFiles(CLEAR);
@@ -639,7 +637,7 @@ turnOffBGM:
 					
 					strcpy(fileName, file->name);
 					
-					if ((strcmp(fileName, "default") == 0))
+					if ((fastStrcmp(fileName, "default", 7) == 0))
 					{
 						strcpy(theme_dir, "romfs:/res");
 						strcpy(font_dir, "romfs:/font");
@@ -662,7 +660,7 @@ turnOffBGM:
 						loadTheme();
 						reloadTheme();
 					}
-					else if ((strcmp(fileName, "..") != 0))
+					else if ((fastStrcmp(fileName, "..", 2) != 0))
 					{
 						strcpy(theme_dir, cwd);
 						strcpy(colour_dir, cwd);
@@ -706,7 +704,7 @@ turnOffBGM:
 					fscanf(read, "%s", buf);
 					fclose(read);
 			
-					if (dirExists(buf)) // Incase a directory previously visited had been deleted, set start path to sdmc:/ to avoid errors.
+					if (dirExists(sdmcArchive, buf)) // Incase a directory previously visited had been deleted, set start path to sdmc:/ to avoid errors.
 						strcpy(cwd, buf);
 					else 
 						strcpy(cwd, START_PATH);
@@ -836,6 +834,12 @@ int main(int argc, char *argv[])
 {
 	initServices();
 	
+	if(setjmp(exitJmp)) 
+	{
+		termServices();
+		return 0;
+	}
+	
 	mainMenu(CLEAR);
 	
 	termServices();
@@ -883,11 +887,11 @@ void updateList(int clearindex)
 				continue;
 
 			// Ignore "." in all Directories
-			if(strcmp(info->d_name, ".") == 0) 
+			if(fastStrcmp(info->d_name, ".", 1) == 0) 
 				continue;
 
 			// Ignore ".." in Root Directory
-			if(strcmp(cwd, ROOT_PATH) == 0 && strcmp(info->d_name, "..") == 0) 
+			if((strcmp(cwd, ROOT_PATH) == 0) && (fastStrcmp(info->d_name, "..", 2) == 0)) 
 				continue;
 
 			// Allocate Memory
@@ -1008,13 +1012,17 @@ void displayFiles()
 	{
 		sf2d_draw_texture(s_UpdateIcon, 75, 0);
 		sftd_draw_text(font, ((320 - (sftd_get_text_width(font, 11, "Checking for updates..."))) / 2), 40, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), 11, "Checking for updates...");
-		wait(100000000);
 		
-		if (strcmp(checkForUpdate(), "Update found") == 0)
-		{
-			wait(100000000);
-			downloadUpdate();
-		}
+		Result ret = installCIA("/3ds/3DShell/3DShell.cia", MEDIATYPE_SD, true);
+		if (ret != 0)
+			sftd_draw_text(font, ((320 - (sftd_get_text_width(font, 11, "Install failed"))) / 2), 60, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), 11, "Install failed");
+		else
+			sftd_draw_text(font, ((320 - (sftd_get_text_width(font, 11, "Install success"))) / 2), 60, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), 11, "Install success");
+		
+		sftd_draw_text(font, ((320 - (sftd_get_text_width(font, 11, "Exiting.."))) / 2), 80, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), 11, "Exiting..");
+		
+		wait(300000000);
+		longjmp(exitJmp, 1);
 	}
 	else
 		sf2d_draw_texture(updateIcon, 75, 0);
@@ -1132,22 +1140,22 @@ void displayFiles()
 
 			if (file->isFolder)
 				sf2d_draw_texture(folderIcon, 30, 58 + (38 * printed));
-			else if ((strcmp(get_filename_ext(file->name), "mp3") == 0) || (strcmp(get_filename_ext(file->name), "MP3") == 0))
+			else if ((fastStrcmp(get_filename_ext(file->name), "mp3", 3) == 0) || (fastStrcmp(get_filename_ext(file->name), "MP3", 3) == 0))
 				sf2d_draw_texture(audioIcon, 30, 58 + (38 * printed));
-			else if ((strcmp(get_filename_ext(file->name), "txt") == 0) || (strcmp(get_filename_ext(file->name), "TXT") == 0))
+			else if ((fastStrcmp(get_filename_ext(file->name), "txt", 3) == 0) || (fastStrcmp(get_filename_ext(file->name), "TXT", 3) == 0))
 				sf2d_draw_texture(txtIcon, 30, 58 + (38 * printed));
-			else if ((strcmp(get_filename_ext(file->name), "bin") == 0) || (strcmp(get_filename_ext(file->name), "BIN") == 0) || 
-					(strcmp(get_filename_ext(file->name), "firm") == 0) || (strcmp(get_filename_ext(file->name), "FIRM") == 0))
+			else if ((fastStrcmp(get_filename_ext(file->name), "bin", 3) == 0) || (fastStrcmp(get_filename_ext(file->name), "BIN", 3) == 0) || 
+					(fastStrcmp(get_filename_ext(file->name), "firm", 4) == 0) || (fastStrcmp(get_filename_ext(file->name), "FIRM", 4) == 0))
 				sf2d_draw_texture(systemIcon, 30, 58 + (38 * printed));
-			else if ((strcmp(get_filename_ext(file->name), "rar") == 0) || (strcmp(get_filename_ext(file->name), "RAR") == 0) || 
-					(strcmp(get_filename_ext(file->name), "zip") == 0) || (strcmp(get_filename_ext(file->name), "ZIP") == 0))
+			else if ((fastStrcmp(get_filename_ext(file->name), "rar", 3) == 0) || (fastStrcmp(get_filename_ext(file->name), "RAR", 3) == 0) || 
+					(fastStrcmp(get_filename_ext(file->name), "zip", 3) == 0) || (fastStrcmp(get_filename_ext(file->name), "ZIP", 3) == 0))
 				sf2d_draw_texture(zipIcon, 30, 58 + (38 * printed));
-			else if ((strcmp(get_filename_ext(file->name), "jpg") == 0) || (strcmp(get_filename_ext(file->name), "JPG") == 0) || 
-					(strcmp(get_filename_ext(file->name), "png") == 0) || (strcmp(get_filename_ext(file->name), "PNG") == 0) || 
-					(strcmp(get_filename_ext(file->name), "gif") == 0) || (strcmp(get_filename_ext(file->name), "GIF") == 0))
+			else if ((fastStrcmp(get_filename_ext(file->name), "jpg", 3) == 0) || (fastStrcmp(get_filename_ext(file->name), "JPG", 3) == 0) || 
+					(fastStrcmp(get_filename_ext(file->name), "png", 3) == 0) || (fastStrcmp(get_filename_ext(file->name), "PNG", 3) == 0) || 
+					(fastStrcmp(get_filename_ext(file->name), "gif", 3) == 0) || (fastStrcmp(get_filename_ext(file->name), "GIF", 3) == 0))
 				sf2d_draw_texture(imgIcon, 30, 58 + (38 * printed));
-			else if ((strcmp(get_filename_ext(file->name), "3dsx") == 0) || (strcmp(get_filename_ext(file->name), "3DSX") == 0) || 
-					(strcmp(get_filename_ext(file->name), "cia") == 0) || (strcmp(get_filename_ext(file->name), "CIA") == 0))
+			else if ((fastStrcmp(get_filename_ext(file->name), "3dsx", 4) == 0) || (fastStrcmp(get_filename_ext(file->name), "3DSX", 4) == 0) || 
+					(fastStrcmp(get_filename_ext(file->name), "cia", 3) == 0) || (fastStrcmp(get_filename_ext(file->name), "CIA", 3) == 0))
 				sf2d_draw_texture(appIcon, 30, 58 + (38 * printed));
 			else
 				sf2d_draw_texture(fileIcon, 30, 58 + (38 * printed));
@@ -1167,9 +1175,9 @@ void displayFiles()
 			strcpy(path, cwd);
 			strcpy(path + strlen(path), file->name);
 			
-			if ((file->isFolder) && (strcmp(file->name, "..") != 0))
+			if ((file->isFolder) && (fastStrcmp(file->name, "..", 2) != 0))
 				sftd_draw_textf(font2, 70, 75 + (38 * printed), RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), 10, "%s drwxr-x---", getFileModifiedTime(path));
-			else if (strcmp(file->name, "..") == 0)
+			else if (fastStrcmp(file->name, "..", 2) == 0)
 				sftd_draw_text(font2, 70, 75 + (38 * printed), RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), 10, "Parent folder");
 			else
 			{
@@ -1214,22 +1222,22 @@ void openFile(void)
 		}
 	}
 	
-	else if ((strcmp(get_filename_ext(file->name), "png") == 0) || (strcmp(get_filename_ext(file->name), "PNG") == 0))
+	else if ((fastStrcmp(get_filename_ext(file->name), "png", 3) == 0) || (fastStrcmp(get_filename_ext(file->name), "PNG", 3) == 0))
 		displayImage(path, 0);
-	else if ((strcmp(get_filename_ext(file->name), "jpg") == 0) || (strcmp(get_filename_ext(file->name), "JPG") == 0))
+	else if ((fastStrcmp(get_filename_ext(file->name), "jpg", 3) == 0) || (fastStrcmp(get_filename_ext(file->name), "JPG", 3) == 0))
 		displayImage(path, 1);
-	/*else if ((strcmp(get_filename_ext(file->name), "txt") == 0) || (strcmp(get_filename_ext(file->name), "TXT") == 0))
+	else if ((fastStrcmp(get_filename_ext(file->name), "txt", 3) == 0) || (fastStrcmp(get_filename_ext(file->name), "TXT", 3) == 0))
 		displayText(path);
-	else if ((strcmp(get_filename_ext(file->name), "gif") == 0) || (strcmp(get_filename_ext(file->name), "GIF") == 0))
-		displayImage(path, 2);
-	else if ((strcmp(get_filename_ext(file->name), "cia") == 0) || (strcmp(get_filename_ext(file->name), "CIA") == 0))
-		installCIA(path);*/
-	else if ((strcmp(get_filename_ext(file->name), "zip") == 0) || (strcmp(get_filename_ext(file->name), "ZIP") == 0))
+	else if ((fastStrcmp(get_filename_ext(file->name), "cia", 3) == 0) || (fastStrcmp(get_filename_ext(file->name), "CIA", 3) == 0))
+		installCIA(path, MEDIATYPE_SD, false);
+	else if ((fastStrcmp(get_filename_ext(file->name), "zip", 3) == 0) || (fastStrcmp(get_filename_ext(file->name), "ZIP", 3) == 0))
 	{
 		extractZip(path, cwd);
 		updateList(CLEAR);
 		displayFiles(CLEAR);
 	}
+	/*else if ((fastStrcmp(get_filename_ext(file->name), "gif", 3) == 0) || (fastStrcmp(get_filename_ext(file->name), "GIF", 3) == 0))
+		displayImage(path, 2);*/
 }
 
 // Navigate to Folder
@@ -1243,7 +1251,7 @@ int navigate(int _case)
 		return -1;
 
 	// Special Case ".."
-	if((_case == -1) || (strcmp(file->name, "..") == 0))
+	if((_case == -1) || (fastStrcmp(file->name, "..", 2) == 0))
 	{
 		// Slash Pointer
 		char * slash = NULL;
@@ -1392,21 +1400,21 @@ int displayProperties()
 		sftd_draw_text(font2, 42, 114,RGBA8(Options_title_text_colour.r, Options_title_text_colour.g, Options_title_text_colour.b, 255), 10, "Type:");	
 		if (file->isFolder)
 			sftd_draw_textf(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "Folder");
-		else if ((strcmp(get_filename_ext(fileName), "CIA") == 0) || (strcmp(get_filename_ext(fileName), "cia") == 0) || (strcmp(get_filename_ext(fileName), "3DSX") == 0) || (strcmp(get_filename_ext(fileName), "3dsx") == 0))
+		else if ((fastStrcmp(get_filename_ext(fileName), "CIA", 3) == 0) || (fastStrcmp(get_filename_ext(fileName), "cia", 3) == 0) || (fastStrcmp(get_filename_ext(fileName), "3DSX", 4) == 0) || (fastStrcmp(get_filename_ext(fileName), "3dsx", 4) == 0))
 			sftd_draw_textf(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "APP");
-		else if ((strcmp(get_filename_ext(fileName), "bin") == 0) || (strcmp(get_filename_ext(fileName), "BIN") == 0) || (strcmp(get_filename_ext(fileName), "firm") == 0) || (strcmp(get_filename_ext(fileName), "FIRM") == 0))
+		else if ((fastStrcmp(get_filename_ext(fileName), "bin", 3) == 0) || (fastStrcmp(get_filename_ext(fileName), "BIN", 3) == 0) || (fastStrcmp(get_filename_ext(fileName), "firm", 4) == 0) || (fastStrcmp(get_filename_ext(fileName), "FIRM", 4) == 0))
 			sftd_draw_textf(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "Payload");
-		else if ((strcmp(get_filename_ext(fileName), "zip") == 0) || (strcmp(get_filename_ext(fileName), "ZIP") == 0))
+		else if ((fastStrcmp(get_filename_ext(fileName), "zip", 3) == 0) || (fastStrcmp(get_filename_ext(fileName), "ZIP", 3) == 0))
 			sftd_draw_textf(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "archive/zip");
-		else if ((strcmp(get_filename_ext(fileName), "rar") == 0) || (strcmp(get_filename_ext(fileName), "RAR") == 0))
+		else if ((fastStrcmp(get_filename_ext(fileName), "rar", 3) == 0) || (fastStrcmp(get_filename_ext(fileName), "RAR", 3) == 0))
 			sftd_draw_textf(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "archive/rar");
-		else if ((strcmp(get_filename_ext(fileName), "PNG") == 0) || (strcmp(get_filename_ext(fileName), "png") == 0))
+		else if ((fastStrcmp(get_filename_ext(fileName), "PNG", 3) == 0) || (fastStrcmp(get_filename_ext(fileName), "png", 3) == 0))
 			sftd_draw_textf(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "image/png");
-		else if ((strcmp(get_filename_ext(fileName), "JPG") == 0) || (strcmp(get_filename_ext(fileName), "jpg") == 0))
+		else if ((fastStrcmp(get_filename_ext(fileName), "JPG", 3) == 0) || (fastStrcmp(get_filename_ext(fileName), "jpg", 3) == 0))
 			sftd_draw_textf(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "image/jpeg");
-		else if ((strcmp(get_filename_ext(fileName), "MP3") == 0) || (strcmp(get_filename_ext(fileName), "mp3") == 0))
+		else if ((fastStrcmp(get_filename_ext(fileName), "MP3", 3) == 0) || (fastStrcmp(get_filename_ext(fileName), "mp3", 3) == 0))
 			sftd_draw_textf(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "audio/mpeg");
-		else if ((strcmp(get_filename_ext(fileName), "txt") == 0) || (strcmp(get_filename_ext(fileName), "TXT") == 0) || (strcmp(get_filename_ext(fileName), "XML") == 0) || (strcmp(get_filename_ext(fileName), "xml") == 0))
+		else if ((fastStrcmp(get_filename_ext(fileName), "txt", 3) == 0) || (fastStrcmp(get_filename_ext(fileName), "TXT", 3) == 0) || (fastStrcmp(get_filename_ext(fileName), "XML", 3) == 0) || (fastStrcmp(get_filename_ext(fileName), "xml", 3) == 0))
 			sftd_draw_textf(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "TEXT");
 		else
 			sftd_draw_textf(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "FILE");
@@ -1434,7 +1442,7 @@ void newFolder()
 	char tempFolder[256];
 	strcpy(tempFolder, keyboard_3ds_get(256, "Enter name"));
 	
-	if (strcmp(tempFolder, "") == 0)
+	if (fastStrcmp(tempFolder, "", 1) == 0)
 		mainMenu(KEEP);
 	
 	char path[500];
@@ -1442,7 +1450,7 @@ void newFolder()
 	
 	strcat(path, tempFolder);
 	
-	makeDir(path);
+	makeDir(sdmcArchive, path);
 	
 	mainMenu(CLEAR);	
 }
@@ -1454,7 +1462,7 @@ int renameF()
 	if(file == NULL) 
 		return -1;
 
-	if(strcmp(file->name, "..") == 0) 
+	if(fastStrcmp(file->name, "..", 2) == 0) 
 		return -2;
 
 	char oldPath[500], newPath[500], name[255], ext[6];
@@ -1473,7 +1481,7 @@ int renameF()
 	strcpy(name, keyboard_3ds_get(255, "Enter name"));
 	strcat(newPath, name);
 	
-	if (strcmp(get_filename_ext(name), "") == 0) // Second check for ext, this is if the user does not specify a file extension.
+	if (fastStrcmp(get_filename_ext(name), "", 1) == 0) // Second check for ext, this is if the user does not specify a file extension.
 		strcat(newPath, ext);
 	
 	fsRename(sdmcArchive, oldPath, newPath);
@@ -1501,7 +1509,7 @@ int delete_folder_recursive(char * path)
 			// Valid Filename
 			if(strlen(info->d_name) > 0)
 			{
-				if(strcmp(info->d_name, ".") == 0 || strcmp(info->d_name, "..") == 0)
+				if((fastStrcmp(info->d_name, ".", 1) == 0) || (fastStrcmp(info->d_name, "..", 2) == 0))
 					continue;
 
 				// Allocate Memory
@@ -1607,12 +1615,12 @@ int delete(void)
 
 	if (sysProtection)
 	{
-		if((strcmp(file->name, "..") == 0) || (SYS_FILES)) 
+		if((fastStrcmp(file->name, "..", 2) == 0) || (SYS_FILES)) 
 			return -2;
 	}
 	else
 	{
-		if(strcmp(file->name, "..") == 0) 
+		if(fastStrcmp(file->name, "..", 2) == 0) 
 			return -2;
 	}
 
@@ -1654,7 +1662,7 @@ void copy(int flag)
 	strcpy(copysource + strlen(copysource), file->name);
 
 	// Add Recursive Folder Flag
-	if ((file->isFolder) && (strcmp(file->name, "..") != 0))
+	if ((file->isFolder) && (fastStrcmp(file->name, "..", 2) != 0))
 		flag |= COPY_FOLDER_RECURSIVE;
 
 	// Set Copy Flags
@@ -1744,7 +1752,7 @@ int copy_folder_recursive(char * a, char * b)
 	if(directory)
 	{
 		// Create Output Directory (is allowed to fail, we can merge folders after all)
-		mkdir(b, 0777);
+		makeDir(sdmcArchive, b);
 		
 		struct dirent * info;
 

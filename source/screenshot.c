@@ -268,8 +268,8 @@ void genScreenshotFileName(int lastNumber, char *fileName, const char *ext)
 	int month = timeStruct->tm_mon + 1;
 	int year = timeStruct->tm_year;
 	
-	if (!(dirExists("/screenshots/")))
-		makeDir("/screenshots");
+	if (!(dirExists(sdmcArchive, "/screenshots/")))
+		makeDir(sdmcArchive, "/screenshots");
 
 	sprintf(fileName, "/screenshots/screenshot-%d-%d-%d-%i-%s", day, month, year, num, ext);
 }
@@ -285,7 +285,7 @@ void captureScreenshot()
 
 	genScreenshotFileName(lastNumber, name, ".png"); 
 	
-	while (fileExists(name))
+	while (fileExists(sdmcArchive, name))
 	{
 		lastNumber++;
 		genScreenshotFileName(lastNumber, name, ".png");

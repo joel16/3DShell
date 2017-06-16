@@ -21,35 +21,48 @@ const char *get_filename_ext(const char *filename)
 	return dot + 1;
 }
 
-int makeDir(const char *path)
+int makeDir(FS_Archive archive, const char *path)
 {
-	if (!path) 
+	if((!archive) || (!path))
 		return -1;
 	
-	return mkdir(path, 0777);
+	return FSUSER_CreateDirectory(archive, fsMakePath(PATH_ASCII, path), 0);
 }
 
-bool fileExists(char *path) 
+bool fileExists(FS_Archive archive, char * path)
 {
-    FILE * temp = fopen(path, "r");
-    if(temp == NULL)
-        return false;
+	if((!path) || (!archive))
+		return false;
+	
+	Handle handle;
 
-    fclose(temp);
+	Result ret = FSUSER_OpenFile(&handle, archive, fsMakePath(PATH_ASCII, path), FS_OPEN_READ, 0);
+	
+	if(ret != 0)
+		return false;
 
-    return true;
+	ret = FSFILE_Close(handle);
+	
+	if(ret != 0)
+		return false;
+	
+	return true;
 }
 
-bool dirExists(const char *path)
+bool dirExists(FS_Archive archive, const char * path)
 {
-    struct stat info;
-
-    if(stat( path, &info ) != 0)
-        return false;
-    else if(info.st_mode & S_IFDIR)
-        return true;
-    else
-        return false;
+	if((!path) || (!archive))
+		return false;
+	
+	Handle handle;
+			
+	if(!(FSUSER_OpenDirectory(&handle, archive, fsMakePath(PATH_ASCII, path))))
+	{
+		if (FSDIR_Close(handle))
+			return true;
+	}
+	
+	return false;
 }
 
 char* getFileCreationTime(char *path) 
@@ -134,14 +147,14 @@ u64 getFileSize(FS_Archive archive, const char *path)
 	return st_size;
 }
 
-int fsRemove(FS_Archive archive, const char *filename)
+int fsRemove(FS_Archive archive, const char * filename)
 {
     Result ret = FSUSER_DeleteFile(archive, fsMakePath(PATH_ASCII, filename));
 
     return ret == 0 ? 0 : -1;
 }
 
-int fsRename(FS_Archive archive, const char *old_filename, const char *new_filename)
+int fsRename(FS_Archive archive, const char * old_filename, const char * new_filename)
 {
     Result ret = FSUSER_RenameFile(archive, fsMakePath(PATH_ASCII, old_filename), archive, fsMakePath(PATH_ASCII, new_filename));
 
