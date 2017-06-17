@@ -83,8 +83,7 @@ void displayImage(char * path, int ext)
 		if (kPress & KEY_B)
 		{
 			wait(100000000);
-			sf2d_free_texture(image);
-			mainMenu(KEEP);
+			break;
 		}
 		
 		if ((kHeld & KEY_L) && (kHeld & KEY_R))
@@ -93,4 +92,5 @@ void displayImage(char * path, int ext)
 	
 	//delete image
 	sf2d_free_texture(image);
+	mainMenu(KEEP);
 }
