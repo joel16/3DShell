@@ -50,19 +50,23 @@ bool fileExists(FS_Archive archive, char * path)
 }
 
 bool dirExists(FS_Archive archive, const char * path)
-{
+{	
 	if((!path) || (!archive))
 		return false;
 	
 	Handle handle;
-			
-	if(!(FSUSER_OpenDirectory(&handle, archive, fsMakePath(PATH_ASCII, path))))
-	{
-		if (FSDIR_Close(handle))
-			return true;
-	}
+
+	Result ret = FSUSER_OpenDirectory(&handle, archive, fsMakePath(PATH_ASCII, path));
 	
-	return false;
+	if(ret != 0)
+		return false;
+
+	ret = FSDIR_Close(handle);
+	
+	if(ret != 0)
+		return false;
+	
+	return true;
 }
 
 char* getFileCreationTime(char *path) 
