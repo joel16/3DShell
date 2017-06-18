@@ -1,12 +1,89 @@
 #include "unzip/archive.h"
 
-#include "main.h"
+#include "common.h"
+#include "fs.h"
 #include "utils.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
+
+void installDirectories()
+{
+	if (!(dirExists(sdmcArchive, "/3ds/")))
+		makeDir(sdmcArchive, "/3ds");
+	if (!(dirExists(sdmcArchive, "/3ds/3DShell/")))
+		makeDir(sdmcArchive, "/3ds/3DShell");
+	if (!(dirExists(sdmcArchive, "/3ds/3DShell/themes/")))
+		makeDir(sdmcArchive, "/3ds/3DShell/themes");
+	if (!(dirExists(sdmcArchive, "/3ds/3DShell/themes/default/")))
+		makeDir(sdmcArchive, "/3ds/3DShell/themes/default");
+	if (!(dirExists(sdmcArchive, "/3ds/3DShell/colours/")))
+		makeDir(sdmcArchive, "/3ds/3DShell/colours");
+	
+	if (fileExists(sdmcArchive, "/3ds/3DShell/lastdir.txt"))
+	{
+		char buf[250];
+		
+		FILE * read = fopen("/3ds/3DShell/lastdir.txt", "r");
+		fscanf(read, "%s", buf);
+		fclose(read);
+		
+		if (dirExists(sdmcArchive, buf)) // Incase a directory previously visited had been deleted, set start path to sdmc:/ to avoid errors.
+			strcpy(cwd, buf);
+		else 
+			strcpy(cwd, START_PATH);
+	}
+	else
+	{
+		char buf[250];
+		strcpy(buf, START_PATH);
+			
+		FILE * write = fopen("/3ds/3DShell/lastdir.txt", "w");
+		fprintf(write, "%s", buf);
+		fclose(write);
+		
+		strcpy(cwd, buf); // Set Start Path to "sdmc:/" if lastDir.txt hasn't been created.
+	}
+	
+	/*if (!fileExists(sdmcArchive, "/3ds/3DShell/bgm.txt"))
+	{
+		setBgm(true);
+	}
+	else
+	{
+		int initBgm = 0;
+		
+		FILE * read = fopen("/3ds/3DShell/bgm.txt", "r");
+		fscanf(read, "%d", &initBgm);
+		fclose(read);
+		
+		if (initBgm == 0)
+			bgmEnable = false;
+		else 
+			bgmEnable = true;
+	}*/
+	
+	if (!fileExists(sdmcArchive, "/3ds/3DShell/sysProtection.txt")) // Initially set it to true
+	{
+		setConfig("/3ds/3DShell/sysProtection.txt", true);
+		sysProtection = true;
+	}
+	else
+	{
+		int info = 0;
+		
+		FILE * read = fopen("/3ds/3DShell/sysProtection.txt", "r");
+		fscanf(read, "%d", &info);
+		fclose(read);
+		
+		if (info == 0)
+			sysProtection = false;
+		else 
+			sysProtection = true;
+	}
+}
 
 void setBilinearFilter(sf2d_texture *texture)
 {
@@ -163,43 +240,4 @@ bool isN3DS()
 		return true;
 	else
 		return false;
-}
-
-int fastStrcmp(const char *ptr0, const char *ptr1, int len)
-{
-	int fast = len/sizeof(size_t) + 1;
-	int offset = (fast-1)*sizeof(size_t);
-	int current_block = 0;
-
-	if(len <= sizeof(size_t))
-		fast = 0;
-
-	size_t *lptr0 = (size_t*)ptr0;
-	size_t *lptr1 = (size_t*)ptr1;
-
-	while(current_block < fast)
-	{
-		if((lptr0[current_block] ^ lptr1[current_block]))
-		{
-			int pos;
-			
-			for(pos = current_block*sizeof(size_t); pos < len ; ++pos )
-			{
-				if((ptr0[pos] ^ ptr1[pos]) || (ptr0[pos] == 0) || (ptr1[pos] == 0))
-					return (int)((unsigned char)ptr0[pos] - (unsigned char)ptr1[pos]);
-			}	
-		}
-
-		++current_block;
-    }
-
-	while(len > offset)
-	{
-		if((ptr0[offset] ^ ptr1[offset]))
-			return (int)((unsigned char)ptr0[offset] - (unsigned char)ptr1[offset]); 
-		
-		++offset;
-	}	
-	
-	return 0;
 }

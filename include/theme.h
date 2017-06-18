@@ -1,8 +1,6 @@
 #ifndef THEME_H
 #define THEME_H
 
-#include <3ds.h>
-
 char temp_arr[250], theme_dir[250], font_dir[250], colour_dir[250];
 
 char background_path[250], selector_path[250], folder_path[250], file_path[250], audio_path[250], app_path[250],

@@ -1,4 +1,6 @@
 #include "clock.h"
+#include "common.h"
+#include "language.h"
 #include "main.h"
 #include "theme.h"
 
@@ -26,14 +28,12 @@ void digitalTime()
 }
 
 char * getDayOfWeek(int type)
-{
-	static const char days[7][16] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
-	
+{	
 	time_t unixTime = time(NULL);
 	struct tm* timeStruct = gmtime((const time_t *)&unixTime);
 	
 	static char buffer[16];
-	sprintf(buffer, "%s", days[timeStruct->tm_wday]);
+	sprintf(buffer, "%s", lang_days[language][timeStruct->tm_wday]);
     
     if(type == 1)
         buffer[3] = 0;
@@ -42,12 +42,7 @@ char * getDayOfWeek(int type)
 }
 
 char * getMonthOfYear(int type)
-{
-	static const char months[12][16] =
-	{
-		"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
-	};
-	
+{	
 	time_t unixTime = time(NULL);
 	struct tm* timeStruct = gmtime((const time_t *)&unixTime);
 	int day = timeStruct->tm_mday;
@@ -56,9 +51,9 @@ char * getMonthOfYear(int type)
 	static char buffer[16];
 	
 	if (type == 0)
-		sprintf(buffer, "%d %s, %d", day, months[timeStruct->tm_mon], year);
+		sprintf(buffer, "%d %s, %d", day, lang_months[language][timeStruct->tm_mon], year);
 	else
-		sprintf(buffer, "%s", months[timeStruct->tm_mon]);
+		sprintf(buffer, "%s", lang_months[language][timeStruct->tm_mon]);
 	
 	if (type == 1)
 		buffer[3] = 0;

@@ -1,8 +1,11 @@
 #include "cia.h"
+#include "common.h"
+#include "dirlist.h"
 #include "fs.h"
 #include "main.h"
 #include "net.h"
 #include "updater.h"
+#include "utils.h"
 
 char * checkForUpdate()
 {

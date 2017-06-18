@@ -1,5 +1,5 @@
 #include "fs.h"
-#include "main.h"
+#include "common.h"
 #include "theme.h"
 #include "utils.h"
 

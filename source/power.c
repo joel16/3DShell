@@ -1,4 +1,4 @@
-#include "main.h"
+#include "common.h"
 #include "mcu.h"
 #include "power.h"
 #include "theme.h"

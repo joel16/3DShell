@@ -1,5 +1,6 @@
+#include "common.h"
+#include "dirlist.h"
 #include "gallery.h"
-#include "main.h"
 #include "screenshot.h"
 #include "utils.h"
 
@@ -17,7 +18,7 @@ void displayImage(char * path, int ext)
 		image = sfil_load_JPEG_file(path, SF2D_PLACE_RAM);
 		setBilinearFilter(image);
 	}
-	else if (ext == 2)
+	else if (ext == 2) // Supported formats: GIF, HDR, PIC, PNM, PSD, TGA
 	{
 		image = sfil_load_IMG_file(path, SF2D_PLACE_RAM);
 		setBilinearFilter(image);
@@ -92,5 +93,4 @@ void displayImage(char * path, int ext)
 	
 	//delete image
 	sf2d_free_texture(image);
-	mainMenu(KEEP);
 }

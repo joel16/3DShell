@@ -30,9 +30,9 @@ include $(DEVKITARM)/3ds_rules
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
 RESOURCES   :=	resources
-SOURCES		:=	source source/unzip
+SOURCES		:=	source source/audio source/file source/net source/unzip 
 DATA		:=	data
-INCLUDES 	:= include
+INCLUDES 	:= 	include include/audio include/file include/net include/unzip 
 ROMFS		:=	romfs
 
 APP_TITLE		:= 3DShell

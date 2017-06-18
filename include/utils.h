@@ -1,9 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <3ds.h>
 #include <sf2d.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 #include <png.h>
@@ -11,6 +9,8 @@
 #define SDK(a,b,c,d) ((a<<24)|(b<<16)|(c<<8)|d)
 
 #define touchInRect(x1, x2, y1, y2) ((touchGetX() >= (x1) && touchGetX() <= (x2)) && (touchGetY() >= (y1) && touchGetY() <= (y2)))
+
+#define wait(nanoSec) svcSleepThread(nanoSec);
 
 void setBilinearFilter(sf2d_texture *texture);
 void endDrawing();
@@ -25,6 +25,5 @@ u8 getRegion();
 u8 getLanguage();
 const char * getUsername();
 bool isN3DS();
-int fastStrcmp(const char *ptr0, const char *ptr1, int len);
 
 #endif
