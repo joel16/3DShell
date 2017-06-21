@@ -25,5 +25,6 @@ u8 getRegion();
 u8 getLanguage();
 const char * getUsername();
 bool isN3DS();
+void utf2ascii(char* dst, u16* src);
 
 #endif

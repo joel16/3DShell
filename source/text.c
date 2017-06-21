@@ -232,8 +232,6 @@ int displayText(char * path)
 	while (aptMainLoop())
 	{
 		hidScanInput();
-		u32 kPress = hidKeysDown();
-		u32 kHeld = hidKeysDown();
 		
 		sf2d_start_frame(GFX_BOTTOM, GFX_LEFT); // Clear bottom screen
 		sf2d_end_frame();
@@ -249,7 +247,7 @@ int displayText(char * path)
 		sftd_draw_textf(font, 40, 27, RGBA8(251, 251, 251, 255), 11, "%s", fileName);
 		draw_ui(path, current_line, &fv);
 		
-		if (kPress & KEY_DUP)
+		if (kPressed & KEY_DUP)
 		{
 			if (current_line > 0) 
 			{
@@ -258,7 +256,7 @@ int displayText(char * path)
 			}
 		}
 		
-		else if (kPress & KEY_DDOWN)
+		else if (kPressed & KEY_DDOWN)
 		{
 			if (current_line+30 <= fv.lines-1) 
 			{
@@ -269,7 +267,7 @@ int displayText(char * path)
 		
 		endDrawing();
 		
-		if (kPress & KEY_B)
+		if (kPressed & KEY_B)
 		{
 			wait(100000000);
 			break;

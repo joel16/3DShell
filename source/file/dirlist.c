@@ -52,15 +52,17 @@ File * files = NULL;
 
 void updateList(int clearindex)
 {
-	// Clear List
 	recursiveFree(files);
 	files = NULL;
 	fileCount = 0;
+	
+	Handle dirHandle;
+	Result directory = FSUSER_OpenDirectory(&dirHandle, sdmcArchive, fsMakePath(PATH_ASCII, cwd));
+	
+	u32 entriesRead;
+	static char dname[1024];
 
-	// Open Working Directory
-	DIR * directory = opendir(cwd);
-
-	if (directory)
+	if(directory == 0)
 	{
 		/* Add fake ".." entry except on root */
 		if (strcmp(cwd, ROOT_PATH)) 
@@ -70,7 +72,7 @@ void updateList(int clearindex)
 
 			// Clear Memory
 			memset(files, 0, sizeof(File));
-			
+
 			// Copy File Name
 			strcpy(files->name, "..");
 
@@ -79,74 +81,79 @@ void updateList(int clearindex)
 
 			fileCount++;
 		}
-		
-		struct dirent * info;
 
-		// Iterate Files
-		while ((info = readdir(directory)) != NULL)
-		{	
-			// Ingore null filename
-			if(info->d_name[0] == '\0') 
-				continue;
-
-			// Ignore "." in all Directories
-			if(strncmp(info->d_name, ".", 1) == 0) 
-				continue;
-
-			// Ignore ".." in Root Directory
-			if((strcmp(cwd, ROOT_PATH) == 0) && (strncmp(info->d_name, "..", 2) == 0)) 
-				continue;
-
-			// Allocate Memory
-			File * item = (File *)malloc(sizeof(File));
-
-			// Clear Memory
-			memset(item, 0, sizeof(File));
+		do
+		{
+			static FS_DirectoryEntry info;
+			memset(&info,0,sizeof(FS_DirectoryEntry));
 			
-			// Copy File Name
-			strcpy(item->name, info->d_name);
-
-			// Set Folder Flag
-			item->isFolder = info->d_type == DT_DIR;
-
-			// New List
-			if(files == NULL) 
-				files = item;
-
-			// Existing List
-			else
+			entriesRead = 0;
+			FSDIR_Read(dirHandle, &entriesRead, 1, &info);
+			
+			if(entriesRead)
 			{
-				// Iterator Variable
-				File * list = files;
+				utf2ascii(&dname[0], info.name);
+				
+				// Ingore null filename
+				if(dname[0] == '\0') 
+					continue;
 
-				// Append to List
-				while(list->next != NULL) 
-					list = list->next;
-	
-				// Link Item
-				list->next = item;
+				// Ignore "." in all Directories
+				if(strcmp(dname, ".") == 0) 
+					continue;
+
+				// Ignore ".." in Root Directory
+				if(strcmp(cwd, ROOT_PATH) == 0 && strcmp(dname, "..") == 0) 
+					continue;
+
+				// Allocate Memory
+				File * item = (File *)malloc(sizeof(File));
+
+				// Clear Memory
+				memset(item, 0, sizeof(File));
+
+				// Copy File Name
+				strcpy(item->name, dname);
+
+				// Set Folder Flag
+				item->isFolder = info.attributes & FS_ATTRIBUTE_DIRECTORY;
+
+				// New List
+				if(files == NULL) 
+					files = item;
+
+				// Existing List
+				else
+				{
+					// Iterator Variable
+					File * list = files;
+
+					// Append to List
+					while(list->next != NULL) list = list->next;
+
+					// Link Item
+					list->next = item;
+				}
+
+				// Increase File Count
+				fileCount++;
 			}
-
-			// Increase File Count
-			fileCount++;
-		}
+		} 
+		while(entriesRead);
 
 		// Close Directory
-		closedir(directory);
+		FSDIR_Close(dirHandle);
 	}
-	
 
 	// Attempt to keep Index
 	if(!clearindex)
 	{
 		// Fix Position
-		if(position >= fileCount) 
-			position = fileCount - 1;
+		if(position >= fileCount) position = fileCount - 1;
 	}
 
 	// Reset Position
-	else 
-		position = 0;
+	else position = 0;
 }
 
 void recursiveFree(File * node)
@@ -509,17 +516,12 @@ File * findindex(int index)
 	return file;
 }
 
-
 int drawDeletionDialog()
 {	
-	touchPosition touch;
-	
 	while(deleteDialog == true)
 	{
 		hidScanInput();
 		hidTouchRead(&touch);
-		u32 kPress = hidKeysDown();
-		u32 kHeld = hidKeysHeld();
 		
 		sf2d_start_frame(GFX_BOTTOM, GFX_LEFT);
 		
@@ -540,7 +542,7 @@ int drawDeletionDialog()
 		if ((kHeld & KEY_L) && (kHeld & KEY_R))
 			captureScreenshot();
 			
-		if ((kPress & KEY_A) || (touchInRect(240, 320, 142, 185)))
+		if ((kPressed & KEY_A) || (touchInRect(240, 320, 142, 185)))
 		{
 			if(delete() == 0)
 			{
@@ -550,7 +552,7 @@ int drawDeletionDialog()
 			
 			break;
 		}
-		else if ((kPress & KEY_B) || (touchInRect(136, 239, 142, 185)))
+		else if ((kPressed & KEY_B) || (touchInRect(136, 239, 142, 185)))
 			break;
 	}
 	
@@ -576,14 +578,10 @@ int displayProperties()
 	char size[16];
 	getSizeString(size, getFileSize(sdmcArchive, fullPath));
 	
-	touchPosition touch;
-	
 	while(properties == true)
 	{
 		hidScanInput();
 		hidTouchRead(&touch);
-		u32 kPress = hidKeysDown();
-		u32 kHeld = hidKeysHeld();
 		
 		sf2d_start_frame(GFX_BOTTOM, GFX_LEFT);
 		
@@ -635,7 +633,7 @@ int displayProperties()
 		if ((kHeld & KEY_L) && (kHeld & KEY_R))
 			captureScreenshot();
 		
-		if ((kPress & KEY_B) || (kPress & KEY_A) || (touchInRect(36, 284, 192, 220)))
+		if ((kPressed & KEY_B) || (kPressed & KEY_A) || (touchInRect(36, 284, 192, 220)))
 			properties = false;
 	}
 	

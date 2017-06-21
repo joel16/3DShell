@@ -273,8 +273,6 @@ void mainMenu(int clearindex)
 	
 	if (clearindex != 0)
 		updateList(CLEAR);
-		
-	touchPosition touch;
 	
 /*turnOnBGM:
 	if(fileExists(sdmcArchive, "/3ds/dspfirm.cdc"))
@@ -299,34 +297,32 @@ turnOffBGM:
 		
 		hidScanInput();
 		hidTouchRead(&touch);
-		u32 kPress = hidKeysDown();
-		u32 kHeld = hidKeysHeld();
 		
 		if ((kHeld & KEY_L) && (kHeld & KEY_R))
 			captureScreenshot();
 		
-		if ((kPress & KEY_TOUCH) && (touchInRect(0, 22, 0, 20)))
+		if ((kPressed & KEY_TOUCH) && (touchInRect(0, 22, 0, 20)))
 		{
 			wait(100000000);
 			DEFAULT_STATE = STATE_HOME;
 		}
-		else if ((kPress & KEY_TOUCH) && (touchInRect(23, 47, 0, 20)))
+		else if ((kPressed & KEY_TOUCH) && (touchInRect(23, 47, 0, 20)))
 		{
 			wait(100000000);
 			DEFAULT_STATE = STATE_OPTIONS;
 		}
-		else if ((kPress & KEY_TOUCH) && (touchInRect(48, 73, 0, 20)))
+		else if ((kPressed & KEY_TOUCH) && (touchInRect(48, 73, 0, 20)))
 		{
 			wait(100000000);
 			DEFAULT_STATE = STATE_SETTINGS;
 		}
-		else if ((kPress & KEY_TOUCH) && (touchInRect(74, 97, 0, 20)))
+		else if ((kPressed & KEY_TOUCH) && (touchInRect(74, 97, 0, 20)))
 		{
 			wait(100000000);
 			DEFAULT_STATE = STATE_UPDATE;
 		}
 		
-		/*else if ((kPress & KEY_TOUCH) && (touchInRect(0, 320, 50, 72)) && (IF_SETTINGS))
+		/*else if ((kPressed & KEY_TOUCH) && (touchInRect(0, 320, 50, 72)) && (IF_SETTINGS))
 		{
 			if (bgmEnable == false)
 			{
@@ -342,7 +338,7 @@ turnOffBGM:
 			}
 		}*/
 		
-		if ((kPress & KEY_TOUCH) && (touchInRect(0, 320, 90, 112)) && (IF_SETTINGS))
+		if ((kPressed & KEY_TOUCH) && (touchInRect(0, 320, 90, 112)) && (IF_SETTINGS))
 		{
 			wait(100000000);
 			if (sysProtection == false)
@@ -357,7 +353,7 @@ turnOffBGM:
 			}
 		}
 		
-		else if ((kPress & KEY_TOUCH) && (touchInRect(283, 303, 125, 145)) && (IF_SETTINGS))
+		else if ((kPressed & KEY_TOUCH) && (touchInRect(283, 303, 125, 145)) && (IF_SETTINGS))
 		{
 			wait(100000000);
 			DEFAULT_STATE = STATE_THEME;
@@ -366,7 +362,7 @@ turnOffBGM:
 			displayFiles(CLEAR);
 		}
 		
-		if ((kPress & KEY_TOUCH) && (touchInRect(98, 123, 0, 20)))
+		if ((kPressed & KEY_TOUCH) && (touchInRect(98, 123, 0, 20)))
 		{	
 			wait(100000000);
 			DEFAULT_STATE = STATE_FTP;
@@ -395,7 +391,7 @@ turnOffBGM:
 			}
 		}
 		
-		if ((kPress & KEY_TOUCH) && (touchInRect(124, 147, 0, 20)))
+		if ((kPressed & KEY_TOUCH) && (touchInRect(124, 147, 0, 20)))
 		{
 			wait(100000000);
 			DEFAULT_STATE = STATE_DOWNLOAD;
@@ -405,7 +401,7 @@ turnOffBGM:
 		{
 			bool downloadReady = false;
 			
-			if ((kPress & KEY_TOUCH) && (touchInRect(0, 320, 40, 54)))
+			if ((kPressed & KEY_TOUCH) && (touchInRect(0, 320, 40, 54)))
 			{
 				strcpy(dl_url, keyboard_3ds_get(255, "Enter URL"));
 				if (strcmp(dl_url, "") != 0)
@@ -416,7 +412,7 @@ turnOffBGM:
 				downloadFile(dl_url, "/");
 		}
 	
-		if ((kPress & KEY_TOUCH) && (touchInRect(148, 173, 0, 20)))
+		if ((kPressed & KEY_TOUCH) && (touchInRect(148, 173, 0, 20)))
 		{
 			wait(100000000);
 			char buf[250];
@@ -434,7 +430,7 @@ turnOffBGM:
 			updateList(CLEAR);
 			displayFiles(CLEAR);
 		}
-		/*else if ((kPress & KEY_TOUCH) && (touchInRect(174, 199, 0, 20))) //Mount stuff goes here
+		/*else if ((kPressed & KEY_TOUCH) && (touchInRect(174, 199, 0, 20))) //Mount stuff goes here
 		{
 			wait(100000000);
 			strcpy(cwd, "nand:/");
@@ -443,7 +439,7 @@ turnOffBGM:
 			displayFiles(CLEAR);
 		}*/
 		
-		if ((kPress & KEY_TOUCH) && (touchInRect(290, 320, 0, 20)))
+		if ((kPressed & KEY_TOUCH) && (touchInRect(290, 320, 0, 20)))
 		{
 			strcpy(cwd, keyboard_3ds_get(250, "Enter path"));
 				
@@ -457,13 +453,13 @@ turnOffBGM:
 				displayFiles(KEEP);
 		}
 		
-		if (kPress & KEY_START) // exit
+		if (kPressed & KEY_START) // exit
 			break;			
 		
 		if(fileCount > 0)
 		{
 			// Position Decrement
-			if (kPress & KEY_DUP)
+			if (kPressed & KEY_DUP)
 			{
 				wait(100000000);
 				
@@ -479,7 +475,7 @@ turnOffBGM:
 			}
 
 			// Position Increment
-			else if (kPress & KEY_DDOWN)
+			else if (kPressed & KEY_DDOWN)
 			{
 				wait(100000000);
 				
@@ -518,7 +514,7 @@ turnOffBGM:
 				displayFiles(KEEP);
 			}
 			
-			else if (kPress & KEY_A)
+			else if (kPressed & KEY_A)
 			{
 				wait(66666666);
 				
@@ -583,7 +579,7 @@ turnOffBGM:
 					openFile(); // Open file/dir
 			}
 			
-			else if ((strcmp(cwd, ROOT_PATH) != 0) && (kPress & KEY_B))
+			else if ((strcmp(cwd, ROOT_PATH) != 0) && (kPressed & KEY_B))
 			{
 				wait(66666666);
 				
@@ -615,14 +611,14 @@ turnOffBGM:
 				}
 			}
 			
-			/*else if ((strcmp(cwd, ROOT_PATH) != 0) && (kPress & KEY_X))
+			/*else if ((strcmp(cwd, ROOT_PATH) != 0) && (kPressed & KEY_X))
 			{
 				wait(100000000);
 				
 				decodeQr();
 			}*/
 			
-			if ((kPress & KEY_TOUCH) && (touchInRect(37, 282, 179, 217)) && (IF_OPTIONS)) // Cancel
+			if ((kPressed & KEY_TOUCH) && (touchInRect(37, 282, 179, 217)) && (IF_OPTIONS)) // Cancel
 			{	
 				wait(100000000);
 				copyF = false;
@@ -641,7 +637,7 @@ turnOffBGM:
 				displayProperties();
 			}
 			
-			else if ((kPress & KEY_TOUCH) && (touchInRect(37, 160, 94, 130)) && (IF_OPTIONS))
+			else if ((kPressed & KEY_TOUCH) && (touchInRect(37, 160, 94, 130)) && (IF_OPTIONS))
 			{
 				selectionX = 0;
 				selectionY = 1;
@@ -651,7 +647,7 @@ turnOffBGM:
 				newFolder();
 			}
 			
-			else if ((kPress & KEY_TOUCH) && (touchInRect(37, 160, 131, 167)) && (IF_OPTIONS))
+			else if ((kPressed & KEY_TOUCH) && (touchInRect(37, 160, 131, 167)) && (IF_OPTIONS))
 			{
 				selectionX = 0;
 				selectionY = 2;
@@ -662,7 +658,7 @@ turnOffBGM:
 				drawDeletionDialog();
 			}
 			
-			else if ((kPress & KEY_TOUCH) && (touchInRect(161, 284, 56, 93)) && (IF_OPTIONS))
+			else if ((kPressed & KEY_TOUCH) && (touchInRect(161, 284, 56, 93)) && (IF_OPTIONS))
 			{
 				selectionX = 1;
 				selectionY = 0;
@@ -672,7 +668,7 @@ turnOffBGM:
 				renameFile();
 			}
 
-			if ((CAN_COPY) && (kPress & KEY_TOUCH) && (touchInRect(161, 284, 94, 130)) && (IF_OPTIONS))
+			if ((CAN_COPY) && (kPressed & KEY_TOUCH) && (touchInRect(161, 284, 94, 130)) && (IF_OPTIONS))
 			{
 				selectionX = 1;
 				selectionY = 1; 
@@ -681,7 +677,7 @@ turnOffBGM:
 				copyF = true;
 				displayFiles(KEEP);
 			}
-			else if (((copyF == true) && (deleteDialog == false)) && (kPress & KEY_TOUCH) && (touchInRect(161, 284, 94, 130)) && (IF_OPTIONS))
+			else if (((copyF == true) && (deleteDialog == false)) && (kPressed & KEY_TOUCH) && (touchInRect(161, 284, 94, 130)) && (IF_OPTIONS))
 			{
 				selectionX = 0;
 				selectionY = 0; 
@@ -695,7 +691,7 @@ turnOffBGM:
 				}	
 			}	
 			
-			if ((CAN_CUT) && (kPress & KEY_TOUCH) && (touchInRect(161, 284, 131, 167)) && (IF_OPTIONS))
+			if ((CAN_CUT) && (kPressed & KEY_TOUCH) && (touchInRect(161, 284, 131, 167)) && (IF_OPTIONS))
 			{
 				selectionX = 1;
 				selectionY = 2;
@@ -704,7 +700,7 @@ turnOffBGM:
 				cutF = true;
 				displayFiles(KEEP);
 			}
-			else if (((cutF == true) && (deleteDialog == false)) && (kPress & KEY_TOUCH) && (touchInRect(161, 284, 131, 167)) && (IF_OPTIONS))
+			else if (((cutF == true) && (deleteDialog == false)) && (kPressed & KEY_TOUCH) && (touchInRect(161, 284, 131, 167)) && (IF_OPTIONS))
 			{
 				selectionX = 0;
 				selectionY = 0;

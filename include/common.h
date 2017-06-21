@@ -35,5 +35,9 @@ sf2d_texture	*background, *options, *_properties, *selector, *deletion, *folderI
 
 sftd_font	*font, *font2;
 
-#endif
+touchPosition touch;
 
+#define kPressed hidKeysDown()
+#define kHeld hidKeysHeld()
+
+#endif

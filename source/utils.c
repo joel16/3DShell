@@ -241,3 +241,12 @@ bool isN3DS()
 	else
 		return false;
 }
+
+void utf2ascii(char* dst, u16* src)
+{
+	if(!src || !dst)
+		return;
+	
+	while(*src)*(dst++)=(*(src++))&0xFF;
+	*dst=0x00;
+}

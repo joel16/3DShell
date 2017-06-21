@@ -30,16 +30,12 @@ void displayImage(char * path, int ext)
 	
 	uint64_t start = osGetTime();
 	
-	touchPosition touch;
-	
 	bool bothScreens = false;
 		
 	while (aptMainLoop())
 	{
 		hidScanInput();
 		hidTouchRead(&touch);
-		u32 kPress = hidKeysDown();
-		u32 kHeld = hidKeysHeld();
 		
 		sf2d_start_frame(GFX_BOTTOM, GFX_LEFT); // Clear bottom screen
 		
@@ -72,7 +68,7 @@ void displayImage(char * path, int ext)
 		sf2d_draw_texture(galleryBar, 0, galleryBarY);
 		sftd_draw_textf(font, 30, nameY, RGBA8(255, 255, 255, 255), 11, "%.60s", fileName);
 		
-		if (kPress & KEY_TOUCH)
+		if (kPressed & KEY_TOUCH)
 		{
 			galleryBarY = 0;
 			nameY = 11;
@@ -81,7 +77,7 @@ void displayImage(char * path, int ext)
 		
 		endDrawing();
 		
-		if (kPress & KEY_B)
+		if (kPressed & KEY_B)
 		{
 			wait(100000000);
 			break;
