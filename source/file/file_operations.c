@@ -42,24 +42,14 @@ int renameFile()
 	if(strncmp(file->name, "..", 2) == 0) 
 		return -2;
 
-	char oldPath[500], newPath[500], name[255], ext[6];
+	char oldPath[500], newPath[500], name[255];
 
 	strcpy(oldPath, cwd);
 	strcpy(newPath, cwd);
 	strcat(oldPath, file->name);
-	strcpy(ext, ""); // Set ext to NULL
-	
-	if (!(file->isFolder)) // If it's not a folder preserve its extension to avoid file corruption.
-	{
-		strcat(ext, ".");
-		strcat(ext, get_filename_ext(file->name));
-	}
 	
 	strcpy(name, keyboard_3ds_get(255, file->name, "Enter name"));
 	strcat(newPath, name);
-	
-	if (strncmp(get_filename_ext(name), "", 1) == 0) // Second check for ext, this is if the user does not specify a file extension.
-		strcat(newPath, ext);
 	
 	fsRename(sdmcArchive, oldPath, newPath);
 	
