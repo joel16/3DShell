@@ -42,7 +42,8 @@ void initServices()
 	sf2d_init();
 	sftd_init();
 	
-	audio_init();
+	ndspInit();
+	ndspSetOutputMode(NDSP_OUTPUT_STEREO);
 	
 	sf2d_set_clear_color(RGBA8(0, 0, 0, 255));
 	sf2d_set_vblank_wait(0);
@@ -187,7 +188,7 @@ void termServices()
 	sf2d_free_texture(imgIcon);
 	sf2d_free_texture(uncheck);
 	
-	audio_stop();
+	ndspExit();
 	sftd_fini();
 	sf2d_fini();
 	romfsExit();
@@ -403,7 +404,7 @@ turnOffBGM:
 			
 			if ((kPressed & KEY_TOUCH) && (touchInRect(0, 320, 40, 54)))
 			{
-				strcpy(dl_url, keyboard_3ds_get(255, "Enter URL"));
+				strcpy(dl_url, keyboard_3ds_get(255, "", "Enter URL"));
 				if (strcmp(dl_url, "") != 0)
 					downloadReady = true;
 			}
@@ -441,7 +442,7 @@ turnOffBGM:
 		
 		if ((kPressed & KEY_TOUCH) && (touchInRect(290, 320, 0, 20)))
 		{
-			strcpy(cwd, keyboard_3ds_get(250, "Enter path"));
+			strcpy(cwd, keyboard_3ds_get(250, "", "Enter path"));
 				
 			if (dirExists(sdmcArchive, cwd))
 			{
@@ -455,6 +456,12 @@ turnOffBGM:
 		
 		if (kPressed & KEY_START) // exit
 			break;			
+			
+		if (audioIsPlaying && currentPlayingAudio != NULL)
+		{
+			if (kPressed & KEY_X) // exit
+				AUDIO_stop();	
+		}
 		
 		if(fileCount > 0)
 		{

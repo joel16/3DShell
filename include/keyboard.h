@@ -5,6 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-char * keyboard_3ds_get(int maxTextLength, const char* hintText);
+char * keyboard_3ds_get(int maxTextLength, const char* initialText, const char* hintText);
 
 #endif

@@ -1,6 +1,6 @@
 #include "keyboard.h"
 
-char * keyboard_3ds_get(int maxTextLength, const char* hintText)
+char * keyboard_3ds_get(int maxTextLength, const char* initialText, const char* hintText)
 {
 	static SwkbdState swkbd;
 	static SwkbdStatusData swkbdStatus;
@@ -12,6 +12,8 @@ char * keyboard_3ds_get(int maxTextLength, const char* hintText)
 	swkbdInit(&swkbd, SWKBD_TYPE_NORMAL, 2, maxTextLength);
 	
     swkbdSetHintText(&swkbd, hintText);
+	
+	swkbdSetInitialText(&swkbd, initialText);
 	
 	swkbdSetButton(&swkbd, SWKBD_BUTTON_LEFT, "Cancel", false);
 	swkbdSetButton(&swkbd, SWKBD_BUTTON_RIGHT, "Confirm", true);

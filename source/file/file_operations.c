@@ -17,7 +17,7 @@ int copymode = NOTHING_TO_COPY;
 void newFolder()
 {
 	char tempFolder[256];
-	strcpy(tempFolder, keyboard_3ds_get(256, "Enter name"));
+	strcpy(tempFolder, keyboard_3ds_get(256, "", "Enter name"));
 	
 	if (strncmp(tempFolder, "", 1) == 0)
 		mainMenu(KEEP);
@@ -55,7 +55,7 @@ int renameFile()
 		strcat(ext, get_filename_ext(file->name));
 	}
 	
-	strcpy(name, keyboard_3ds_get(255, "Enter name"));
+	strcpy(name, keyboard_3ds_get(255, file->name, "Enter name"));
 	strcat(newPath, name);
 	
 	if (strncmp(get_filename_ext(name), "", 1) == 0) // Second check for ext, this is if the user does not specify a file extension.
