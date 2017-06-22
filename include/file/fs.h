@@ -29,6 +29,7 @@ char* getFileModifiedTime(char *path);
 char* getFileAccessedTime(char *path);
 u64 getFileSize(FS_Archive archive, const char *path);
 int fsRemove(FS_Archive archive, const char *filename);
+int fsRmdir(FS_Archive archive, const char * path);
 int fsRename(FS_Archive archive, const char *old_filename, const char *new_filename);
 
 #endif

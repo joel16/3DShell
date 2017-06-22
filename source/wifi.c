@@ -1,3 +1,4 @@
+#include "common.h"
 #include "wifi.h"
 
 void drawWifiStatus(int x, int y)

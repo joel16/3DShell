@@ -62,7 +62,7 @@ void updateList(int clearindex)
 	u32 entriesRead;
 	static char dname[1024];
 
-	if(directory == 0)
+	if(!(directory))
 	{
 		/* Add fake ".." entry except on root */
 		if (strcmp(cwd, ROOT_PATH)) 
@@ -85,7 +85,7 @@ void updateList(int clearindex)
 		do
 		{
 			static FS_DirectoryEntry info;
-			memset(&info,0,sizeof(FS_DirectoryEntry));
+			memset(&info, 0, sizeof(FS_DirectoryEntry));
 			
 			entriesRead = 0;
 			FSDIR_Read(dirHandle, &entriesRead, 1, &info);
@@ -117,6 +117,8 @@ void updateList(int clearindex)
 
 				// Set Folder Flag
 				item->isFolder = info.attributes & FS_ATTRIBUTE_DIRECTORY;
+				
+				item->isRDONLY = info.attributes & FS_ATTRIBUTE_READ_ONLY; 
 
 				// New List
 				if(files == NULL) 

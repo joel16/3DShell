@@ -9,7 +9,6 @@
 #define COPY_KEEP_ON_FINISH 0
 #define NOTHING_TO_COPY -1
 
-
 /*
 *	Copy Move Origin
 */

@@ -1,7 +1,6 @@
 #ifndef TEXT_H
 #define TEXT_H
 
-#include <stdlib.h>
 #include <ctype.h>
 
 #define MAX_LENGTH_LINE 77

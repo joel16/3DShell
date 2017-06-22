@@ -7,6 +7,8 @@
 #include <sfil.h>
 #include <sftd.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define ROOT_PATH "/"
 #define START_PATH ROOT_PATH

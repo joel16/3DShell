@@ -2,10 +2,6 @@
 #define DIRLIST_H
 
 #include <fcntl.h>
-#include <dirent.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 #define CLEAR 1
@@ -23,6 +19,8 @@ typedef struct File
 
 	// Folder Flag
 	int isFolder;
+	
+	int isRDONLY;
 
 	// File Name
 	char name[256];

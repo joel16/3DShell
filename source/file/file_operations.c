@@ -74,56 +74,70 @@ int delete_folder_recursive(char * path)
 	File * filelist = NULL;
 
 	// Open Working Directory
-	DIR * directory = opendir(path);
+	Handle dirHandle;
+	Result directory = FSUSER_OpenDirectory(&dirHandle, sdmcArchive, fsMakePath(PATH_ASCII, path));
+	
+	u32 entriesRead;
+	static char dname[1024];
 
 	// Opened Directory
-	if(directory)
+	if(!(directory))
 	{
-		struct dirent * info;
-
-		while ((info = readdir(directory)) != NULL)
-		{	
-			// Valid Filename
-			if(strlen(info->d_name) > 0)
+		do
+		{
+			static FS_DirectoryEntry info;
+			memset(&info, 0, sizeof(FS_DirectoryEntry));
+			
+			entriesRead = 0;
+			FSDIR_Read(dirHandle, &entriesRead, 1, &info);
+			
+			if(entriesRead)
 			{
-				if((strncmp(info->d_name, ".", 1) == 0) || (strncmp(info->d_name, "..", 2) == 0))
-					continue;
-
-				// Allocate Memory
-				File * item = (File *)malloc(sizeof(File));
-
-				// Clear Memory
-				memset(item, 0, sizeof(File));
-
-				// Copy File Name
-				strcpy(item->name, info->d_name);
-
-				// Set Folder Flag
-				item->isFolder = info->d_type == DT_DIR;
-
-				// New List
-				if(filelist == NULL) 
-					filelist = item;
-
-				// Existing List
-				else
+				utf2ascii(&dname[0], info.name);
+				
+				// Valid Filename
+				if(strlen(dname) > 0)
 				{
-					// Iterator Variable
-					File * list = filelist;
+					if((strncmp(dname, ".", 1) == 0) || (strncmp(dname, "..", 2) == 0))
+						continue;
 
-					// Append to List
-					while(list->next != NULL) 
-						list = list->next;
+					// Allocate Memory
+					File * item = (File *)malloc(sizeof(File));
+					
+					// Clear Memory
+					memset(item, 0, sizeof(File));
 
-					// Link Item
-					list->next = item;
+					// Copy File Name
+					strcpy(item->name, dname);
+
+					// Set Folder Flag
+					item->isFolder = info.attributes & FS_ATTRIBUTE_DIRECTORY;
+
+					// New List
+					if(filelist == NULL) 
+						filelist = item;
+
+					// Existing List
+					else
+					{
+						// Iterator Variable
+						File * list = filelist;
+
+						// Append to List
+						while(list->next != NULL) 
+							list = list->next;
+
+						// Link Item
+						list->next = item;
+					}
 				}
 			}
-		}
+		} 
+		while(entriesRead);
 	}
 
 	// Close Directory
-	closedir(directory);
+	FSDIR_Close(dirHandle);
 	
 	// List Node
 	File * node = filelist;
@@ -148,7 +162,7 @@ int delete_folder_recursive(char * path)
 
 			// Recursion Delete
 			delete_folder_recursive(buffer);
-
+			
 			// Free Memory
 			free(buffer);
 		}
@@ -178,7 +192,7 @@ int delete_folder_recursive(char * path)
 	recursiveFree(filelist);
 
 	// Delete now empty Folder
-	return rmdir(path);
+	return fsRmdir(sdmcArchive, path);
 }
 
 int delete(void)
@@ -323,58 +337,72 @@ int copy_file(char * a, char * b)
 int copy_folder_recursive(char * a, char * b)
 {
 	// Open Working Directory
-	DIR * directory = opendir(a);
+	Handle dirHandle;
+	Result directory = FSUSER_OpenDirectory(&dirHandle, sdmcArchive, fsMakePath(PATH_ASCII, a));
+	
+	u32 entriesRead;
+	static char dname[1024];
 
 	// Opened Directory
-	if(directory)
+	if(!(directory))
 	{
 		// Create Output Directory (is allowed to fail, we can merge folders after all)
 		makeDir(sdmcArchive, b);
-		
-		struct dirent * info;
 
 		// Iterate Files
-		while ((info = readdir(directory)) != NULL)
+		do
 		{
-			// Valid Filename
-			if(strlen(info->d_name) > 0)
+			static FS_DirectoryEntry info;
+			memset(&info, 0, sizeof(FS_DirectoryEntry));
+			
+			entriesRead = 0;
+			FSDIR_Read(dirHandle, &entriesRead, 1, &info);
+			
+			if(entriesRead)
 			{
-				// Calculate Buffer Size
-				int insize = strlen(a) + strlen(info->d_name) + 2;
-				int outsize = strlen(b) + strlen(info->d_name) + 2;
+				utf2ascii(&dname[0], info.name);
+				
+				// Valid Filename
+				if(strlen(dname) > 0)
+				{
+					// Calculate Buffer Size
+					int insize = strlen(a) + strlen(dname) + 2;
+					int outsize = strlen(b) + strlen(dname) + 2;
 
-				// Allocate Buffer
-				char * inbuffer = (char *)malloc(insize);
-				char * outbuffer = (char *)malloc(outsize);
+					// Allocate Buffer
+					char * inbuffer = (char *)malloc(insize);
+					char * outbuffer = (char *)malloc(outsize);
 
-				// Puzzle Input Path
-				strcpy(inbuffer, a);
-				inbuffer[strlen(inbuffer) + 1] = 0;
-				inbuffer[strlen(inbuffer)] = '/';
-				strcpy(inbuffer + strlen(inbuffer), info->d_name);
+					// Puzzle Input Path
+					strcpy(inbuffer, a);
+					inbuffer[strlen(inbuffer) + 1] = 0;
+					inbuffer[strlen(inbuffer)] = '/';
+					strcpy(inbuffer + strlen(inbuffer), dname);
 
-				// Puzzle Output Path
-				strcpy(outbuffer, b);
-				outbuffer[strlen(outbuffer) + 1] = 0;
-				outbuffer[strlen(outbuffer)] = '/';
-				strcpy(outbuffer + strlen(outbuffer), info->d_name);
+					// Puzzle Output Path
+					strcpy(outbuffer, b);
+					outbuffer[strlen(outbuffer) + 1] = 0;
+					outbuffer[strlen(outbuffer)] = '/';
+					strcpy(outbuffer + strlen(outbuffer), dname);
 
-				// Another Folder
-				if(info->d_type == DT_DIR)
-					copy_folder_recursive(inbuffer, outbuffer); // Copy Folder (via recursion)
+					// Another Folder
+					if(info.attributes & FS_ATTRIBUTE_DIRECTORY)
+						copy_folder_recursive(inbuffer, outbuffer); // Copy Folder (via recursion)
 
-				// Simple File
-				else
-					copy_file(inbuffer, outbuffer); // Copy File
+					// Simple File
+					else
+						copy_file(inbuffer, outbuffer); // Copy File
 
-				// Free Buffer
-				free(inbuffer);
-				free(outbuffer);
+					// Free Buffer
+					free(inbuffer);
+					free(outbuffer);
+				}
 			}
-		}
+		} 
+		while(entriesRead);
 
 		// Close Directory
-		closedir(directory);
+		FSDIR_Close(dirHandle);
 
 		// Return Success
 		return 0;

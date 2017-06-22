@@ -158,6 +158,13 @@ int fsRemove(FS_Archive archive, const char * filename)
     return ret == 0 ? 0 : -1;
 }
 
+int fsRmdir(FS_Archive archive, const char * path)
+{
+    Result ret = FSUSER_DeleteDirectory(archive, fsMakePath(PATH_ASCII, path));
+
+    return ret == 0 ? 0 : -1;
+}
+
 int fsRename(FS_Archive archive, const char * old_filename, const char * new_filename)
 {
     Result ret = FSUSER_RenameFile(archive, fsMakePath(PATH_ASCII, old_filename), archive, fsMakePath(PATH_ASCII, new_filename));
