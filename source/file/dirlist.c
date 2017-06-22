@@ -346,9 +346,7 @@ void displayFiles()
 			if(i == position)
 				sf2d_draw_texture(selector, 0, 53 + (38 * printed));
 			
-			sf2d_draw_texture(uncheck, 6, 64 + (38 * printed));
-			
-			//char * ext = strrchr(file->name, '.');
+			sf2d_draw_texture(uncheck, 8, 66 + (38 * printed));
 
 			if (file->isFolder)
 				sf2d_draw_texture(folderIcon, 30, 58 + (38 * printed));

@@ -65,6 +65,7 @@ void initServices()
 	systemIcon = sfil_load_PNG_file(system_path, SF2D_PLACE_RAM); setBilinearFilter(systemIcon);
 	zipIcon = sfil_load_PNG_file(zip_path, SF2D_PLACE_RAM); setBilinearFilter(zipIcon);
 	imgIcon = sfil_load_PNG_file(img_path, SF2D_PLACE_RAM); setBilinearFilter(imgIcon);
+	check = sfil_load_PNG_file(check_path, SF2D_PLACE_RAM); setBilinearFilter(check);
 	uncheck = sfil_load_PNG_file(uncheck_path, SF2D_PLACE_RAM); setBilinearFilter(uncheck);
 	
 	homeIcon = sfil_load_PNG_file("romfs:/res/home.png", SF2D_PLACE_RAM); setBilinearFilter(homeIcon);

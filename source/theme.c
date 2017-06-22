@@ -71,6 +71,7 @@ void loadTheme()
 	char system_res[100] = "/system.png";
 	char zip_res[100] = "/zip.png";
 	char img_res[100] = "/img.png";
+	char check_res[100] = "/check.png";
 	char uncheck_res[100] = "/uncheck.png";
 	char options_res[100] = "/options.png";
 	char properties_res[100] = "/properties.png";
@@ -103,6 +104,7 @@ void loadTheme()
 	replaceAsset(temp_arr, theme_dir, system_res, system_path);
 	replaceAsset(temp_arr, theme_dir, zip_res, zip_path);
 	replaceAsset(temp_arr, theme_dir, img_res, img_path);
+	replaceAsset(temp_arr, theme_dir, check_res, check_path);
 	replaceAsset(temp_arr, theme_dir, uncheck_res, uncheck_path);
 	replaceAsset(temp_arr, theme_dir, options_res, options_path);
 	replaceAsset(temp_arr, theme_dir, properties_res, properties_path);
@@ -232,6 +234,7 @@ void reloadTheme()
 	systemIcon = sfil_load_PNG_file(system_path, SF2D_PLACE_RAM); setBilinearFilter(systemIcon);
 	zipIcon = sfil_load_PNG_file(zip_path, SF2D_PLACE_RAM); setBilinearFilter(zipIcon);
 	imgIcon = sfil_load_PNG_file(img_path, SF2D_PLACE_RAM); setBilinearFilter(imgIcon);
+	check = sfil_load_PNG_file(check_path, SF2D_PLACE_RAM); setBilinearFilter(check);
 	uncheck = sfil_load_PNG_file(uncheck_path, SF2D_PLACE_RAM); setBilinearFilter(uncheck);
 	
 	font = sftd_load_font_file(font_path);

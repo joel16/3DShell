@@ -30,7 +30,7 @@ bool copyF, cutF, properties, deleteDialog, bgmEnable, sysProtection;
 
 jmp_buf exitJmp; 
 
-sf2d_texture	*background, *options, *_properties, *selector, *deletion, *folderIcon, *fileIcon, *uncheck,
+sf2d_texture	*background, *options, *_properties, *selector, *deletion, *folderIcon, *fileIcon, *check, *uncheck,
 				*audioIcon, *appIcon, *txtIcon, *systemIcon, *zipIcon, *imgIcon, *homeIcon, *optionsIcon, *sdIcon, *nandIcon,
 				*ftpIcon, *s_HomeIcon, *s_OptionsIcon, *s_SdIcon, *s_NandIcon, *settingsIcon, *s_SettingsIcon, *s_ftpIcon,
 				*searchIcon, *updateIcon, *s_UpdateIcon, *toggleOn, *toggleOff, *themeIcon, *dlIcon, *s_dlIcon;
