@@ -20,10 +20,14 @@ typedef struct File
 	// Folder Flag
 	int isFolder;
 	
+	// Read-only Flag
 	int isRDONLY;
 
 	// File Name
 	char name[256];
+	
+	// File Extension
+	char ext[4];
 } File;
 
 /*

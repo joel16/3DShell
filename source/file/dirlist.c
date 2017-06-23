@@ -118,7 +118,11 @@ void updateList(int clearindex)
 				// Set Folder Flag
 				item->isFolder = info.attributes & FS_ATTRIBUTE_DIRECTORY;
 				
+				// Set Read-Only Flag
 				item->isRDONLY = info.attributes & FS_ATTRIBUTE_READ_ONLY; 
+				
+				// Copy File Name
+				strcpy(item->ext, info.shortExt);
 
 				// New List
 				if(files == NULL) 
@@ -346,31 +350,35 @@ void displayFiles()
 			if(i == position)
 				sf2d_draw_texture(selector, 0, 53 + (38 * printed));
 			
+			char path[500];
+			strcpy(path, cwd);
+			strcpy(path + strlen(path), file->name);
+
 			sf2d_draw_texture(uncheck, 8, 66 + (38 * printed));
 
 			if (file->isFolder)
 				sf2d_draw_texture(folderIcon, 30, 58 + (38 * printed));
-			else if ((strncmp(get_filename_ext(file->name), "mp3", 3) == 0) || (strncmp(get_filename_ext(file->name), "MP3", 3) == 0))
+			else if ((strncmp(file->ext, "mp3", 3) == 0) || (strncmp(file->ext, "MP3", 3) == 0))
 				sf2d_draw_texture(audioIcon, 30, 58 + (38 * printed));
-			else if ((strncmp(get_filename_ext(file->name), "txt", 3) == 0) || (strncmp(get_filename_ext(file->name), "TXT", 3) == 0))
+			else if ((strncmp(file->ext, "txt", 3) == 0) || (strncmp(file->ext, "TXT", 3) == 0))
 				sf2d_draw_texture(txtIcon, 30, 58 + (38 * printed));
-			else if ((strncmp(get_filename_ext(file->name), "bin", 3) == 0) || (strncmp(get_filename_ext(file->name), "BIN", 3) == 0) || 
-					(strncmp(get_filename_ext(file->name), "firm", 4) == 0) || (strncmp(get_filename_ext(file->name), "FIRM", 4) == 0))
+			else if ((strncmp(file->ext, "bin", 3) == 0) || (strncmp(file->ext, "BIN", 3) == 0) || 
+					(strncmp(file->ext, "fir", 3) == 0) || (strncmp(file->ext, "FIR", 3) == 0))
 				sf2d_draw_texture(systemIcon, 30, 58 + (38 * printed));
-			else if ((strncmp(get_filename_ext(file->name), "rar", 3) == 0) || (strncmp(get_filename_ext(file->name), "RAR", 3) == 0) || 
-					(strncmp(get_filename_ext(file->name), "zip", 3) == 0) || (strncmp(get_filename_ext(file->name), "ZIP", 3) == 0))
+			else if ((strncmp(file->ext, "rar", 3) == 0) || (strncmp(file->ext, "RAR", 3) == 0) || 
+					(strncmp(file->ext, "zip", 3) == 0) || (strncmp(file->ext, "ZIP", 3) == 0))
 				sf2d_draw_texture(zipIcon, 30, 58 + (38 * printed));
-			else if ((strncmp(get_filename_ext(file->name), "jpg", 3) == 0) || (strncmp(get_filename_ext(file->name), "JPG", 3) == 0) || 
-					(strncmp(get_filename_ext(file->name), "png", 3) == 0) || (strncmp(get_filename_ext(file->name), "PNG", 3) == 0) || 
-					(strncmp(get_filename_ext(file->name), "gif", 3) == 0) || (strncmp(get_filename_ext(file->name), "GIF", 3) == 0))
+			else if ((strncmp(file->ext, "jpg", 3) == 0) || (strncmp(file->ext, "JPG", 3) == 0) || 
+					(strncmp(file->ext, "png", 3) == 0) || (strncmp(file->ext, "PNG", 3) == 0) || 
+					(strncmp(file->ext, "gif", 3) == 0) || (strncmp(file->ext, "GIF", 3) == 0))
 				sf2d_draw_texture(imgIcon, 30, 58 + (38 * printed));
-			else if ((strncmp(get_filename_ext(file->name), "3dsx", 4) == 0) || (strncmp(get_filename_ext(file->name), "3DSX", 4) == 0) || 
-					(strncmp(get_filename_ext(file->name), "cia", 3) == 0) || (strncmp(get_filename_ext(file->name), "CIA", 3) == 0))
+			else if ((strncmp(file->ext, "3ds", 3) == 0) || (strncmp(file->ext, "3DS", 3) == 0) || 
+					(strncmp(file->ext, "cia", 3) == 0) || (strncmp(file->ext, "CIA", 3) == 0))
 				sf2d_draw_texture(appIcon, 30, 58 + (38 * printed));
 			else
 				sf2d_draw_texture(fileIcon, 30, 58 + (38 * printed));
 			
-			char buf[64], path[500], size[16];
+			char buf[64], size[16];
 
 			strncpy(buf, file->name, sizeof(buf));
 			buf[sizeof(buf) - 1] = '\0';
@@ -381,9 +389,6 @@ void displayFiles()
 				strcat(buf, " ");
 			
 			sftd_draw_textf(font, 70, 60 + (38 * printed), RGBA8(TopScreen_colour.r ,TopScreen_colour.g, TopScreen_colour.b, 255), 11, "%.52s", buf); // Display file name
-			
-			strcpy(path, cwd);
-			strcpy(path + strlen(path), file->name);
 			
 			if ((file->isFolder) && (strncmp(file->name, "..", 2) != 0))
 				sftd_draw_textf(font2, 70, 75 + (38 * printed), RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), 10, "%s drwxr-x---", getFileModifiedTime(path));
@@ -419,8 +424,6 @@ void openFile(void)
 	strcpy(path, cwd);
 	strcpy(path + strlen(path), file->name);
 	
-	//char * ext = strrchr(path, '.');
-	
 	if (file->isFolder)
 	{
 		// Attempt to navigate to Target
@@ -432,17 +435,17 @@ void openFile(void)
 		}
 	}
 	
-	else if ((strncmp(get_filename_ext(file->name), "png", 3) == 0) || (strncmp(get_filename_ext(file->name), "PNG", 3) == 0))
+	else if ((strncmp(file->ext, "png", 3) == 0) || (strncmp(file->ext, "PNG", 3) == 0))
 		displayImage(path, 0);
-	else if ((strncmp(get_filename_ext(file->name), "jpg", 3) == 0) || (strncmp(get_filename_ext(file->name), "JPG", 3) == 0))
+	else if ((strncmp(file->ext, "jpg", 3) == 0) || (strncmp(file->ext, "JPG", 3) == 0))
 		displayImage(path, 1);
-	else if ((strncmp(get_filename_ext(file->name), "gif", 3) == 0) || (strncmp(get_filename_ext(file->name), "GIF", 3) == 0))
+	else if ((strncmp(file->ext, "gif", 3) == 0) || (strncmp(file->ext, "GIF", 3) == 0))
 		displayImage(path, 2);
-	else if ((strncmp(get_filename_ext(file->name), "txt", 3) == 0) || (strncmp(get_filename_ext(file->name), "TXT", 3) == 0))
+	else if ((strncmp(file->ext, "txt", 3) == 0) || (strncmp(file->ext, "TXT", 3) == 0))
 		displayText(path);
-	else if ((strncmp(get_filename_ext(file->name), "cia", 3) == 0) || (strncmp(get_filename_ext(file->name), "CIA", 3) == 0))
+	else if ((strncmp(file->ext, "cia", 3) == 0) || (strncmp(file->ext, "CIA", 3) == 0))
 		installCIA(path, MEDIATYPE_SD, false);
-	else if ((strncmp(get_filename_ext(file->name), "zip", 3) == 0) || (strncmp(get_filename_ext(file->name), "ZIP", 3) == 0))
+	else if ((strncmp(file->ext, "zip", 3) == 0) || (strncmp(file->ext, "ZIP", 3) == 0))
 	{
 		extractZip(path, cwd);
 		updateList(CLEAR);
@@ -569,11 +572,9 @@ int displayProperties()
 	
 	char path[255], fullPath[500];
 	
-	strcpy(fileName, file->name);
-	
 	strcpy(path, cwd);
 	strcpy(fullPath, cwd);
-	strcpy(fullPath + strlen(fullPath), fileName);
+	strcpy(fullPath + strlen(fullPath), file->name);
 	
 	char size[16];
 	getSizeString(size, getFileSize(sdmcArchive, fullPath));
@@ -597,27 +598,28 @@ int displayProperties()
 		
 		sftd_draw_text(font2, 42, 74, RGBA8(Options_title_text_colour.r, Options_title_text_colour.g, Options_title_text_colour.b, 255), 10, lang_properties[language][2]);
 			sftd_draw_textf(font2, 100, 74,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "%.36s", fileName);
-		sftd_draw_text(font2, 42, 94,RGBA8(Options_title_text_colour.r, Options_title_text_colour.g, Options_title_text_colour.b, 255), 10, lang_properties[language][3]);
-			sftd_draw_textf(font2, 100, 94,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "%s", path);
+		sftd_draw_text(font2, 42, 94, RGBA8(Options_title_text_colour.r, Options_title_text_colour.g, Options_title_text_colour.b, 255), 10, lang_properties[language][3]);
+			sftd_draw_textf(font2, 100, 94, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "%s", path);
 			
-		sftd_draw_text(font2, 42, 114,RGBA8(Options_title_text_colour.r, Options_title_text_colour.g, Options_title_text_colour.b, 255), 10, lang_properties[language][4]);	
+		sftd_draw_text(font2, 42, 114, RGBA8(Options_title_text_colour.r, Options_title_text_colour.g, Options_title_text_colour.b, 255), 10, lang_properties[language][4]);	
+		
 		if (file->isFolder)
 			sftd_draw_text(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, lang_files[language][1]);
-		else if ((strncmp(get_filename_ext(fileName), "CIA", 3) == 0) || (strncmp(get_filename_ext(fileName), "cia", 3) == 0) || (strncmp(get_filename_ext(fileName), "3DSX", 4) == 0) || (strncmp(get_filename_ext(fileName), "3dsx", 4) == 0))
+		else if ((strncmp(file->ext, "CIA", 3) == 0) || (strncmp(file->ext, "cia", 3) == 0) || (strncmp(file->ext, "3DS", 3) == 0) || (strncmp(file->ext, "3ds", 3) == 0))
 			sftd_draw_text(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, lang_files[language][2]);
-		else if ((strncmp(get_filename_ext(fileName), "bin", 3) == 0) || (strncmp(get_filename_ext(fileName), "BIN", 3) == 0) || (strncmp(get_filename_ext(fileName), "firm", 4) == 0) || (strncmp(get_filename_ext(fileName), "FIRM", 4) == 0))
+		else if ((strncmp(file->ext, "bin", 3) == 0) || (strncmp(file->ext, "BIN", 3) == 0) || (strncmp(file->ext, "fir", 3) == 0) || (strncmp(file->ext, "FIR", 3) == 0))
 			sftd_draw_text(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, lang_files[language][3]);
-		else if ((strncmp(get_filename_ext(fileName), "zip", 3) == 0) || (strncmp(get_filename_ext(fileName), "ZIP", 3) == 0))
+		else if ((strncmp(file->ext, "zip", 3) == 0) || (strncmp(file->ext, "ZIP", 3) == 0))
 			sftd_draw_text(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, lang_files[language][4]);
-		else if ((strncmp(get_filename_ext(fileName), "rar", 3) == 0) || (strncmp(get_filename_ext(fileName), "RAR", 3) == 0))
+		else if ((strncmp(file->ext, "rar", 3) == 0) || (strncmp(file->ext, "RAR", 3) == 0))
 			sftd_draw_text(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, lang_files[language][5]);
-		else if ((strncmp(get_filename_ext(fileName), "PNG", 3) == 0) || (strncmp(get_filename_ext(fileName), "png", 3) == 0))
+		else if ((strncmp(file->ext, "PNG", 3) == 0) || (strncmp(file->ext, "png", 3) == 0))
 			sftd_draw_text(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, lang_files[language][6]);
-		else if ((strncmp(get_filename_ext(fileName), "JPG", 3) == 0) || (strncmp(get_filename_ext(fileName), "jpg", 3) == 0))
+		else if ((strncmp(file->ext, "JPG", 3) == 0) || (strncmp(file->ext, "jpg", 3) == 0))
 			sftd_draw_text(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, lang_files[language][7]);
-		else if ((strncmp(get_filename_ext(fileName), "MP3", 3) == 0) || (strncmp(get_filename_ext(fileName), "mp3", 3) == 0))
+		else if ((strncmp(file->ext, "MP3", 3) == 0) || (strncmp(file->ext, "mp3", 3) == 0))
 			sftd_draw_text(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, lang_files[language][8]);
-		else if ((strncmp(get_filename_ext(fileName), "txt", 3) == 0) || (strncmp(get_filename_ext(fileName), "TXT", 3) == 0) || (strncmp(get_filename_ext(fileName), "XML", 3) == 0) || (strncmp(get_filename_ext(fileName), "xml", 3) == 0))
+		else if ((strncmp(file->ext, "txt", 3) == 0) || (strncmp(file->ext, "TXT", 3) == 0) || (strncmp(file->ext, "XML", 3) == 0) || (strncmp(file->ext, "xml", 3) == 0))
 			sftd_draw_text(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, lang_files[language][9]);
 		else
 			sftd_draw_text(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, lang_files[language][10]);

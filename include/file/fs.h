@@ -20,7 +20,6 @@ typedef struct
 
 void openSdArchive();
 void closeSdArchive();
-const char *get_filename_ext(const char *filename);
 int makeDir(FS_Archive archive, const char *path);
 bool fileExists(FS_Archive archive, char * path);
 bool dirExists(FS_Archive archive, const char * path);

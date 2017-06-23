@@ -15,6 +15,8 @@
 char copysource[1024];
 
 extern int copymode;
+int selected;
+char selected_file[255][255]; // 255 slots, of length 255
 
 void newFolder();
 int renameFile(void);
@@ -24,6 +26,7 @@ int copy_file(char * a, char * b);
 int copy_folder_recursive(char * a, char * b);
 int paste(void);
 void installDirectories();
+int addToClipboard();
 void saveLastDirectory();
 
 #endif

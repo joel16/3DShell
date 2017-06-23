@@ -11,16 +11,6 @@ void closeSdArchive()
 	FSUSER_CloseArchive(sdmcArchive);
 }
 
-const char *get_filename_ext(const char *filename) 
-{
-    const char *dot = strrchr(filename, '.');
-    
-	if (!dot || dot == filename) 
-		return "";
-    
-	return dot + 1;
-}
-
 int makeDir(FS_Archive archive, const char *path)
 {
 	if((!archive) || (!path))

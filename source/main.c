@@ -187,6 +187,7 @@ void termServices()
 	sf2d_free_texture(systemIcon);
 	sf2d_free_texture(zipIcon);
 	sf2d_free_texture(imgIcon);
+	sf2d_free_texture(check);
 	sf2d_free_texture(uncheck);
 	
 	ndspExit();
