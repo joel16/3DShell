@@ -45,6 +45,9 @@ void initServices()
 	ndspInit();
 	ndspSetOutputMode(NDSP_OUTPUT_STEREO);
 	
+	amInit();
+	AM_QueryAvailableExternalTitleDatabase(NULL);
+	
 	sf2d_set_clear_color(RGBA8(0, 0, 0, 255));
 	sf2d_set_vblank_wait(0);
 	
@@ -190,6 +193,7 @@ void termServices()
 	sf2d_free_texture(check);
 	sf2d_free_texture(uncheck);
 	
+	amExit();
 	ndspExit();
 	sftd_fini();
 	sf2d_fini();
