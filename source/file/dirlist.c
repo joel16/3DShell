@@ -444,7 +444,7 @@ void openFile(void)
 	else if ((strncmp(file->ext, "txt", 3) == 0) || (strncmp(file->ext, "TXT", 3) == 0))
 		displayText(path);
 	else if ((strncmp(file->ext, "cia", 3) == 0) || (strncmp(file->ext, "CIA", 3) == 0))
-		installCIA(path, MEDIATYPE_SD, false);
+		displayCIA(path);
 	else if ((strncmp(file->ext, "zip", 3) == 0) || (strncmp(file->ext, "ZIP", 3) == 0))
 	{
 		extractZip(path, cwd);
