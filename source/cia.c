@@ -238,8 +238,8 @@ int displayCIA(const char * path)
 		}
 		else if (isInstalling == 2)
 		{
-			sftd_draw_text(font, (300 - sftd_get_text_width(font, 11, "DONE")), 220, RGBA8(0, 150, 136, 255), 11, "DONE");
-			sftd_draw_text(font, (300 - (sftd_get_text_width(font, 11, "OPEN") + sftd_get_text_width(font, 11, "DONE") + 20)), 220, RGBA8(0, 150, 136, 255), 11, "OPEN");
+			sftd_draw_text(font, (300 - sftd_get_text_width(font, 11, "OPEN")), 220, RGBA8(0, 150, 136, 255), 11, "OPEN");
+			sftd_draw_text(font, (300 - (sftd_get_text_width(font, 11, "DONE") + sftd_get_text_width(font, 11, "OPEN") + 20)), 220, RGBA8(0, 150, 136, 255), 11, "DONE");
 		}
 		
 		sf2d_end_frame();
@@ -299,15 +299,15 @@ int displayCIA(const char * path)
 		}
 		else if (isInstalling == 2)
 		{
-			if (touchInRect((300 - sftd_get_text_width(font, 11, "DONE")), 300, 220, 240))
-			{
-				wait(100000000);
-				break;
-			}
-			else if (touchInRect((300 - (sftd_get_text_width(font, 11, "OPEN") + sftd_get_text_width(font, 11, "DONE") + 20)), ((300 - 20) - sftd_get_text_width(font, 11, "DONE")), 220, 240))
+			if (touchInRect((300 - sftd_get_text_width(font, 11, "OPEN")), 300, 220, 240))
 			{
 				wait(100000000);
 				launchCIA(cia.titleID, cia.mediaType);
+			}
+			else if (touchInRect((300 - (sftd_get_text_width(font, 11, "DONE") + sftd_get_text_width(font, 11, "OPEN") + 20)), ((300 - 20) - sftd_get_text_width(font, 11, "OPEN")), 220, 240))
+			{
+				wait(100000000);
+				break;
 			}
 		}
 				
