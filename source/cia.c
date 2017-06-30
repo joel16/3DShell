@@ -214,20 +214,20 @@ Cia getCiaInfo(const char * path, FS_MediaType mediaType)
 		char buffer[512];
 		if(smdh.titles[language].shortDescription != NULL)
 		{
-			memset(buffer, 0, 0x40);
-			utfn2ascii(buffer, smdh.titles[language].shortDescription, 0x40);
+			memset(buffer, 0, 64 + 1);
+			utfn2ascii(buffer, smdh.titles[language].shortDescription, 64 + 1);
 			strcpy(cia.title, buffer);
 		}
 		if(smdh.titles[language].longDescription != NULL)
 		{
-			memset(buffer, 0, 0x80);
-			utfn2ascii(buffer, smdh.titles[language].longDescription, 0x80);
+			memset(buffer, 0, 128 + 1);
+			utfn2ascii(buffer, smdh.titles[language].longDescription, 128 + 1);
 			strcpy(cia.description, buffer);
 		}
 		if(smdh.titles[language].publisher != NULL)
 		{
-			memset(buffer, 0, 0x40);
-			utfn2ascii(buffer, smdh.titles[language].publisher, 0x40);
+			memset(buffer, 0, 64 + 1);
+			utfn2ascii(buffer, smdh.titles[language].publisher, 64 + 1);
 			strcpy(cia.author, buffer);
 		}
 	}
@@ -371,7 +371,7 @@ int displayCIA(const char * path)
 		digitalTime(346, 1);
 		
 		sf2d_draw_texture(largeIcon, 15, 28);
-		sftd_draw_textf(font, 78, 28, RGBA8(0, 0, 0, 255), 11, "%s v%u (0x%016llX)", fileName, cia.version, cia.titleID);
+		sftd_draw_textf(font, 78, 28, RGBA8(0, 0, 0, 255), 11, "%s v%u (%016llX)", fileName, cia.version, cia.titleID);
 		sftd_draw_textf(font, 78, 44, RGBA8(0, 0, 0, 255), 11, "%s %s by %s", platformString(cia.platform), categoryString(cia.category), cia.author);
 		sftd_draw_textf(font, 78, 60, RGBA8(0, 0, 0, 255), 11, "%s", size);
 		

@@ -119,7 +119,7 @@ void initServices()
 	
 	//APT_SetAppCpuTimeLimit(80);
 	
-	language = getLanguage();
+	language = 1; //getLanguage();
 	
 	sprintf(welcomeMsg, "%s %s! %s", lang_welcome[language][0], getUsername(), lang_welcome[language][1]);
 	
