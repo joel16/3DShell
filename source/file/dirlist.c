@@ -572,9 +572,11 @@ int displayProperties()
 	
 	char path[255], fullPath[500];
 	
+	strcpy(fileName, file->name);
+	
 	strcpy(path, cwd);
 	strcpy(fullPath, cwd);
-	strcpy(fullPath + strlen(fullPath), file->name);
+	strcpy(fullPath + strlen(fullPath), fileName);
 	
 	char size[16];
 	getSizeString(size, getFileSize(sdmcArchive, fullPath));
