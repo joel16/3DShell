@@ -461,13 +461,7 @@ turnOffBGM:
 		}
 		
 		if (kPressed & KEY_START) // exit
-			break;			
-			
-		if (audioIsPlaying && currentPlayingAudio != NULL)
-		{
-			if (kPressed & KEY_X) // exit
-				AUDIO_stop();	
-		}
+			break;
 		
 		if(fileCount > 0)
 		{

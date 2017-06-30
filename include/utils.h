@@ -12,6 +12,15 @@
 
 #define wait(nanoSec) svcSleepThread(nanoSec);
 
+typedef struct 
+{
+	u32 magic;
+	u8* pixels;
+	int width;
+	int height;
+	u16 bitperpixel;
+} Bitmap;
+
 void setBilinearFilter(sf2d_texture *texture);
 void endDrawing();
 void getSizeString(char * string, uint64_t size);
@@ -26,5 +35,8 @@ u8 getLanguage();
 const char * getUsername();
 bool isN3DS();
 void utf2ascii(char* dst, u16* src);
+void utfn2ascii(char* dst, u16* src, int max);
+void putPixel565(u8* dst, u8 x, u8 y, u16 v);
+u8* flipBitmap24(u8* flip_bitmap, Bitmap* result);
 
 #endif
