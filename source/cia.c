@@ -331,14 +331,14 @@ int displayCIA(const char * path)
 	
 	sf2d_set_clear_color(RGBA8(245, 245, 245, 255));
 	
-	int pBar = 34, xlim = 300;
-	
 	int isInstalling = 0;
 	
 	Cia cia = getCiaInfo(path, MEDIATYPE_SD);
 	
 	char size[16];
 	getSizeString(size, cia.size);
+	
+	int pBar = 34, xlim = 300;
 		
 	while (aptMainLoop())
 	{
@@ -377,7 +377,6 @@ int displayCIA(const char * path)
 		
 		if (isInstalling == 0)
 			sftd_draw_text(font, 15, 86, RGBA8(0, 0, 0, 255), 11, "Do you want to install this application?");
-		
 		else if (isInstalling == 1)
 		{
 			sf2d_draw_rectangle(100, 130, 200, 3, RGBA8(185, 224, 220, 255));
@@ -386,16 +385,19 @@ int displayCIA(const char * path)
 			// Boundary stuff
 			sf2d_draw_rectangle(0, 130, 100, 3, RGBA8(245, 245, 245, 255));
 			sf2d_draw_rectangle(300, 130, 66, 3, RGBA8(245, 245, 245, 255)); 
-		
+	
 			sftd_draw_text(font, ((400 - sftd_get_text_width(font, 11, "Installing...")) / 2), 146, RGBA8(0, 0, 0, 255), 11, "Installing...");
-		
+			
 			pBar += 4;
 		
 			if (pBar >= xlim)
 				pBar = 34;
+			
+			isInstalling = installCIA(path, MEDIATYPE_SD, update);
 		}
 		else
 			sftd_draw_text(font, ((400 - sftd_get_text_width(font, 11, "App installed.")) / 2), 146, RGBA8(0, 0, 0, 255), 11, "App installed.");
+		
 		
 		endDrawing();
 		
@@ -403,9 +405,8 @@ int displayCIA(const char * path)
 		{
 			if (touchInRect((300 - sftd_get_text_width(font, 11, "INSTALL")), 300, 220, 240))
 			{
+				wait(100000000);
 				isInstalling = 1;
-				isInstalling = installCIA(path, MEDIATYPE_SD, update);
-				//wait(100000000);
 			}
 			else if (touchInRect((300 - (sftd_get_text_width(font, 11, "CANCEL") + sftd_get_text_width(font, 11, "INSTALL") + 20)), ((300 - 20) - sftd_get_text_width(font, 11, "INSTALL")), 220, 240))
 			{

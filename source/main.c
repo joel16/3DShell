@@ -133,7 +133,7 @@ void initServices()
 }
 
 void termServices()
-{
+{	
 	osSetSpeedupEnable(0);
 	
 	sftd_free_font(font);
@@ -227,16 +227,17 @@ static loop_status_t loop(loop_status_t (*callback)(void))
 		sf2d_draw_texture(settingsIcon, 50, 0);
 		sf2d_draw_texture(updateIcon, 75, 0);
 		sf2d_draw_texture(s_ftpIcon, 100, 0);
+		sf2d_draw_texture(dlIcon, 125, 0);
 		
 		if (BROWSE_STATE == STATE_SD)
-			sf2d_draw_texture(s_SdIcon, 125, 0);
+			sf2d_draw_texture(s_SdIcon, 150, 0);
 		else
-			sf2d_draw_texture(sdIcon, 125, 0);
+			sf2d_draw_texture(sdIcon, 150, 0);
 	
 		if (BROWSE_STATE == STATE_NAND)
-			sf2d_draw_texture(s_NandIcon, 150, 0);
+			sf2d_draw_texture(s_NandIcon, 175, 0);
 		else
-			sf2d_draw_texture(nandIcon, 150, 0);
+			sf2d_draw_texture(nandIcon, 175, 0);
 		
 		sf2d_draw_texture(searchIcon, (320 - searchIcon->width), -2);
 		
@@ -323,13 +324,13 @@ turnOffBGM:
 			wait(100000000);
 			DEFAULT_STATE = STATE_SETTINGS;
 		}
-		else if ((kPressed & KEY_TOUCH) && (touchInRect(74, 97, 0, 20)))
+		/*else if ((kPressed & KEY_TOUCH) && (touchInRect(74, 97, 0, 20)))
 		{
 			wait(100000000);
 			DEFAULT_STATE = STATE_UPDATE;
 		}
 		
-		/*else if ((kPressed & KEY_TOUCH) && (touchInRect(0, 320, 50, 72)) && (IF_SETTINGS))
+		else if ((kPressed & KEY_TOUCH) && (touchInRect(0, 320, 50, 72)) && (IF_SETTINGS))
 		{
 			if (bgmEnable == false)
 			{
@@ -398,7 +399,7 @@ turnOffBGM:
 			}
 		}
 		
-		if ((kPressed & KEY_TOUCH) && (touchInRect(124, 147, 0, 20)))
+		/*if ((kPressed & KEY_TOUCH) && (touchInRect(124, 147, 0, 20)))
 		{
 			wait(100000000);
 			DEFAULT_STATE = STATE_DOWNLOAD;
@@ -417,7 +418,7 @@ turnOffBGM:
 			
 			if (downloadReady == true)
 				downloadFile(dl_url, "/");
-		}
+		}*/
 	
 		if ((kPressed & KEY_TOUCH) && (touchInRect(148, 173, 0, 20)))
 		{

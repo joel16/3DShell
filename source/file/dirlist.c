@@ -154,12 +154,13 @@ void updateList(int clearindex)
 	// Attempt to keep Index
 	if(!clearindex)
 	{
-		// Fix Position
-		if(position >= fileCount) position = fileCount - 1;
+		if(position >= fileCount) 
+			position = fileCount - 1; // Fix Position
 	}
 
 	// Reset Position
-	else position = 0;
+	else 
+		position = 0;
 }
 
 void recursiveFree(File * node)
@@ -224,7 +225,7 @@ void displayFiles()
 	else
 		sf2d_draw_texture(settingsIcon, 50, 1);
 	
-	if (DEFAULT_STATE == STATE_UPDATE)
+	/*if (DEFAULT_STATE == STATE_UPDATE)
 	{
 		sf2d_draw_texture(s_UpdateIcon, 75, 0);
 		sftd_draw_text(font, ((320 - (sftd_get_text_width(font, 11, lang_update[language][0]))) / 2), 40, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), 11, lang_update[language][0]);
@@ -240,7 +241,7 @@ void displayFiles()
 		wait(300000000);
 		longjmp(exitJmp, 1);
 	}
-	else
+	else*/
 		sf2d_draw_texture(updateIcon, 75, 0);
 	
 	sf2d_draw_texture(ftpIcon, 100, 0);
@@ -397,7 +398,12 @@ void displayFiles()
 			else
 			{
 				getSizeString(size, getFileSize(sdmcArchive, path));
-				sftd_draw_textf(font2, 70, 75 + (38 * printed), RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), 10, "%s -rw-rw----", getFileModifiedTime(path));
+				
+				if (file->isRDONLY)
+					sftd_draw_textf(font2, 70, 75 + (38 * printed), RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), 10, "%s -r--r-----", getFileModifiedTime(path));
+				else
+					sftd_draw_textf(font2, 70, 75 + (38 * printed), RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), 10, "%s -rw-rw----", getFileModifiedTime(path));
+				
 				sftd_draw_textf(font2, 395 - sftd_get_text_width(font2, 10, size), 75 + (38 * printed), RGBA8(TopScreen_colour.r, TopScreen_colour.g, TopScreen_colour.b, 255), 10, "%s", size);
 			}
 			
@@ -441,8 +447,6 @@ void openFile(void)
 		displayImage(path, 1);
 	else if ((strncmp(file->ext, "gif", 3) == 0) || (strncmp(file->ext, "GIF", 3) == 0))
 		displayImage(path, 2);
-	else if ((strncmp(file->ext, "txt", 3) == 0) || (strncmp(file->ext, "TXT", 3) == 0))
-		displayText(path);
 	else if ((strncmp(file->ext, "cia", 3) == 0) || (strncmp(file->ext, "CIA", 3) == 0))
 		displayCIA(path);
 	else if ((strncmp(file->ext, "zip", 3) == 0) || (strncmp(file->ext, "ZIP", 3) == 0))
@@ -451,6 +455,8 @@ void openFile(void)
 		updateList(CLEAR);
 		displayFiles(CLEAR);
 	}
+	/*else if ((strncmp(file->ext, "txt", 3) == 0) || (strncmp(file->ext, "TXT", 3) == 0))
+		displayText(path);*/
 }
 
 // Navigate to Folder
