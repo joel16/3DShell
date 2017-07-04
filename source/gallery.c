@@ -1,3 +1,4 @@
+#include "bmp.h"
 #include "common.h"
 #include "dirlist.h"
 #include "gallery.h"
@@ -7,22 +8,27 @@
 void displayImage(char * path, int ext)
 {
 	sf2d_texture * image = NULL;
-
-	if (ext == 0)
+	
+	switch (ext)
 	{
-		image = sfil_load_PNG_file(path, SF2D_PLACE_RAM);
-		setBilinearFilter(image);
+		case 0:
+			image = sfil_load_PNG_file(path, SF2D_PLACE_RAM);
+			break;
+		
+		case 1:
+			image = sfil_load_JPEG_file(path, SF2D_PLACE_RAM);
+			break;
+		
+		case 2: // Supported formats: GIF, HDR, PIC, PNM, PSD, TGA.
+			image = sfil_load_IMG_file(path, SF2D_PLACE_RAM);
+			break;
+		
+		case 3: // Becasue sfil_load_BMP_file is broken.
+			image = sfil_load_BMP_file2(path);
+			break;
 	}
-	else if (ext == 1)
-	{
-		image = sfil_load_JPEG_file(path, SF2D_PLACE_RAM);
-		setBilinearFilter(image);
-	}
-	else if (ext == 2) // Supported formats: GIF, HDR, PIC, PNM, PSD, TGA
-	{
-		image = sfil_load_IMG_file(path, SF2D_PLACE_RAM);
-		setBilinearFilter(image);
-	}
+	
+	setBilinearFilter(image);
 	
 	sf2d_set_clear_color(RGBA8(33, 39, 43, 255));
 	

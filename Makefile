@@ -30,13 +30,13 @@ include $(DEVKITARM)/3ds_rules
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
 RESOURCES   :=	resources
-SOURCES		:=	source source/audio source/file source/net source/unzip 
+SOURCES		:=	source source/audio source/file source/libnsbmp source/net source/unzip 
 DATA		:=	data
-INCLUDES 	:= 	include include/audio include/file include/net include/unzip 
+INCLUDES 	:= 	include include/audio include/file include/libnsbmp include/net include/stb_image include/unzip 
 ROMFS		:=	romfs
 
 APP_TITLE		:= 3DShell
-APP_DESCRIPTION	:= GUI File Manager 
+APP_DESCRIPTION	:= Multi-purpose GUI File Manager 
 APP_AUTHOR		:= Joel16
 
 VERSION_MAJOR := 1
