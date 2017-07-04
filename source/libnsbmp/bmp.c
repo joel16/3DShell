@@ -142,10 +142,10 @@ sf2d_texture * sfil_load_BMP(unsigned char *data, size_t size, unsigned int x)
 	return texture;
 }
 
-sf2d_texture * sfil_load_BMP_file2(const char * file)
+sf2d_texture * sfil_load_BMP_file2(const char * filename)
 {
 	u32 size;
-	u8 * buf = (u8*)bufferizeFile(file, &size, true, false);
+	u8 * buf = (u8*)bufferizeFile(filename, &size, true, false);
 	
 	sf2d_texture * texture = sfil_load_BMP(buf, size, 0);
 	

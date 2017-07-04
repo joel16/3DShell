@@ -6,4 +6,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+sf2d_texture * sfil_load_BMP_file2(const char * filename);
+
 #endif
