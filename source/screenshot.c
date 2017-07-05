@@ -1,19 +1,12 @@
 #include "fs.h"
 #include "screenshot.h"
 
-static inline void update_gfx(void)
-{
-	gfxFlushBuffers();
-	gspWaitForVBlank();
-	gfxSwapBuffers();
-}
-
 #define USE_CALLBACK
 
 static void png_file_write(png_structp png_ptr, png_bytep data, png_size_t length)
 {
 	ssize_t rc;
-	FILE    *fp = (FILE*)png_get_io_ptr(png_ptr);
+	FILE *fp = (FILE*)png_get_io_ptr(png_ptr);
 	
 	if(length <= 0)
 	{
@@ -22,6 +15,7 @@ static void png_file_write(png_structp png_ptr, png_bytep data, png_size_t lengt
 	}
 
 	rc = fwrite(data, 1, length, fp);
+	
 	if(rc <= 0)
 	{
 		fprintf(stderr, "fwrite failed\n");
@@ -34,14 +28,12 @@ static void png_file_write(png_structp png_ptr, png_bytep data, png_size_t lengt
 	}
 }
 
-static void
-png_file_flush(png_structp png_ptr)
+static void png_file_flush(png_structp png_ptr)
 {
 	/* no-op */
 }
 
-static void
-png_file_error(png_structp png_ptr, png_const_charp error_msg)
+static void png_file_error(png_structp png_ptr, png_const_charp error_msg)
 {
 	fprintf(stderr, "%s\n", error_msg);
 }
@@ -55,7 +47,7 @@ static void png_file_warning(png_structp png_ptr, png_const_charp warning_msg)
 
 static void png_row_callback(png_structp png_ptr, png_uint_32 row, int pass)
 {
-	fprintf(stderr, "\x1b[2;0H%3d%%\n", row*100 / 480);
+	fprintf(stderr, "\x1b[2;0H%3d%%\n", row * 100 / 480);
 }
 
 #endif
@@ -266,12 +258,12 @@ void genScreenshotFileName(int lastNumber, char *fileName, const char *ext)
 	int num = lastNumber;
 	int day = timeStruct->tm_mday;
 	int month = timeStruct->tm_mon + 1;
-	int year = timeStruct->tm_year;
+	int year = timeStruct->tm_year + 1900;
 	
 	if (!(dirExists(fsArchive, "/screenshots/")))
 		makeDir(fsArchive, "/screenshots");
 
-	sprintf(fileName, "/screenshots/screenshot-%d-%d-%d-%i-%s", day, month, year, num, ext);
+	sprintf(fileName, "/screenshots/Screenshot_%02d%02d%02d-%i%s", year, month, day, num, ext);
 }
 
 void captureScreenshot()
