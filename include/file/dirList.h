@@ -48,7 +48,7 @@ extern File * files;
 /*
 *	Generic definitions
 */
-int selectionX, selectionY, BROWSE_STATE, DEFAULT_STATE;
+int selectionX, selectionY, DEFAULT_STATE;
 
 #define STATE_HOME 0
 #define STATE_OPTIONS 1
@@ -57,9 +57,6 @@ int selectionX, selectionY, BROWSE_STATE, DEFAULT_STATE;
 #define STATE_FTP 4
 #define STATE_THEME 5
 #define STATE_DOWNLOAD 6
-
-#define STATE_SD 0
-#define STATE_NAND 1
 
 #define IF_OPTIONS	((DEFAULT_STATE != STATE_HOME) && (DEFAULT_STATE != STATE_UPDATE) && (DEFAULT_STATE != STATE_SETTINGS) && \
 					(DEFAULT_STATE != STATE_FTP) && (DEFAULT_STATE != STATE_THEME))

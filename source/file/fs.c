@@ -1,14 +1,14 @@
 #include "fs.h"
 #include "utils.h"
 
-void openSdArchive()
+void openArchive(FS_ArchiveID id)
 {
-	FSUSER_OpenArchive(&sdmcArchive, ARCHIVE_SDMC, fsMakePath(PATH_EMPTY, ""));
+	FSUSER_OpenArchive(&fsArchive, id, fsMakePath(PATH_EMPTY, ""));
 }
 
-void closeSdArchive()
+void closeArchive()
 {
-	FSUSER_CloseArchive(sdmcArchive);
+	FSUSER_CloseArchive(fsArchive);
 }
 
 int makeDir(FS_Archive archive, const char *path)

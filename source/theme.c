@@ -22,7 +22,7 @@ char * setFileDefaultsChar(char path[], char data[], char var[])
 {
 	FILE * temp;
 	
-	if (!(fileExists(sdmcArchive, path)))
+	if (!(fileExists(fsArchive, path)))
 	{
 		temp = fopen(path, "w");
 		fprintf(temp, "%s", data);
@@ -47,7 +47,7 @@ void createFontColours(char * path, int r, int g, int b)
 {
 	FILE * file;
 	 
-	if (!(fileExists(sdmcArchive, path)))
+	if (!(fileExists(fsArchive, path)))
 	{
 		file = fopen(path, "w");
 		fprintf(file, "%d\n%d\n%d", r, g, b);

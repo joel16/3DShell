@@ -2942,7 +2942,7 @@ FTP_DECLARE(RMD)
 		return ftp_send_response(session, 553, "%s\r\n", strerror(errno));
 
   /* remove the directory */
-	rc = fsRmdir(sdmcArchive, session->buffer);
+	rc = fsRmdir(fsArchive, session->buffer);
 	if(rc != 0)
 		return ftp_send_response(session, 550, "failed to delete directory\r\n");
 
@@ -3013,7 +3013,7 @@ FTP_DECLARE(RNTO)
 		return ftp_send_response(session, 554, "%s\r\n", strerror(errno));
 
 	/* rename the file */
-	rc = fsRename(sdmcArchive, session->tmp_buffer, session->buffer);
+	rc = fsRename(fsArchive, session->tmp_buffer, session->buffer);
 	if(rc != 0)
 		return ftp_send_response(session, 550, "failed to rename file/directory\r\n");
 	

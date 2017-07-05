@@ -27,7 +27,7 @@ void newFolder()
 	
 	strcat(path, tempFolder);
 	
-	makeDir(sdmcArchive, path);
+	makeDir(fsArchive, path);
 	
 	mainMenu(CLEAR);	
 }
@@ -51,7 +51,7 @@ int renameFile()
 	strcpy(name, keyboard_3ds_get(255, file->name, "Enter name"));
 	strcat(newPath, name);
 	
-	fsRename(sdmcArchive, oldPath, newPath);
+	fsRename(fsArchive, oldPath, newPath);
 	
 	mainMenu(CLEAR);
 	
@@ -65,7 +65,7 @@ int delete_folder_recursive(char * path)
 
 	// Open Working Directory
 	Handle dirHandle;
-	Result directory = FSUSER_OpenDirectory(&dirHandle, sdmcArchive, fsMakePath(PATH_ASCII, path));
+	Result directory = FSUSER_OpenDirectory(&dirHandle, fsArchive, fsMakePath(PATH_ASCII, path));
 	
 	u32 entriesRead;
 	static char dname[1024];
@@ -171,7 +171,7 @@ int delete_folder_recursive(char * path)
 			strcpy(buffer + strlen(buffer), node->name);
 
 			// Delete File
-			fsRemove(sdmcArchive, buffer);
+			fsRemove(fsArchive, buffer);
 
 			// Free Memory
 			free(buffer);
@@ -182,7 +182,7 @@ int delete_folder_recursive(char * path)
 	recursiveFree(filelist);
 
 	// Delete now empty Folder
-	return fsRmdir(sdmcArchive, path);
+	return fsRmdir(fsArchive, path);
 }
 
 int delete(void)
@@ -225,7 +225,7 @@ int delete(void)
 
 	// Delete File
 	else 
-		return fsRemove(sdmcArchive, path);
+		return fsRemove(fsArchive, path);
 }
 
 // Copy File or Folder
@@ -275,7 +275,7 @@ int copy_file(char * a, char * b)
 	if(in >= 0)
 	{
 		// Delete Output File (if existing)
-		fsRemove(sdmcArchive, b);
+		fsRemove(fsArchive, b);
 
 		// Open File for Writing
 		int out = open(b, O_WRONLY | O_CREAT | O_TRUNC, 0777);
@@ -328,7 +328,7 @@ int copy_folder_recursive(char * a, char * b)
 {
 	// Open Working Directory
 	Handle dirHandle;
-	Result directory = FSUSER_OpenDirectory(&dirHandle, sdmcArchive, fsMakePath(PATH_ASCII, a));
+	Result directory = FSUSER_OpenDirectory(&dirHandle, fsArchive, fsMakePath(PATH_ASCII, a));
 	
 	u32 entriesRead;
 	static char dname[1024];
@@ -337,7 +337,7 @@ int copy_folder_recursive(char * a, char * b)
 	if(!(directory))
 	{
 		// Create Output Directory (is allowed to fail, we can merge folders after all)
-		makeDir(sdmcArchive, b);
+		makeDir(fsArchive, b);
 
 		// Iterate Files
 		do
@@ -476,7 +476,7 @@ int paste(void)
 
 		// Source Delete
 		if(result == 0 && (copymode & COPY_DELETE_ON_FINISH) == COPY_DELETE_ON_FINISH)
-			fsRemove(sdmcArchive, copysource); // Delete File
+			fsRemove(fsArchive, copysource); // Delete File
 	}
 
 	// Paste Success

@@ -11,77 +11,80 @@
 
 void installDirectories()
 {
-	if (!(dirExists(sdmcArchive, "/3ds/")))
-		makeDir(sdmcArchive, "/3ds");
-	if (!(dirExists(sdmcArchive, "/3ds/3DShell/")))
-		makeDir(sdmcArchive, "/3ds/3DShell");
-	if (!(dirExists(sdmcArchive, "/3ds/3DShell/themes/")))
-		makeDir(sdmcArchive, "/3ds/3DShell/themes");
-	if (!(dirExists(sdmcArchive, "/3ds/3DShell/themes/default/")))
-		makeDir(sdmcArchive, "/3ds/3DShell/themes/default");
-	if (!(dirExists(sdmcArchive, "/3ds/3DShell/colours/")))
-		makeDir(sdmcArchive, "/3ds/3DShell/colours");
+	if (BROWSE_STATE != STATE_NAND)
+	{
+		if (!(dirExists(fsArchive, "/3ds/")))
+			makeDir(fsArchive, "/3ds");
+		if (!(dirExists(fsArchive, "/3ds/3DShell/")))
+			makeDir(fsArchive, "/3ds/3DShell");
+		if (!(dirExists(fsArchive, "/3ds/3DShell/themes/")))
+			makeDir(fsArchive, "/3ds/3DShell/themes");
+		if (!(dirExists(fsArchive, "/3ds/3DShell/themes/default/")))
+			makeDir(fsArchive, "/3ds/3DShell/themes/default");
+		if (!(dirExists(fsArchive, "/3ds/3DShell/colours/")))
+			makeDir(fsArchive, "/3ds/3DShell/colours");
 	
-	if (fileExists(sdmcArchive, "/3ds/3DShell/lastdir.txt"))
-	{
-		char buf[250];
+		if (fileExists(fsArchive, "/3ds/3DShell/lastdir.txt"))
+		{
+			char buf[250];
 		
-		FILE * read = fopen("/3ds/3DShell/lastdir.txt", "r");
-		fscanf(read, "%s", buf);
-		fclose(read);
+			FILE * read = fopen("/3ds/3DShell/lastdir.txt", "r");
+			fscanf(read, "%s", buf);
+			fclose(read);
 		
-		if (dirExists(sdmcArchive, buf)) // Incase a directory previously visited had been deleted, set start path to sdmc:/ to avoid errors.
-			strcpy(cwd, buf);
-		else 
-			strcpy(cwd, START_PATH);
-	}
-	else
-	{
-		char buf[250];
-		strcpy(buf, START_PATH);
+			if (dirExists(fsArchive, buf)) // Incase a directory previously visited had been deleted, set start path to sdmc:/ to avoid errors.
+				strcpy(cwd, buf);
+			else 
+				strcpy(cwd, START_PATH);
+		}
+		else
+		{
+			char buf[250];
+			strcpy(buf, START_PATH);
 			
-		FILE * write = fopen("/3ds/3DShell/lastdir.txt", "w");
-		fprintf(write, "%s", buf);
-		fclose(write);
+			FILE * write = fopen("/3ds/3DShell/lastdir.txt", "w");
+			fprintf(write, "%s", buf);
+			fclose(write);
 		
-		strcpy(cwd, buf); // Set Start Path to "sdmc:/" if lastDir.txt hasn't been created.
-	}
+			strcpy(cwd, buf); // Set Start Path to "sdmc:/" if lastDir.txt hasn't been created.
+		}
 	
-	/*if (!fileExists(sdmcArchive, "/3ds/3DShell/bgm.txt"))
-	{
-		setBgm(true);
-	}
-	else
-	{
-		int initBgm = 0;
+		/*if (!fileExists(fsArchive, "/3ds/3DShell/bgm.txt"))
+		{
+			setBgm(true);
+		}
+		else
+		{
+			int initBgm = 0;
 		
-		FILE * read = fopen("/3ds/3DShell/bgm.txt", "r");
-		fscanf(read, "%d", &initBgm);
-		fclose(read);
+			FILE * read = fopen("/3ds/3DShell/bgm.txt", "r");
+			fscanf(read, "%d", &initBgm);
+			fclose(read);
 		
-		if (initBgm == 0)
-			bgmEnable = false;
-		else 
-			bgmEnable = true;
-	}*/
+			if (initBgm == 0)
+				bgmEnable = false;
+			else 
+				bgmEnable = true;
+		}*/
 	
-	if (!fileExists(sdmcArchive, "/3ds/3DShell/sysProtection.txt")) // Initially set it to true
-	{
-		setConfig("/3ds/3DShell/sysProtection.txt", true);
-		sysProtection = true;
-	}
-	else
-	{
-		int info = 0;
-		
-		FILE * read = fopen("/3ds/3DShell/sysProtection.txt", "r");
-		fscanf(read, "%d", &info);
-		fclose(read);
-		
-		if (info == 0)
-			sysProtection = false;
-		else 
+		if (!fileExists(fsArchive, "/3ds/3DShell/sysProtection.txt")) // Initially set it to true
+		{
+			setConfig("/3ds/3DShell/sysProtection.txt", true);
 			sysProtection = true;
+		}
+		else
+		{
+			int info = 0;
+		
+			FILE * read = fopen("/3ds/3DShell/sysProtection.txt", "r");
+			fscanf(read, "%d", &info);
+			fclose(read);
+		
+			if (info == 0)
+				sysProtection = false;
+			else 
+				sysProtection = true;
+		}
 	}
 }
 
@@ -143,12 +146,12 @@ int extractZip(const char * zipFile, const char * path)
 {
 	char tmpFile2[1024];
 	char tmpPath2[1024];
-	FS_Archive sdmcArchive = 0;
+	FS_Archive fsArchive = 0;
 	
-	FSUSER_OpenArchive(&sdmcArchive, ARCHIVE_SDMC, fsMakePath(PATH_EMPTY, ""));
+	FSUSER_OpenArchive(&fsArchive, ARCHIVE_SDMC, fsMakePath(PATH_EMPTY, ""));
 	FS_Path tempPath = fsMakePath(PATH_ASCII, path);
-	FSUSER_CreateDirectory(sdmcArchive, tempPath, FS_ATTRIBUTE_DIRECTORY);
-	FSUSER_CloseArchive(sdmcArchive);
+	FSUSER_CreateDirectory(fsArchive, tempPath, FS_ATTRIBUTE_DIRECTORY);
+	FSUSER_CloseArchive(fsArchive);
 	
 	strcpy(tmpPath2, "sdmc:");
 	strcat(tmpPath2, (char *)path);

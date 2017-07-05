@@ -57,7 +57,7 @@ void updateList(int clearindex)
 	fileCount = 0;
 	
 	Handle dirHandle;
-	Result directory = FSUSER_OpenDirectory(&dirHandle, sdmcArchive, fsMakePath(PATH_ASCII, cwd));
+	Result directory = FSUSER_OpenDirectory(&dirHandle, fsArchive, fsMakePath(PATH_ASCII, cwd));
 	
 	u32 entriesRead;
 	static char dname[1024];
@@ -392,12 +392,18 @@ void displayFiles()
 			sftd_draw_textf(font, 70, 60 + (38 * printed), RGBA8(TopScreen_colour.r ,TopScreen_colour.g, TopScreen_colour.b, 255), 11, "%.52s", buf); // Display file name
 			
 			if ((file->isFolder) && (strncmp(file->name, "..", 2) != 0))
-				sftd_draw_textf(font2, 70, 75 + (38 * printed), RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), 10, "%s drwxr-x---", getFileModifiedTime(path));
+			{
+				if (file->isRDONLY)
+					sftd_draw_textf(font2, 70, 75 + (38 * printed), RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), 10, "%s dr-xr-x---", getFileModifiedTime(path));
+				else
+					sftd_draw_textf(font2, 70, 75 + (38 * printed), RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), 10, "%s drwxr-x---", getFileModifiedTime(path));
+				
+			}
 			else if (strncmp(file->name, "..", 2) == 0)
 				sftd_draw_text(font2, 70, 75 + (38 * printed), RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), 10, lang_files[language][0]);
 			else
 			{
-				getSizeString(size, getFileSize(sdmcArchive, path));
+				getSizeString(size, getFileSize(fsArchive, path));
 				
 				if (file->isRDONLY)
 					sftd_draw_textf(font2, 70, 75 + (38 * printed), RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), 10, "%s -r--r-----", getFileModifiedTime(path));
@@ -435,7 +441,9 @@ void openFile(void)
 		// Attempt to navigate to Target
 		if(navigate(0) == 0)
 		{	
-			saveLastDirectory();
+			if (BROWSE_STATE != STATE_NAND)
+				saveLastDirectory();
+			
 			updateList(CLEAR);
 			displayFiles(CLEAR);
 		}
@@ -457,8 +465,8 @@ void openFile(void)
 		updateList(CLEAR);
 		displayFiles(CLEAR);
 	}
-	/*else if ((strncmp(file->ext, "txt", 3) == 0) || (strncmp(file->ext, "TXT", 3) == 0))
-		displayText(path);*/
+	else if ((strncmp(file->ext, "txt", 3) == 0) || (strncmp(file->ext, "TXT", 3) == 0))
+		displayText(path);
 }
 
 // Navigate to Folder
@@ -493,7 +501,9 @@ int navigate(int _case)
 
 		// Terminate Working Directory
 		slash[0] = 0;
-		saveLastDirectory();
+		
+		if (BROWSE_STATE != STATE_NAND)
+			saveLastDirectory();
 	}
 
 	// Normal Folder
@@ -504,7 +514,8 @@ int navigate(int _case)
 		cwd[strlen(cwd) + 1] = 0;
 		cwd[strlen(cwd)] = '/';
 		
-		saveLastDirectory();
+		if (BROWSE_STATE != STATE_NAND)
+			saveLastDirectory();
 	}
 
 	// Return Success
@@ -587,7 +598,7 @@ int displayProperties()
 	strcpy(fullPath + strlen(fullPath), fileName);
 	
 	char size[16];
-	getSizeString(size, getFileSize(sdmcArchive, fullPath));
+	getSizeString(size, getFileSize(fsArchive, fullPath));
 	
 	while(properties == true)
 	{

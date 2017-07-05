@@ -29,7 +29,7 @@ void initServices()
 	srvInit();
 	fsInit();
 	sdmcInit();
-	openSdArchive();
+	openArchive(ARCHIVE_SDMC);
 	sdmcWriteSafe(false);
 	aptInit();
 	mcuInit();
@@ -128,7 +128,7 @@ void initServices()
 	DEFAULT_STATE = STATE_HOME;
 	BROWSE_STATE = STATE_SD;
 	
-	/*if (fileExists(sdmcArchive, "/3ds/3DShell/bgm.ogg")) // Initally create this to avoid crashes
+	/*if (fileExists(fsArchive, "/3ds/3DShell/bgm.ogg")) // Initally create this to avoid crashes
 		bgm = sound_create(BGM);*/
 }
 
@@ -205,7 +205,7 @@ void termServices()
 	ptmuExit();
 	mcuExit();
 	aptExit();
-	closeSdArchive();
+	closeArchive();
 	sdmcExit();
 	fsExit();
 	srvExit();
@@ -283,9 +283,9 @@ void mainMenu(int clearindex)
 		updateList(CLEAR);
 	
 /*turnOnBGM:
-	if(fileExists(sdmcArchive, "/3ds/dspfirm.cdc"))
+	if(fileExists(fsArchive, "/3ds/dspfirm.cdc"))
 	{
-		if (fileExists(sdmcArchive, "/3ds/3DShell/bgm.ogg"))
+		if (fileExists(fsArchive, "/3ds/3DShell/bgm.ogg"))
 		{
 			if((!(isPlaying)) && (bgmEnable == true))
 				audio_load_ogg("/3ds/3DShell/bgm.ogg");
@@ -420,38 +420,43 @@ turnOffBGM:
 				downloadFile(dl_url, "/");
 		}*/
 	
-		if ((kPressed & KEY_TOUCH) && (touchInRect(148, 173, 0, 20)))
+		if ((kPressed & KEY_TOUCH) && (touchInRect(148, 173, 0, 20))) // SD
 		{
 			wait(100000000);
-			char buf[250];
 		
-			FILE * read = fopen("/3ds/3DShell/lastdir.txt", "r");
-			fscanf(read, "%s", buf);
-			fclose(read);
-		
-			if (dirExists(sdmcArchive, buf)) // Incase a directory previously visited had been deleted, set start path to sdmc:/ to avoid errors.
-				strcpy(cwd, buf);
-			else 
-				strcpy(cwd, START_PATH);
+			FILE * file = fopen("/3ds/3DShell/lastdir.txt", "w");
+			fprintf(file, "%s", START_PATH);
+			fclose(file);
+			
+			strcpy(cwd, START_PATH);
 			
 			BROWSE_STATE = STATE_SD;
+			
+			closeArchive();
+			openArchive(ARCHIVE_SDMC);
+			
 			updateList(CLEAR);
 			displayFiles(CLEAR);
 		}
-		/*else if ((kPressed & KEY_TOUCH) && (touchInRect(174, 199, 0, 20))) //Mount stuff goes here
+		else if ((kPressed & KEY_TOUCH) && (touchInRect(174, 199, 0, 20))) // CTR-NAND
 		{
 			wait(100000000);
-			strcpy(cwd, "nand:/");
+			strcpy(cwd, START_PATH);
+			
 			BROWSE_STATE = STATE_NAND;
+			
+			closeArchive();
+			openArchive(ARCHIVE_NAND_CTR_FS);
+			
 			updateList(CLEAR);
 			displayFiles(CLEAR);
-		}*/
+		}
 		
 		if ((kPressed & KEY_TOUCH) && (touchInRect(290, 320, 0, 20)))
 		{
 			strcpy(cwd, keyboard_3ds_get(250, "", "Enter path"));
 				
-			if (dirExists(sdmcArchive, cwd))
+			if (dirExists(fsArchive, cwd))
 			{
 				updateList(CLEAR);
 				displayFiles(CLEAR);
@@ -599,7 +604,7 @@ turnOffBGM:
 					fscanf(read, "%s", buf);
 					fclose(read);
 			
-					if (dirExists(sdmcArchive, buf)) // Incase a directory previously visited had been deleted, set start path to sdmc:/ to avoid errors.
+					if (dirExists(fsArchive, buf)) // Incase a directory previously visited had been deleted, set start path to sdmc:/ to avoid errors.
 						strcpy(cwd, buf);
 					else 
 						strcpy(cwd, START_PATH);
@@ -655,7 +660,7 @@ turnOffBGM:
 				newFolder();
 			}
 			
-			else if ((kPressed & KEY_TOUCH) && (touchInRect(37, 160, 131, 167)) && (IF_OPTIONS))
+			else if ((kPressed & KEY_TOUCH) && (touchInRect(37, 160, 131, 167)) && (IF_OPTIONS) && (BROWSE_STATE != STATE_NAND))
 			{
 				selectionX = 0;
 				selectionY = 2;
@@ -666,7 +671,7 @@ turnOffBGM:
 				drawDeletionDialog();
 			}
 			
-			else if ((kPressed & KEY_TOUCH) && (touchInRect(161, 284, 56, 93)) && (IF_OPTIONS))
+			else if ((kPressed & KEY_TOUCH) && (touchInRect(161, 284, 56, 93)) && (IF_OPTIONS) && (BROWSE_STATE != STATE_NAND))
 			{
 				selectionX = 1;
 				selectionY = 0;
@@ -699,7 +704,7 @@ turnOffBGM:
 				}	
 			}	
 			
-			if ((CAN_CUT) && (kPressed & KEY_TOUCH) && (touchInRect(161, 284, 131, 167)) && (IF_OPTIONS))
+			if ((CAN_CUT) && (kPressed & KEY_TOUCH) && (touchInRect(161, 284, 131, 167)) && (IF_OPTIONS)  && (BROWSE_STATE != STATE_NAND))
 			{
 				selectionX = 1;
 				selectionY = 2;
@@ -708,7 +713,7 @@ turnOffBGM:
 				cutF = true;
 				displayFiles(KEEP);
 			}
-			else if (((cutF == true) && (deleteDialog == false)) && (kPressed & KEY_TOUCH) && (touchInRect(161, 284, 131, 167)) && (IF_OPTIONS))
+			else if (((cutF == true) && (deleteDialog == false)) && (kPressed & KEY_TOUCH) && (touchInRect(161, 284, 131, 167)) && (IF_OPTIONS)  && (BROWSE_STATE != STATE_NAND))
 			{
 				selectionX = 0;
 				selectionY = 0;

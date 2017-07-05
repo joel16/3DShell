@@ -8,7 +8,12 @@
 #include <sys/stat.h>
 #include <time.h>
 
-FS_Archive sdmcArchive;
+FS_Archive fsArchive;
+
+int BROWSE_STATE;
+
+#define STATE_SD 0
+#define STATE_NAND 1
 
 typedef struct 
 {
@@ -18,8 +23,8 @@ typedef struct
 	unsigned int error;
 } FSFILE;
 
-void openSdArchive();
-void closeSdArchive();
+void openArchive(FS_ArchiveID id);
+void closeArchive();
 int makeDir(FS_Archive archive, const char *path);
 bool fileExists(FS_Archive archive, char * path);
 bool dirExists(FS_Archive archive, const char * path);
