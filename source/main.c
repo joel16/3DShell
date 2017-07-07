@@ -423,10 +423,8 @@ turnOffBGM:
 		if ((kPressed & KEY_TOUCH) && (touchInRect(148, 173, 0, 20))) // SD
 		{
 			wait(100000000);
-		
-			FILE * file = fopen("/3ds/3DShell/lastdir.txt", "w");
-			fprintf(file, "%s", START_PATH);
-			fclose(file);
+			
+			writeFile("/3ds/3DShell/lastdir.txt", START_PATH);
 			
 			strcpy(cwd, START_PATH);
 			
@@ -543,17 +541,9 @@ turnOffBGM:
 						strcpy(font_dir, "romfs:/font");
 						strcpy(colour_dir, "/3ds/3DShell");
 						
-						FILE * file = fopen("/3ds/3DShell/theme.bin", "w");
-						fprintf(file, "%s", theme_dir);
-						fclose(file);
-						
-						file = fopen("/3ds/3DShell/colours.bin", "w");
-						fprintf(file, "%s", colour_dir);
-						fclose(file);
-						
-						file = fopen("/3ds/3DShell/font.bin", "w");
-						fprintf(file, "%s", font_dir);
-						fclose(file);
+						writeFile("/3ds/3DShell/theme.bin", theme_dir);
+						writeFile("/3ds/3DShell/colours.bin", colour_dir);
+						writeFile("/3ds/3DShell/font.bin", font_dir);
 						
 						wait(1000000);
 						
@@ -570,17 +560,9 @@ turnOffBGM:
 						strcat(colour_dir, fileName);
 						strcat(font_dir, fileName);
 						
-						FILE * file = fopen("/3ds/3DShell/theme.bin", "w");
-						fprintf(file, "%s", theme_dir);
-						fclose(file);
-						
-						file = fopen("/3ds/3DShell/colours.bin", "w");
-						fprintf(file, "%s", colour_dir);
-						fclose(file);
-						
-						file = fopen("/3ds/3DShell/font.bin", "w");
-						fprintf(file, "%s", font_dir);
-						fclose(file);
+						writeFile("/3ds/3DShell/theme.bin", theme_dir);
+						writeFile("/3ds/3DShell/colours.bin", colour_dir);
+						writeFile("/3ds/3DShell/font.bin", font_dir);
 						
 						wait(1000000);
 						

@@ -39,14 +39,8 @@ void installDirectories()
 		}
 		else
 		{
-			char buf[250];
-			strcpy(buf, START_PATH);
-			
-			FILE * write = fopen("/3ds/3DShell/lastdir.txt", "w");
-			fprintf(write, "%s", buf);
-			fclose(write);
-		
-			strcpy(cwd, buf); // Set Start Path to "sdmc:/" if lastDir.txt hasn't been created.
+			writeFile("/3ds/3DShell/lastdir.txt", START_PATH);
+			strcpy(cwd, START_PATH); // Set Start Path to "sdmc:/" if lastDir.txt hasn't been created.
 		}
 	
 		/*if (!fileExists(fsArchive, "/3ds/3DShell/bgm.txt"))
@@ -175,22 +169,12 @@ int extractZip(const char * zipFile, const char * path)
 	return result;
 }
 
-void setConfig(char * path, bool set) //using individual txt files for configs for now (plan to change this later when there's more options)
+void setConfig(const char * path, bool set) // using individual txt files for configs for now (plan to change this later when there's more options)
 {
 	if (set == true)
-	{
-		int config = 1;
-		FILE * write = fopen(path, "w");
-		fprintf(write, "%d", config);
-		fclose(write);
-	}
+		writeFile(path, "1");
 	else
-	{
-		int config = 0;
-		FILE * write = fopen(path, "w");
-		fprintf(write, "%d", config);
-		fclose(write);
-	}
+		writeFile(path, "0");
 }
 
 const char * getLastNChars(char * str, int n)
@@ -245,33 +229,39 @@ bool isN3DS()
 		return false;
 }
 
-void utf2ascii(char* dst, u16* src)
+void utf2ascii(char * dst, u16 * src)
 {
 	if(!src || !dst)
 		return;
 	
 	while(*src)*(dst++)=(*(src++))&0xFF;
+	
 	*dst=0x00;
 }
 
-void utfn2ascii(char* dst, u16* src, int max)
+void utfn2ascii(char * dst, u16 * src, int max)
 {
-	if(!src || !dst)return;
-	int n=0;
-	while(*src && n<max-1){*(dst++)=(*(src++))&0xFF;n++;}
-	*dst=0x00;
+	if (!src || !dst)
+		return;
+	
+	int n = 0;
+	
+	while(*src && n<max-1)
+		*(dst++)=(*(src++))&0xFF;n++;
+	
+	*dst = 0x00;
 }
 
-void putPixel565(u8* dst, u8 x, u8 y, u16 v)
+void putPixel565(u8 * dst, u8 x, u8 y, u16 v)
 {
 	dst[(x+(47-y)*48)*3+0]=(v&0x1F)<<3;
 	dst[(x+(47-y)*48)*3+1]=((v>>5)&0x3F)<<2;
 	dst[(x+(47-y)*48)*3+2]=((v>>11)&0x1F)<<3;
 }
 
-u8* flipBitmap24(u8* flip_bitmap, Bitmap* result)
+u8* flipBitmap24(u8 * flip_bitmap, Bitmap * result)
 {
-	if(!result) 
+	if (!result) 
 		return NULL;
 	
 	int x, y;
@@ -280,7 +270,7 @@ u8* flipBitmap24(u8* flip_bitmap, Bitmap* result)
 	{
 		for (x = 0; x < result->width; x++)
 		{
-			int idx = (x+y * result->width)*3;
+			int idx = (x+y * result->width) * 3;
 			*(u32*)(&(flip_bitmap[idx])) = ((*(u32*)&(result->pixels[(x + (result->height - y - 1) * result->width)*3]) & 0x00FFFFFF) | (*(u32*)(&(flip_bitmap[idx])) & 0xFF000000));
 		}
 	}

@@ -496,10 +496,5 @@ int paste(void)
 
 void saveLastDirectory()
 {
-	char buf[250];
-	strcpy(buf, cwd);
-			
-	FILE * write = fopen("/3ds/3DShell/lastdir.txt", "w");
-	fprintf(write, "%s", buf);
-	fclose(write);
+	writeFile("/3ds/3DShell/lastdir.txt", cwd);
 }

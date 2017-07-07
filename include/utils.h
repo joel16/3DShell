@@ -26,17 +26,17 @@ void endDrawing();
 void getSizeString(char * string, uint64_t size);
 int touchGetX();
 int touchGetY();
-sf2d_texture *sfil_load_IMG_file(const char *filename, sf2d_place place);
+sf2d_texture *sfil_load_IMG_file(const char * filename, sf2d_place place);
 int extractZip(const char * zipFile, const char * path);
-void setConfig(char * path, bool set);
+void setConfig(const char * path, bool set);
 const char * getLastNChars(char * str, int n);
 u8 getRegion();
 u8 getLanguage();
 const char * getUsername();
 bool isN3DS();
-void utf2ascii(char* dst, u16* src);
-void utfn2ascii(char* dst, u16* src, int max);
-void putPixel565(u8* dst, u8 x, u8 y, u16 v);
-u8* flipBitmap24(u8* flip_bitmap, Bitmap* result);
+void utf2ascii(char * dst, u16* src);
+void utfn2ascii(char * dst, u16* src, int max);
+void putPixel565(u8 * dst, u8 x, u8 y, u16 v);
+u8* flipBitmap24(u8 * flip_bitmap, Bitmap * result);
 
 #endif

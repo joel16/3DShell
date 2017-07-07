@@ -11,7 +11,7 @@ void closeArchive()
 	FSUSER_CloseArchive(fsArchive);
 }
 
-int makeDir(FS_Archive archive, const char *path)
+Result makeDir(FS_Archive archive, const char *path)
 {
 	if((!archive) || (!path))
 		return -1;
@@ -19,7 +19,7 @@ int makeDir(FS_Archive archive, const char *path)
 	return FSUSER_CreateDirectory(archive, fsMakePath(PATH_ASCII, path), 0);
 }
 
-bool fileExists(FS_Archive archive, char * path)
+bool fileExists(FS_Archive archive, const char * path)
 {
 	if((!path) || (!archive))
 		return false;
@@ -57,14 +57,6 @@ bool dirExists(FS_Archive archive, const char * path)
 		return false;
 	
 	return true;
-}
-
-char* getFileCreationTime(char *path) 
-{
-    struct stat attr;
-    stat(path, &attr);
-	
-    return ctime(&attr.st_ctime);
 }
 
 char* getFileModifiedTime(char *path) 
@@ -121,14 +113,6 @@ char* getFileModifiedTime(char *path)
 	return timeStr;
 }
 
-char* getFileAccessedTime(char *path) 
-{
-    struct stat attr;
-    stat(path, &attr);
-	
-    return ctime(&attr.st_atime);
-}
-
 u64 getFileSize(FS_Archive archive, const char *path)
 {
 	u64 st_size;
@@ -141,23 +125,64 @@ u64 getFileSize(FS_Archive archive, const char *path)
 	return st_size;
 }
 
-int fsRemove(FS_Archive archive, const char * filename)
+Result fsRemove(FS_Archive archive, const char * filename)
 {
     Result ret = FSUSER_DeleteFile(archive, fsMakePath(PATH_ASCII, filename));
 
     return ret == 0 ? 0 : -1;
 }
 
-int fsRmdir(FS_Archive archive, const char * path)
+Result fsRmdir(FS_Archive archive, const char * path)
 {
     Result ret = FSUSER_DeleteDirectory(archive, fsMakePath(PATH_ASCII, path));
 
     return ret == 0 ? 0 : -1;
 }
 
-int fsRename(FS_Archive archive, const char * old_filename, const char * new_filename)
+Result fsRename(FS_Archive archive, const char * old_filename, const char * new_filename)
 {
     Result ret = FSUSER_RenameFile(archive, fsMakePath(PATH_ASCII, old_filename), archive, fsMakePath(PATH_ASCII, new_filename));
 
     return ret == 0 ? 0 : -1;
+}
+
+Result fsOpen(Handle * handle, const char * path, u32 flags)
+{
+	FS_ArchiveID id;
+	
+	if (BROWSE_STATE == STATE_SD)
+		id = ARCHIVE_SDMC;
+	else
+		id = ARCHIVE_NAND_CTR_FS;
+	
+	Result ret = FSUSER_OpenFileDirectly(handle, id, fsMakePath(PATH_EMPTY, ""), fsMakePath(PATH_ASCII, path), flags, 0);
+	
+	return ret == 0 ? 0 : -1;
+}
+
+Result fsClose(Handle handle)
+{
+	Result ret = FSFILE_Close(handle);
+	
+	return ret == 0 ? 0 : -1;
+}
+
+Result writeFile(const char * path, const char * buf)
+{
+	Handle handle;
+	
+	u32 len = strlen(buf);
+	u64 size;
+	u32 written;
+	
+	if (fileExists(fsArchive, path))
+		fsRemove(fsArchive, path);
+	
+	Result ret = fsOpen(&handle, path, (FS_OPEN_WRITE | FS_OPEN_CREATE));
+	ret = FSFILE_GetSize(handle, &size);
+	ret = FSFILE_SetSize(handle, size + len);
+	ret = FSFILE_Write(handle, &written, size, buf, len, FS_WRITE_FLUSH);
+	ret = fsClose(handle);
+	
+	return ret == 0 ? 0 : -1;
 }

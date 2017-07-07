@@ -20,18 +20,13 @@ struct colour Settings_text_min_colour;
 
 char * setFileDefaultsChar(char path[], char data[], char var[])
 {
-	FILE * temp;
-	
 	if (!(fileExists(fsArchive, path)))
-	{
-		temp = fopen(path, "w");
-		fprintf(temp, "%s", data);
-		fclose(temp);
-	}
-	
-	temp = fopen(path, "r");
-	fscanf(temp, "%s", var);
-	fclose(temp);
+		writeFile(path, data);
+		
+	FILE * file;
+	file = fopen(path, "r");
+	fscanf(file, "%s", var);
+	fclose(file);
 	
 	return var;
 }
@@ -44,14 +39,12 @@ void replaceAsset(char arr[], char path[], char img_path[], char redirect_path[]
 }
 
 void createFontColours(char * path, int r, int g, int b)
-{
-	FILE * file;
-	 
+{	 
 	if (!(fileExists(fsArchive, path)))
 	{
-		file = fopen(path, "w");
-		fprintf(file, "%d\n%d\n%d", r, g, b);
-		fclose(file);
+		char buf[11];
+		snprintf(buf, 12, "%d\n%d\n%d", r, g, b);
+		writeFile(path, buf);
 	}
 }
 
