@@ -67,17 +67,17 @@ void updateList(int clearindex)
 		/* Add fake ".." entry except on root */
 		if (strcmp(cwd, ROOT_PATH)) 
 		{
-			// New List
+			// New list
 			files = (File *)malloc(sizeof(File));
 
-			// Clear Memory
+			// Clear memory
 			memset(files, 0, sizeof(File));
 
-			// Copy File Name
+			// Copy file Name
 			strcpy(files->name, "..");
 
-			// Set Folder Flag
-			files->isFolder = 1;
+			// Set folder flag
+			files->isDir = 1;
 
 			fileCount++;
 		}
@@ -106,73 +106,79 @@ void updateList(int clearindex)
 				if(strcmp(cwd, ROOT_PATH) == 0 && strcmp(dname, "..") == 0) 
 					continue;
 
-				// Allocate Memory
+				// Allocate memory
 				File * item = (File *)malloc(sizeof(File));
 
-				// Clear Memory
+				// Clear memory
 				memset(item, 0, sizeof(File));
 
-				// Copy File Name
+				// Copy file name
 				strcpy(item->name, dname);
 
-				// Set Folder Flag
-				item->isFolder = info.attributes & FS_ATTRIBUTE_DIRECTORY;
+				// Set folder flag
+				item->isDir = info.attributes & FS_ATTRIBUTE_DIRECTORY;
 				
-				// Set Read-Only Flag
-				item->isRDONLY = info.attributes & FS_ATTRIBUTE_READ_ONLY; 
+				// Set read-Only flag
+				item->isReadOnly = info.attributes & FS_ATTRIBUTE_READ_ONLY; 
 				
-				// Copy File Name
+				// Set read-Only flag
+				item->isHidden = info.attributes & FS_ATTRIBUTE_HIDDEN; 
+				
+				// Copy file extension
 				strcpy(item->ext, info.shortExt);
+				
+				// Copy file size
+				item->size = info.fileSize;
 
-				// New List
+				// New list
 				if(files == NULL) 
 					files = item;
 
-				// Existing List
+				// Existing list
 				else
 				{
-					// Iterator Variable
+					// Iterator variable
 					File * list = files;
 
-					// Append to List
+					// Append to list
 					while(list->next != NULL) list = list->next;
 
-					// Link Item
+					// Link item
 					list->next = item;
 				}
 
-				// Increase File Count
+				// Increase file count
 				fileCount++;
 			}
 		} 
 		while(entriesRead);
 
-		// Close Directory
+		// Close directory
 		FSDIR_Close(dirHandle);
 	}
 
-	// Attempt to keep Index
+	// Attempt to keep index
 	if(!clearindex)
 	{
 		if(position >= fileCount) 
-			position = fileCount - 1; // Fix Position
+			position = fileCount - 1; // Fix position
 	}
 
-	// Reset Position
+	// Reset position
 	else 
 		position = 0;
 }
 
 void recursiveFree(File * node)
 {
-	// End of List
+	// End of list
 	if(node == NULL)
 		return;
 
-	// Nest Further
+	// Nest further
 	recursiveFree(node->next);
 
-	// Free Memory
+	// Free memory
 	free(node);
 }
 
@@ -304,8 +310,7 @@ void displayFiles()
 	else
 		sf2d_draw_texture(optionsIcon, 25, 0);
 		
-	sf2d_end_frame();
-	// Ends here
+	sf2d_end_frame(); // Ends here
 	
 	sf2d_start_frame(GFX_TOP, GFX_LEFT);
         		
@@ -330,13 +335,13 @@ void displayFiles()
 	
 	sf2d_draw_rectangle(83, 47, fill, 2, RGBA8(Storage_colour.r, Storage_colour.g, Storage_colour.b, 255)); // Draw storage bar
 
-	// File Iterator Variable
+	// File iterator variable
 	int i = 0;
 
-	// Print Counter
+	// Print counter
 	int printed = 0;
 
-	// Draw File List
+	// Draw file list
 	File * file = files;
 	
 	for(; file != NULL; file = file->next)
@@ -357,7 +362,7 @@ void displayFiles()
 
 			sf2d_draw_texture(uncheck, 8, 66 + (38 * printed));
 
-			if (file->isFolder)
+			if (file->isDir)
 				sf2d_draw_texture(folderIcon, 30, 58 + (38 * printed));
 			else if ((strncmp(file->ext, "mp3", 3) == 0) || (strncmp(file->ext, "MP3", 3) == 0))
 				sf2d_draw_texture(audioIcon, 30, 58 + (38 * printed));
@@ -391,9 +396,9 @@ void displayFiles()
 			
 			sftd_draw_textf(font, 70, 60 + (38 * printed), RGBA8(TopScreen_colour.r ,TopScreen_colour.g, TopScreen_colour.b, 255), 11, "%.52s", buf); // Display file name
 			
-			if ((file->isFolder) && (strncmp(file->name, "..", 2) != 0))
+			if ((file->isDir) && (strncmp(file->name, "..", 2) != 0))
 			{
-				if (file->isRDONLY)
+				if (file->isReadOnly)
 					sftd_draw_textf(font2, 70, 75 + (38 * printed), RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), 10, "%s dr-xr-x---", getFileModifiedTime(path));
 				else
 					sftd_draw_textf(font2, 70, 75 + (38 * printed), RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), 10, "%s drwxr-x---", getFileModifiedTime(path));
@@ -403,9 +408,9 @@ void displayFiles()
 				sftd_draw_text(font2, 70, 75 + (38 * printed), RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), 10, lang_files[language][0]);
 			else
 			{
-				getSizeString(size, getFileSize(fsArchive, path));
+				getSizeString(size, file->size);
 				
-				if (file->isRDONLY)
+				if (file->isReadOnly)
 					sftd_draw_textf(font2, 70, 75 + (38 * printed), RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), 10, "%s -r--r-----", getFileModifiedTime(path));
 				else
 					sftd_draw_textf(font2, 70, 75 + (38 * printed), RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), 10, "%s -rw-rw----", getFileModifiedTime(path));
@@ -416,7 +421,7 @@ void displayFiles()
 			printed++; // Increase printed counter
 		}
 
-		i++; // Increase Counter
+		i++; // Increase counter
 	}
 	
 	endDrawing();
@@ -436,9 +441,9 @@ void openFile(void)
 	strcpy(path, cwd);
 	strcpy(path + strlen(path), file->name);
 	
-	if (file->isFolder)
+	if (file->isDir)
 	{
-		// Attempt to navigate to Target
+		// Attempt to navigate to target
 		if(navigate(0) == 0)
 		{	
 			if (BROWSE_STATE != STATE_NAND)
@@ -472,44 +477,44 @@ void openFile(void)
 // Navigate to Folder
 int navigate(int _case)
 {
-	// Find File
+	// Find file
 	File * file = findindex(position);
 
-	// Not a Folder
-	if(file == NULL || !file->isFolder) 
+	// Not a folder
+	if(file == NULL || !file->isDir) 
 		return -1;
 
-	// Special Case ".."
+	// Special case ".."
 	if((_case == -1) || (strncmp(file->name, "..", 2) == 0))
 	{
-		// Slash Pointer
+		// Slash pointer
 		char * slash = NULL;
 
-		// Find Last '/' in Working Directory
+		// Find last '/' in working directory
 		int i = strlen(cwd) - 2; for(; i >= 0; i--)
 		{
 			// Slash discovered
 			if(cwd[i] == '/')
 			{
-				// Save Pointer
+				// Save pointer
 				slash = cwd + i + 1;
 
-				// Stop Search
+				// Stop search
 				break;
 			}
 		}
 
-		// Terminate Working Directory
+		// Terminate working directory
 		slash[0] = 0;
 		
 		if (BROWSE_STATE != STATE_NAND)
 			saveLastDirectory();
 	}
 
-	// Normal Folder
+	// Normal folder
 	else
 	{
-		// Append Folder to Working Directory
+		// Append folder to working directory
 		strcpy(cwd + strlen(cwd), file->name);
 		cwd[strlen(cwd) + 1] = 0;
 		cwd[strlen(cwd)] = '/';
@@ -518,23 +523,23 @@ int navigate(int _case)
 			saveLastDirectory();
 	}
 
-	// Return Success
+	// Return success
 	return 0;
 }
 
-// Find File Information by Index
+// Find file information by index
 File * findindex(int index)
 {
-	// File Iterator Variable
+	// File iterator variable
 	int i = 0;
 
-	// Find File Item
+	// Find file Item
 	File * file = files; 
 	
 	for(; file != NULL && i != index; file = file->next) 
 		i++;
 
-	// Return File
+	// Return file
 	return file;
 }
 
@@ -597,8 +602,8 @@ int displayProperties()
 	strcpy(fullPath, cwd);
 	strcpy(fullPath + strlen(fullPath), fileName);
 	
-	char size[16];
-	getSizeString(size, getFileSize(fsArchive, fullPath));
+	char fileSize[16];
+	getSizeString(fileSize, file->size);
 	
 	while(properties == true)
 	{
@@ -624,7 +629,7 @@ int displayProperties()
 			
 		sftd_draw_text(font2, 42, 114, RGBA8(Options_title_text_colour.r, Options_title_text_colour.g, Options_title_text_colour.b, 255), 10, lang_properties[language][4]);	
 		
-		if (file->isFolder)
+		if (file->isDir)
 			sftd_draw_text(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, lang_files[language][1]);
 		else if ((strncmp(file->ext, "CIA", 3) == 0) || (strncmp(file->ext, "cia", 3) == 0) || (strncmp(file->ext, "3DS", 3) == 0) || (strncmp(file->ext, "3ds", 3) == 0))
 			sftd_draw_text(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, lang_files[language][2]);
@@ -644,11 +649,11 @@ int displayProperties()
 			sftd_draw_text(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, lang_files[language][9]);
 		else
 			sftd_draw_text(font2, 100, 114,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, lang_files[language][10]);
-			
-		if (!(file->isFolder))
+		
+		if (!(file->isDir))
 		{
 			sftd_draw_text(font2, 42, 134,RGBA8(Options_title_text_colour.r, Options_title_text_colour.g, Options_title_text_colour.b, 255), 10, lang_properties[language][5]);
-				sftd_draw_textf(font2, 100, 134,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "%s", size);
+				sftd_draw_textf(font2, 100, 134,  RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), 10, "%s", fileSize);
 		}
 		
 		endDrawing();

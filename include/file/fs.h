@@ -32,10 +32,9 @@ char* getFileModifiedTime(char * path);
 u64 getFileSize(FS_Archive archive, const char *path);
 Result fsRemove(FS_Archive archive, const char *filename);
 Result fsRmdir(FS_Archive archive, const char * path);
+Result fsRmdirRecursive(FS_Archive archive, const char * path);
 Result fsRename(FS_Archive archive, const char *old_filename, const char *new_filename);
 Result fsOpen(Handle * handle, const char * path, u32 flags);
-Result fsRead(Handle handle, u32 * bytesRead, u64 offset, void * buffer, u32 size);
-Result fsWrite(Handle handle, u32 * bytesWritten, u64 offset, void * buffer, u32 size);
 Result fsClose(Handle filehandle);
 Result writeFile(const char * path, const char * buf);
 

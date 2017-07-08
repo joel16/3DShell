@@ -14,20 +14,19 @@
 */
 typedef struct File
 {
-	// Next Item
-	struct File * next;
+	struct File * next; // Next item
 
-	// Folder Flag
-	int isFolder;
+	int isDir; // Folder flag
 	
-	// Read-only Flag
-	int isRDONLY;
+	int isReadOnly; // Read-only flag
+	
+	int isHidden; // Hidden file flag
 
-	// File Name
-	char name[256];
+	char name[256]; // File name
 	
-	// File Extension
-	char ext[4];
+	char ext[4]; // File extension
+	
+	uint64_t size; // File size
 } File;
 
 /*

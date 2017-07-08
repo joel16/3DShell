@@ -82,7 +82,7 @@ void installDirectories()
 	}
 }
 
-void setBilinearFilter(sf2d_texture *texture)
+void setBilinearFilter(sf2d_texture * texture)
 {
 	sf2d_texture_set_params(texture, GPU_TEXTURE_MAG_FILTER(GPU_LINEAR) | GPU_TEXTURE_MIN_FILTER(GPU_NEAREST));
 }
@@ -93,7 +93,7 @@ void endDrawing()
 	sf2d_swapbuffers();
 }
 
-void getSizeString(char *string, uint64_t size) //Thanks TheOfficialFloW
+void getSizeString(char * string, uint64_t size) //Thanks TheOfficialFloW
 {
 	double double_size = (double)size;
 
@@ -229,27 +229,21 @@ bool isN3DS()
 		return false;
 }
 
-void utf2ascii(char * dst, u16 * src)
+void utf2ascii(char* dst, u16* src)
 {
 	if(!src || !dst)
 		return;
 	
 	while(*src)*(dst++)=(*(src++))&0xFF;
-	
 	*dst=0x00;
 }
 
-void utfn2ascii(char * dst, u16 * src, int max)
+void utfn2ascii(char* dst, u16* src, int max)
 {
-	if (!src || !dst)
-		return;
-	
-	int n = 0;
-	
-	while(*src && n<max-1)
-		*(dst++)=(*(src++))&0xFF;n++;
-	
-	*dst = 0x00;
+	if(!src || !dst)return;
+	int n=0;
+	while(*src && n<max-1){*(dst++)=(*(src++))&0xFF;n++;}
+	*dst=0x00;
 }
 
 void putPixel565(u8 * dst, u8 x, u8 y, u16 v)

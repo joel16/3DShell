@@ -1,3 +1,4 @@
+#include "dirlist.h"
 #include "fs.h"
 #include "utils.h"
 
@@ -113,7 +114,7 @@ char* getFileModifiedTime(char *path)
 	return timeStr;
 }
 
-u64 getFileSize(FS_Archive archive, const char *path)
+u64 getFileSize(FS_Archive archive, const char * path)
 {
 	u64 st_size;
 	Handle handle;
@@ -135,6 +136,13 @@ Result fsRemove(FS_Archive archive, const char * filename)
 Result fsRmdir(FS_Archive archive, const char * path)
 {
     Result ret = FSUSER_DeleteDirectory(archive, fsMakePath(PATH_ASCII, path));
+
+    return ret == 0 ? 0 : -1;
+}
+
+Result fsRmdirRecursive(FS_Archive archive, const char * path)
+{
+    Result ret = FSUSER_DeleteDirectoryRecursively(archive, fsMakePath(PATH_ASCII, path));
 
     return ret == 0 ? 0 : -1;
 }
