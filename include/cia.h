@@ -54,7 +54,9 @@ typedef struct
 	char description[0x80];
 	char author[0x40];
 	u16 version;
+	u32 coreVersion;
 	u64 size;
+	u64 requiredSpace;
 } Cia;
 
 Result installCIA(const char * path, FS_MediaType media, bool update);

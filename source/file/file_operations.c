@@ -58,133 +58,6 @@ int renameFile()
 	return 0;
 }
 
-int delete_folder_recursive(char * path)
-{
-	// Internal file list
-	File * filelist = NULL;
-
-	// Open working directory
-	Handle dirHandle;
-	Result directory = FSUSER_OpenDirectory(&dirHandle, fsArchive, fsMakePath(PATH_ASCII, path));
-	
-	u32 entriesRead;
-	static char dname[1024];
-
-	// Opened directory
-	if(!(directory))
-	{
-		do
-		{
-			static FS_DirectoryEntry info;
-			memset(&info, 0, sizeof(FS_DirectoryEntry));
-			
-			entriesRead = 0;
-			FSDIR_Read(dirHandle, &entriesRead, 1, &info);
-			
-			if(entriesRead)
-			{
-				utf2ascii(&dname[0], info.name);
-				
-				// Valid filename
-				if(strlen(dname) > 0)
-				{
-					if((strncmp(dname, ".", 1) == 0) || (strncmp(dname, "..", 2) == 0))
-						continue;
-
-					// Allocate memory
-					File * item = (File *)malloc(sizeof(File));
-					
-					// Clear memory
-					memset(item, 0, sizeof(File));
-
-					// Copy file name
-					strcpy(item->name, dname);
-
-					// Set folder flag
-					item->isDir = info.attributes & FS_ATTRIBUTE_DIRECTORY;
-
-					// New list
-					if(filelist == NULL) 
-						filelist = item;
-
-					// Existing list
-					else
-					{
-						// Iterator variable
-						File * list = filelist;
-
-						// Append to list
-						while(list->next != NULL) 
-							list = list->next;
-
-						// Link item
-						list->next = item;
-					}
-				}
-			}
-		} 
-		while(entriesRead);
-	}
-
-	// Close directory
-	FSDIR_Close(dirHandle);
-	
-	// List node
-	File * node = filelist;
-
-	// Iterate files
-	for(; node != NULL; node = node->next)
-	{
-		// Directory
-		if(node->isDir)
-		{
-			// Required buffer size
-			int size = strlen(path) + strlen(node->name) + 2;
-
-			// Allocate buffer
-			char * buffer = (char *)malloc(size);
-
-			// Combine path
-			strcpy(buffer, path);
-			strcpy(buffer + strlen(buffer), node->name);
-			buffer[strlen(buffer) + 1] = 0;
-			buffer[strlen(buffer)] = '/';
-
-			// Recursion delete
-			delete_folder_recursive(buffer);
-			
-			// Free memory
-			free(buffer);
-		}
-
-		// File
-		else
-		{
-			// Required buffer size
-			int size = strlen(path) + strlen(node->name) + 1;
-
-			// Allocate buffer
-			char * buffer = (char *)malloc(size);
-
-			// Combine path
-			strcpy(buffer, path);
-			strcpy(buffer + strlen(buffer), node->name);
-
-			// Delete file
-			fsRemove(fsArchive, buffer);
-
-			// Free memory
-			free(buffer);
-		}
-	}
-
-	// Free temporary list
-	recursiveFree(filelist);
-
-	// Delete now empty folder
-	return fsRmdir(fsArchive, path);
-}
-
 int delete(void)
 {
 	// Find file
@@ -214,15 +87,7 @@ int delete(void)
 
 	// Delete folder
 	if (file->isDir)
-	{
-		// Add trailing slash
-		path[strlen(path) + 1] = 0;
-		path[strlen(path)] = '/';
-
-		// Delete folder
-		return delete_folder_recursive(path);
-	}
-
+		return fsRmdirRecursive(fsArchive, path);
 	// Delete file
 	else 
 		return fsRemove(fsArchive, path);
@@ -458,14 +323,7 @@ int paste(void)
 
 		// Source delete
 		if(result == 0 && (copymode & COPY_DELETE_ON_FINISH) == COPY_DELETE_ON_FINISH)
-		{
-			// Append trailing slash (for recursion to work)
-			copysource[strlen(copysource) + 1] = 0;
-			copysource[strlen(copysource)] = '/';
-
-			// Delete source
-			delete_folder_recursive(copysource);
-		}
+			fsRmdirRecursive(fsArchive, copysource);
 	}
 
 	// Simple file copy

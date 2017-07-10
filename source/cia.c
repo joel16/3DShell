@@ -118,6 +118,8 @@ Cia getCiaInfo(const char * path, FS_MediaType mediaType)
 	Result ret = FSUSER_OpenFileDirectly(&fileHandle, ARCHIVE_SDMC, fsMakePath(PATH_ASCII, ""), fsMakePath(PATH_ASCII, path), FS_OPEN_READ, 0);
 	
 	ret = AM_GetCiaFileInfo(mediaType, &info, fileHandle);
+	//ret = AM_GetCiaRequiredSpace(&cia.requiredSpace, mediaType, fileHandle);
+	ret = AM_GetCiaCoreVersion(&cia.coreVersion, fileHandle);
 	
 	if (ret)
 		return cia;
@@ -338,6 +340,9 @@ int displayCIA(const char * path)
 	char size[16];
 	getSizeString(size, cia.size);
 	
+	/*char requiredSpace[16];
+	getSizeString(size, cia.requiredSpace);*/
+	
 	int pBar = 34, xlim = 300;
 		
 	while (aptMainLoop())
@@ -371,12 +376,15 @@ int displayCIA(const char * path)
 		digitalTime(346, 1);
 		
 		sf2d_draw_texture(largeIcon, 15, 28);
-		sftd_draw_textf(font, 78, 28, RGBA8(0, 0, 0, 255), 11, "%s v%u (%016llX)", fileName, cia.version, cia.titleID);
+		sftd_draw_textf(font, 78, 28, RGBA8(0, 0, 0, 255), 11, "%s v%u.0.0 (%016llX)", fileName, cia.coreVersion, cia.titleID);
 		sftd_draw_textf(font, 78, 44, RGBA8(0, 0, 0, 255), 11, "%s %s by %s", platformString(cia.platform), categoryString(cia.category), cia.author);
 		sftd_draw_textf(font, 78, 60, RGBA8(0, 0, 0, 255), 11, "%s", size);
 		
 		if (isInstalling == 0)
+		{
 			sftd_draw_text(font, 15, 86, RGBA8(0, 0, 0, 255), 11, "Do you want to install this application?");
+			//sftd_draw_textf(font, 15, 116, RGBA8(0, 0, 0, 255), 11, "Program requires: %s", requiredSpace);	
+		}
 		else if (isInstalling == 1)
 		{
 			sf2d_draw_rectangle(100, 130, 200, 3, RGBA8(185, 224, 220, 255));
