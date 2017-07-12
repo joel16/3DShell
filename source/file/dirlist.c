@@ -1,3 +1,4 @@
+#include "archive.h"
 #include "cia.h"
 #include "clock.h"
 #include "common.h"
@@ -99,11 +100,11 @@ void updateList(int clearindex)
 					continue;
 
 				// Ignore "." in all Directories
-				if(strcmp(dname, ".") == 0) 
+				if(strncmp(dname, ".", 1) == 0) 
 					continue;
 
 				// Ignore ".." in Root Directory
-				if(strcmp(cwd, ROOT_PATH) == 0 && strcmp(dname, "..") == 0) 
+				if(strcmp(cwd, ROOT_PATH) == 0 && strncmp(dname, "..", 2) == 0) 
 					continue;
 
 				// Allocate memory
@@ -182,7 +183,7 @@ void recursiveFree(File * node)
 	free(node);
 }
 
-void displayFiles()
+void displayFiles(void)
 {
 	// Bottom screen options
 	sf2d_start_frame(GFX_BOTTOM, GFX_LEFT);
@@ -320,7 +321,7 @@ void displayFiles()
 	
 	drawWifiStatus(270, 2);
 	drawBatteryStatus(295, 2);
-	digitalTime(346, 1);
+	digitalTime();
 	
 	FS_ArchiveResource	resource = {0};
 	
@@ -450,7 +451,7 @@ void openFile(void)
 				saveLastDirectory();
 			
 			updateList(CLEAR);
-			displayFiles(CLEAR);
+			displayFiles();
 		}
 	}
 	
@@ -468,7 +469,7 @@ void openFile(void)
 	{
 		extractZip(path, cwd);
 		updateList(CLEAR);
-		displayFiles(CLEAR);
+		displayFiles();
 	}
 	else if ((strncmp(file->ext, "txt", 3) == 0) || (strncmp(file->ext, "TXT", 3) == 0))
 		displayText(path);
@@ -543,7 +544,7 @@ File * findindex(int index)
 	return file;
 }
 
-int drawDeletionDialog()
+int drawDeletionDialog(void)
 {	
 	while(deleteDialog == true)
 	{
@@ -574,7 +575,7 @@ int drawDeletionDialog()
 			if(delete() == 0)
 			{
 				updateList(CLEAR);
-				displayFiles(CLEAR);
+				displayFiles();
 			}
 			
 			break;
@@ -587,7 +588,7 @@ int drawDeletionDialog()
 	return 0;
 }
 
-int displayProperties()
+int displayProperties(void)
 {
 	File * file = findindex(position);
 

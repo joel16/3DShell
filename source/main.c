@@ -24,7 +24,7 @@ struct colour BottomScreen_text_colour;
 
 //static struct sound *bgm;
 
-void initServices()
+void initServices(void)
 {
 	srvInit();
 	fsInit();
@@ -132,7 +132,7 @@ void initServices()
 		bgm = sound_create(BGM);*/
 }
 
-void termServices()
+void termServices(void)
 {	
 	osSetSpeedupEnable(0);
 	
@@ -301,7 +301,7 @@ turnOffBGM:
 	while (aptMainLoop())
 	{
 		// Display file list
-		displayFiles(KEEP);
+		displayFiles();
 		
 		hidScanInput();
 		hidTouchRead(&touch);
@@ -367,7 +367,7 @@ turnOffBGM:
 			DEFAULT_STATE = STATE_THEME;
 			strcpy(cwd, "/3ds/3DShell/themes/");
 			updateList(CLEAR);
-			displayFiles(CLEAR);
+			displayFiles();
 		}
 		
 		if ((kPressed & KEY_TOUCH) && (touchInRect(98, 123, 0, 20)))
@@ -434,7 +434,7 @@ turnOffBGM:
 			openArchive(ARCHIVE_SDMC);
 			
 			updateList(CLEAR);
-			displayFiles(CLEAR);
+			displayFiles();
 		}
 		else if ((kPressed & KEY_TOUCH) && (touchInRect(174, 199, 0, 20))) // CTR-NAND
 		{
@@ -447,7 +447,7 @@ turnOffBGM:
 			openArchive(ARCHIVE_NAND_CTR_FS);
 			
 			updateList(CLEAR);
-			displayFiles(CLEAR);
+			displayFiles();
 		}
 		
 		if ((kPressed & KEY_TOUCH) && (touchInRect(290, 320, 0, 20)))
@@ -457,11 +457,11 @@ turnOffBGM:
 			if (dirExists(fsArchive, cwd))
 			{
 				updateList(CLEAR);
-				displayFiles(CLEAR);
+				displayFiles();
 			}
 				
 			else 
-				displayFiles(KEEP);
+				displayFiles();
 		}
 		
 		if (kPressed & KEY_START) // exit
@@ -482,7 +482,7 @@ turnOffBGM:
 				else position = fileCount - 1;
 
 				// Display file list
-				displayFiles(KEEP);
+				displayFiles();
 			}
 
 			// Position Increment
@@ -498,7 +498,7 @@ turnOffBGM:
 				else position = 0;
 
 				// Display file list
-				displayFiles(KEEP);
+				displayFiles();
 			}
 			
 			if (kHeld & KEY_CPAD_UP)
@@ -510,7 +510,7 @@ turnOffBGM:
 
 				else position = fileCount - 1;
 
-				displayFiles(KEEP);
+				displayFiles();
 			}
 
 			else if (kHeld & KEY_CPAD_DOWN)
@@ -522,7 +522,7 @@ turnOffBGM:
 				
 				else position = 0;
 				
-				displayFiles(KEEP);
+				displayFiles();
 			}
 			
 			else if (kPressed & KEY_A)
@@ -595,14 +595,14 @@ turnOffBGM:
 					
 					DEFAULT_STATE = STATE_SETTINGS;
 					updateList(CLEAR);
-					displayFiles(CLEAR);
+					displayFiles();
 				}
 				
 				else
 				{
 					navigate(-1);
 					updateList(CLEAR);
-					displayFiles(CLEAR);
+					displayFiles();
 				}
 			}
 			
@@ -639,7 +639,7 @@ turnOffBGM:
 				
 				wait(100000000);
 				
-				newFolder();
+				createFolder();
 			}
 			
 			else if ((kPressed & KEY_TOUCH) && (touchInRect(37, 160, 131, 167)) && (IF_OPTIONS) && (BROWSE_STATE != STATE_NAND))
@@ -670,7 +670,7 @@ turnOffBGM:
 				wait(100000000);
 				copy(COPY_KEEP_ON_FINISH);
 				copyF = true;
-				displayFiles(KEEP);
+				displayFiles();
 			}
 			else if (((copyF == true) && (deleteDialog == false)) && (kPressed & KEY_TOUCH) && (touchInRect(161, 284, 94, 130)) && (IF_OPTIONS))
 			{
@@ -682,7 +682,7 @@ turnOffBGM:
 				{
 					copyF = false;
 					updateList(CLEAR);
-					displayFiles(CLEAR);
+					displayFiles();
 				}	
 			}	
 			
@@ -693,7 +693,7 @@ turnOffBGM:
 				wait(100000000);
 				copy(COPY_DELETE_ON_FINISH);
 				cutF = true;
-				displayFiles(KEEP);
+				displayFiles();
 			}
 			else if (((cutF == true) && (deleteDialog == false)) && (kPressed & KEY_TOUCH) && (touchInRect(161, 284, 131, 167)) && (IF_OPTIONS)  && (BROWSE_STATE != STATE_NAND))
 			{
@@ -705,7 +705,7 @@ turnOffBGM:
 				{
 					cutF = false;
 					updateList(CLEAR);
-					displayFiles(CLEAR);
+					displayFiles();
 				}
 			}
 		}

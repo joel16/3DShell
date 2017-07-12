@@ -373,10 +373,10 @@ int displayCIA(const char * path)
 		
 		drawWifiStatus(270, 2);
 		drawBatteryStatus(295, 2);
-		digitalTime(346, 1);
+		digitalTime();
 		
 		sf2d_draw_texture(largeIcon, 15, 28);
-		sftd_draw_textf(font, 78, 28, RGBA8(0, 0, 0, 255), 11, "%s v%u.0.0 (%016llX)", fileName, cia.coreVersion, cia.titleID);
+		sftd_draw_textf(font, 78, 28, RGBA8(0, 0, 0, 255), 11, "%s v%u (%016llX)", fileName, cia.version, cia.titleID);
 		sftd_draw_textf(font, 78, 44, RGBA8(0, 0, 0, 255), 11, "%s %s by %s", platformString(cia.platform), categoryString(cia.category), cia.author);
 		sftd_draw_textf(font, 78, 60, RGBA8(0, 0, 0, 255), 11, "%s", size);
 		

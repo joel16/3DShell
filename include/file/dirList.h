@@ -75,12 +75,12 @@ int selectionX, selectionY, DEFAULT_STATE;
 #define resetSelection() selectionX = -1, selectionY = -1;
 
 void updateList(int clearindex);
-void displayFiles();
+void displayFiles(void);
 void recursiveFree(File * node);
 void openFile(void);
 int navigate(int _case);
 File * findindex(int index);
-int drawDeletionDialog();
-int displayProperties();
+int drawDeletionDialog(void);
+int displayProperties(void);
 
 #endif

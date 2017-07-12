@@ -1,11 +1,11 @@
 #include "mcu.h"
 
-Result mcuInit()
+Result mcuInit(void)
 {
     return srvGetServiceHandle(&mcuhwcHandle, "mcu::HWC");
 }
 
-Result mcuExit()
+Result mcuExit(void)
 {
     return svcCloseHandle(mcuhwcHandle);
 }

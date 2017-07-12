@@ -6,7 +6,7 @@
 
 struct colour TopScreen_bar_colour;
 
-void digitalTime()
+void digitalTime(void)
 {
 	time_t unix_time = time(0);
 	struct tm* time_struct = gmtime((const time_t*)&unix_time);

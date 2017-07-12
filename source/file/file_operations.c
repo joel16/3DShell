@@ -14,7 +14,7 @@
 */
 int copymode = NOTHING_TO_COPY;
 
-void newFolder()
+void createFolder(void)
 {
 	char tempFolder[256];
 	strcpy(tempFolder, keyboard_3ds_get(256, "", "Enter name"));
@@ -32,7 +32,7 @@ void newFolder()
 	mainMenu(CLEAR);	
 }
 
-int renameFile()
+int renameFile(void)
 {
 	File * file = findindex(position);
 
@@ -352,7 +352,7 @@ int paste(void)
 	return result;
 }
 
-void saveLastDirectory()
+void saveLastDirectory(void)
 {
 	writeFile("/3ds/3DShell/lastdir.txt", cwd);
 }

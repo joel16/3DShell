@@ -5,8 +5,8 @@
 
 Handle mcuhwcHandle;
 
-Result mcuInit();
-Result mcuExit();
+Result mcuInit(void);
+Result mcuExit(void);
 Result mcuGetBatteryLevel(u8* out);
 
 #endif

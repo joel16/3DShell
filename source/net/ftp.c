@@ -1519,7 +1519,10 @@ void ftp_exit(void)
 
 	/* stop listening for new clients */
 	if(listenfd >= 0)
+	{
 		ftp_closesocket(listenfd, false);
+		listenfd = -1;
+	}
 
 #ifdef _3DS
 	/* deinitialize SOC service */

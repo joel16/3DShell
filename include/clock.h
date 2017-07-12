@@ -3,7 +3,7 @@
 
 #include <time.h>
 
-void digitalTime();
+void digitalTime(void);
 char * getDayOfWeek(int type);
 char * getMonthOfYear(int type);
 

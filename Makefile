@@ -30,16 +30,16 @@ include $(DEVKITARM)/3ds_rules
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
 RESOURCES   :=	resources
-SOURCES		:=	source source/audio source/file source/libnsbmp source/net source/unzip 
+SOURCES		:=	source source/audio source/file source/libnsbmp source/net source/unzip
 DATA		:=	data
-INCLUDES 	:= 	include include/audio include/file include/libnsbmp include/net include/stb_image include/unzip 
+INCLUDES 	:= 	include include/audio include/file include/libnsbmp include/net include/stb_image include/unzip
 ROMFS		:=	romfs
 
 APP_TITLE		:= 3DShell
 APP_DESCRIPTION	:= Multi-purpose GUI File Manager 
 APP_AUTHOR		:= Joel16
 
-VERSION_MAJOR := 1
+VERSION_MAJOR := 2
 VERSION_MINOR := 0
 
 #---------------------------------------------------------------------------------
@@ -56,7 +56,7 @@ APP_CPU_SPEED 		:= 804MHz
 APP_VERSION_MAJOR 	:= VERSION_MAJOR
 APP_ROMFS_DIR		:= $(TOPDIR)/romfs
 
-ICON 		:= $(RESOURCES)/icon.png
+ICON 		:= $(RESOURCES)/ic_launcher_filemanager.png
 BANNER 		:= $(RESOURCES)/banner.png
 JINGLE 		:= $(RESOURCES)/banner.wav
 LOGO 		:= resources/logo.bcma.lz
@@ -65,10 +65,10 @@ LOGO 		:= resources/logo.bcma.lz
 # options for code generation
 #---------------------------------------------------------------------------------
 
-ARCH    := -march=armv6k -mtune=mpcore -mfloat-abi=hard
+ARCH    := -march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
-CFLAGS	:=	-g -Wall -O2 -mword-relocations -Werror -DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR)\
-			-fomit-frame-pointer -ffast-math \
+CFLAGS	:=	-g -Wall -Werror -O2 -mword-relocations \
+			-ffast-math -DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) \
 			$(ARCH)
 
 CFLAGS 	+= $(INCLUDE) -DARM11 -D_3DS

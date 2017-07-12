@@ -7,7 +7,7 @@
 #include "updater.h"
 #include "utils.h"
 
-char * checkForUpdate()
+char * checkForUpdate(void)
 {
 	int currVer = 0, updateVer = 0;
 	static char str[20];
@@ -31,7 +31,7 @@ char * checkForUpdate()
 	return str;
 }
 
-void downloadUpdate()
+void downloadUpdate(void)
 {
 	Result ret = downloadFile("https://github.com/3DShell-Bot/Updater/releases/download/UPDATER/3DShell.cia", "/3ds/3DShell/3DShell.cia");
 	
@@ -43,7 +43,7 @@ void downloadUpdate()
 	}
 }
 
-void installUpdate()
+void installUpdate(void)
 {	
 	sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, "Update completed")) / 2), 80, RGBA8(251, 251, 251, 255), 11, "Update completed");
 	

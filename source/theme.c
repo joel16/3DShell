@@ -48,7 +48,7 @@ void createFontColours(char * path, int r, int g, int b)
 	}
 }
 
-void loadTheme()
+void loadTheme(void)
 {	
 	strcpy(theme_dir, setFileDefaultsChar("/3ds/3DShell/theme.bin", "romfs:/res", theme_dir));
 	strcpy(font_dir, setFileDefaultsChar("/3ds/3DShell/font.bin", "romfs:/font", font_dir));
@@ -194,7 +194,7 @@ void loadTheme()
 	fclose(file);
 }
 
-void reloadTheme()
+void reloadTheme(void)
 {	
 	sftd_free_font(font);
 	sftd_free_font(font2);

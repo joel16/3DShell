@@ -7,12 +7,12 @@ void openArchive(FS_ArchiveID id)
 	FSUSER_OpenArchive(&fsArchive, id, fsMakePath(PATH_EMPTY, ""));
 }
 
-void closeArchive()
+void closeArchive(void)
 {
 	FSUSER_CloseArchive(fsArchive);
 }
 
-Result makeDir(FS_Archive archive, const char *path)
+Result makeDir(FS_Archive archive, const char * path)
 {
 	if((!archive) || (!path))
 		return -1;
@@ -60,10 +60,11 @@ bool dirExists(FS_Archive archive, const char * path)
 	return true;
 }
 
-char* getFileModifiedTime(char *path) 
+char* getFileModifiedTime(char * path) 
 {
 	static char timeStr[30];
 	u64 mtime;
+	
 	sdmc_getmtime(path, &mtime);
 	time_t mt = mtime;
 	struct tm *timeStruct = gmtime(&mt);
@@ -178,7 +179,6 @@ Result fsClose(Handle handle)
 Result writeFile(const char * path, const char * buf)
 {
 	Handle handle;
-	
 	u32 len = strlen(buf);
 	u64 size;
 	u32 written;

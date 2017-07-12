@@ -3,6 +3,8 @@
 
 #define USE_CALLBACK
 
+#define NUM_LEVELS (Z_BEST_COMPRESSION - Z_NO_COMPRESSION + 1)
+
 static void png_file_write(png_structp png_ptr, png_bytep data, png_size_t length)
 {
 	ssize_t rc;
@@ -266,8 +268,10 @@ void genScreenshotFileName(int lastNumber, char *fileName, const char *ext)
 	sprintf(fileName, "/screenshots/Screenshot_%02d%02d%02d-%i%s", year, month, day, num, ext);
 }
 
-void captureScreenshot()
+void captureScreenshot(void)
 {	
+	static char name[256];
+	
 	sprintf(name, "%s", "screenshot"); 
 
 	if(lastNumber == -1)
