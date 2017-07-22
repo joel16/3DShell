@@ -2,6 +2,7 @@
 #define GALLERY_H
 
 #include <sf2d.h>
+#include <math.h>
 
 sf2d_texture * galleryBar;
 
