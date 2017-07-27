@@ -2,10 +2,8 @@
 #define FS_H
 
 #include <3ds.h>
-#include <stdbool.h>
-#include <stdio.h>
+
 #include <string.h>
-#include <sys/stat.h>
 #include <time.h>
 
 FS_Archive fsArchive;

@@ -2,12 +2,15 @@
 #include "common.h"
 #include "language.h"
 #include "main.h"
+#include "screen.h"
 #include "theme.h"
 
 struct colour TopScreen_bar_colour;
 
 void digitalTime(void)
 {
+	float width = 0;
+	
 	time_t unix_time = time(0);
 	struct tm* time_struct = gmtime((const time_t*)&unix_time);
 	int hours = time_struct->tm_hour;
@@ -21,10 +24,16 @@ void digitalTime(void)
 	else if(hours > 12)
 		hours = hours - 12;
 
-	if (hours >= 1 && hours < 10)  
-		sftd_draw_textf(font, 395 - sftd_get_text_width(font, 11, "0:00 XM"), 1, RGBA8(TopScreen_bar_colour.r, TopScreen_bar_colour.g, TopScreen_bar_colour.b, 255), 11, "%2i:%02i %s", hours, minutes, amOrPm ? "AM" : "PM");
+	if ((hours >= 1) && (hours < 10))  
+	{
+		width = screen_get_string_width("0:00 XM", 0.41f, 0.41f);
+		screen_draw_stringf((395 - width), 1, 0.41f, 0.41f, RGBA8(TopScreen_bar_colour.r, TopScreen_bar_colour.g, TopScreen_bar_colour.b, 255), "%2i:%02i %s", hours, minutes, amOrPm ? "AM" : "PM");
+	}
 	else
-		sftd_draw_textf(font, 395 - sftd_get_text_width(font, 11, "00:00 XM"), 1, RGBA8(TopScreen_bar_colour.r, TopScreen_bar_colour.g, TopScreen_bar_colour.b, 255), 11, "%2i:%02i %s", hours, minutes, amOrPm ? "AM" : "PM");
+	{
+		width = screen_get_string_width("00:00 XM", 0.41f, 0.41f);
+		screen_draw_stringf((395 - width), 1, 0.41f, 0.41f, RGBA8(TopScreen_bar_colour.r, TopScreen_bar_colour.g, TopScreen_bar_colour.b, 255), "%2i:%02i %s", hours, minutes, amOrPm ? "AM" : "PM");
+	}
 }
 
 char * getDayOfWeek(int type)

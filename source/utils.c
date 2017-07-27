@@ -2,11 +2,6 @@
 #include "fs.h"
 #include "utils.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
-
 void installDirectories(void)
 {
 	if (BROWSE_STATE != STATE_NAND)
@@ -80,17 +75,6 @@ void installDirectories(void)
 	}
 }
 
-void setBilinearFilter(sf2d_texture * texture)
-{
-	sf2d_texture_set_params(texture, GPU_TEXTURE_MAG_FILTER(GPU_LINEAR) | GPU_TEXTURE_MIN_FILTER(GPU_NEAREST));
-}
-
-void endDrawing(void)
-{
-	sf2d_end_frame();
-	sf2d_swapbuffers();
-}
-
 void getSizeString(char * string, uint64_t size) //Thanks TheOfficialFloW
 {
 	double double_size = (double)size;
@@ -117,21 +101,6 @@ int touchGetY(void)
 	touchPosition pos;	
 	hidTouchRead(&pos);
 	return pos.py;
-}
-
-sf2d_texture * sfil_load_IMG_file(const char * filename, sf2d_place place)
-{
-	int w, h;
-	unsigned char *data = stbi_load(filename, &w, &h, NULL, 4);
-	
-	if (data == NULL) 
-		return NULL;
-	
-	sf2d_texture * texture = NULL;
-	texture = sf2d_create_texture_mem_RGBA8(data, w, h, TEXFMT_RGBA8, place);
-	stbi_image_free(data);
-	
-	return texture;
 }
 
 void setConfig(const char * path, bool set) // using individual txt files for configs for now (plan to change this later when there's more options)

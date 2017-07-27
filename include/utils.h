@@ -1,7 +1,6 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <sf2d.h>
 #include <stdlib.h>
 
 #include <png.h>
@@ -22,12 +21,9 @@ typedef struct
 } Bitmap;
 
 void installDirectories(void);
-void setBilinearFilter(sf2d_texture *texture);
-void endDrawing(void);
 void getSizeString(char * string, uint64_t size);
 int touchGetX(void);
 int touchGetY(void);
-sf2d_texture *sfil_load_IMG_file(const char * filename, sf2d_place place);
 void setConfig(const char * path, bool set);
 const char * getLastNChars(char * str, int n);
 u8 getRegion(void);

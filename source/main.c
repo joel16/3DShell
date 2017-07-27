@@ -11,6 +11,7 @@
 #include "mcu.h"
 #include "net.h"
 #include "power.h"
+#include "screen.h"
 #include "screenshot.h"
 #include "sound.h"
 #include "theme.h"
@@ -38,9 +39,11 @@ void initServices(void)
 	cfguInit();
 	acInit();
 	httpcInit(0);
+	
+	gfxInitDefault();
+	gfxSet3D(false);
 	romfsInit();
-	sf2d_init();
-	sftd_init();
+	screen_init();
 	
 	ndspInit();
 	ndspSetOutputMode(NDSP_OUTPUT_STEREO);
@@ -48,72 +51,73 @@ void initServices(void)
 	amInit();
 	AM_QueryAvailableExternalTitleDatabase(NULL);
 	
-	sf2d_set_clear_color(RGBA8(0, 0, 0, 255));
-	sf2d_set_vblank_wait(0);
-	
 	installDirectories();
 	
 	loadTheme();
 	
-	background = sfil_load_PNG_file(background_path, SF2D_PLACE_RAM); setBilinearFilter(background);
-	options = sfil_load_PNG_file(options_path, SF2D_PLACE_RAM); setBilinearFilter(options);
-	_properties = sfil_load_PNG_file(properties_path, SF2D_PLACE_RAM); setBilinearFilter(_properties);
-	deletion = sfil_load_PNG_file(deletion_path, SF2D_PLACE_RAM); setBilinearFilter(deletion);
-	selector = sfil_load_PNG_file(selector_path, SF2D_PLACE_RAM); setBilinearFilter(selector);
-	folderIcon = sfil_load_PNG_file(folder_path, SF2D_PLACE_RAM); setBilinearFilter(folderIcon);
-	fileIcon = sfil_load_PNG_file(file_path, SF2D_PLACE_RAM); setBilinearFilter(fileIcon); 
-	audioIcon = sfil_load_PNG_file(audio_path, SF2D_PLACE_RAM); setBilinearFilter(audioIcon);
-	appIcon = sfil_load_PNG_file(app_path, SF2D_PLACE_RAM); setBilinearFilter(appIcon);
-	txtIcon = sfil_load_PNG_file(txt_path, SF2D_PLACE_RAM); setBilinearFilter(txtIcon);
-	systemIcon = sfil_load_PNG_file(system_path, SF2D_PLACE_RAM); setBilinearFilter(systemIcon);
-	zipIcon = sfil_load_PNG_file(zip_path, SF2D_PLACE_RAM); setBilinearFilter(zipIcon);
-	imgIcon = sfil_load_PNG_file(img_path, SF2D_PLACE_RAM); setBilinearFilter(imgIcon);
-	check = sfil_load_PNG_file(check_path, SF2D_PLACE_RAM); setBilinearFilter(check);
-	uncheck = sfil_load_PNG_file(uncheck_path, SF2D_PLACE_RAM); setBilinearFilter(uncheck);
+	screen_load_texture_file(TEXTURE_BACKGROUND, background_path, true);
+	screen_load_texture_file(TEXTURE_SELECTOR, selector_path, true);
+	screen_load_texture_file(TEXTURE_OPTIONS, options_path, true);
+	screen_load_texture_file(TEXTURE_PROPERTIES, properties_path, true);
+	screen_load_texture_file(TEXTURE_DELETE, deletion_path, true);
 	
-	homeIcon = sfil_load_PNG_file("romfs:/res/home.png", SF2D_PLACE_RAM); setBilinearFilter(homeIcon);
-	optionsIcon = sfil_load_PNG_file("romfs:/res/options_icon.png", SF2D_PLACE_RAM); setBilinearFilter(optionsIcon);
-	sdIcon = sfil_load_PNG_file("romfs:/res/sd.png", SF2D_PLACE_RAM); setBilinearFilter(sdIcon);
-	nandIcon = sfil_load_PNG_file("romfs:/res/nand.png", SF2D_PLACE_RAM); setBilinearFilter(nandIcon);
-	settingsIcon = sfil_load_PNG_file("romfs:/res/settings.png", SF2D_PLACE_RAM); setBilinearFilter(settingsIcon);
-	updateIcon = sfil_load_PNG_file("romfs:/res/update.png", SF2D_PLACE_RAM); setBilinearFilter(updateIcon);
-	ftpIcon = sfil_load_PNG_file("romfs:/res/ftp.png", SF2D_PLACE_RAM); setBilinearFilter(ftpIcon);
-	dlIcon = sfil_load_PNG_file("romfs:/res/url.png", SF2D_PLACE_RAM); setBilinearFilter(dlIcon);
-	themeIcon = sfil_load_PNG_file("romfs:/res/theme.png", SF2D_PLACE_RAM); setBilinearFilter(themeIcon);
-	s_HomeIcon = sfil_load_PNG_file("romfs:/res/s_home.png", SF2D_PLACE_RAM); setBilinearFilter(s_HomeIcon);
-	s_OptionsIcon = sfil_load_PNG_file("romfs:/res/s_options_icon.png", SF2D_PLACE_RAM); setBilinearFilter(s_OptionsIcon);
-	s_SdIcon = sfil_load_PNG_file("romfs:/res/s_sd.png", SF2D_PLACE_RAM); setBilinearFilter(s_SdIcon);
-	s_SettingsIcon = sfil_load_PNG_file("romfs:/res/s_settings.png", SF2D_PLACE_RAM); setBilinearFilter(s_SettingsIcon);
-	s_NandIcon = sfil_load_PNG_file("romfs:/res/s_nand.png", SF2D_PLACE_RAM); setBilinearFilter(s_NandIcon);
-	s_UpdateIcon = sfil_load_PNG_file("romfs:/res/s_update.png", SF2D_PLACE_RAM); setBilinearFilter(s_UpdateIcon);
-	s_ftpIcon = sfil_load_PNG_file("romfs:/res/s_ftp.png", SF2D_PLACE_RAM); setBilinearFilter(s_ftpIcon);
-	s_dlIcon = sfil_load_PNG_file("romfs:/res/s_url.png", SF2D_PLACE_RAM); setBilinearFilter(s_dlIcon);
-	searchIcon = sfil_load_PNG_file("romfs:/res/search.png", SF2D_PLACE_RAM); setBilinearFilter(searchIcon);
+	screen_load_texture_file(TEXTURE_FOLDER_ICON, folder_path, true);
+	screen_load_texture_file(TEXTURE_FILE_ICON, file_path, true);
+	screen_load_texture_file(TEXTURE_APP_ICON, app_path, true);
+	screen_load_texture_file(TEXTURE_AUDIO_ICON, audio_path, true);
+	screen_load_texture_file(TEXTURE_IMG_ICON, img_path, true);
+	screen_load_texture_file(TEXTURE_SYSTEM_ICON, system_path, true);
+	screen_load_texture_file(TEXTURE_TXT_ICON, txt_path, true);
+	screen_load_texture_file(TEXTURE_ZIP_ICON, zip_path, true);
 	
-	toggleOn = sfil_load_PNG_file("romfs:/res/toggleOn.png", SF2D_PLACE_RAM); setBilinearFilter(toggleOn);
-	toggleOff = sfil_load_PNG_file("romfs:/res/toggleOff.png", SF2D_PLACE_RAM); setBilinearFilter(toggleOff);
+	screen_load_texture_file(TEXTURE_HOME_ICON, "romfs:/res/home.png", true);
+	screen_load_texture_file(TEXTURE_OPTIONS_ICON, "romfs:/res/options_icon.png", true);
+	screen_load_texture_file(TEXTURE_SETTINGS_ICON, "romfs:/res/settings.png", true);
+	screen_load_texture_file(TEXTURE_UPDATE_ICON, "romfs:/res/update.png", true);
+	screen_load_texture_file(TEXTURE_FTP_ICON, "romfs:/res/ftp.png", true);
+	screen_load_texture_file(TEXTURE_DOWNLOAD_ICON, "romfs:/res/url.png", true);
 	
-	_0 = sfil_load_PNG_file("romfs:/res/battery/0.png", SF2D_PLACE_RAM); setBilinearFilter(_0);
-	_15 = sfil_load_PNG_file("romfs:/res/battery/15.png", SF2D_PLACE_RAM); setBilinearFilter(_15);
-	_28 = sfil_load_PNG_file("romfs:/res/battery/28.png", SF2D_PLACE_RAM); setBilinearFilter(_28);
-	_43 = sfil_load_PNG_file("romfs:/res/battery/43.png", SF2D_PLACE_RAM); setBilinearFilter(_43);
-	_57 = sfil_load_PNG_file("romfs:/res/battery/57.png", SF2D_PLACE_RAM); setBilinearFilter(_57);
-	_71 = sfil_load_PNG_file("romfs:/res/battery/71.png", SF2D_PLACE_RAM); setBilinearFilter(_71);
-	_85 = sfil_load_PNG_file("romfs:/res/battery/85.png", SF2D_PLACE_RAM); setBilinearFilter(_85);
-	_100 = sfil_load_PNG_file("romfs:/res/battery/100.png", SF2D_PLACE_RAM); setBilinearFilter(_100);
-	_charge = sfil_load_PNG_file("romfs:/res/battery/charge.png", SF2D_PLACE_RAM); setBilinearFilter(_charge);
+	screen_load_texture_file(TEXTURE_HOME_ICON_SELECTED, "romfs:/res/s_home.png", true);
+	screen_load_texture_file(TEXTURE_OPTIONS_ICON_SELECTED, "romfs:/res/s_options_icon.png", true);
+	screen_load_texture_file(TEXTURE_SETTINGS_ICON_SELECTED, "romfs:/res/s_settings.png", true);
+	screen_load_texture_file(TEXTURE_UPDATE_ICON_SELECTED, "romfs:/res/s_update.png", true);
+	screen_load_texture_file(TEXTURE_FTP_ICON_SELECTED, "romfs:/res/s_ftp.png", true);
+	screen_load_texture_file(TEXTURE_DOWNLOAD_ICON_SELECTED, "romfs:/res/s_url.png", true);
 	
-	wifiIcon0 = sfil_load_PNG_file("romfs:/res/wifi/stat_sys_wifi_signal_0.png", SF2D_PLACE_RAM); setBilinearFilter(wifiIcon0);
-	wifiIcon1 = sfil_load_PNG_file("romfs:/res/wifi/stat_sys_wifi_signal_1.png", SF2D_PLACE_RAM); setBilinearFilter(wifiIcon1);
-	wifiIcon2 = sfil_load_PNG_file("romfs:/res/wifi/stat_sys_wifi_signal_2.png", SF2D_PLACE_RAM); setBilinearFilter(wifiIcon2);
-	wifiIcon3 = sfil_load_PNG_file("romfs:/res/wifi/stat_sys_wifi_signal_3.png", SF2D_PLACE_RAM); setBilinearFilter(wifiIcon3);
-	wifiIconNull = sfil_load_PNG_file("romfs:/res/wifi/stat_sys_wifi_signal_null.png", SF2D_PLACE_RAM); setBilinearFilter(wifiIconNull);
+	screen_load_texture_file(TEXTURE_SD_ICON, "romfs:/res/sd.png", true);
+	screen_load_texture_file(TEXTURE_NAND_ICON, "romfs:/res/nand.png", true);
 	
-	galleryBar = sfil_load_PNG_file("romfs:/res/gallery/bar.png", SF2D_PLACE_RAM); setBilinearFilter(galleryBar);
+	screen_load_texture_file(TEXTURE_SD_ICON_SELECTED, "romfs:/res/s_sd.png", true);
+	screen_load_texture_file(TEXTURE_NAND_ICON_SELECTED, "romfs:/res/s_nand.png", true);
 	
-	font = sftd_load_font_file(font_path);
-	font2 = sftd_load_font_file(font_path);
+	screen_load_texture_file(TEXTURE_TOGGLE_ON, "romfs:/res/toggleOn.png", true);
+	screen_load_texture_file(TEXTURE_TOGGLE_OFF, "romfs:/res/toggleOff.png", true);
 	
+	screen_load_texture_file(TEXTURE_CHECK_ICON, check_path, true);
+	screen_load_texture_file(TEXTURE_UNCHECK_ICON, uncheck_path, true);
+	
+	screen_load_texture_file(TEXTURE_SEARCH_ICON, "romfs:/res/search.png", true);
+	
+	screen_load_texture_file(TEXTURE_THEME_ICON, "romfs:/res/theme.png", true);
+	
+	screen_load_texture_file(TEXTURE_BATTERY_0, "romfs:/res/battery/0.png", true);
+	screen_load_texture_file(TEXTURE_BATTERY_15, "romfs:/res/battery/15.png", true);
+	screen_load_texture_file(TEXTURE_BATTERY_28, "romfs:/res/battery/28.png", true);
+	screen_load_texture_file(TEXTURE_BATTERY_43, "romfs:/res/battery/43.png", true);
+	screen_load_texture_file(TEXTURE_BATTERY_57, "romfs:/res/battery/57.png", true);
+	screen_load_texture_file(TEXTURE_BATTERY_71, "romfs:/res/battery/71.png", true);
+	screen_load_texture_file(TEXTURE_BATTERY_85, "romfs:/res/battery/85.png", true);
+	screen_load_texture_file(TEXTURE_BATTERY_100, "romfs:/res/battery/100.png", true);
+	screen_load_texture_file(TEXTURE_BATTERY_CHARGE, "romfs:/res/battery/charge.png", true);
+	
+	screen_load_texture_file(TEXTURE_WIFI_NULL, "romfs:/res/wifi/stat_sys_wifi_signal_null.png", true);
+	screen_load_texture_file(TEXTURE_WIFI_0, "romfs:/res/wifi/stat_sys_wifi_signal_0.png", true);
+	screen_load_texture_file(TEXTURE_WIFI_1, "romfs:/res/wifi/stat_sys_wifi_signal_1.png", true);
+	screen_load_texture_file(TEXTURE_WIFI_2, "romfs:/res/wifi/stat_sys_wifi_signal_2.png", true);
+	screen_load_texture_file(TEXTURE_WIFI_3, "romfs:/res/wifi/stat_sys_wifi_signal_3.png", true);
+	
+	screen_load_texture_file(TEXTURE_GALLERY_BAR, "romfs:/res/gallery/bar.png", true);
+
 	if (isN3DS())
 		osSetSpeedupEnable(true);
 	
@@ -136,68 +140,74 @@ void termServices(void)
 {	
 	osSetSpeedupEnable(0);
 	
-	sftd_free_font(font);
-	sftd_free_font(font2);
+	screen_unload_texture(TEXTURE_GALLERY_BAR);
 	
-	sf2d_free_texture(galleryBar);
+	screen_unload_texture(TEXTURE_WIFI_NULL);
+	screen_unload_texture(TEXTURE_WIFI_3);
+	screen_unload_texture(TEXTURE_WIFI_2);
+	screen_unload_texture(TEXTURE_WIFI_1);
+	screen_unload_texture(TEXTURE_WIFI_0);
 	
-	sf2d_free_texture(wifiIconNull);
-	sf2d_free_texture(wifiIcon3);
-	sf2d_free_texture(wifiIcon2);
-	sf2d_free_texture(wifiIcon1);
-	sf2d_free_texture(wifiIcon0);
+	screen_unload_texture(TEXTURE_BATTERY_CHARGE);
+	screen_unload_texture(TEXTURE_BATTERY_100);
+	screen_unload_texture(TEXTURE_BATTERY_85);
+	screen_unload_texture(TEXTURE_BATTERY_71);
+	screen_unload_texture(TEXTURE_BATTERY_57);
+	screen_unload_texture(TEXTURE_BATTERY_43);
+	screen_unload_texture(TEXTURE_BATTERY_28);
+	screen_unload_texture(TEXTURE_BATTERY_15);
+	screen_unload_texture(TEXTURE_BATTERY_0);
 	
-	sf2d_free_texture(_charge);
-	sf2d_free_texture(_100);
-	sf2d_free_texture(_85);
-	sf2d_free_texture(_71);
-	sf2d_free_texture(_57);
-	sf2d_free_texture(_43);
-	sf2d_free_texture(_28);
-	sf2d_free_texture(_15);
-	sf2d_free_texture(_0);
+	screen_unload_texture(TEXTURE_THEME_ICON);
 	
-	sf2d_free_texture(toggleOff);
-	sf2d_free_texture(toggleOn);
+	screen_unload_texture(TEXTURE_SEARCH_ICON);
 	
-	sf2d_free_texture(homeIcon);
-	sf2d_free_texture(optionsIcon);
-	sf2d_free_texture(sdIcon);
-	sf2d_free_texture(nandIcon);
-	sf2d_free_texture(settingsIcon);
-	sf2d_free_texture(updateIcon);
-	sf2d_free_texture(ftpIcon);
-	sf2d_free_texture(themeIcon);
-	sf2d_free_texture(s_HomeIcon);
-	sf2d_free_texture(s_OptionsIcon);
-	sf2d_free_texture(s_SdIcon);
-	sf2d_free_texture(s_SettingsIcon);
-	sf2d_free_texture(s_NandIcon);
-	sf2d_free_texture(s_UpdateIcon);
-	sf2d_free_texture(s_ftpIcon);
-	sf2d_free_texture(searchIcon);
+	screen_unload_texture(TEXTURE_TOGGLE_OFF);
+	screen_unload_texture(TEXTURE_TOGGLE_ON);
 	
-	sf2d_free_texture(background);
-	sf2d_free_texture(options);
-	sf2d_free_texture(_properties);
-	sf2d_free_texture(deletion);
-	sf2d_free_texture(selector);
-	sf2d_free_texture(folderIcon);
-	sf2d_free_texture(fileIcon);
-	sf2d_free_texture(audioIcon);
-	sf2d_free_texture(appIcon);
-	sf2d_free_texture(txtIcon);
-	sf2d_free_texture(systemIcon);
-	sf2d_free_texture(zipIcon);
-	sf2d_free_texture(imgIcon);
-	sf2d_free_texture(check);
-	sf2d_free_texture(uncheck);
+	screen_unload_texture(TEXTURE_CHECK_ICON);
+	screen_unload_texture(TEXTURE_UNCHECK_ICON);
+	
+	screen_unload_texture(TEXTURE_HOME_ICON);
+	screen_unload_texture(TEXTURE_OPTIONS_ICON);
+	screen_unload_texture(TEXTURE_SETTINGS_ICON);
+	screen_unload_texture(TEXTURE_UPDATE_ICON);
+	screen_unload_texture(TEXTURE_FTP_ICON);
+	screen_unload_texture(TEXTURE_DOWNLOAD_ICON);
+	
+	screen_unload_texture(TEXTURE_HOME_ICON_SELECTED);
+	screen_unload_texture(TEXTURE_OPTIONS_ICON_SELECTED);
+	screen_unload_texture(TEXTURE_SETTINGS_ICON_SELECTED);
+	screen_unload_texture(TEXTURE_UPDATE_ICON_SELECTED);
+	screen_unload_texture(TEXTURE_FTP_ICON_SELECTED);
+	screen_unload_texture(TEXTURE_DOWNLOAD_ICON_SELECTED);
+	
+	screen_unload_texture(TEXTURE_SD_ICON);
+	screen_unload_texture(TEXTURE_NAND_ICON);
+	
+	screen_unload_texture(TEXTURE_SD_ICON_SELECTED);
+	screen_unload_texture(TEXTURE_NAND_ICON_SELECTED);
+	
+	screen_unload_texture(TEXTURE_FOLDER_ICON);
+	screen_unload_texture(TEXTURE_FILE_ICON);
+	screen_unload_texture(TEXTURE_APP_ICON);
+	screen_unload_texture(TEXTURE_AUDIO_ICON);
+	screen_unload_texture(TEXTURE_IMG_ICON);
+	screen_unload_texture(TEXTURE_SYSTEM_ICON);
+	screen_unload_texture(TEXTURE_TXT_ICON);
+	screen_unload_texture(TEXTURE_ZIP_ICON);
+	
+	screen_unload_texture(TEXTURE_BACKGROUND);
+	screen_unload_texture(TEXTURE_SELECTOR);
+	screen_unload_texture(TEXTURE_OPTIONS);
+	screen_unload_texture(TEXTURE_PROPERTIES);
+	screen_unload_texture(TEXTURE_DELETE);
 	
 	amExit();
 	ndspExit();
-	sftd_fini();
-	sf2d_fini();
+	screen_exit();
 	romfsExit();
+	gfxExit();
 	httpcExit();
 	acExit();
 	cfguExit();
@@ -217,29 +227,30 @@ static loop_status_t loop(loop_status_t (*callback)(void))
 
 	while(aptMainLoop())
 	{
-		sf2d_start_frame(GFX_BOTTOM, GFX_LEFT);
+		screen_begin_frame();
+		screen_select(GFX_BOTTOM);
 		
-		sf2d_draw_rectangle(0, 0, 320, 240, RGBA8(BottomScreen_colour.r, BottomScreen_colour.g, BottomScreen_colour.b, 255));
-		sf2d_draw_rectangle(0, 0, 320, 20, RGBA8(BottomScreen_bar_colour.r, BottomScreen_bar_colour.g, BottomScreen_bar_colour.b, 255));
+		screen_draw_rect(0, 0, 320, 240, RGBA8(BottomScreen_colour.r, BottomScreen_colour.g, BottomScreen_colour.b, 255));
+		screen_draw_rect(0, 0, 320, 20, RGBA8(BottomScreen_bar_colour.r, BottomScreen_bar_colour.g, BottomScreen_bar_colour.b, 255));
 		
-		sf2d_draw_texture(homeIcon, -2, -2);
-		sf2d_draw_texture(optionsIcon, 25, 0);
-		sf2d_draw_texture(settingsIcon, 50, 0);
-		sf2d_draw_texture(updateIcon, 75, 0);
-		sf2d_draw_texture(s_ftpIcon, 100, 0);
-		sf2d_draw_texture(dlIcon, 125, 0);
+		screen_draw_texture(TEXTURE_HOME_ICON, -2, -2);
+		screen_draw_texture(TEXTURE_OPTIONS_ICON, 25, 0);
+		screen_draw_texture(TEXTURE_SETTINGS_ICON, 50, 0);
+		screen_draw_texture(TEXTURE_UPDATE_ICON, 75, 0);
+		screen_draw_texture(TEXTURE_FTP_ICON_SELECTED, 100, 0);
+		screen_draw_texture(TEXTURE_DOWNLOAD_ICON, 125, 0);
 		
 		if (BROWSE_STATE == STATE_SD)
-			sf2d_draw_texture(s_SdIcon, 150, 0);
+			screen_draw_texture(TEXTURE_SD_ICON_SELECTED, 150, 0);
 		else
-			sf2d_draw_texture(sdIcon, 150, 0);
+			screen_draw_texture(TEXTURE_SD_ICON, 150, 0);
 	
 		if (BROWSE_STATE == STATE_NAND)
-			sf2d_draw_texture(s_NandIcon, 175, 0);
+			screen_draw_texture(TEXTURE_NAND_ICON_SELECTED, 175, 0);
 		else
-			sf2d_draw_texture(nandIcon, 175, 0);
+			screen_draw_texture(TEXTURE_NAND_ICON, 175, 0);
 		
-		sf2d_draw_texture(searchIcon, (320 - searchIcon->width), -2);
+		screen_draw_texture(TEXTURE_SEARCH_ICON, (320 - screen_get_texture_width(TEXTURE_SEARCH_ICON)), -2);
 		
 		char buf[25];
 		
@@ -248,23 +259,23 @@ static loop_status_t loop(loop_status_t (*callback)(void))
 		
 		if (wifiStatus == 0)
 		{
-			sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, lang_ftp[language][3])) / 2), 40, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), 11, lang_ftp[language][3]);
+			screen_draw_string(((320 - screen_get_string_width(lang_ftp[language][3], 0.41f, 0.41f)) / 2), 40, 0.41f, 0.41f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][3]);
 			sprintf(buf, lang_ftp[language][4]);
 		}
 		else
 		{
-			sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, lang_ftp[language][0])) / 2), 40, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), 11, lang_ftp[language][0]);
+			screen_draw_string(((320 - screen_get_string_width(lang_ftp[language][0], 0.41f, 0.41f)) / 2), 40, 0.41f, 0.41f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][0]);
 			u32 ip = gethostid();
 			sprintf(buf, "IP: %lu.%lu.%lu.%lu:5000", ip & 0xFF, (ip>>8)&0xFF, (ip>>16)&0xFF, (ip>>24)&0xFF);
 		}
 		
-		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, buf)) / 2), 60, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), 11, buf);
+		screen_draw_string(((320 - screen_get_string_width(buf, 0.41f, 0.41f)) / 2), 60, 0.41f, 0.41f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), buf);
 		
-		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, lang_ftp[language][1])) / 2), 80, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), 11, lang_ftp[language][1]);
+		screen_draw_string(((320 - screen_get_string_width(lang_ftp[language][1], 0.41f, 0.41f)) / 2), 80, 0.41f, 0.41f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][1]);
 		
-		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, lang_ftp[language][2])) / 2), 100, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), 11, lang_ftp[language][2]);
+		screen_draw_string(((320 - screen_get_string_width(lang_ftp[language][2], 0.41f, 0.41f)) / 2), 100, 0.41f, 0.41f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][2]);
 		
-		endDrawing();
+		screen_end_frame();
 		
 		status = callback();
 		if(status != LOOP_CONTINUE)
@@ -538,12 +549,10 @@ turnOffBGM:
 					if ((strncmp(fileName, "default", 7) == 0))
 					{
 						strcpy(theme_dir, "romfs:/res");
-						strcpy(font_dir, "romfs:/font");
 						strcpy(colour_dir, "/3ds/3DShell");
 						
 						writeFile("/3ds/3DShell/theme.bin", theme_dir);
 						writeFile("/3ds/3DShell/colours.bin", colour_dir);
-						writeFile("/3ds/3DShell/font.bin", font_dir);
 						
 						wait(1000000);
 						
@@ -554,15 +563,12 @@ turnOffBGM:
 					{
 						strcpy(theme_dir, cwd);
 						strcpy(colour_dir, cwd);
-						strcpy(font_dir, cwd);
 						
 						strcat(theme_dir, fileName);
 						strcat(colour_dir, fileName);
-						strcat(font_dir, fileName);
 						
 						writeFile("/3ds/3DShell/theme.bin", theme_dir);
 						writeFile("/3ds/3DShell/colours.bin", colour_dir);
-						writeFile("/3ds/3DShell/font.bin", font_dir);
 						
 						wait(1000000);
 						
