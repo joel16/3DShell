@@ -27,12 +27,12 @@ void digitalTime(void)
 	if ((hours >= 1) && (hours < 10))  
 	{
 		width = screen_get_string_width("0:00 XM", 0.41f, 0.41f);
-		screen_draw_stringf((395 - width), 1, 0.41f, 0.41f, RGBA8(TopScreen_bar_colour.r, TopScreen_bar_colour.g, TopScreen_bar_colour.b, 255), "%2i:%02i %s", hours, minutes, amOrPm ? "AM" : "PM");
+		screen_draw_stringf((395 - width), 2, 0.41f, 0.41f, RGBA8(TopScreen_bar_colour.r, TopScreen_bar_colour.g, TopScreen_bar_colour.b, 255), "%2i:%02i %s", hours, minutes, amOrPm ? "AM" : "PM");
 	}
 	else
 	{
 		width = screen_get_string_width("00:00 XM", 0.41f, 0.41f);
-		screen_draw_stringf((395 - width), 1, 0.41f, 0.41f, RGBA8(TopScreen_bar_colour.r, TopScreen_bar_colour.g, TopScreen_bar_colour.b, 255), "%2i:%02i %s", hours, minutes, amOrPm ? "AM" : "PM");
+		screen_draw_stringf((395 - width), 2, 0.41f, 0.41f, RGBA8(TopScreen_bar_colour.r, TopScreen_bar_colour.g, TopScreen_bar_colour.b, 255), "%2i:%02i %s", hours, minutes, amOrPm ? "AM" : "PM");
 	}
 }
 

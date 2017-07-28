@@ -316,7 +316,7 @@ void displayFiles(void)
         		
 	screen_draw_texture(TEXTURE_BACKGROUND, 0, 0);
 	
-	screen_draw_stringf(84, 28, 0.41f, 0.41f, RGBA8(TopScreen_bar_colour.r, TopScreen_bar_colour.g, TopScreen_bar_colour.b, 255), "%.35s", cwd); // Display current path
+	screen_draw_stringf(84, 28, 0.44f, 0.44f, RGBA8(TopScreen_bar_colour.r, TopScreen_bar_colour.g, TopScreen_bar_colour.b, 255), "%.35s", cwd); // Display current path
 	
 	drawWifiStatus(270, 2);
 	drawBatteryStatus(295, 2);
@@ -394,7 +394,7 @@ void displayFiles(void)
 			while(len -- > 0)
 				strcat(buf, " ");
 			
-			screen_draw_stringf(70, 60 + (38 * printed), 0.41f, 0.41f, RGBA8(TopScreen_colour.r ,TopScreen_colour.g, TopScreen_colour.b, 255), "%.52s", buf); // Display file name
+			screen_draw_stringf(70, 60 + (38 * printed), 0.44f, 0.44f, RGBA8(TopScreen_colour.r ,TopScreen_colour.g, TopScreen_colour.b, 255), "%.52s", buf); // Display file name
 			
 			if ((file->isDir) && (strncmp(file->name, "..", 2) != 0))
 			{
@@ -405,7 +405,7 @@ void displayFiles(void)
 				
 			}
 			else if (strncmp(file->name, "..", 2) == 0)
-				screen_draw_string(70, 75 + (38 * printed), 0.41f, 0.41f, RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), lang_files[language][0]);
+				screen_draw_string(70, 75 + (38 * printed), 0.44f, 0.44f, RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), lang_files[language][0]);
 			else
 			{
 				getSizeString(size, file->size);
@@ -425,7 +425,7 @@ void displayFiles(void)
 	}
 	
 	// length is 187
-	//screen_draw_stringf(5, 1, 0.41f, 0.41f, RGBA8(181, 181, 181, 255), "%d/%d", (position + 1), fileCount); // debug stuff
+	//screen_draw_stringf(5, 1, 0.44f, 0.44f, RGBA8(181, 181, 181, 255), "%d/%d", (position + 1), fileCount); // debug stuff
 	
 	screen_end_frame();
 }

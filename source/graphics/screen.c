@@ -90,16 +90,6 @@ static void screen_set_blend(u32 color, bool rgb, bool alpha)
 	C3D_TexEnvColor(env, color);
 }
 
-void screen_clear(gfxScreen_t screen, u32 color)
-{	
-	color = ((color>>24)&0x000000FF) | ((color>>8)&0x0000FF00) | ((color<<8)&0x00FF0000) | ((color<<24)&0xFF000000); // reverse byte order
-	
-	if (screen == GFX_TOP)
-		C3D_RenderTargetSetClear(target_top, C3D_CLEAR_ALL, color, 0);
-	else
-		C3D_RenderTargetSetClear(target_bottom, C3D_CLEAR_ALL, color, 0);
-}
-
 void screen_init(void) 
 {	
 	// Initialize Citro3D
@@ -214,6 +204,16 @@ void screen_exit(void)
 		C3D_Fini();
 		c3d_initialized = false;
 	}
+}
+
+void screen_clear(gfxScreen_t screen, u32 color)
+{	
+	color = ((color>>24)&0x000000FF) | ((color>>8)&0x0000FF00) | ((color<<8)&0x00FF0000) | ((color<<24)&0xFF000000); // reverse byte order
+	
+	if (screen == GFX_TOP)
+		C3D_RenderTargetSetClear(target_top, C3D_CLEAR_ALL, color, 0);
+	else
+		C3D_RenderTargetSetClear(target_bottom, C3D_CLEAR_ALL, color, 0);
 }
 
 void screen_set_base_alpha(u8 alpha) 
@@ -588,7 +588,7 @@ static void setTextColor(u32 color)
 	C3D_TexEnvColor(env, color);
 }
 
-static void screen_draw_string_internal(const char * text, float x, float y, float scaleX, float scaleY, u32 color, bool wrap, float wrapX) 
+static void screen_draw_string_internal(const char * text, float x, float y, float scaleX, float scaleY, u32 color, bool wrap, bool baseline, float wrapX) 
 {
 	if(text == NULL)
 		return;
@@ -607,8 +607,12 @@ static void screen_draw_string_internal(const char * text, float x, float y, flo
 
 	const uint8_t* p = (const uint8_t*) text;
 	const uint8_t* lastAlign = p;
-	u32 code = 0;
-	ssize_t units = -1;
+	
+	ssize_t  units;
+	uint32_t code;
+	
+	u32 flags = GLYPH_POS_CALC_VTXCOORD | (baseline ? GLYPH_POS_AT_BASELINE : 0);
+	
 	while(*p && (units = decode_utf8(&code, p)) != -1 && code > 0) 
 	{
 		p += units;
@@ -636,7 +640,7 @@ static void screen_draw_string_internal(const char * text, float x, float y, flo
 			}
 
 			fontGlyphPos_s data;
-			fontCalcGlyphPos(&data, fontGlyphIndexFromCodePoint(code), GLYPH_POS_CALC_VTXCOORD, scaleX, scaleY);
+			fontCalcGlyphPos(&data, fontGlyphIndexFromCodePoint(code), flags, scaleX, scaleY);
 
 			if(data.sheetIndex != lastSheet) 
 			{
@@ -658,7 +662,7 @@ static void screen_draw_string_internal(const char * text, float x, float y, flo
 
 void screen_draw_string(float x, float y, float scaleX, float scaleY, u32 color, const char * text) 
 {
-	screen_draw_string_internal(text, x, y, scaleX, scaleY, color, false, 0);
+	screen_draw_string_internal(text, x, y, scaleX, scaleY, color, false, false, 0);
 }
 
 void screen_draw_stringf(float x, float y, float scaleX, float scaleY, u32 color, const char * text, ...) 
@@ -667,13 +671,13 @@ void screen_draw_stringf(float x, float y, float scaleX, float scaleY, u32 color
 	va_list args;
 	va_start(args, text);
 	vsnprintf(buffer, 256, text, args);
-	screen_draw_string_internal(buffer, x, y, scaleX, scaleY, color, false, 0);
+	screen_draw_string_internal(buffer, x, y, scaleX, scaleY, color, false, false, 0);
 	va_end(args);
 }
 
 void screen_draw_string_wrap(float x, float y, float scaleX, float scaleY, u32 color, float wrapX, const char * text) 
 {
-	screen_draw_string_internal(text, x, y, scaleX, scaleY, color, true, wrapX);
+	screen_draw_string_internal(text, x, y, scaleX, scaleY, color, true, false, wrapX);
 }
 
 static void * screen_pool_memalign(u32 size, u32 alignment)
