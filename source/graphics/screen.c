@@ -90,9 +90,14 @@ static void screen_set_blend(u32 color, bool rgb, bool alpha)
 	C3D_TexEnvColor(env, color);
 }
 
-static void screen_clear(gfxScreen_t screen, u32 color)
+void screen_clear(gfxScreen_t screen, u32 color)
 {	
-	C3D_FrameBufClear(screen == GFX_TOP ? &target_top->frameBuf : &target_bottom->frameBuf, C3D_CLEAR_ALL, color, 0);
+	color = ((color>>24)&0x000000FF) | ((color>>8)&0x0000FF00) | ((color<<8)&0x00FF0000) | ((color<<24)&0xFF000000); // reverse byte order
+	
+	if (screen == GFX_TOP)
+		C3D_RenderTargetSetClear(target_top, C3D_CLEAR_ALL, color, 0);
+	else
+		C3D_RenderTargetSetClear(target_bottom, C3D_CLEAR_ALL, color, 0);
 }
 
 void screen_init(void) 
@@ -124,11 +129,11 @@ void screen_init(void)
 	// Initialize the render target
 	target_top = C3D_RenderTargetCreate(TOP_SCREEN_HEIGHT, TOP_SCREEN_WIDTH, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
 	C3D_RenderTargetSetOutput(target_top, GFX_TOP, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
-	screen_clear(GFX_TOP, CLEAR_COLOR);
+	C3D_FrameBufClear(&target_top->frameBuf, C3D_CLEAR_ALL, CLEAR_COLOR, 0);
 
 	target_bottom = C3D_RenderTargetCreate(BOTTOM_SCREEN_HEIGHT, BOTTOM_SCREEN_WIDTH, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
 	C3D_RenderTargetSetOutput(target_bottom, GFX_BOTTOM, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
-	screen_clear(GFX_BOTTOM, CLEAR_COLOR);
+	C3D_FrameBufClear(&target_bottom->frameBuf, C3D_CLEAR_ALL, CLEAR_COLOR, 0);
 	
 	// Compute the projection matrix (top and bottom screens)
 	Mtx_OrthoTilt(&projection_top, 0.0, TOP_SCREEN_WIDTH, TOP_SCREEN_HEIGHT, 0.0, 0.0, 1.0, true);

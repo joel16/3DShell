@@ -15,15 +15,19 @@ void displayImage(char * path)
 	int bottom_tex_x = 40, bottom_tex_y = 240;
 	int view_factor = 4;
 	
-	screen_load_texture_file(TEXTURE_GALLERY_IMAGE, path, true);
+	screen_clear(GFX_TOP, RGBA8(33, 39, 43, 255));
+	screen_clear(GFX_BOTTOM, RGBA8(33, 39, 43, 255));
 	
-	//sf2d_set_clear_color(RGBA8(33, 39, 43, 255));
+	screen_load_texture_file(TEXTURE_GALLERY_IMAGE, path, true);
 	
 	int galleryBarY = 0, galleryBarLimY = -35, nameY = 11, nameLimY = -11;
 	
 	u64 start = osGetTime();
 	
-	//bool bothScreens = false;
+	bool bothScreens = false;
+	
+	u32 width = screen_get_texture_width(TEXTURE_GALLERY_IMAGE);
+	u32 height = screen_get_texture_height(TEXTURE_GALLERY_IMAGE);
 		
 	while (aptMainLoop())
 	{
@@ -33,19 +37,18 @@ void displayImage(char * path)
 		screen_begin_frame();
 		
 		screen_select(GFX_BOTTOM);
-		
-		/*if (bothScreens == true)
-			sf2d_draw_texture_part_rotate_scale(image, 0 + 160, 0 + 120, rad, bottom_tex_x, bottom_tex_y, 320, 240, scale, scale);
+		if (bothScreens == true)
+			screen_draw_texture_crop(TEXTURE_GALLERY_IMAGE, -40, 0, 360, (height / 2));
 		
 		screen_select(GFX_TOP);
 		
-		if ((image->width <= 400) && (image->height <= 240))
-			sf2d_draw_texture_part_rotate_scale(image, 0 + 200, 0 + 120, rad, 0, 0, image->width, image->height, scale, scale);
-		else if ((image->width == 400) && ((image->height == 480) || (image->height >= 480 && image->height <= 482))) // Both screens
+		if ((width <= 400) && (height <= 240))
+			screen_draw_texture(TEXTURE_GALLERY_IMAGE, ((400 - width) / 2), ((240 - height) / 2));
+		else if ((width == 400) && ((height == 480) || ((height >= 480) && (height <= 482)))) // Both screens
 		{
-			sf2d_draw_texture_part_rotate_scale(image, 0 + 200, 0 + 120, rad, top_tex_x, top_tex_y, 400, 240, scale, scale);
+			screen_draw_texture_crop(TEXTURE_GALLERY_IMAGE, 0, 0, 400, 240);
 			bothScreens = true;
-		}*/
+		}
 		
 		if (osGetTime() - start >= (2000))
 		{

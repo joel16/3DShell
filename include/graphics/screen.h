@@ -22,6 +22,7 @@
 
 #define CLEAR_COLOR 				0x000000FF
 
+void screen_clear(gfxScreen_t screen, u32 color);
 void screen_init(void);
 void screen_exit(void);
 void screen_set_base_alpha(u8 alpha);

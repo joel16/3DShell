@@ -37,5 +37,5 @@ void drawBatteryStatus(int x, int y)
 	if(batteryPercent == 100)
 		screen_draw_stringf(x + 15, y - 1, 0.41f, 0.41f, RGBA8(TopScreen_bar_colour.r, TopScreen_bar_colour.g, TopScreen_bar_colour.b, 255), "100%%");
 	else
-		screen_draw_stringf(x + 20, y - 1, 0.41f, 0.41f, RGBA8(TopScreen_bar_colour.r, TopScreen_bar_colour.g, TopScreen_bar_colour.b, 255), "%3d%%", batteryPercent);
+		screen_draw_stringf(x + 20, y - 1, 0.41f, 0.41f, RGBA8(TopScreen_bar_colour.r, TopScreen_bar_colour.g, TopScreen_bar_colour.b, 255), "%2d%%", batteryPercent);
 }
