@@ -268,7 +268,7 @@ static void screen_prepare_texture(u32* pow2WidthOut, u32* pow2HeightOut, u32 id
 	if(pow2Height < 64)
         pow2Height = 64;
 
-	if(textures[id].tex.data != NULL && (textures[id].tex.width != pow2Width || textures[id].tex.height != pow2Height || textures[id].tex.fmt != format)) 
+	if(textures[id].tex.data != NULL && ((textures[id].tex.width != pow2Width) || (textures[id].tex.height != pow2Height) || (textures[id].tex.fmt != format))) 
 	{
 		C3D_TexDelete(&textures[id].tex);
 		textures[id].tex.data = NULL;
@@ -412,6 +412,45 @@ void screen_load_texture_gif(u32 id, const char* path, bool linearFilter)
 	}
 
 	screen_load_texture_untiled(id, image, (u32) (width * height * 4), (u32)width, (u32)height, GPU_RGBA8, linearFilter);
+
+	free(image);
+}
+
+void screen_load_texture_jpg(u32 id, const char* path, bool linearFilter) 
+{
+	if(id >= MAX_TEXTURES) 
+		return;
+
+	FILE * fd = fopen(path, "rb");
+	
+	if(fd == NULL)
+		return;
+
+	int width = 0, height = 0, depth = 0;
+	u8 * image = stbi_load_from_file(fd, &width, &height, &depth, STBI_rgb);
+	
+	fclose(fd);
+
+	if((image == NULL) || (depth != STBI_rgb))
+		return;
+	
+	for(u32 x = 0; x < width; x++) 
+	{
+		for(u32 y = 0; y < height; y++) 
+		{
+			u32 pos = (y * width + x) * 3;
+
+			u8 c1 = image[pos + 0];
+			u8 c2 = image[pos + 1];
+			u8 c3 = image[pos + 2];
+
+			image[pos + 0] = c3;
+			image[pos + 1] = c2;
+			image[pos + 2] = c1;
+		}
+	}
+
+	screen_load_texture_untiled(id, image, (u32) (width * height * 3), (u32)width, (u32)height, GPU_RGB8, linearFilter);
 
 	free(image);
 }
