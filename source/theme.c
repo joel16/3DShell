@@ -210,23 +210,23 @@ void reloadTheme(void)
 	screen_unload_texture(TEXTURE_CHECK_ICON);
 	screen_unload_texture(TEXTURE_UNCHECK_ICON);
 	
-	screen_load_texture_file(TEXTURE_BACKGROUND, background_path, true);
-	screen_load_texture_file(TEXTURE_SELECTOR, selector_path, true);
-	screen_load_texture_file(TEXTURE_OPTIONS, options_path, true);
-	screen_load_texture_file(TEXTURE_PROPERTIES, properties_path, true);
-	screen_load_texture_file(TEXTURE_DELETE, deletion_path, true);
+	screen_load_texture_png(TEXTURE_BACKGROUND, background_path, true);
+	screen_load_texture_png(TEXTURE_SELECTOR, selector_path, true);
+	screen_load_texture_png(TEXTURE_OPTIONS, options_path, true);
+	screen_load_texture_png(TEXTURE_PROPERTIES, properties_path, true);
+	screen_load_texture_png(TEXTURE_DELETE, deletion_path, true);
 	
-	screen_load_texture_file(TEXTURE_FOLDER_ICON, folder_path, true);
-	screen_load_texture_file(TEXTURE_FILE_ICON, file_path, true);
-	screen_load_texture_file(TEXTURE_APP_ICON, app_path, true);
-	screen_load_texture_file(TEXTURE_AUDIO_ICON, audio_path, true);
-	screen_load_texture_file(TEXTURE_IMG_ICON, img_path, true);
-	screen_load_texture_file(TEXTURE_SYSTEM_ICON, system_path, true);
-	screen_load_texture_file(TEXTURE_TXT_ICON, txt_path, true);
-	screen_load_texture_file(TEXTURE_ZIP_ICON, zip_path, true);
+	screen_load_texture_png(TEXTURE_FOLDER_ICON, folder_path, true);
+	screen_load_texture_png(TEXTURE_FILE_ICON, file_path, true);
+	screen_load_texture_png(TEXTURE_APP_ICON, app_path, true);
+	screen_load_texture_png(TEXTURE_AUDIO_ICON, audio_path, true);
+	screen_load_texture_png(TEXTURE_IMG_ICON, img_path, true);
+	screen_load_texture_png(TEXTURE_SYSTEM_ICON, system_path, true);
+	screen_load_texture_png(TEXTURE_TXT_ICON, txt_path, true);
+	screen_load_texture_png(TEXTURE_ZIP_ICON, zip_path, true);
 	
-	screen_load_texture_file(TEXTURE_CHECK_ICON, check_path, true);
-	screen_load_texture_file(TEXTURE_UNCHECK_ICON, uncheck_path, true);
+	screen_load_texture_png(TEXTURE_CHECK_ICON, check_path, true);
+	screen_load_texture_png(TEXTURE_UNCHECK_ICON, uncheck_path, true);
 	
 	FILE * file;
 	

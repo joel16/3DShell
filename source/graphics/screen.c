@@ -1,3 +1,5 @@
+#include "libnsbmp.h"
+#include "lodepng.h"
 #include "screen.h"
 #include "stb_image.h"
 
@@ -21,8 +23,8 @@ static int uLoc_use_transform;
 static C3D_RenderTarget * target_top;
 static C3D_RenderTarget * target_bottom;
 
-static C3D_Mtx projection_top;
-static C3D_Mtx projection_bottom;
+static C3D_Mtx projectionTop;
+static C3D_Mtx projectionBot;
 
 static C3D_Tex * glyphSheets;
 
@@ -96,6 +98,15 @@ void screen_init(void)
 	if(C3D_Init(C3D_DEFAULT_CMDBUF_SIZE * 16))
 		c3d_initialized = true;
 	
+	// Initialize the render targets
+	target_top = C3D_RenderTargetCreate(SCREEN_HEIGHT, TOP_SCREEN_WIDTH, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
+	C3D_FrameBufClear(&target_top->frameBuf, C3D_CLEAR_ALL, CLEAR_COLOR, 0);
+	C3D_RenderTargetSetOutput(target_top, GFX_TOP, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
+
+	target_bottom = C3D_RenderTargetCreate(SCREEN_HEIGHT, BOTTOM_SCREEN_WIDTH, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
+	C3D_FrameBufClear(&target_bottom->frameBuf, C3D_CLEAR_ALL, CLEAR_COLOR, 0);
+	C3D_RenderTargetSetOutput(target_bottom, GFX_BOTTOM, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
+	
 	mempool_addr = linearAlloc(0x80000);
 	mempool_size = 0x80000;
 	
@@ -105,29 +116,20 @@ void screen_init(void)
 	shaderProgramSetVsh(&program, &vshader_dvlb->DVLE[0]);
 	C3D_BindProgram(&program);
 	
+	// Get the location of the uniforms
 	uLoc_projection = shaderInstanceGetUniformLocation(program.vertexShader, "projection");
 	uLoc_transform = shaderInstanceGetUniformLocation(program.vertexShader, "transform");
 	uLoc_use_transform = shaderInstanceGetUniformLocation(program.vertexShader, "useTransform");
 
 	// Configure attributes for use with the vertex shader
-	// Attribute format and element count are ignored in immediate mode
 	C3D_AttrInfo* attrInfo = C3D_GetAttrInfo();
 	AttrInfo_Init(attrInfo);
 	AttrInfo_AddLoader(attrInfo, 0, GPU_FLOAT, 3); // v0 = position
 	AttrInfo_AddLoader(attrInfo, 1, GPU_FLOAT, 2); // v2 = texcoord
 	
-	// Initialize the render target
-	target_top = C3D_RenderTargetCreate(TOP_SCREEN_HEIGHT, TOP_SCREEN_WIDTH, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
-	C3D_RenderTargetSetOutput(target_top, GFX_TOP, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
-	C3D_FrameBufClear(&target_top->frameBuf, C3D_CLEAR_ALL, CLEAR_COLOR, 0);
-
-	target_bottom = C3D_RenderTargetCreate(BOTTOM_SCREEN_HEIGHT, BOTTOM_SCREEN_WIDTH, GPU_RB_RGBA8, GPU_RB_DEPTH24_STENCIL8);
-	C3D_RenderTargetSetOutput(target_bottom, GFX_BOTTOM, GFX_LEFT, DISPLAY_TRANSFER_FLAGS);
-	C3D_FrameBufClear(&target_bottom->frameBuf, C3D_CLEAR_ALL, CLEAR_COLOR, 0);
-	
 	// Compute the projection matrix (top and bottom screens)
-	Mtx_OrthoTilt(&projection_top, 0.0, TOP_SCREEN_WIDTH, TOP_SCREEN_HEIGHT, 0.0, 0.0, 1.0, true);
-	Mtx_OrthoTilt(&projection_bottom, 0.0, BOTTOM_SCREEN_WIDTH, BOTTOM_SCREEN_HEIGHT, 0.0, 0.0, 1.0, true);
+	Mtx_OrthoTilt(&projectionTop, 0.0, TOP_SCREEN_WIDTH, SCREEN_HEIGHT, 0.0, 0.0, 1.0, true);
+	Mtx_OrthoTilt(&projectionBot, 0.0, BOTTOM_SCREEN_WIDTH, SCREEN_HEIGHT, 0.0, 0.0, 1.0, true);
 
 	C3D_CullFace(GPU_CULL_NONE);
 	
@@ -337,43 +339,80 @@ void screen_load_texture_untiled(u32 id, void* data, u32 size, u32 width, u32 he
 	C3D_TexFlush(&textures[id].tex);
 }
 
-void screen_load_texture_file(u32 id, const char* path, bool linearFilter) 
+void screen_load_texture_png(u32 id, const char* path, bool linearFilter) 
+{
+	if(id >= MAX_TEXTURES) 
+		return;
+
+	unsigned char * image;
+	unsigned width = 0, height = 0;
+
+	lodepng_decode32_file(&image, &width, &height, path);
+
+	if(image == NULL)
+		return;
+
+	// lodepng outputs big endian rgba so we need to convert
+	for(u32 x = 0; x < width; x++) 
+	{
+        for(u32 y = 0; y < height; y++) 
+		{
+            u32 pos = (y * width + x) * 4;
+
+            u8 c1 = image[pos + 0];
+            u8 c2 = image[pos + 1];
+            u8 c3 = image[pos + 2];
+            u8 c4 = image[pos + 3];
+
+            image[pos + 0] = c4;
+            image[pos + 1] = c3;
+            image[pos + 2] = c2;
+            image[pos + 3] = c1;
+        }
+    }
+
+	screen_load_texture_untiled(id, image, (u32) (width * height * 4), (u32) width, (u32) height, GPU_RGBA8, linearFilter);
+
+	free(image);
+}
+
+void screen_load_texture_gif(u32 id, const char* path, bool linearFilter) 
 {
 	if(id >= MAX_TEXTURES) 
 		return;
 
 	FILE * fd = fopen(path, "rb");
+	
 	if(fd == NULL)
 		return;
 
-	int width;
-	int height;
-	int depth;
-	u8* image = stbi_load_from_file(fd, &width, &height, &depth, STBI_rgb_alpha);
+	int width = 0, height = 0, depth = 0;
+	u8 * image = stbi_load_from_file(fd, &width, &height, &depth, STBI_rgb_alpha);
+	
 	fclose(fd);
 
 	if((image == NULL) || (depth != STBI_rgb_alpha))
 		return;
-
+	
 	for(u32 x = 0; x < width; x++) 
 	{
-		for(u32 y = 0; y < height; y++) 
+        for(u32 y = 0; y < height; y++) 
 		{
-			u32 pos = (y * width + x) * 4;
+            u32 pos = (y * width + x) * 4;
 
-			u8 c1 = image[pos + 0];
-			u8 c2 = image[pos + 1];
-			u8 c3 = image[pos + 2];
-			u8 c4 = image[pos + 3];
+            u8 c1 = image[pos + 0];
+            u8 c2 = image[pos + 1];
+            u8 c3 = image[pos + 2];
+            u8 c4 = image[pos + 3];
 
-			image[pos + 0] = c4;
-			image[pos + 1] = c3;
-			image[pos + 2] = c2;
-			image[pos + 3] = c1;
-		}
-	}
+            image[pos + 0] = c4;
+            image[pos + 1] = c3;
+            image[pos + 2] = c2;
+            image[pos + 3] = c1;
+        }
+    }
 
-	screen_load_texture_untiled(id, image, (u32) (width * height * 4), (u32) width, (u32) height, GPU_RGBA8, linearFilter);
+	screen_load_texture_untiled(id, image, (u32) (width * height * 4), (u32)width, (u32)height, GPU_RGBA8, linearFilter);
 
 	free(image);
 }
@@ -421,7 +460,7 @@ void screen_select(gfxScreen_t screen)
 		return;
 
 	// Get the location of the uniforms
-	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, shaderInstanceGetUniformLocation(program.vertexShader, "projection"), screen == GFX_TOP ? &projection_top : &projection_bottom);
+	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, shaderInstanceGetUniformLocation(program.vertexShader, "projection"), screen == GFX_TOP ? &projectionTop : &projectionBot);
 }
 
 static void screen_draw_quad(float x1, float y1, float x2, float y2, float left, float bottom, float right, float top) 
@@ -474,6 +513,26 @@ void screen_draw_texture_crop(u32 id, float x, float y, float width, float heigh
 
 	C3D_TexBind(0, &textures[id].tex);
 	screen_draw_quad(x, y, x + width, y + height, 0, (float) (textures[id].tex.height - textures[id].height) / (float) textures[id].tex.height, width / (float) textures[id].tex.width, (textures[id].tex.height - textures[id].height + height) / (float) textures[id].tex.height);
+
+	if(base_alpha != 0xFF)
+		screen_set_blend(0, false, false);
+}
+
+void screen_draw_texture_blend(u32 id, float x, float y, u32 color) 
+{
+	screen_set_blend(color, true, true);
+	
+	if(id >= MAX_TEXTURES)
+		return;
+
+	if(textures[id].tex.data == NULL)
+		return;
+	
+	if(base_alpha != 0xFF)
+		screen_set_blend(base_alpha << 24, false, true);
+
+	C3D_TexBind(0, &textures[id].tex);
+	screen_draw_quad(x, y, x + textures[id].width, y + textures[id].height, 0, (float) (textures[id].tex.height - textures[id].height) / (float) textures[id].tex.height, (float) textures[id].width / (float) textures[id].tex.width, 1.0f);
 
 	if(base_alpha != 0xFF)
 		screen_set_blend(0, false, false);

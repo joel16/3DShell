@@ -41,7 +41,6 @@ void initServices(void)
 	httpcInit(0);
 	
 	gfxInitDefault();
-	gfxSet3D(false);
 	romfsInit();
 	screen_init();
 	
@@ -55,68 +54,68 @@ void initServices(void)
 	
 	loadTheme();
 	
-	screen_load_texture_file(TEXTURE_BACKGROUND, background_path, true);
-	screen_load_texture_file(TEXTURE_SELECTOR, selector_path, true);
-	screen_load_texture_file(TEXTURE_OPTIONS, options_path, true);
-	screen_load_texture_file(TEXTURE_PROPERTIES, properties_path, true);
-	screen_load_texture_file(TEXTURE_DELETE, deletion_path, true);
+	screen_load_texture_png(TEXTURE_BACKGROUND, background_path, true);
+	screen_load_texture_png(TEXTURE_SELECTOR, selector_path, true);
+	screen_load_texture_png(TEXTURE_OPTIONS, options_path, true);
+	screen_load_texture_png(TEXTURE_PROPERTIES, properties_path, true);
+	screen_load_texture_png(TEXTURE_DELETE, deletion_path, true);
 	
-	screen_load_texture_file(TEXTURE_FOLDER_ICON, folder_path, true);
-	screen_load_texture_file(TEXTURE_FILE_ICON, file_path, true);
-	screen_load_texture_file(TEXTURE_APP_ICON, app_path, true);
-	screen_load_texture_file(TEXTURE_AUDIO_ICON, audio_path, true);
-	screen_load_texture_file(TEXTURE_IMG_ICON, img_path, true);
-	screen_load_texture_file(TEXTURE_SYSTEM_ICON, system_path, true);
-	screen_load_texture_file(TEXTURE_TXT_ICON, txt_path, true);
-	screen_load_texture_file(TEXTURE_ZIP_ICON, zip_path, true);
+	screen_load_texture_png(TEXTURE_FOLDER_ICON, folder_path, true);
+	screen_load_texture_png(TEXTURE_FILE_ICON, file_path, true);
+	screen_load_texture_png(TEXTURE_APP_ICON, app_path, true);
+	screen_load_texture_png(TEXTURE_AUDIO_ICON, audio_path, true);
+	screen_load_texture_png(TEXTURE_IMG_ICON, img_path, true);
+	screen_load_texture_png(TEXTURE_SYSTEM_ICON, system_path, true);
+	screen_load_texture_png(TEXTURE_TXT_ICON, txt_path, true);
+	screen_load_texture_png(TEXTURE_ZIP_ICON, zip_path, true);
 	
-	screen_load_texture_file(TEXTURE_HOME_ICON, "romfs:/res/home.png", true);
-	screen_load_texture_file(TEXTURE_OPTIONS_ICON, "romfs:/res/options_icon.png", true);
-	screen_load_texture_file(TEXTURE_SETTINGS_ICON, "romfs:/res/settings.png", true);
-	screen_load_texture_file(TEXTURE_UPDATE_ICON, "romfs:/res/update.png", true);
-	screen_load_texture_file(TEXTURE_FTP_ICON, "romfs:/res/ftp.png", true);
-	screen_load_texture_file(TEXTURE_DOWNLOAD_ICON, "romfs:/res/url.png", true);
+	screen_load_texture_png(TEXTURE_HOME_ICON, "romfs:/res/home.png", true);
+	screen_load_texture_png(TEXTURE_OPTIONS_ICON, "romfs:/res/options_icon.png", true);
+	screen_load_texture_png(TEXTURE_SETTINGS_ICON, "romfs:/res/settings.png", true);
+	screen_load_texture_png(TEXTURE_UPDATE_ICON, "romfs:/res/update.png", true);
+	screen_load_texture_png(TEXTURE_FTP_ICON, "romfs:/res/ftp.png", true);
+	screen_load_texture_png(TEXTURE_DOWNLOAD_ICON, "romfs:/res/url.png", true);
 	
-	screen_load_texture_file(TEXTURE_HOME_ICON_SELECTED, "romfs:/res/s_home.png", true);
-	screen_load_texture_file(TEXTURE_OPTIONS_ICON_SELECTED, "romfs:/res/s_options_icon.png", true);
-	screen_load_texture_file(TEXTURE_SETTINGS_ICON_SELECTED, "romfs:/res/s_settings.png", true);
-	screen_load_texture_file(TEXTURE_UPDATE_ICON_SELECTED, "romfs:/res/s_update.png", true);
-	screen_load_texture_file(TEXTURE_FTP_ICON_SELECTED, "romfs:/res/s_ftp.png", true);
-	screen_load_texture_file(TEXTURE_DOWNLOAD_ICON_SELECTED, "romfs:/res/s_url.png", true);
+	screen_load_texture_png(TEXTURE_HOME_ICON_SELECTED, "romfs:/res/s_home.png", true);
+	screen_load_texture_png(TEXTURE_OPTIONS_ICON_SELECTED, "romfs:/res/s_options_icon.png", true);
+	screen_load_texture_png(TEXTURE_SETTINGS_ICON_SELECTED, "romfs:/res/s_settings.png", true);
+	screen_load_texture_png(TEXTURE_UPDATE_ICON_SELECTED, "romfs:/res/s_update.png", true);
+	screen_load_texture_png(TEXTURE_FTP_ICON_SELECTED, "romfs:/res/s_ftp.png", true);
+	screen_load_texture_png(TEXTURE_DOWNLOAD_ICON_SELECTED, "romfs:/res/s_url.png", true);
 	
-	screen_load_texture_file(TEXTURE_SD_ICON, "romfs:/res/sd.png", true);
-	screen_load_texture_file(TEXTURE_NAND_ICON, "romfs:/res/nand.png", true);
+	screen_load_texture_png(TEXTURE_SD_ICON, "romfs:/res/sd.png", true);
+	screen_load_texture_png(TEXTURE_NAND_ICON, "romfs:/res/nand.png", true);
 	
-	screen_load_texture_file(TEXTURE_SD_ICON_SELECTED, "romfs:/res/s_sd.png", true);
-	screen_load_texture_file(TEXTURE_NAND_ICON_SELECTED, "romfs:/res/s_nand.png", true);
+	screen_load_texture_png(TEXTURE_SD_ICON_SELECTED, "romfs:/res/s_sd.png", true);
+	screen_load_texture_png(TEXTURE_NAND_ICON_SELECTED, "romfs:/res/s_nand.png", true);
 	
-	screen_load_texture_file(TEXTURE_TOGGLE_ON, "romfs:/res/toggleOn.png", true);
-	screen_load_texture_file(TEXTURE_TOGGLE_OFF, "romfs:/res/toggleOff.png", true);
+	screen_load_texture_png(TEXTURE_TOGGLE_ON, "romfs:/res/toggleOn.png", true);
+	screen_load_texture_png(TEXTURE_TOGGLE_OFF, "romfs:/res/toggleOff.png", true);
 	
-	screen_load_texture_file(TEXTURE_CHECK_ICON, check_path, true);
-	screen_load_texture_file(TEXTURE_UNCHECK_ICON, uncheck_path, true);
+	screen_load_texture_png(TEXTURE_CHECK_ICON, check_path, true);
+	screen_load_texture_png(TEXTURE_UNCHECK_ICON, uncheck_path, true);
 	
-	screen_load_texture_file(TEXTURE_SEARCH_ICON, "romfs:/res/search.png", true);
+	screen_load_texture_png(TEXTURE_SEARCH_ICON, "romfs:/res/search.png", true);
 	
-	screen_load_texture_file(TEXTURE_THEME_ICON, "romfs:/res/theme.png", true);
+	screen_load_texture_png(TEXTURE_THEME_ICON, "romfs:/res/theme.png", true);
 	
-	screen_load_texture_file(TEXTURE_BATTERY_0, "romfs:/res/battery/0.png", true);
-	screen_load_texture_file(TEXTURE_BATTERY_15, "romfs:/res/battery/15.png", true);
-	screen_load_texture_file(TEXTURE_BATTERY_28, "romfs:/res/battery/28.png", true);
-	screen_load_texture_file(TEXTURE_BATTERY_43, "romfs:/res/battery/43.png", true);
-	screen_load_texture_file(TEXTURE_BATTERY_57, "romfs:/res/battery/57.png", true);
-	screen_load_texture_file(TEXTURE_BATTERY_71, "romfs:/res/battery/71.png", true);
-	screen_load_texture_file(TEXTURE_BATTERY_85, "romfs:/res/battery/85.png", true);
-	screen_load_texture_file(TEXTURE_BATTERY_100, "romfs:/res/battery/100.png", true);
-	screen_load_texture_file(TEXTURE_BATTERY_CHARGE, "romfs:/res/battery/charge.png", true);
+	screen_load_texture_png(TEXTURE_BATTERY_0, "romfs:/res/battery/0.png", true);
+	screen_load_texture_png(TEXTURE_BATTERY_15, "romfs:/res/battery/15.png", true);
+	screen_load_texture_png(TEXTURE_BATTERY_28, "romfs:/res/battery/28.png", true);
+	screen_load_texture_png(TEXTURE_BATTERY_43, "romfs:/res/battery/43.png", true);
+	screen_load_texture_png(TEXTURE_BATTERY_57, "romfs:/res/battery/57.png", true);
+	screen_load_texture_png(TEXTURE_BATTERY_71, "romfs:/res/battery/71.png", true);
+	screen_load_texture_png(TEXTURE_BATTERY_85, "romfs:/res/battery/85.png", true);
+	screen_load_texture_png(TEXTURE_BATTERY_100, "romfs:/res/battery/100.png", true);
+	screen_load_texture_png(TEXTURE_BATTERY_CHARGE, "romfs:/res/battery/charge.png", true);
 	
-	screen_load_texture_file(TEXTURE_WIFI_NULL, "romfs:/res/wifi/stat_sys_wifi_signal_null.png", true);
-	screen_load_texture_file(TEXTURE_WIFI_0, "romfs:/res/wifi/stat_sys_wifi_signal_0.png", true);
-	screen_load_texture_file(TEXTURE_WIFI_1, "romfs:/res/wifi/stat_sys_wifi_signal_1.png", true);
-	screen_load_texture_file(TEXTURE_WIFI_2, "romfs:/res/wifi/stat_sys_wifi_signal_2.png", true);
-	screen_load_texture_file(TEXTURE_WIFI_3, "romfs:/res/wifi/stat_sys_wifi_signal_3.png", true);
+	screen_load_texture_png(TEXTURE_WIFI_NULL, "romfs:/res/wifi/stat_sys_wifi_signal_null.png", true);
+	screen_load_texture_png(TEXTURE_WIFI_0, "romfs:/res/wifi/stat_sys_wifi_signal_0.png", true);
+	screen_load_texture_png(TEXTURE_WIFI_1, "romfs:/res/wifi/stat_sys_wifi_signal_1.png", true);
+	screen_load_texture_png(TEXTURE_WIFI_2, "romfs:/res/wifi/stat_sys_wifi_signal_2.png", true);
+	screen_load_texture_png(TEXTURE_WIFI_3, "romfs:/res/wifi/stat_sys_wifi_signal_3.png", true);
 	
-	screen_load_texture_file(TEXTURE_GALLERY_BAR, "romfs:/res/gallery/bar.png", true);
+	screen_load_texture_png(TEXTURE_GALLERY_BAR, "romfs:/res/gallery/bar.png", true);
 
 	if (isN3DS())
 		osSetSpeedupEnable(true);

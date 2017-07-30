@@ -29,9 +29,9 @@ include $(DEVKITARM)/3ds_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
-SOURCES		:=	source source/audio source/file source/graphics source/libnsbmp source/net source/unzip
+SOURCES		:=	source source/audio source/file source/graphics source/net source/unzip
 DATA		:=	data
-INCLUDES	:=	include include/audio include/file include/graphics include/libnsbmp include/net include/stb_image include/unzip
+INCLUDES	:=	include include/audio include/file include/graphics include/net include/unzip
 ROMFS		:=	romfs
 
 APP_TITLE		:= 3DShell
@@ -76,14 +76,11 @@ LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
 LIBS	:= -lcitro3d -lctru -lm -lpng16 -lz
 
-OS := $(shell uname)
-
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
 LIBDIRS	:= $(CTRULIB) $(PORTLIBS)
-
 
 #---------------------------------------------------------------------------------
 # no real need to edit anything past this point unless you need to add additional
@@ -170,7 +167,7 @@ $(BUILD):
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(TARGET).3dsx $(TARGET).smdh $(TARGET).cia $(TARGET).elf
+	@rm -fr $(BUILD) $(TARGET).bin $(TARGET).3dsx $(TARGET).smdh $(TARGET).cia $(TARGET).elf
 
 
 #---------------------------------------------------------------------------------

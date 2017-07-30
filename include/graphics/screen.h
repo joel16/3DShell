@@ -1,20 +1,19 @@
 #ifndef SCREEN_H
 #define SCREEN_H
 
+#include <3ds.h>
+#include <citro3d.h>
+
 #include <errno.h>
 #include <malloc.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <3ds.h>
-#include <citro3d.h>
+#define TOP_SCREEN_WIDTH			400
+#define BOTTOM_SCREEN_WIDTH			320
 
-#define TOP_SCREEN_WIDTH 			400
-#define TOP_SCREEN_HEIGHT 			240
-
-#define BOTTOM_SCREEN_WIDTH 		320
-#define BOTTOM_SCREEN_HEIGHT 		240
+#define SCREEN_HEIGHT				240
 
 #define MAX_TEXTURES 				1024
 
@@ -28,7 +27,8 @@ void screen_clear(gfxScreen_t screen, u32 color);
 void screen_set_base_alpha(u8 alpha);
 u32 screen_allocate_free_texture(void);
 void screen_load_texture_untiled(u32 id, void* data, u32 size, u32 width, u32 height, GPU_TEXCOLOR format, bool linearFilter);
-void screen_load_texture_file(u32 id, const char* path, bool linearFilter);
+void screen_load_texture_png(u32 id, const char* path, bool linearFilter);
+void screen_load_texture_gif(u32 id, const char* path, bool linearFilter);
 void screen_load_texture_tiled(u32 id, void* data, u32 size, u32 width, u32 height, GPU_TEXCOLOR format, bool linearFilter);
 void screen_unload_texture(u32 id);
 void screen_get_texture_size(u32* width, u32* height, u32 id);

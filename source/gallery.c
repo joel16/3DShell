@@ -18,7 +18,14 @@ void displayImage(char * path)
 	screen_clear(GFX_TOP, RGBA8(33, 39, 43, 255));
 	screen_clear(GFX_BOTTOM, RGBA8(33, 39, 43, 255));
 	
-	screen_load_texture_file(TEXTURE_GALLERY_IMAGE, path, true);
+	File * file = findindex(position);
+	
+	if ((strncmp(file->ext, "png", 3) == 0) || (strncmp(file->ext, "PNG", 3) == 0))
+		screen_load_texture_png(TEXTURE_GALLERY_IMAGE, path, true);
+	else if ((strncmp(file->ext, "gif", 3) == 0) || (strncmp(file->ext, "GIF", 3) == 0))
+		screen_load_texture_gif(TEXTURE_GALLERY_IMAGE, path, true);
+	/*else if ((strncmp(file->ext, "jpg", 3) == 0) || (strncmp(file->ext, "JPG", 3) == 0))
+		screen_load_texture_jpg(TEXTURE_GALLERY_IMAGE, path, true);*/
 	
 	int galleryBarY = 0, galleryBarLimY = -35, nameY = 11, nameLimY = -11;
 	
@@ -35,8 +42,8 @@ void displayImage(char * path)
 		hidTouchRead(&touch);
 		
 		screen_begin_frame();
-		
 		screen_select(GFX_BOTTOM);
+		
 		if (bothScreens == true)
 			screen_draw_texture_crop(TEXTURE_GALLERY_IMAGE, -40, 0, 360, (height / 2));
 		
