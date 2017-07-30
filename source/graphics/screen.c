@@ -146,10 +146,9 @@ void screen_init(void)
 		return;
 
 	// Load the glyph texture sheets
-	int i;
+	int i = 0;
 	TGLP_s* glyphInfo = fontGetGlyphInfo();
-	glyphSheets = malloc(sizeof(C3D_Tex)*glyphInfo->nSheets);
-	
+	glyphSheets = malloc(sizeof(C3D_Tex) * glyphInfo->nSheets);
 	for (i = 0; i < glyphInfo->nSheets; i ++)
 	{
 		C3D_Tex * tex = &glyphSheets[i];
@@ -355,21 +354,21 @@ void screen_load_texture_png(u32 id, const char* path, bool linearFilter)
 	// lodepng outputs big endian rgba so we need to convert
 	for(u32 x = 0; x < width; x++) 
 	{
-        for(u32 y = 0; y < height; y++) 
+		for(u32 y = 0; y < height; y++) 
 		{
-            u32 pos = (y * width + x) * 4;
+			u32 pos = (y * width + x) * 4;
 
-            u8 c1 = image[pos + 0];
-            u8 c2 = image[pos + 1];
-            u8 c3 = image[pos + 2];
-            u8 c4 = image[pos + 3];
+			u8 c1 = image[pos + 0];
+			u8 c2 = image[pos + 1];
+			u8 c3 = image[pos + 2];
+			u8 c4 = image[pos + 3];
 
-            image[pos + 0] = c4;
-            image[pos + 1] = c3;
-            image[pos + 2] = c2;
-            image[pos + 3] = c1;
-        }
-    }
+			image[pos + 0] = c4;
+			image[pos + 1] = c3;
+			image[pos + 2] = c2;
+			image[pos + 3] = c1;
+		}
+	}
 
 	screen_load_texture_untiled(id, image, (u32) (width * height * 4), (u32) width, (u32) height, GPU_RGBA8, linearFilter);
 
@@ -396,21 +395,21 @@ void screen_load_texture_gif(u32 id, const char* path, bool linearFilter)
 	
 	for(u32 x = 0; x < width; x++) 
 	{
-        for(u32 y = 0; y < height; y++) 
+		for(u32 y = 0; y < height; y++) 
 		{
-            u32 pos = (y * width + x) * 4;
+			u32 pos = (y * width + x) * 4;
 
-            u8 c1 = image[pos + 0];
-            u8 c2 = image[pos + 1];
-            u8 c3 = image[pos + 2];
-            u8 c4 = image[pos + 3];
+			u8 c1 = image[pos + 0];
+			u8 c2 = image[pos + 1];
+			u8 c3 = image[pos + 2];
+			u8 c4 = image[pos + 3];
 
-            image[pos + 0] = c4;
-            image[pos + 1] = c3;
-            image[pos + 2] = c2;
-            image[pos + 3] = c1;
-        }
-    }
+			image[pos + 0] = c4;
+			image[pos + 1] = c3;
+			image[pos + 2] = c2;
+			image[pos + 3] = c1;
+		}
+	}
 
 	screen_load_texture_untiled(id, image, (u32) (width * height * 4), (u32)width, (u32)height, GPU_RGBA8, linearFilter);
 
@@ -460,7 +459,7 @@ void screen_select(gfxScreen_t screen)
 		return;
 
 	// Get the location of the uniforms
-	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, shaderInstanceGetUniformLocation(program.vertexShader, "projection"), screen == GFX_TOP ? &projectionTop : &projectionBot);
+	C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, screen == GFX_TOP ? &projectionTop : &projectionBot);
 }
 
 static void screen_draw_quad(float x1, float y1, float x2, float y2, float left, float bottom, float right, float top) 
@@ -513,26 +512,6 @@ void screen_draw_texture_crop(u32 id, float x, float y, float width, float heigh
 
 	C3D_TexBind(0, &textures[id].tex);
 	screen_draw_quad(x, y, x + width, y + height, 0, (float) (textures[id].tex.height - textures[id].height) / (float) textures[id].tex.height, width / (float) textures[id].tex.width, (textures[id].tex.height - textures[id].height + height) / (float) textures[id].tex.height);
-
-	if(base_alpha != 0xFF)
-		screen_set_blend(0, false, false);
-}
-
-void screen_draw_texture_blend(u32 id, float x, float y, u32 color) 
-{
-	screen_set_blend(color, true, true);
-	
-	if(id >= MAX_TEXTURES)
-		return;
-
-	if(textures[id].tex.data == NULL)
-		return;
-	
-	if(base_alpha != 0xFF)
-		screen_set_blend(base_alpha << 24, false, true);
-
-	C3D_TexBind(0, &textures[id].tex);
-	screen_draw_quad(x, y, x + textures[id].width, y + textures[id].height, 0, (float) (textures[id].tex.height - textures[id].height) / (float) textures[id].tex.height, (float) textures[id].width / (float) textures[id].tex.width, 1.0f);
 
 	if(base_alpha != 0xFF)
 		screen_set_blend(0, false, false);
@@ -660,36 +639,41 @@ static void screen_draw_string_internal(const char * text, float x, float y, flo
 	float lineWidth;
 	screen_get_string_size_internal(&lineWidth, NULL, text, scaleX, scaleY, true, wrap, wrapX - x);
 
-	float currX = x;
-
-	int lastSheet = -1;
-
-	const uint8_t* p = (const uint8_t*) text;
-	const uint8_t* lastAlign = p;
-	
 	ssize_t  units;
 	uint32_t code;
 	
+	const uint8_t * p = (const uint8_t *)text;
+	const uint8_t * lastAlign = p;
+	float firstX = x;
 	u32 flags = GLYPH_POS_CALC_VTXCOORD | (baseline ? GLYPH_POS_AT_BASELINE : 0);
+	int lastSheet = -1;
 	
-	while(*p && (units = decode_utf8(&code, p)) != -1 && code > 0) 
+	do
 	{
+		if (!*p) 
+			break;
+		
+		units = decode_utf8(&code, p);
+		
+		if (units == -1)
+			break;
+		
 		p += units;
 
-		if(code == '\n' || (wrap && currX + scaleX * fontGetCharWidthInfo(fontGlyphIndexFromCodePoint(code))->charWidth >= wrapX)) 
+		if((code == '\n') || (wrap && firstX + scaleX * fontGetCharWidthInfo(fontGlyphIndexFromCodePoint(code))->charWidth >= wrapX)) 
 		{
 			lastAlign = p;
 
 			screen_get_string_size_internal(&lineWidth, NULL, (const char*) p, scaleX, scaleY, true, wrap, wrapX - x);
-
-			currX = x;
-
-			y += scaleY * fontGetInfo()->lineFeed;
+			
+			firstX = x;
+			y += scaleY*fontGetInfo()->lineFeed;
 		}
 
 		if(code != '\n') 
 		{
 			u32 num = 1;
+			
 			if(code == '\t') 
 			{
 				code = ' ';
@@ -709,12 +693,12 @@ static void screen_draw_string_internal(const char * text, float x, float y, flo
 
 			for(u32 i = 0; i < num; i++) 
 			{
-				screen_draw_quad(currX + data.vtxcoord.left, y + data.vtxcoord.top, currX + data.vtxcoord.right, y + data.vtxcoord.bottom, data.texcoord.left, data.texcoord.bottom, data.texcoord.right, data.texcoord.top);
+				screen_draw_quad(firstX + data.vtxcoord.left, y + data.vtxcoord.top, firstX + data.vtxcoord.right, y + data.vtxcoord.bottom, data.texcoord.left, data.texcoord.bottom, data.texcoord.right, data.texcoord.top);
 
-				currX += data.xAdvance;
+				firstX += data.xAdvance;
 			}
 		}
-	}
+	} while (code > 0);
 	
 	screen_set_blend(0, false, false);
 }
