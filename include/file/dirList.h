@@ -1,8 +1,7 @@
 #ifndef DIRLIST_H
 #define DIRLIST_H
 
-#include <fcntl.h>
-#include <unistd.h>
+#include <3ds.h>
 
 #define CLEAR 1
 #define KEEP 0
@@ -26,7 +25,7 @@ typedef struct File
 	
 	char ext[4]; // File extension
 	
-	uint64_t size; // File size
+	u64 size; // File size
 } File;
 
 /*
