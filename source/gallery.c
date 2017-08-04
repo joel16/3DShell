@@ -24,8 +24,10 @@ void displayImage(char * path)
 		screen_load_texture_png(TEXTURE_GALLERY_IMAGE, path, true);
 	else if ((strncmp(file->ext, "gif", 3) == 0) || (strncmp(file->ext, "GIF", 3) == 0))
 		screen_load_texture_gif(TEXTURE_GALLERY_IMAGE, path, true);
-	/*else if ((strncmp(file->ext, "jpg", 3) == 0) || (strncmp(file->ext, "JPG", 3) == 0))
-		screen_load_texture_jpg(TEXTURE_GALLERY_IMAGE, path, true);*/
+	else if ((strncmp(file->ext, "jpg", 3) == 0) || (strncmp(file->ext, "JPG", 3) == 0))
+		screen_load_texture_jpg(TEXTURE_GALLERY_IMAGE, path, true);
+	else if ((strncmp(file->ext, "bmp", 3) == 0) || (strncmp(file->ext, "BMP", 3) == 0))
+		screen_load_texture_bmp(TEXTURE_GALLERY_IMAGE, path, true);
 	
 	int galleryBarY = 0, galleryBarLimY = -35, nameY = 11, nameLimY = -11;
 	

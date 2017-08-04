@@ -455,6 +455,124 @@ void screen_load_texture_jpg(u32 id, const char* path, bool linearFilter)
 	free(image);
 }
 
+void * bitmap_create(int width, int height, unsigned int state)
+{
+	(void) state;  /* unused */
+	return calloc(width * height, 4);
+}
+
+unsigned char * bitmap_get_buffer(void * bitmap)
+{
+	return (unsigned char *)bitmap;
+}
+
+size_t bitmap_get_bpp(void * bitmap)
+{
+	(void) bitmap;  /* unused */
+	return 4;
+}
+
+void bitmap_destroy(void * bitmap)
+{
+	free(bitmap);
+}
+
+void * fileToBuf(const char* path, u32* size)
+{
+	FILE * fd = fopen(path, "rb");
+	
+	if(fd == NULL)
+		return NULL;
+	
+	u8 * buffer;
+	long lSize;
+	fseek (fd, 0, SEEK_END);
+	lSize = ftell(fd);
+	rewind(fd);
+
+	buffer = (u8 *)malloc(lSize);
+	
+	if (size)
+		*size = lSize;
+	
+	if(!buffer)
+	{
+		fclose(fd);
+		return NULL;
+	}
+		
+	fread(buffer, 1, lSize, fd);
+	fclose(fd);
+	return buffer;
+}
+
+void screen_load_texture_bmp(u32 id, const char* path, bool linearFilter) 
+{
+	if(id >= MAX_TEXTURES) 
+		return;
+	
+	u32 size;
+	u8 * buf = (u8 *)fileToBuf(path, &size);
+
+	bmp_bitmap_callback_vt bitmap_callbacks = 
+	{
+		bitmap_create,
+		bitmap_destroy,
+		bitmap_get_buffer,
+		bitmap_get_bpp
+	};
+	
+	bmp_result code;
+	bmp_image bmp;
+
+	/* create our bmp image */
+	bmp_create(&bmp, &bitmap_callbacks);
+
+	/* analyse the BMP */
+	code = bmp_analyse(&bmp, size, buf);
+	
+	if (code != BMP_OK) 
+	{
+		bmp_finalise(&bmp);
+		return;
+	}
+
+	/* decode the image */
+	code = bmp_decode(&bmp);
+	
+	if (code != BMP_OK) 
+	{
+		bmp_finalise(&bmp);
+		return;
+	}
+
+	u8 * image;
+	image = (u8 *)bmp.bitmap;
+	
+	for(u32 x = 0; x < bmp.width; x++) 
+	{
+		for(u32 y = 0; y < bmp.height; y++) 
+		{
+			u32 pos = (y * bmp.width + x) * 4;
+
+			u8 c1 = image[pos + 0];
+			u8 c2 = image[pos + 1];
+			u8 c3 = image[pos + 2];
+			u8 c4 = image[pos + 3];
+
+			image[pos + 0] = c4;
+			image[pos + 1] = c3;
+			image[pos + 2] = c2;
+			image[pos + 3] = c1;
+		}
+	}
+	
+	screen_load_texture_untiled(id, image, (bmp.width * bmp.height * 4), bmp.width, bmp.height, GPU_RGBA8, true);
+
+	bmp_finalise(&bmp);
+	free(buf);
+}
+
 void screen_unload_texture(u32 id) 
 {
 	if(id >= MAX_TEXTURES)

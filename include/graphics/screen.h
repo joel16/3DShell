@@ -30,6 +30,7 @@ void screen_load_texture_untiled(u32 id, void* data, u32 size, u32 width, u32 he
 void screen_load_texture_png(u32 id, const char* path, bool linearFilter);
 void screen_load_texture_gif(u32 id, const char* path, bool linearFilter);
 void screen_load_texture_jpg(u32 id, const char* path, bool linearFilter);
+void screen_load_texture_bmp(u32 id, const char* path, bool linearFilter);
 void screen_load_texture_tiled(u32 id, void* data, u32 size, u32 width, u32 height, GPU_TEXCOLOR format, bool linearFilter);
 void screen_unload_texture(u32 id);
 void screen_get_texture_size(u32* width, u32* height, u32 id);
