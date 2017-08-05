@@ -53,9 +53,9 @@ void displayImage(char * path)
 		
 		if ((width <= 400) && (height <= 240))
 			screen_draw_texture(TEXTURE_GALLERY_IMAGE, ((400 - width) / 2), ((240 - height) / 2));
-		else if ((width == 400) && ((height == 480) || ((height >= 480) && (height <= 482)))) // Both screens
+		else if ((width >= 400) && (height >= 480)) // Both screens
 		{
-			screen_draw_texture_crop(TEXTURE_GALLERY_IMAGE, 0, 0, 400, 240);
+			screen_draw_texture(TEXTURE_GALLERY_IMAGE, ((400 - width) / 2), 0);
 			bothScreens = true;
 		}
 		
