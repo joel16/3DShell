@@ -135,7 +135,7 @@ Cia getCiaInfo(const char * path, FS_MediaType mediaType)
 	bitmap->pixels = (u8*)malloc(6912);
 	bitmap->bitperpixel = 24;
 	
-	//convert RGB565 to RGB24
+	// convert RGB565 to 24 Bitmap
 	int tile_size = 16;
 	int tile_number = 1;
 	int extra_x = 0;
@@ -192,11 +192,29 @@ Cia getCiaInfo(const char * path, FS_MediaType mediaType)
 		}
 		
 		free(flipped);
+	} // To here.
+	
+	for(u32 x = 0; x < bitmap->width; x++) 
+	{
+		for(u32 y = 0; y < bitmap->height; y++) 
+		{
+			u32 pos = (y * bitmap->width + x) * 4;
+
+			u8 c1 = real_pixels[pos + 0];
+			u8 c2 = real_pixels[pos + 1];
+			u8 c3 = real_pixels[pos + 2];
+			u8 c4 = real_pixels[pos + 3];
+
+			real_pixels[pos + 0] = c4;
+			real_pixels[pos + 1] = c3;
+			real_pixels[pos + 2] = c2;
+			real_pixels[pos + 3] = c1;
+		}
 	}
 	
-	//largeIcon = sf2d_create_texture_mem_RGBA8(real_pixels, bitmap->width, bitmap->height, TEXFMT_RGBA8, SF2D_PLACE_RAM);
+	screen_load_texture_untiled(TEXTURE_CIA_LARGE_ICON, real_pixels, (bitmap->width *  bitmap->height * 4), bitmap->width, bitmap->height, GPU_RGBA8, true);
 	
-	free(real_pixels); // To here.
+	free(real_pixels);
 	
 	FSFILE_Close(fileHandle);
 	
@@ -330,7 +348,8 @@ int displayCIA(const char * path)
 	if (strncmp(fileName, "3DShell.cia", 11) == 0)
 		update = true;
 	
-	//sf2d_set_clear_color(RGBA8(245, 245, 245, 255));
+	screen_clear(GFX_TOP, RGBA8(245, 245, 245, 255));
+	screen_clear(GFX_BOTTOM, RGBA8(245, 245, 245, 255));
 	
 	int isInstalling = 0;
 	
@@ -373,7 +392,7 @@ int displayCIA(const char * path)
 		drawBatteryStatus(295, 2);
 		digitalTime();
 		
-		//sf2d_draw_texture(largeIcon, 15, 28);
+		screen_draw_texture(TEXTURE_CIA_LARGE_ICON, 15, 28);
 		screen_draw_stringf(78, 28, 0.41f, 0.41f, RGBA8(0, 0, 0, 255), "%s v%u (%016llX)", fileName, cia.version, cia.titleID);
 		screen_draw_stringf(78, 44, 0.41f, 0.41f, RGBA8(0, 0, 0, 255), "%s %s by %s", platformString(cia.platform), categoryString(cia.category), cia.author);
 		screen_draw_stringf(78, 60, 0.41f, 0.41f, RGBA8(0, 0, 0, 255), "%s", size);
@@ -438,6 +457,6 @@ int displayCIA(const char * path)
 	}
 	
 	//delete smdhIcon
-	//sf2d_free_texture(largeIcon);
+	screen_unload_texture(TEXTURE_CIA_LARGE_ICON);
 	return 0;
 }

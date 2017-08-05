@@ -6,6 +6,8 @@
 
 #pragma GCC diagnostic ignored "-Wstrict-aliasing" // Ignore this one warning cause fuck it.
 
+#define TEXTURE_CIA_LARGE_ICON 51
+
 typedef struct 
 {
 	u16 shortDescription[0x40];

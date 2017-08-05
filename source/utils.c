@@ -136,18 +136,13 @@ u8 getLanguage(void)
 
 const char * getUsername(void) 
 {
-	int i;
-	size_t size = 0x16;
-	u8 * temp = (u8*)malloc(size);
-	char * username = (char*)malloc(size / 2);
-	
-	for(i = 0; i < (size / 2); i++)
-		username[i] = 0;
-	
-	CFGU_GetConfigInfoBlk2(0x1C, 0xA0000, temp);
-	
-	for(i = 0; i < (size / 2); i++)
-		username[i] = (char)((u16*)temp)[i];
+	u8 * data = (u8*)malloc(28);
+	char * username = (char*)malloc(0x13);
+    
+	CFGU_GetConfigInfoBlk2(0x1C, 0x000A0000, data);
+
+	for (int i = 0; i < 0x13; i++)
+		username[i] = (char)((u16*)data)[i];
 	
 	return username;
 }
