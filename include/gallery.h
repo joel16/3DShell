@@ -1,11 +1,11 @@
 #ifndef GALLERY_H
 #define GALLERY_H
 
-#include <sf2d.h>
 #include <math.h>
 
-sf2d_texture * galleryBar;
+#define TEXTURE_GALLERY_BAR 49
+#define TEXTURE_GALLERY_IMAGE 50
 
-void displayImage(char * path, int ext);
+void displayImage(char * path);
 
 #endif

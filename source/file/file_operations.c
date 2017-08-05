@@ -119,53 +119,60 @@ void copy(int flag)
 int copy_file(char * a, char * b)
 {
 	// Chunk size
-	int chunksize = 512 * 1024;
+	int chunksize = (512 * 1024);
 
 	// Reading buffer
 	char * buffer = (char *)malloc(chunksize);
 
 	// Accumulated writing
-	int totalwrite = 0;
-
-	// Accumulated reading
-	int totalread = 0;
+	u32 bytesWritten = 0;
 
 	// Result
 	int result = 0;
+	
+	Handle inputHandle, outputHandle;
 
 	// Open file for reading
-	int in = open(a, O_RDONLY, 0777);
+	Result in = fsOpen(&inputHandle, a, FS_OPEN_READ);
+	
+	u64 size = getFileSize(fsArchive, a);
 
 	// Opened file for reading
-	if(in >= 0)
+	if(in == 0)
 	{
 		// Delete output file (if existing)
 		fsRemove(fsArchive, b);
 
 		// Open file for writing
-		int out = open(b, O_WRONLY | O_CREAT | O_TRUNC, 0777);
+		Result out = fsOpen(&outputHandle, b, (FS_OPEN_CREATE | FS_OPEN_WRITE));
 
 		// Opened file for writing
-		if(out >= 0)
+		if(out == 0)
 		{
 			// Read byte count
-			int b_read = 0;
+			u32 bytesRead = 0;
+			u64 offset = 0;
 
 			// Copy loop (512KB at a time)
-			while((b_read = read(in, buffer, chunksize)) > 0)
+			do
 			{
 				// Accumulate read data
-				totalread += b_read;
-
+				FSFILE_Read(inputHandle, &bytesRead, offset, buffer, chunksize);
+				
 				// Write data
-				totalwrite += write(out, buffer, b_read);
+				bytesWritten += FSFILE_Write(outputHandle, &bytesWritten, offset, buffer, size, FS_WRITE_FLUSH);
+				
+				// Break once the entire file is written to the output path
+				if (bytesWritten == bytesRead)
+					break;
 			}
+			while(bytesRead);
 
 			// Close output file
-			close(out);
+			FSFILE_Close(outputHandle);
 
 			// Insufficient copy
-			if(totalread != totalwrite) 
+			if(bytesRead != bytesWritten) 
 				result = -3;
 		}
 
@@ -174,7 +181,7 @@ int copy_file(char * a, char * b)
 			result = -2;
 
 		// Close input file
-		close(in);
+		FSFILE_Close(inputHandle);
 	}
 
 	// Input open error

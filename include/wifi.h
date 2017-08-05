@@ -1,9 +1,11 @@
 #ifndef WIFI_H
 #define WIFI_H
 
-#include <sf2d.h>
-
-sf2d_texture *wifiIcon0, *wifiIcon1, *wifiIcon2, *wifiIcon3, *wifiIconNull;
+#define TEXTURE_WIFI_NULL 44
+#define TEXTURE_WIFI_0 45
+#define TEXTURE_WIFI_1 46
+#define TEXTURE_WIFI_2 47
+#define TEXTURE_WIFI_3 48
 
 void drawWifiStatus(int x, int y);
 

@@ -4,6 +4,7 @@
 #include "fs.h"
 #include "main.h"
 #include "net.h"
+#include "screen.h"
 #include "updater.h"
 #include "utils.h"
 
@@ -37,7 +38,7 @@ void downloadUpdate(void)
 	
 	if (ret == 0)
 	{
-		sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, "Downloaded update")) / 2), 60, RGBA8(251, 251, 251, 255), 11, "Downloaded update");
+		screen_draw_string(((320 - screen_get_string_width("Downloaded update", 0.41f, 0.41f)) / 2), 60, 0.41f, 0.41f, RGBA8(251, 251, 251, 255), "Downloaded update");
 		wait(100000000);
 		installUpdate();
 	}
@@ -45,7 +46,7 @@ void downloadUpdate(void)
 
 void installUpdate(void)
 {	
-	sftd_draw_text(font, ((320 - sftd_get_text_width(font, 11, "Update completed")) / 2), 80, RGBA8(251, 251, 251, 255), 11, "Update completed");
+	screen_draw_string(((320 - screen_get_string_width("Update completed", 0.41f, 0.41f)) / 2), 80, 0.41f, 0.41f, RGBA8(251, 251, 251, 255), "Update completed");
 	
 	//installCIA("/3ds/3DShell/3DShell.cia");
 	

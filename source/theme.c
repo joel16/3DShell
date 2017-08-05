@@ -1,5 +1,6 @@
 #include "fs.h"
 #include "common.h"
+#include "screen.h"
 #include "theme.h"
 #include "utils.h"
 
@@ -51,7 +52,6 @@ void createFontColours(char * path, int r, int g, int b)
 void loadTheme(void)
 {	
 	strcpy(theme_dir, setFileDefaultsChar("/3ds/3DShell/theme.bin", "romfs:/res", theme_dir));
-	strcpy(font_dir, setFileDefaultsChar("/3ds/3DShell/font.bin", "romfs:/font", font_dir));
 	strcpy(colour_dir, setFileDefaultsChar("/3ds/3DShell/colours.bin", "/3ds/3DShell", colour_dir));
 
 	char background_res[100] = "/background.png";
@@ -85,8 +85,6 @@ void loadTheme(void)
 	char settings_text_res[100] = "/colours/settingsText.txt";
 	char settings_text_min_res[100] = "/colours/settingsTextMin.txt";
 	
-	char font_res[100] = "/font.ttf";
-	
 	replaceAsset(temp_arr, theme_dir, background_res, background_path);
 	replaceAsset(temp_arr, theme_dir, selector_res, selector_path);
 	replaceAsset(temp_arr, theme_dir, folder_res, folder_path);
@@ -117,8 +115,6 @@ void loadTheme(void)
 	replaceAsset(temp_arr, colour_dir, settings_title_text_res, settings_title_text_path);
 	replaceAsset(temp_arr, colour_dir, settings_text_res, settings_text_path);
 	replaceAsset(temp_arr, colour_dir, settings_text_min_res, settings_text_min_path);
-	
-	replaceAsset(temp_arr, font_dir, font_res, font_path);
 	
 	FILE * file;
 	
@@ -196,42 +192,41 @@ void loadTheme(void)
 
 void reloadTheme(void)
 {	
-	sftd_free_font(font);
-	sftd_free_font(font2);
-
-	sf2d_free_texture(background);
-	sf2d_free_texture(selector);
-	sf2d_free_texture(folderIcon);
-	sf2d_free_texture(options);
-	sf2d_free_texture(_properties);
-	sf2d_free_texture(deletion);
-	sf2d_free_texture(fileIcon);
-	sf2d_free_texture(audioIcon);
-	sf2d_free_texture(appIcon);
-	sf2d_free_texture(txtIcon);
-	sf2d_free_texture(systemIcon);
-	sf2d_free_texture(zipIcon);
-	sf2d_free_texture(imgIcon);
-	sf2d_free_texture(uncheck);
+	screen_unload_texture(TEXTURE_BACKGROUND);
+	screen_unload_texture(TEXTURE_SELECTOR);
+	screen_unload_texture(TEXTURE_OPTIONS);
+	screen_unload_texture(TEXTURE_PROPERTIES);
+	screen_unload_texture(TEXTURE_DELETE);
+		
+	screen_unload_texture(TEXTURE_FOLDER_ICON);
+	screen_unload_texture(TEXTURE_FILE_ICON);
+	screen_unload_texture(TEXTURE_APP_ICON);
+	screen_unload_texture(TEXTURE_AUDIO_ICON);
+	screen_unload_texture(TEXTURE_IMG_ICON);
+	screen_unload_texture(TEXTURE_SYSTEM_ICON);	
+	screen_unload_texture(TEXTURE_TXT_ICON);
+	screen_unload_texture(TEXTURE_ZIP_ICON);
 	
-	background = sfil_load_PNG_file(background_path, SF2D_PLACE_RAM); setBilinearFilter(background);
-	options = sfil_load_PNG_file(options_path, SF2D_PLACE_RAM); setBilinearFilter(options);
-	_properties = sfil_load_PNG_file(properties_path, SF2D_PLACE_RAM); setBilinearFilter(_properties);
-	deletion = sfil_load_PNG_file(deletion_path, SF2D_PLACE_RAM); setBilinearFilter(deletion);
-	selector = sfil_load_PNG_file(selector_path, SF2D_PLACE_RAM); setBilinearFilter(selector);
-	folderIcon = sfil_load_PNG_file(folder_path, SF2D_PLACE_RAM); setBilinearFilter(folderIcon);
-	fileIcon = sfil_load_PNG_file(file_path, SF2D_PLACE_RAM); setBilinearFilter(fileIcon); 
-	audioIcon = sfil_load_PNG_file(audio_path, SF2D_PLACE_RAM); setBilinearFilter(audioIcon);
-	appIcon = sfil_load_PNG_file(app_path, SF2D_PLACE_RAM); setBilinearFilter(appIcon);
-	txtIcon = sfil_load_PNG_file(txt_path, SF2D_PLACE_RAM); setBilinearFilter(txtIcon);
-	systemIcon = sfil_load_PNG_file(system_path, SF2D_PLACE_RAM); setBilinearFilter(systemIcon);
-	zipIcon = sfil_load_PNG_file(zip_path, SF2D_PLACE_RAM); setBilinearFilter(zipIcon);
-	imgIcon = sfil_load_PNG_file(img_path, SF2D_PLACE_RAM); setBilinearFilter(imgIcon);
-	check = sfil_load_PNG_file(check_path, SF2D_PLACE_RAM); setBilinearFilter(check);
-	uncheck = sfil_load_PNG_file(uncheck_path, SF2D_PLACE_RAM); setBilinearFilter(uncheck);
+	screen_unload_texture(TEXTURE_CHECK_ICON);
+	screen_unload_texture(TEXTURE_UNCHECK_ICON);
 	
-	font = sftd_load_font_file(font_path);
-	font2 = sftd_load_font_file(font_path);
+	screen_load_texture_png(TEXTURE_BACKGROUND, background_path, true);
+	screen_load_texture_png(TEXTURE_SELECTOR, selector_path, true);
+	screen_load_texture_png(TEXTURE_OPTIONS, options_path, true);
+	screen_load_texture_png(TEXTURE_PROPERTIES, properties_path, true);
+	screen_load_texture_png(TEXTURE_DELETE, deletion_path, true);
+	
+	screen_load_texture_png(TEXTURE_FOLDER_ICON, folder_path, true);
+	screen_load_texture_png(TEXTURE_FILE_ICON, file_path, true);
+	screen_load_texture_png(TEXTURE_APP_ICON, app_path, true);
+	screen_load_texture_png(TEXTURE_AUDIO_ICON, audio_path, true);
+	screen_load_texture_png(TEXTURE_IMG_ICON, img_path, true);
+	screen_load_texture_png(TEXTURE_SYSTEM_ICON, system_path, true);
+	screen_load_texture_png(TEXTURE_TXT_ICON, txt_path, true);
+	screen_load_texture_png(TEXTURE_ZIP_ICON, zip_path, true);
+	
+	screen_load_texture_png(TEXTURE_CHECK_ICON, check_path, true);
+	screen_load_texture_png(TEXTURE_UNCHECK_ICON, uncheck_path, true);
 	
 	FILE * file;
 	

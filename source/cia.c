@@ -3,11 +3,10 @@
 #include "common.h"
 #include "language.h"
 #include "power.h"
+#include "screen.h"
 #include "screenshot.h"
 #include "utils.h"
 #include "wifi.h"
-
-sf2d_texture * largeIcon;
 
 const char * platformString(AppPlatform platform) 
 {
@@ -136,7 +135,7 @@ Cia getCiaInfo(const char * path, FS_MediaType mediaType)
 	bitmap->pixels = (u8*)malloc(6912);
 	bitmap->bitperpixel = 24;
 	
-	//convert RGB565 to RGB24
+	// convert RGB565 to 24 Bitmap
 	int tile_size = 16;
 	int tile_number = 1;
 	int extra_x = 0;
@@ -193,11 +192,29 @@ Cia getCiaInfo(const char * path, FS_MediaType mediaType)
 		}
 		
 		free(flipped);
+	} // To here.
+	
+	for(u32 x = 0; x < bitmap->width; x++) 
+	{
+		for(u32 y = 0; y < bitmap->height; y++) 
+		{
+			u32 pos = (y * bitmap->width + x) * 4;
+
+			u8 c1 = real_pixels[pos + 0];
+			u8 c2 = real_pixels[pos + 1];
+			u8 c3 = real_pixels[pos + 2];
+			u8 c4 = real_pixels[pos + 3];
+
+			real_pixels[pos + 0] = c4;
+			real_pixels[pos + 1] = c3;
+			real_pixels[pos + 2] = c2;
+			real_pixels[pos + 3] = c1;
+		}
 	}
 	
-	largeIcon = sf2d_create_texture_mem_RGBA8(real_pixels, bitmap->width, bitmap->height, TEXFMT_RGBA8, SF2D_PLACE_RAM);
+	screen_load_texture_untiled(TEXTURE_CIA_LARGE_ICON, real_pixels, (bitmap->width *  bitmap->height * 4), bitmap->width, bitmap->height, GPU_RGBA8, true);
 	
-	free(real_pixels); // To here.
+	free(real_pixels);
 	
 	FSFILE_Close(fileHandle);
 	
@@ -331,7 +348,8 @@ int displayCIA(const char * path)
 	if (strncmp(fileName, "3DShell.cia", 11) == 0)
 		update = true;
 	
-	sf2d_set_clear_color(RGBA8(245, 245, 245, 255));
+	screen_clear(GFX_TOP, RGBA8(245, 245, 245, 255));
+	screen_clear(GFX_BOTTOM, RGBA8(245, 245, 245, 255));
 	
 	int isInstalling = 0;
 	
@@ -350,51 +368,50 @@ int displayCIA(const char * path)
 		hidScanInput();
 		hidTouchRead(&touch);
 		
-		sf2d_start_frame(GFX_BOTTOM, GFX_LEFT); // Clear bottom screen
+		screen_begin_frame();
+		screen_select(GFX_BOTTOM);
 		
-		sf2d_draw_rectangle(0, 0, 400, 240, RGBA8(250, 250, 250, 255));
+		screen_draw_rect(0, 0, 400, 240, RGBA8(250, 250, 250, 255));
 		
 		if (isInstalling == 0)
 		{
-			sftd_draw_text(font, (300 - sftd_get_text_width(font, 11, "INSTALL")), 220, RGBA8(0, 150, 136, 255), 11, "INSTALL");
-			sftd_draw_text(font, (300 - (sftd_get_text_width(font, 11, "CANCEL") + sftd_get_text_width(font, 11, "INSTALL") + 20)), 220, RGBA8(0, 150, 136, 255), 11, "CANCEL");
+			screen_draw_string((300 - screen_get_string_width("INSTALL", 0.41f, 0.41f)), 220, 0.41f, 0.41f, RGBA8(0, 150, 136, 255), "INSTALL");
+			screen_draw_string((300 - (screen_get_string_width("CANCEL", 0.41f, 0.41f) + screen_get_string_width("INSTALL", 0.41f, 0.41f) + 20)), 220, 0.41f, 0.41f, RGBA8(0, 150, 136, 255), "CANCEL");
 		}
 		else if (isInstalling == 2)
 		{
-			sftd_draw_text(font, (300 - sftd_get_text_width(font, 11, "OPEN")), 220, RGBA8(0, 150, 136, 255), 11, "OPEN");
-			sftd_draw_text(font, (300 - (sftd_get_text_width(font, 11, "DONE") + sftd_get_text_width(font, 11, "OPEN") + 20)), 220, RGBA8(0, 150, 136, 255), 11, "DONE");
+			screen_draw_string((300 - screen_get_string_width("OPEN", 0.41f, 0.41f)), 220, 0.41f, 0.41f, RGBA8(0, 150, 136, 255), "OPEN");
+			screen_draw_string((300 - (screen_get_string_width("DONE", 0.41f, 0.41f) + screen_get_string_width("OPEN", 0.41f, 0.41f) + 20)), 220, 0.41f, 0.41f, RGBA8(0, 150, 136, 255), "DONE");
 		}
 		
-		sf2d_end_frame();
+		screen_select(GFX_TOP);
 		
-		sf2d_start_frame(GFX_TOP, GFX_LEFT);
-		
-		sf2d_draw_rectangle(0, 0, 400, 16, RGBA8(117, 117, 117, 255));
+		screen_draw_rect(0, 0, 400, 16, RGBA8(117, 117, 117, 255));
 		
 		drawWifiStatus(270, 2);
 		drawBatteryStatus(295, 2);
 		digitalTime();
 		
-		sf2d_draw_texture(largeIcon, 15, 28);
-		sftd_draw_textf(font, 78, 28, RGBA8(0, 0, 0, 255), 11, "%s v%u (%016llX)", fileName, cia.version, cia.titleID);
-		sftd_draw_textf(font, 78, 44, RGBA8(0, 0, 0, 255), 11, "%s %s by %s", platformString(cia.platform), categoryString(cia.category), cia.author);
-		sftd_draw_textf(font, 78, 60, RGBA8(0, 0, 0, 255), 11, "%s", size);
+		screen_draw_texture(TEXTURE_CIA_LARGE_ICON, 15, 28);
+		screen_draw_stringf(78, 28, 0.41f, 0.41f, RGBA8(0, 0, 0, 255), "%s v%u (%016llX)", fileName, cia.version, cia.titleID);
+		screen_draw_stringf(78, 44, 0.41f, 0.41f, RGBA8(0, 0, 0, 255), "%s %s by %s", platformString(cia.platform), categoryString(cia.category), cia.author);
+		screen_draw_stringf(78, 60, 0.41f, 0.41f, RGBA8(0, 0, 0, 255), "%s", size);
 		
 		if (isInstalling == 0)
 		{
-			sftd_draw_text(font, 15, 86, RGBA8(0, 0, 0, 255), 11, "Do you want to install this application?");
-			//sftd_draw_textf(font, 15, 116, RGBA8(0, 0, 0, 255), 11, "Program requires: %s", requiredSpace);	
+			screen_draw_string(15, 86, 0.41f, 0.41f, RGBA8(0, 0, 0, 255), "Do you want to install this application?");
+			//screen_draw_stringf(15, 116, 0.41f, 0.41f, RGBA8(0, 0, 0, 255), "Program requires: %s", requiredSpace);	
 		}
 		else if (isInstalling == 1)
 		{
-			sf2d_draw_rectangle(100, 130, 200, 3, RGBA8(185, 224, 220, 255));
-			sf2d_draw_rectangle(pBar, 130, 66, 3, RGBA8(0, 150, 136, 255));
+			screen_draw_rect(100, 130, 200, 3, RGBA8(185, 224, 220, 255));
+			screen_draw_rect(pBar, 130, 66, 3, RGBA8(0, 150, 136, 255));
 		
 			// Boundary stuff
-			sf2d_draw_rectangle(0, 130, 100, 3, RGBA8(245, 245, 245, 255));
-			sf2d_draw_rectangle(300, 130, 66, 3, RGBA8(245, 245, 245, 255)); 
+			screen_draw_rect(0, 130, 100, 3, RGBA8(245, 245, 245, 255));
+			screen_draw_rect(300, 130, 66, 3, RGBA8(245, 245, 245, 255)); 
 	
-			sftd_draw_text(font, ((400 - sftd_get_text_width(font, 11, "Installing...")) / 2), 146, RGBA8(0, 0, 0, 255), 11, "Installing...");
+			screen_draw_string(((400 - screen_get_string_width("Installing...", 0.41f, 0.41f)) / 2), 146, 0.41f, 0.41f, RGBA8(0, 0, 0, 255), "Installing...");
 			
 			pBar += 4;
 		
@@ -404,19 +421,18 @@ int displayCIA(const char * path)
 			isInstalling = installCIA(path, MEDIATYPE_SD, update);
 		}
 		else
-			sftd_draw_text(font, ((400 - sftd_get_text_width(font, 11, "App installed.")) / 2), 146, RGBA8(0, 0, 0, 255), 11, "App installed.");
+			screen_draw_string(((400 - screen_get_string_width("App installed.", 0.41f, 0.41f)) / 2), 146, 0.41f, 0.41f, RGBA8(0, 0, 0, 255), "App installed.");
 		
-		
-		endDrawing();
+		screen_end_frame();
 		
 		if (isInstalling == 0)
 		{
-			if (touchInRect((300 - sftd_get_text_width(font, 11, "INSTALL")), 300, 220, 240))
+			if (touchInRect((300 - screen_get_string_width("INSTALL", 0.41f, 0.41f)), 300, 220, 240))
 			{
 				wait(100000000);
 				isInstalling = 1;
 			}
-			else if (touchInRect((300 - (sftd_get_text_width(font, 11, "CANCEL") + sftd_get_text_width(font, 11, "INSTALL") + 20)), ((300 - 20) - sftd_get_text_width(font, 11, "INSTALL")), 220, 240))
+			else if (touchInRect((300 - (screen_get_string_width("CANCEL", 0.41f, 0.41f) + screen_get_string_width("INSTALL", 0.41f, 0.41f) + 20)), ((300 - 20) - screen_get_string_width("INSTALL", 0.41f, 0.41f)), 220, 240))
 			{
 				wait(100000000);
 				break;
@@ -424,12 +440,12 @@ int displayCIA(const char * path)
 		}
 		else if (isInstalling == 2)
 		{
-			if (touchInRect((300 - sftd_get_text_width(font, 11, "OPEN")), 300, 220, 240))
+			if (touchInRect((300 - screen_get_string_width("OPEN", 0.41f, 0.41f)), 300, 220, 240))
 			{
 				wait(100000000);
 				launchCIA(cia.titleID, cia.mediaType);
 			}
-			else if (touchInRect((300 - (sftd_get_text_width(font, 11, "DONE") + sftd_get_text_width(font, 11, "OPEN") + 20)), ((300 - 20) - sftd_get_text_width(font, 11, "OPEN")), 220, 240))
+			else if (touchInRect((300 - (screen_get_string_width("DONE", 0.41f, 0.41f) + screen_get_string_width("OPEN", 0.41f, 0.41f) + 20)), ((300 - 20) - screen_get_string_width("OPEN", 0.41f, 0.41f)), 220, 240))
 			{
 				wait(100000000);
 				break;
@@ -441,6 +457,6 @@ int displayCIA(const char * path)
 	}
 	
 	//delete smdhIcon
-	sf2d_free_texture(largeIcon);
+	screen_unload_texture(TEXTURE_CIA_LARGE_ICON);
 	return 0;
 }

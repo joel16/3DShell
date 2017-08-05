@@ -60,7 +60,7 @@ bool dirExists(FS_Archive archive, const char * path)
 	return true;
 }
 
-char* getFileModifiedTime(char * path) 
+char * getFileModifiedTime(char * path) 
 {
 	static char timeStr[30];
 	u64 mtime;

@@ -1,9 +1,15 @@
 #ifndef POWER_H
 #define POWER_H
 
-#include <sf2d.h>
-
-sf2d_texture	*_0, *_15, *_28, *_43, *_57, *_71, *_85, *_100, *_charge;
+#define TEXTURE_BATTERY_0 35
+#define TEXTURE_BATTERY_15 36
+#define TEXTURE_BATTERY_28 37
+#define TEXTURE_BATTERY_43 38
+#define TEXTURE_BATTERY_57 39
+#define TEXTURE_BATTERY_71 40
+#define TEXTURE_BATTERY_85 41
+#define TEXTURE_BATTERY_100 42
+#define TEXTURE_BATTERY_CHARGE 43
 
 void drawBatteryStatus(int x, int y);
 

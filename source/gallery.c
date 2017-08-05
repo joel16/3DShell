@@ -1,68 +1,61 @@
-#include "bmp.h"
 #include "common.h"
 #include "dirlist.h"
 #include "gallery.h"
+#include "screen.h"
 #include "screenshot.h"
 #include "utils.h"
 
-void displayImage(char * path, int ext)
+void displayImage(char * path)
 {
-	float scale = 1.0f;
-	float zoom_min = 0.25f;
-	float zoom_max = 2.0f;
-	float zoom_factor = 0.025f;
+	float scale = 1.0f, zoom_factor = 0.025f;
+	float zoom_min = 0.25f, zoom_max = 4.0f;
 	float rad = 0;
 	
-	sf2d_texture * image = NULL;
+	int top_tex_x = 0, top_tex_y = 0;
+	int bottom_tex_x = 40, bottom_tex_y = 240;
+	int view_factor = 4;
 	
-	switch (ext)
-	{
-		case 0:
-			image = sfil_load_PNG_file(path, SF2D_PLACE_RAM);
-			break;
-		
-		case 1:
-			image = sfil_load_JPEG_file(path, SF2D_PLACE_RAM);
-			break;
-		
-		case 2: // Supported formats: GIF, HDR, PIC, PNM, PSD, TGA.
-			image = sfil_load_IMG_file(path, SF2D_PLACE_RAM);
-			break;
-		
-		case 3: // Becasue sfil_load_BMP_file is broken.
-			image = sfil_load_BMP_file2(path);
-			break;
-	}
+	screen_clear(GFX_TOP, RGBA8(33, 39, 43, 255));
+	screen_clear(GFX_BOTTOM, RGBA8(33, 39, 43, 255));
 	
-	setBilinearFilter(image);
+	File * file = findindex(position);
 	
-	sf2d_set_clear_color(RGBA8(33, 39, 43, 255));
+	if ((strncmp(file->ext, "png", 3) == 0) || (strncmp(file->ext, "PNG", 3) == 0))
+		screen_load_texture_png(TEXTURE_GALLERY_IMAGE, path, true);
+	else if ((strncmp(file->ext, "gif", 3) == 0) || (strncmp(file->ext, "GIF", 3) == 0))
+		screen_load_texture_gif(TEXTURE_GALLERY_IMAGE, path, true);
+	else if ((strncmp(file->ext, "jpg", 3) == 0) || (strncmp(file->ext, "JPG", 3) == 0))
+		screen_load_texture_jpg(TEXTURE_GALLERY_IMAGE, path, true);
+	else if ((strncmp(file->ext, "bmp", 3) == 0) || (strncmp(file->ext, "BMP", 3) == 0))
+		screen_load_texture_bmp(TEXTURE_GALLERY_IMAGE, path, true);
 	
 	int galleryBarY = 0, galleryBarLimY = -35, nameY = 11, nameLimY = -11;
 	
-	uint64_t start = osGetTime();
+	u64 start = osGetTime();
 	
 	bool bothScreens = false;
+	
+	u32 width = screen_get_texture_width(TEXTURE_GALLERY_IMAGE);
+	u32 height = screen_get_texture_height(TEXTURE_GALLERY_IMAGE);
 		
 	while (aptMainLoop())
 	{
 		hidScanInput();
 		hidTouchRead(&touch);
 		
-		sf2d_start_frame(GFX_BOTTOM, GFX_LEFT); // Clear bottom screen
+		screen_begin_frame();
+		screen_select(GFX_BOTTOM);
 		
 		if (bothScreens == true)
-			sf2d_draw_texture_part_rotate_scale(image, 0 + 160, 0 + 120, rad, 40, 240, 320, 240, scale, scale);
+			screen_draw_texture_crop(TEXTURE_GALLERY_IMAGE, -40, 0, 360, (height / 2));
 		
-		sf2d_end_frame();
+		screen_select(GFX_TOP);
 		
-		sf2d_start_frame(GFX_TOP, GFX_LEFT);
-		
-		if ((image->width <= 400) && (image->height <= 240))
-			sf2d_draw_texture_part_rotate_scale(image, 0 + 200, 0 + 120, rad, 0, 0, image->width, image->height, scale, scale);
-		else if ((image->width == 400) && ((image->height == 480) || (image->height == 482))) // Both screens
+		if ((width <= 400) && (height <= 240))
+			screen_draw_texture(TEXTURE_GALLERY_IMAGE, ((400 - width) / 2), ((240 - height) / 2));
+		else if ((width >= 400) && (height >= 480)) // Both screens
 		{
-			sf2d_draw_texture_part_rotate_scale(image, 0 + 200, 0 + 120, rad, 0, 0, 400, 240, scale, scale);
+			screen_draw_texture(TEXTURE_GALLERY_IMAGE, ((400 - width) / 2), 0);
 			bothScreens = true;
 		}
 		
@@ -77,8 +70,8 @@ void displayImage(char * path, int ext)
 		if (nameY == -11)
 			nameY = nameLimY; 
 			
-		sf2d_draw_texture(galleryBar, 0, galleryBarY);
-		sftd_draw_textf(font, 30, nameY, RGBA8(255, 255, 255, 255), 11, "%.60s", fileName);
+		screen_draw_texture(TEXTURE_GALLERY_BAR, 0, galleryBarY);
+		screen_draw_stringf(30, nameY, 0.41f, 0.41f, RGBA8(255, 255, 255, 255), "%.60s", fileName);
 		
 		if (kPressed & KEY_TOUCH)
 		{
@@ -113,12 +106,45 @@ void displayImage(char * path, int ext)
 				rad -= M_TWOPI;
 		}
 		
-		endDrawing();
+		if ((scale > 1.0f) && (kHeld & KEY_CPAD_UP))
+		{
+			top_tex_y -= view_factor;
+			bottom_tex_y -= view_factor;
+		}
+		else if ((scale > 1.0f) && (kHeld & KEY_CPAD_DOWN))
+		{
+			top_tex_y += view_factor;
+			bottom_tex_y += view_factor;
+		}
+		else if ((scale > 1.0f) && (kHeld & KEY_CPAD_RIGHT))
+		{
+			top_tex_x += view_factor;
+			bottom_tex_x += view_factor;
+		}
+		else if ((scale > 1.0f) && (kHeld & KEY_CPAD_LEFT))
+		{
+			top_tex_x -= view_factor;
+			bottom_tex_x -= view_factor;
+		}
+		
+		screen_end_frame();
 		
 		if (kPressed & KEY_B)
 		{
-			wait(100000000);
-			break;
+			if ((rad != 0) || (scale != 1.0f)) // Basically reset the position before exiting
+			{
+				rad = 0;
+				scale = 1.0f;
+				top_tex_x = 0;
+				top_tex_y = 0;
+				bottom_tex_x = 40;
+				bottom_tex_y = 240;
+			}
+			else
+			{
+				wait(100000000);
+				break;
+			}
 		}
 		
 		if ((kHeld & KEY_L) && (kHeld & KEY_R))
@@ -126,5 +152,5 @@ void displayImage(char * path, int ext)
 	}
 	
 	//delete image
-	sf2d_free_texture(image);
+	screen_unload_texture(TEXTURE_GALLERY_IMAGE);
 }
