@@ -39,6 +39,7 @@ void screen_end_frame(void);
 void screen_select(gfxScreen_t screen);
 void screen_draw_texture(u32 id, float x, float y) ;
 void screen_draw_texture_crop(u32 id, float x, float y, float width, float height);
+void screen_draw_texture_tint(u32 id, float x, float y, u32 color);
 int screen_get_texture_width(u32 id);
 int screen_get_texture_height(u32 id);
 void screen_get_string_size(float* width, float* height, const char* text, float scaleX, float scaleY);

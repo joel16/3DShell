@@ -456,7 +456,7 @@ int displayCIA(const char * path)
 			captureScreenshot();
 	}
 	
-	//delete smdhIcon
+	// delete smdhIcon
 	screen_unload_texture(TEXTURE_CIA_LARGE_ICON);
 	return 0;
 }

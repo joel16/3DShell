@@ -656,6 +656,31 @@ void screen_draw_texture(u32 id, float x, float y)
 		screen_set_blend(0, false, false);
 }
 
+void screen_draw_texture_tint(u32 id, float x, float y, u32 color) 
+{
+	if(id >= MAX_TEXTURES)
+		return;
+
+	if(textures[id].tex.data == NULL)
+		return;
+	
+	if(base_alpha != 0xFF)
+		screen_set_blend(base_alpha << 24, false, true);
+	
+	C3D_TexBind(0, &textures[id].tex);
+	
+	C3D_TexEnv* env = C3D_GetTexEnv(0);
+	C3D_TexEnvSrc(env, C3D_Both, GPU_TEXTURE0, GPU_CONSTANT, 0);
+	C3D_TexEnvOp(env, C3D_Both, 0, 0, 0);
+	C3D_TexEnvFunc(env, C3D_Both, GPU_MODULATE);
+	C3D_TexEnvColor(env, color);
+	
+	screen_draw_quad(x, y, x + textures[id].width, y + textures[id].height, 0, (float) (textures[id].tex.height - textures[id].height) / (float) textures[id].tex.height, (float) textures[id].width / (float) textures[id].tex.width, 1.0f);
+
+	if(base_alpha != 0xFF)
+		screen_set_blend(0, false, false);
+}
+
 void screen_draw_texture_crop(u32 id, float x, float y, float width, float height) 
 {
 	if(id >= MAX_TEXTURES)
