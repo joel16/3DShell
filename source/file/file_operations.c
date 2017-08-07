@@ -4,7 +4,11 @@
 #include "fs.h"
 #include "keyboard.h"
 #include "main.h"
+#include "screen.h"
 #include "utils.h"
+
+#include <fcntl.h>
+#include <unistd.h>
 
 /*
 *	Copy Mode
@@ -125,54 +129,47 @@ int copy_file(char * a, char * b)
 	char * buffer = (char *)malloc(chunksize);
 
 	// Accumulated writing
-	u32 bytesWritten = 0;
+	u64 totalwrite = 0;
+
+	// Accumulated reading
+	u64 totalread = 0;
 
 	// Result
 	int result = 0;
-	
-	Handle inputHandle, outputHandle;
 
 	// Open file for reading
-	Result in = fsOpen(&inputHandle, a, FS_OPEN_READ);
-	
-	u64 size = getFileSize(fsArchive, a);
+	int in = open(a, O_RDONLY, 0777);
 
 	// Opened file for reading
-	if(in == 0)
+	if(in >= 0)
 	{
 		// Delete output file (if existing)
 		fsRemove(fsArchive, b);
 
 		// Open file for writing
-		Result out = fsOpen(&outputHandle, b, (FS_OPEN_CREATE | FS_OPEN_WRITE));
+		int out = open(b, O_WRONLY | O_CREAT | O_TRUNC, 0777);
 
 		// Opened file for writing
-		if(out == 0)
+		if(out >= 0)
 		{
 			// Read byte count
-			u32 bytesRead = 0;
-			u64 offset = 0;
+			u64 b_read = 0;
 
 			// Copy loop (512KB at a time)
-			do
+			while((b_read = read(in, buffer, chunksize)) > 0)
 			{
 				// Accumulate read data
-				FSFILE_Read(inputHandle, &bytesRead, offset, buffer, chunksize);
-				
+				totalread += b_read;
+
 				// Write data
-				bytesWritten += FSFILE_Write(outputHandle, &bytesWritten, offset, buffer, size, FS_WRITE_FLUSH);
-				
-				// Break once the entire file is written to the output path
-				if (bytesWritten == bytesRead)
-					break;
+				totalwrite += write(out, buffer, b_read);
 			}
-			while(bytesRead);
 
 			// Close output file
-			FSFILE_Close(outputHandle);
+			close(out);
 
 			// Insufficient copy
-			if(bytesRead != bytesWritten) 
+			if(totalread != totalwrite) 
 				result = -3;
 		}
 
@@ -181,7 +178,7 @@ int copy_file(char * a, char * b)
 			result = -2;
 
 		// Close input file
-		FSFILE_Close(inputHandle);
+		close(in);
 	}
 
 	// Input open error
