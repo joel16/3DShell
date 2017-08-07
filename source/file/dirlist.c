@@ -545,7 +545,7 @@ File * findindex(int index)
 int drawDeletionDialog(void)
 {	
 	while(deleteDialog == true)
-	{
+	{	
 		hidScanInput();
 		hidTouchRead(&touch);
 		
@@ -584,6 +584,10 @@ int drawDeletionDialog(void)
 	}
 	
 	deleteDialog = false;
+	selectionX = 0;
+	selectionY = 0;
+	copyF = false;
+	cutF = false;
 	return 0;
 }
 

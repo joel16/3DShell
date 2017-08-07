@@ -235,9 +235,8 @@ void displayFTP()
 		
 		hidScanInput();
 		hidTouchRead(&touch);
-		u32 kPress = hidKeysDown();
 
-		if ((kPress & KEY_TOUCH) && (touchInRect(98, 123, 0, 20))) 
+		if ((kPressed & KEY_TOUCH) && (touchInRect(98, 123, 0, 20))) 
 			break;
 		
 		screen_draw_rect(0, 0, 320, 240, RGBA8(BottomScreen_colour.r, BottomScreen_colour.g, BottomScreen_colour.b, 255));

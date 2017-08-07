@@ -486,7 +486,7 @@ void * fileToBuf(const char* path, u32* size)
 	
 	u8 * buffer;
 	long lSize;
-	fseek (fd, 0, SEEK_END);
+	fseek(fd, 0, SEEK_END);
 	lSize = ftell(fd);
 	rewind(fd);
 
