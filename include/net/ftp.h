@@ -9,6 +9,6 @@ typedef enum
 	LOOP_EXIT,		/*!< Terminate looping */
 } loop_status_t;
 
-int           ftp_init(void);
-loop_status_t ftp_loop(void);
-void          ftp_exit(void);
+int ftp_init(void);
+void ftp_loop(void);
+void ftp_exit(void);

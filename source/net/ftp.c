@@ -224,12 +224,6 @@ static int ftp_command_cmp(const void *p1, const void *p2)
 #ifdef _3DS
 	/*! SOC service buffer */
 	static u32 *SOCU_buffer = NULL;
-
-	/*! Whether LCD is powered */
-	static bool lcd_power = true;
-
-	/*! aptHook cookie */
-	static aptHookCookie cookie;
 #endif
 
 /*! server listen address */
@@ -1330,42 +1324,6 @@ static int update_status(void)
 	return 0;
 }
 
-#ifdef _3DS
-/*! Handle apt events
- *
- *  @param[in] type    Event type
- *  @param[in] closure Callback closure
- */
-static void apt_hook(APT_HookType type, void *closure)
-{
-	switch(type)
-	{
-		case APTHOOK_ONSUSPEND:
-		case APTHOOK_ONSLEEP:
-			/* turn on backlight, or you can't see the home menu! */
-			if(R_SUCCEEDED(gspLcdInit()))
-			{
-				GSPLCD_PowerOnBacklight(GSPLCD_SCREEN_BOTH);
-				gspLcdExit();
-			}
-			break;
-
-		case APTHOOK_ONRESTORE:
-		case APTHOOK_ONWAKEUP:
-			/* restore backlight power state */
-			if(R_SUCCEEDED(gspLcdInit()))
-			{
-				(lcd_power ? GSPLCD_PowerOnBacklight : GSPLCD_PowerOffBacklight)(GSPLCD_SCREEN_BOTH);
-				gspLcdExit();
-			}
-			break;
-
-		default:
-			break;
-	}
-}
-#endif
-
 /*! initialize ftp subsystem */
 int ftp_init(void)
 {
@@ -1376,43 +1334,16 @@ int ftp_init(void)
 #ifdef _3DS
 	Result ret  = 0;
 	u32 wifi = 0;
-	bool loop;
-
-	/* register apt hook */
-	aptHook(&cookie, apt_hook, NULL);
 
 	/* wait for wifi to be available */
-	while((loop = aptMainLoop()) && !wifi && (ret == 0 || ret == 0xE0A09D2E))
-	{
-		ret = 0;
-
-		// MODIFIED HERE (Start)
-		touchPosition touch;
-	
-		// update button state
-		hidScanInput();
-		hidTouchRead(&touch);
-		u32 kPress = hidKeysDown();
-
-		// check if B was pressed
-		if ((kPress & KEY_TOUCH) && (touchInRect(98, 123, 0, 20))) 
-		{
-			/* user canceled */
-			loop = false;
-			break;
-		}
-		// MODIFIED HERE (End)
-	
-		/* update the wifi status */
-		ret = ACU_GetWifiStatus(&wifi);
-		if(ret != 0)
-			wifi = 0;
-	}
+	ret = ACU_GetWifiStatus(&wifi);
+	if(ret != 0)
+		wifi = 0;
 
 	/* check if there was a wifi error */
 	
 	/* check if we need to exit */
-	if(!loop || ret != 0)
+	if(ret != 0)
 		return -1;
 	
 #ifdef ENABLE_LOGGING
@@ -1537,7 +1468,7 @@ void ftp_exit(void)
  *
  *  @returns whether to keep looping
  */
-loop_status_t ftp_loop(void)
+void ftp_loop(void)
 {
 	int           rc;
 	struct pollfd pollinfo;
@@ -1551,13 +1482,8 @@ loop_status_t ftp_loop(void)
 	/* poll for a new client */
 	rc = poll(&pollinfo, 1, 0);
 	if(rc < 0)
-	{
-		/* wifi got disabled */
-		if(errno == ENETDOWN)
-			return LOOP_RESTART;
-
-		return LOOP_EXIT;
-	}
+		return;
+	
 	else if(rc > 0)
 	{
 		if(pollinfo.revents & POLLIN)
@@ -1571,23 +1497,6 @@ loop_status_t ftp_loop(void)
 	session = sessions;
 	while(session != NULL)
 		session = ftp_session_poll(session);
-
-#ifdef _3DS
-	/* check if the user wants to exit */
-	touchPosition touch;
-	
-	// MODIFIED HERE (Start)
-	// update button state
-	hidScanInput();
-	hidTouchRead(&touch);
-	u32 kPress = hidKeysDown();
-
-	if ((kPress & KEY_TOUCH) && (touchInRect(98, 123, 0, 20))) 
-		return LOOP_EXIT;
-	// MODIFIED HERE (End)
-#endif
-
-	return LOOP_CONTINUE;
 }
 
 /*! change to parent directory

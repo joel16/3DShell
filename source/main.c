@@ -14,6 +14,7 @@
 #include "screen.h"
 #include "screenshot.h"
 #include "sound.h"
+#include "task.h"
 #include "theme.h"
 #include "updater.h"
 #include "utils.h"
@@ -220,14 +221,24 @@ void termServices(void)
 	srvExit();
 }
 
-static loop_status_t loop(loop_status_t (*callback)(void))
+void displayFTP()
 {
-	loop_status_t status = LOOP_CONTINUE;
-
+	ftp_init();
+	task_init();
+	
+	touchPosition touch;
+	
 	while(aptMainLoop())
 	{
 		screen_begin_frame();
 		screen_select(GFX_BOTTOM);
+		
+		hidScanInput();
+		hidTouchRead(&touch);
+		u32 kPress = hidKeysDown();
+
+		if ((kPress & KEY_TOUCH) && (touchInRect(98, 123, 0, 20))) 
+			break;
 		
 		screen_draw_rect(0, 0, 320, 240, RGBA8(BottomScreen_colour.r, BottomScreen_colour.g, BottomScreen_colour.b, 255));
 		screen_draw_rect(0, 0, 320, 20, RGBA8(BottomScreen_bar_colour.r, BottomScreen_bar_colour.g, BottomScreen_bar_colour.b, 255));
@@ -250,6 +261,8 @@ static loop_status_t loop(loop_status_t (*callback)(void))
 			screen_draw_texture(TEXTURE_NAND_ICON, 175, 0);
 		
 		screen_draw_texture(TEXTURE_SEARCH_ICON, (320 - screen_get_texture_width(TEXTURE_SEARCH_ICON)), -2);
+
+		ftp_loop();
 		
 		char buf[25];
 		
@@ -275,13 +288,11 @@ static loop_status_t loop(loop_status_t (*callback)(void))
 		screen_draw_string(((320 - screen_get_string_width(lang_ftp[language][2], 0.41f, 0.41f)) / 2), 100, 0.41f, 0.41f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][2]);
 		
 		screen_end_frame();
-		
-		status = callback();
-		if(status != LOOP_CONTINUE)
-			return status;
 	}
-
-	return LOOP_EXIT;
+	
+	task_exit();
+	ftp_exit();
+	DEFAULT_STATE = STATE_HOME;
 }
 
 void mainMenu(int clearindex)
@@ -305,8 +316,6 @@ void mainMenu(int clearindex)
 turnOffBGM:
 	if ((isPlaying) && (bgmEnable == false))
 		sound_stop(bgm);*/
-	
-	loop_status_t status = LOOP_OFF;
 	
 	while (aptMainLoop())
 	{
@@ -384,29 +393,11 @@ turnOffBGM:
 		{	
 			wait(100000000);
 			DEFAULT_STATE = STATE_FTP;
-			wait(100000000);
-			status = LOOP_RESTART;
 		}
 		
 		if (DEFAULT_STATE == STATE_FTP)
 		{
-			while (status == LOOP_RESTART)
-			{
-				if(ftp_init() == 0)
-				{
-					// ftp loop
-					status = loop(ftp_loop);
-
-					// done with ftp
-					ftp_exit();
-				}
-				else
-				{
-					wait(100000000);
-					status = LOOP_EXIT;
-					DEFAULT_STATE = STATE_HOME;
-				}
-			}
+			displayFTP();
 		}
 		
 		/*if ((kPressed & KEY_TOUCH) && (touchInRect(124, 147, 0, 20)))
