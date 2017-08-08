@@ -548,7 +548,7 @@ turnOffBGM:
 						loadTheme();
 						reloadTheme();
 					}
-					else if ((strncmp(fileName, "..", 2) != 0))
+					else if ((strncmp(fileName, "..", 2) != 0) && (file->isDir))
 					{
 						strcpy(theme_dir, cwd);
 						strcpy(colour_dir, cwd);
