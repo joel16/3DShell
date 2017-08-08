@@ -77,7 +77,7 @@ jmp_buf exitJmp;
 
 touchPosition touch;
 
-#define kPressed hidKeysDown()
-#define kHeld hidKeysHeld()
+#define kPressed (u32)hidKeysDown()
+#define kHeld (u32)hidKeysHeld()
 
 #endif

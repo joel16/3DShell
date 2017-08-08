@@ -569,7 +569,7 @@ int drawDeletionDialog(void)
 		if ((kHeld & KEY_L) && (kHeld & KEY_R))
 			captureScreenshot();
 			
-		if ((kPressed & KEY_A) || (touchInRect(240, 320, 142, 185)))
+		if ((kPressed & KEY_A) || ((touchInRect(240, 320, 142, 185))  && (kPressed & KEY_TOUCH)))
 		{
 			if(delete() == 0)
 			{
@@ -579,7 +579,7 @@ int drawDeletionDialog(void)
 			
 			break;
 		}
-		else if ((kPressed & KEY_B) || (touchInRect(136, 239, 142, 185)))
+		else if ((kPressed & KEY_B) || ((touchInRect(136, 239, 142, 185))  && (kPressed & KEY_TOUCH)))
 			break;
 	}
 	

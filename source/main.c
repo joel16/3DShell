@@ -236,7 +236,7 @@ void displayFTP()
 		hidScanInput();
 		hidTouchRead(&touch);
 
-		if ((kPressed & KEY_TOUCH) && (touchInRect(98, 123, 0, 20))) 
+		if (((kPressed & KEY_TOUCH) && (touchInRect(98, 123, 0, 20))) || (kPressed & KEY_SELECT)) 
 			break;
 		
 		screen_draw_rect(0, 0, 320, 240, RGBA8(BottomScreen_colour.r, BottomScreen_colour.g, BottomScreen_colour.b, 255));
@@ -388,7 +388,7 @@ turnOffBGM:
 			displayFiles();
 		}
 		
-		if ((kPressed & KEY_TOUCH) && (touchInRect(98, 123, 0, 20)))
+		if (((kPressed & KEY_TOUCH) && (touchInRect(98, 123, 0, 20))) || (kPressed & KEY_SELECT))
 		{	
 			wait(100000000);
 			DEFAULT_STATE = STATE_FTP;
@@ -637,25 +637,31 @@ turnOffBGM:
 				createFolder();
 			}
 			
-			else if ((kPressed & KEY_TOUCH) && (touchInRect(37, 160, 131, 167)) && (IF_OPTIONS) && (BROWSE_STATE != STATE_NAND))
+			else if ((kPressed & KEY_TOUCH) && (touchInRect(37, 160, 131, 167)) && (IF_OPTIONS))
 			{
-				selectionX = 0;
-				selectionY = 2;
+				if (((BROWSE_STATE == STATE_NAND) && (!sysProtection)) || (BROWSE_STATE == STATE_SD))
+				{
+					selectionX = 0;
+					selectionY = 2;
 				
-				wait(100000000);
+					wait(100000000);
 				
-				deleteDialog = true;
-				drawDeletionDialog();
+					deleteDialog = true;
+					drawDeletionDialog();
+				}
 			}
 			
-			else if ((kPressed & KEY_TOUCH) && (touchInRect(161, 284, 56, 93)) && (IF_OPTIONS) && (BROWSE_STATE != STATE_NAND))
+			else if ((kPressed & KEY_TOUCH) && (touchInRect(161, 284, 56, 93)) && (IF_OPTIONS))
 			{
-				selectionX = 1;
-				selectionY = 0;
+				if (((BROWSE_STATE == STATE_NAND) && (!sysProtection)) || (BROWSE_STATE == STATE_SD))
+				{
+					selectionX = 1;
+					selectionY = 0;
 				
-				wait(100000000);
+					wait(100000000);
 				
-				renameFile();
+					renameFile();
+				}
 			}
 
 			if ((CAN_COPY) && (kPressed & KEY_TOUCH) && (touchInRect(161, 284, 94, 130)) && (IF_OPTIONS))
@@ -681,26 +687,32 @@ turnOffBGM:
 				}	
 			}	
 			
-			if ((CAN_CUT) && (kPressed & KEY_TOUCH) && (touchInRect(161, 284, 131, 167)) && (IF_OPTIONS)  && (BROWSE_STATE != STATE_NAND))
+			if ((CAN_CUT) && (kPressed & KEY_TOUCH) && (touchInRect(161, 284, 131, 167)) && (IF_OPTIONS))
 			{
-				selectionX = 1;
-				selectionY = 2;
-				wait(100000000);
-				copy(COPY_DELETE_ON_FINISH);
-				cutF = true;
-				displayFiles();
-			}
-			else if (((cutF == true) && (deleteDialog == false)) && (kPressed & KEY_TOUCH) && (touchInRect(161, 284, 131, 167)) && (IF_OPTIONS)  && (BROWSE_STATE != STATE_NAND))
-			{
-				selectionX = 0;
-				selectionY = 0;
-				wait(100000000);
-				
-				if(paste() == 0)
+				if (((BROWSE_STATE == STATE_NAND) && (!sysProtection)) || (BROWSE_STATE == STATE_SD))
 				{
-					cutF = false;
-					updateList(CLEAR);
+					selectionX = 1;
+					selectionY = 2;
+					wait(100000000);
+					copy(COPY_DELETE_ON_FINISH);
+					cutF = true;
 					displayFiles();
+				}
+			}
+			else if (((cutF == true) && (deleteDialog == false)) && (kPressed & KEY_TOUCH) && (touchInRect(161, 284, 131, 167)) && (IF_OPTIONS))
+			{
+				if (((BROWSE_STATE == STATE_NAND) && (!sysProtection)) || (BROWSE_STATE == STATE_SD))
+				{
+					selectionX = 0;
+					selectionY = 0;
+					wait(100000000);
+				
+					if(paste() == 0)
+					{
+						cutF = false;
+						updateList(CLEAR);
+						displayFiles();
+					}
 				}
 			}
 		}

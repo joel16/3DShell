@@ -174,29 +174,3 @@ void utfn2ascii(char* dst, u16* src, int max)
 	while(*src && n<max-1){*(dst++)=(*(src++))&0xFF;n++;}
 	*dst=0x00;
 }
-
-void putPixel565(u8 * dst, u8 x, u8 y, u16 v)
-{
-	dst[(x+(47-y)*48)*3+0]=(v&0x1F)<<3;
-	dst[(x+(47-y)*48)*3+1]=((v>>5)&0x3F)<<2;
-	dst[(x+(47-y)*48)*3+2]=((v>>11)&0x1F)<<3;
-}
-
-u8* flipBitmap24(u8 * flip_bitmap, Bitmap * result)
-{
-	if (!result) 
-		return NULL;
-	
-	int x, y;
-	
-	for (y = 0; y < result->height; y++)
-	{
-		for (x = 0; x < result->width; x++)
-		{
-			int idx = (x+y * result->width) * 3;
-			*(u32*)(&(flip_bitmap[idx])) = ((*(u32*)&(result->pixels[(x + (result->height - y - 1) * result->width)*3]) & 0x00FFFFFF) | (*(u32*)(&(flip_bitmap[idx])) & 0xFF000000));
-		}
-	}
-		
-	return flip_bitmap;
-}

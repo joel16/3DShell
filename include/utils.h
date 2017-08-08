@@ -32,7 +32,5 @@ const char * getUsername(void);
 bool isN3DS(void);
 void utf2ascii(char * dst, u16* src);
 void utfn2ascii(char * dst, u16* src, int max);
-void putPixel565(u8 * dst, u8 x, u8 y, u16 v);
-u8* flipBitmap24(u8 * flip_bitmap, Bitmap * result);
 
 #endif
