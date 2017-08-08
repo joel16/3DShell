@@ -1,3 +1,8 @@
+/*
+	Please do NOT use this without my permission. It's one thing to keep things open source,
+	but another when a user scraps your work and slaps their name onto it.
+*/
+
 #ifndef SCREEN_H
 #define SCREEN_H
 
