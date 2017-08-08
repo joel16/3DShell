@@ -97,10 +97,10 @@ static void generateScreenshotFileName(int number, char *fileName, const char *e
 	int month = timeStruct->tm_mon + 1;
 	int year = timeStruct->tm_year + 1900;
 	
-	if (!(dirExists(fsArchive, "/screenshots/")))
-		makeDir(fsArchive, "/screenshots");
+	if (!(dirExists(fsArchive, "sdmc:/screenshots/")))
+		makeDir(fsArchive, "sdmc:/screenshots");
 
-	sprintf(fileName, "/screenshots/Screenshot_%02d%02d%02d-%i%s", year, month, day, num, ext);
+	sprintf(fileName, "sdmc:/screenshots/Screenshot_%02d%02d%02d-%i%s", year, month, day, num, ext);
 }
 
 void captureScreenshot(void)
