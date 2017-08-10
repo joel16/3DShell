@@ -126,6 +126,9 @@ void updateList(int clearindex)
 				// Set read-Only flag
 				item->isHidden = info.attributes & FS_ATTRIBUTE_HIDDEN; 
 				
+				if ((isHiddenEnabled) && (item->isHidden))
+					continue;
+				
 				// Copy file extension
 				strcpy(item->ext, info.shortExt);
 				
@@ -218,6 +221,9 @@ void displayFiles(void)
 		screen_draw_string(10, 130, 0.41f, 0.41f, RGBA8(Settings_text_colour.r, Settings_text_colour.g, Settings_text_colour.b, 255), lang_settings[language][3]);
 		screen_draw_stringf(10, 142, 0.41f, 0.41f, RGBA8(Settings_text_min_colour.r, Settings_text_min_colour.g, Settings_text_min_colour.b, 255), "%s %s", lang_settings[language][4], theme_dir);
 		
+		screen_draw_string(10, 170, 0.41f, 0.41f, RGBA8(Settings_text_colour.r, Settings_text_colour.g, Settings_text_colour.b, 255), lang_settings[language][7]);
+		screen_draw_stringf(10, 182, 0.41f, 0.41f, RGBA8(Settings_text_min_colour.r, Settings_text_min_colour.g, Settings_text_min_colour.b, 255), "%s", lang_settings[language][8]);
+		
 		if (bgmEnable)
 			screen_draw_texture(TEXTURE_TOGGLE_ON, 280, 50);
 		else 
@@ -227,6 +233,11 @@ void displayFiles(void)
 			screen_draw_texture(TEXTURE_TOGGLE_ON, 280, 90);
 		else 
 			screen_draw_texture(TEXTURE_TOGGLE_OFF, 280, 90);
+		
+		if (isHiddenEnabled)
+			screen_draw_texture(TEXTURE_TOGGLE_ON, 280, 170);
+		else 
+			screen_draw_texture(TEXTURE_TOGGLE_OFF, 280, 170);
 		
 		screen_draw_texture(TEXTURE_THEME_ICON, 283, 125);
 	}

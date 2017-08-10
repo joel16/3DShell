@@ -129,10 +129,10 @@ const char lang_deletion[][5][100] =
 	{"確認刪除", "這個動作無法復原", "你希望繼續嗎", "否", "是"}
 };
 
-const char lang_settings[][7][100] =
+const char lang_settings[][9][100] =
 {
 	{"一般的", "システムファイル防御", "大切なファイルの削除を防止します", "カスタムテーマ", "現在のテーマ:", "BGM", "Enable BGM upon start up."},
-	{"General", "System file protection", "Prevents deletion of system files.", "Custom themes", "Current:", "BGM", "Enable BGM upon start up."},
+	{"General", "System file protection", "Prevents deletion of system files.", "Custom themes", "Current:", "BGM", "Enable BGM upon start up.", "Show hidden files", "Displays hidden files in file browser."},
 	{"Général", "Protection de fichier système", "Empêche la supprimation des fichiers systèmes.", "Thèmes personnalisés", "Actuel:", "BGM", "Enable BGM upon start up."},
 	{"Allgemein", "Systemdateien-Schutz", "Verhindert das Löschen von Systemdateien.", "Eigene Themen", "Aktuell:", "BGM", "Enable BGM upon start up."},
 	{"Generale", "Protezione file di sistema", "Previene l'eliminazione di file di sistema.", "Temi custom", "Attuale:", "BGM", "Enable BGM upon start up."},

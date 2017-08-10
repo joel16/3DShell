@@ -72,6 +72,25 @@ void installDirectories(void)
 			else 
 				sysProtection = true;
 		}
+		
+		if (!fileExists(fsArchive, "/3ds/3DShell/isHidden.txt")) // Initially set it to true
+		{
+			setConfig("/3ds/3DShell/isHidden.txt", true);
+			isHiddenEnabled = true;
+		}
+		else
+		{
+			int info = 0;
+		
+			FILE * read = fopen("/3ds/3DShell/isHidden.txt", "r");
+			fscanf(read, "%d", &info);
+			fclose(read);
+		
+			if (info == 0)
+				isHiddenEnabled = false;
+			else 
+				isHiddenEnabled = true;
+		}
 	}
 }
 

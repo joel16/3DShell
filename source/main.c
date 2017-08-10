@@ -348,7 +348,7 @@ turnOffBGM:
 			DEFAULT_STATE = STATE_UPDATE;
 		}
 		
-		else if ((kPressed & KEY_TOUCH) && (touchInRect(0, 320, 50, 72)) && (IF_SETTINGS))
+		else if ((kPressed & KEY_TOUCH) && (touchInRect(280, 320, 50, 72)) && (IF_SETTINGS))
 		{
 			if (bgmEnable == false)
 			{
@@ -364,7 +364,7 @@ turnOffBGM:
 			}
 		}*/
 		
-		if ((kPressed & KEY_TOUCH) && (touchInRect(0, 320, 90, 112)) && (IF_SETTINGS))
+		if ((kPressed & KEY_TOUCH) && (touchInRect(280, 320, 90, 112)) && (IF_SETTINGS))
 		{
 			wait(100000000);
 			if (sysProtection == false)
@@ -384,6 +384,23 @@ turnOffBGM:
 			wait(100000000);
 			DEFAULT_STATE = STATE_THEME;
 			strcpy(cwd, "/3ds/3DShell/themes/");
+			updateList(CLEAR);
+			displayFiles();
+		}
+		
+		else if ((kPressed & KEY_TOUCH) && (touchInRect(280, 320, 170, 192)) && (IF_SETTINGS))
+		{
+			wait(100000000);
+			if (isHiddenEnabled == false)
+			{
+				setConfig("/3ds/3DShell/isHidden.txt", true);
+				isHiddenEnabled = true;
+			}
+			else 
+			{
+				setConfig("/3ds/3DShell/isHidden.txt", false);
+				isHiddenEnabled = false;
+			}
 			updateList(CLEAR);
 			displayFiles();
 		}
