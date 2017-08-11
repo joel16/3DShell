@@ -17,11 +17,11 @@ void digitalTime(void)
 	int minutes = time_struct->tm_min;
 	int amOrPm = 0;
 	
-	if(hours < 12)
+	if (hours < 12)
 		amOrPm = 1;
-	if(hours == 0)
+	if (hours == 0)
 		hours = 12;
-	else if(hours > 12)
+	else if (hours > 12)
 		hours = hours - 12;
 
 	if ((hours >= 1) && (hours < 10))  
@@ -44,7 +44,7 @@ char * getDayOfWeek(int type)
 	static char buffer[16];
 	sprintf(buffer, "%s", lang_days[language][timeStruct->tm_wday]);
     
-    if(type == 1)
+    if (type == 1)
         buffer[3] = 0;
 	
     return buffer;

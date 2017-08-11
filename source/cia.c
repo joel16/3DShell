@@ -65,15 +65,15 @@ AppPlatform platformFromId(u16 id)
 
 AppCategory categoryFromId(u16 id) 
 {
-	if((id & 0x8000) == 0x8000) 
+	if ((id & 0x8000) == 0x8000) 
 		return CATEGORY_TWL;
-	else if((id & 0x10) == 0x10)
+	else if ((id & 0x10) == 0x10)
 		return CATEGORY_SYSTEM;
-	else if((id & 0x6) == 0x6) 
+	else if ((id & 0x6) == 0x6) 
 		return CATEGORY_PATCH;
-	else if((id & 0x4) == 0x4) 
+	else if ((id & 0x4) == 0x4) 
 		return CATEGORY_DLC;
-	else if((id & 0x2) == 0x2) 
+	else if ((id & 0x2) == 0x2) 
 		return CATEGORY_DEMO;
 	
 	return CATEGORY_APP;
@@ -84,17 +84,17 @@ SMDH getCiaSMDH(const char * cia)
 	SMDH smdh;
 
 	FILE * file = fopen(cia, "rb");
-	if(!file)
+	if (!file)
 		return smdh;
 
-	if(fseek(file, -0x36C0, SEEK_END) != 0)
+	if (fseek(file, -0x36C0, SEEK_END) != 0)
 	{
 		fclose(file);
 		return smdh;
 	}
 
 	size_t bytesRead = fread(&smdh, sizeof(SMDH), 1, file);
-	if(bytesRead < 0)
+	if (bytesRead < 0)
 	{
 		fclose(file);
 		return smdh;
@@ -102,7 +102,7 @@ SMDH getCiaSMDH(const char * cia)
 
 	fclose(file);
 
-	if(smdh.magic[0] != 'S' || smdh.magic[1] != 'M' || smdh.magic[2] != 'D' || smdh.magic[3] != 'H')
+	if (smdh.magic[0] != 'S' || smdh.magic[1] != 'M' || smdh.magic[2] != 'D' || smdh.magic[3] != 'H')
 		return smdh;
 	
 	return smdh;
@@ -254,22 +254,22 @@ Cia getCiaInfo(const char * path, FS_MediaType mediaType)
 	
 	SMDH smdh = getCiaSMDH(path);
 	
-	if(smdh.titles != NULL)
+	if (smdh.titles != NULL)
 	{
 		char buffer[512];
-		if(smdh.titles[language].shortDescription != NULL)
+		if (smdh.titles[language].shortDescription != NULL)
 		{
 			memset(buffer, 0, 64 + 1);
 			utfn2ascii(buffer, smdh.titles[language].shortDescription, 64 + 1);
 			strcpy(cia.title, buffer);
 		}
-		if(smdh.titles[language].longDescription != NULL)
+		if (smdh.titles[language].longDescription != NULL)
 		{
 			memset(buffer, 0, 128 + 1);
 			utfn2ascii(buffer, smdh.titles[language].longDescription, 128 + 1);
 			strcpy(cia.description, buffer);
 		}
-		if(smdh.titles[language].publisher != NULL)
+		if (smdh.titles[language].publisher != NULL)
 		{
 			memset(buffer, 0, 64 + 1);
 			utfn2ascii(buffer, smdh.titles[language].publisher, 64 + 1);

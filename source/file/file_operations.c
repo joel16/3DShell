@@ -40,10 +40,10 @@ int renameFile(void)
 {
 	File * file = findindex(position);
 
-	if(file == NULL) 
+	if (file == NULL) 
 		return -1;
 
-	if(strncmp(file->name, "..", 2) == 0) 
+	if (strncmp(file->name, "..", 2) == 0) 
 		return -2;
 
 	char oldPath[500], newPath[500], name[255];
@@ -68,17 +68,17 @@ int delete(void)
 	File * file = findindex(position);
 
 	// Not found
-	if(file == NULL) 
+	if (file == NULL) 
 		return -1;
 
 	if (sysProtection)
 	{
-		if((strncmp(file->name, "..", 2) == 0) || (SYS_FILES)) 
+		if ((strncmp(file->name, "..", 2) == 0) || (SYS_FILES)) 
 			return -2;
 	}
 	else
 	{
-		if(strncmp(file->name, "..", 2) == 0) 
+		if (strncmp(file->name, "..", 2) == 0) 
 			return -2;
 	}
 
@@ -104,7 +104,7 @@ void copy(int flag)
 	File * file = findindex(position);
 
 	// Not found
-	if(file == NULL) 
+	if (file == NULL) 
 		return;
 
 	// Copy file source
@@ -141,7 +141,7 @@ int copy_file(char * a, char * b)
 	int in = open(a, O_RDONLY, 0777);
 
 	// Opened file for reading
-	if(in >= 0)
+	if (in >= 0)
 	{
 		// Delete output file (if existing)
 		fsRemove(fsArchive, b);
@@ -150,7 +150,7 @@ int copy_file(char * a, char * b)
 		int out = open(b, O_WRONLY | O_CREAT | O_TRUNC, 0777);
 
 		// Opened file for writing
-		if(out >= 0)
+		if (out >= 0)
 		{
 			// Read byte count
 			u64 b_read = 0;
@@ -169,7 +169,7 @@ int copy_file(char * a, char * b)
 			close(out);
 
 			// Insufficient copy
-			if(totalread != totalwrite) 
+			if (totalread != totalwrite) 
 				result = -3;
 		}
 
@@ -203,7 +203,7 @@ int copy_folder_recursive(char * a, char * b)
 	static char dname[1024];
 
 	// Opened directory
-	if(!(directory))
+	if (!(directory))
 	{
 		// Create output directory (is allowed to fail, we can merge folders after all)
 		makeDir(fsArchive, b);
@@ -217,12 +217,12 @@ int copy_folder_recursive(char * a, char * b)
 			entriesRead = 0;
 			FSDIR_Read(dirHandle, &entriesRead, 1, &info);
 			
-			if(entriesRead)
+			if (entriesRead)
 			{
 				utf2ascii(&dname[0], info.name);
 				
 				// Valid filename
-				if(strlen(dname) > 0)
+				if (strlen(dname) > 0)
 				{
 					// Calculate buffer size
 					int insize = strlen(a) + strlen(dname) + 2;
@@ -245,7 +245,7 @@ int copy_folder_recursive(char * a, char * b)
 					strcpy(outbuffer + strlen(outbuffer), dname);
 
 					// Another folder
-					if(info.attributes & FS_ATTRIBUTE_DIRECTORY)
+					if (info.attributes & FS_ATTRIBUTE_DIRECTORY)
 						copy_folder_recursive(inbuffer, outbuffer); // Copy folder (via recursion)
 
 					// Simple file
@@ -276,7 +276,7 @@ int copy_folder_recursive(char * a, char * b)
 int paste(void)
 {
 	// No copy source
-	if(copymode == NOTHING_TO_COPY) 
+	if (copymode == NOTHING_TO_COPY) 
 		return -1;
 
 	// Source and target folder are identical
@@ -284,7 +284,7 @@ int paste(void)
 	int i = 0; 
 	
 	for(; i < strlen(copysource); i++) 
-		if(copysource[i] == '/') 
+		if (copysource[i] == '/') 
 			lastslash = copysource + i;
 		
 	char backup = lastslash[1];
@@ -292,7 +292,7 @@ int paste(void)
 	int identical = strcmp(copysource, cwd) == 0;
 	lastslash[1] = backup;
 	
-	if(identical) 
+	if (identical) 
 		return -2;
 
 	// Source filename
@@ -312,13 +312,13 @@ int paste(void)
 	int result = -3;
 
 	// Recursive folder copy
-	if((copymode & COPY_FOLDER_RECURSIVE) == COPY_FOLDER_RECURSIVE)
+	if ((copymode & COPY_FOLDER_RECURSIVE) == COPY_FOLDER_RECURSIVE)
 	{
 		// Check files in current folder
 		File * node = files; for(; node != NULL; node = node->next)
 		{
 			// Found a file matching the name (folder = ok, file = not)
-			if(strcmp(filename, node->name) == 0 && !node->isDir)
+			if (strcmp(filename, node->name) == 0 && !node->isDir)
 				return -4; // Error out
 		}
 
@@ -326,7 +326,7 @@ int paste(void)
 		result = copy_folder_recursive(copysource, copytarget);
 
 		// Source delete
-		if(result == 0 && (copymode & COPY_DELETE_ON_FINISH) == COPY_DELETE_ON_FINISH)
+		if ((R_SUCCEEDED(result)) && (copymode & COPY_DELETE_ON_FINISH) == COPY_DELETE_ON_FINISH)
 			fsRmdirRecursive(fsArchive, copysource);
 	}
 
@@ -337,12 +337,12 @@ int paste(void)
 		result = copy_file(copysource, copytarget);
 
 		// Source delete
-		if(result == 0 && (copymode & COPY_DELETE_ON_FINISH) == COPY_DELETE_ON_FINISH)
+		if ((R_SUCCEEDED(result)) && (copymode & COPY_DELETE_ON_FINISH) == COPY_DELETE_ON_FINISH)
 			fsRemove(fsArchive, copysource); // Delete File
 	}
 
 	// Paste success
-	if(result == 0)
+	if (R_SUCCEEDED(result))
 	{
 		// Erase cache data
 		memset(copysource, 0, sizeof(copysource));

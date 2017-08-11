@@ -22,7 +22,7 @@ Result extractZip(const char * zipFile, const char * path)
 		strncat(tmpFile2, (char*)zipFile, (1024 - strlen(tmpFile2) - 1));
 	}
 	
-	Zip *handle = ZipOpen(tmpFile2);
+	Zip * handle = ZipOpen(tmpFile2);
 	
 	if (handle == NULL) 
 		return 0;

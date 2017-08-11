@@ -64,7 +64,7 @@ void updateList(int clearindex)
 	u32 entriesRead;
 	static char dname[1024];
 
-	if(!(directory))
+	if(R_SUCCEEDED(directory))
 	{
 		/* Add fake ".." entry except on root */
 		if (strcmp(cwd, ROOT_PATH)) 
@@ -459,7 +459,7 @@ void openFile(void)
 	if (file->isDir)
 	{
 		// Attempt to navigate to target
-		if(navigate(0) == 0)
+		if(R_SUCCEEDED(navigate(0)))
 		{	
 			if (BROWSE_STATE != STATE_NAND)
 				saveLastDirectory();
@@ -582,7 +582,7 @@ int drawDeletionDialog(void)
 			
 		if ((kPressed & KEY_A) || ((touchInRect(240, 320, 142, 185))  && (kPressed & KEY_TOUCH)))
 		{
-			if(delete() == 0)
+			if(R_SUCCEEDED(delete()))
 			{
 				updateList(CLEAR);
 				displayFiles();

@@ -14,7 +14,7 @@ void closeArchive(void)
 
 Result makeDir(FS_Archive archive, const char * path)
 {
-	if((!archive) || (!path))
+	if ((!archive) || (!path))
 		return -1;
 	
 	return FSUSER_CreateDirectory(archive, fsMakePath(PATH_ASCII, path), 0);
@@ -22,19 +22,19 @@ Result makeDir(FS_Archive archive, const char * path)
 
 bool fileExists(FS_Archive archive, const char * path)
 {
-	if((!path) || (!archive))
+	if ((!path) || (!archive))
 		return false;
 	
 	Handle handle;
 
 	Result ret = FSUSER_OpenFile(&handle, archive, fsMakePath(PATH_ASCII, path), FS_OPEN_READ, 0);
 	
-	if(ret != 0)
+	if (R_FAILED(ret))
 		return false;
 
 	ret = FSFILE_Close(handle);
 	
-	if(ret != 0)
+	if (R_FAILED(ret))
 		return false;
 	
 	return true;
@@ -42,19 +42,19 @@ bool fileExists(FS_Archive archive, const char * path)
 
 bool dirExists(FS_Archive archive, const char * path)
 {	
-	if((!path) || (!archive))
+	if ((!path) || (!archive))
 		return false;
 	
 	Handle handle;
 
 	Result ret = FSUSER_OpenDirectory(&handle, archive, fsMakePath(PATH_ASCII, path));
 	
-	if(ret != 0)
+	if (R_FAILED(ret))
 		return false;
 
 	ret = FSDIR_Close(handle);
 	
-	if(ret != 0)
+	if (R_FAILED(ret))
 		return false;
 	
 	return true;
@@ -73,11 +73,11 @@ char * getFileModifiedTime(char * path)
 	int minutes = timeStruct->tm_min;
 	int amOrPm = 0;
 	
-	if(hours < 12)
+	if (hours < 12)
 		amOrPm = 1;
-	if(hours == 0)
+	if (hours == 0)
 		hours = 12;
-	else if(hours > 12)
+	else if (hours > 12)
 		hours = hours - 12;
 	
 	int day = timeStruct->tm_mday;
@@ -131,28 +131,28 @@ Result fsRemove(FS_Archive archive, const char * filename)
 {
     Result ret = FSUSER_DeleteFile(archive, fsMakePath(PATH_ASCII, filename));
 
-    return ret == 0 ? 0 : -1;
+    return R_SUCCEEDED(ret)? 0 : -1;
 }
 
 Result fsRmdir(FS_Archive archive, const char * path)
 {
     Result ret = FSUSER_DeleteDirectory(archive, fsMakePath(PATH_ASCII, path));
 
-    return ret == 0 ? 0 : -1;
+    return R_SUCCEEDED(ret)? 0 : -1;
 }
 
 Result fsRmdirRecursive(FS_Archive archive, const char * path)
 {
     Result ret = FSUSER_DeleteDirectoryRecursively(archive, fsMakePath(PATH_ASCII, path));
 
-    return ret == 0 ? 0 : -1;
+    return R_SUCCEEDED(ret)? 0 : -1;
 }
 
 Result fsRename(FS_Archive archive, const char * old_filename, const char * new_filename)
 {
     Result ret = FSUSER_RenameFile(archive, fsMakePath(PATH_ASCII, old_filename), archive, fsMakePath(PATH_ASCII, new_filename));
 
-    return ret == 0 ? 0 : -1;
+    return R_SUCCEEDED(ret)? 0 : -1;
 }
 
 Result fsOpen(Handle * handle, const char * path, u32 flags)
@@ -166,14 +166,14 @@ Result fsOpen(Handle * handle, const char * path, u32 flags)
 	
 	Result ret = FSUSER_OpenFileDirectly(handle, id, fsMakePath(PATH_EMPTY, ""), fsMakePath(PATH_ASCII, path), flags, 0);
 	
-	return ret == 0 ? 0 : -1;
+	return R_SUCCEEDED(ret)? 0 : -1;
 }
 
 Result fsClose(Handle handle)
 {
 	Result ret = FSFILE_Close(handle);
 	
-	return ret == 0 ? 0 : -1;
+	return R_SUCCEEDED(ret)? 0 : -1;
 }
 
 Result writeFile(const char * path, const char * buf)
@@ -192,5 +192,5 @@ Result writeFile(const char * path, const char * buf)
 	ret = FSFILE_Write(handle, &written, size, buf, len, FS_WRITE_FLUSH);
 	ret = fsClose(handle);
 	
-	return ret == 0 ? 0 : -1;
+	return R_SUCCEEDED(ret)? 0 : -1;
 }

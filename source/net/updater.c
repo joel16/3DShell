@@ -17,7 +17,7 @@ char * checkForUpdate(void)
 	
 	currVer = VERSION_MAJOR + VERSION_MINOR; // A shitty way to get updates I know - I plan to change this later.
 	
-	if (ret == 0)
+	if (R_SUCCEEDED(ret))
 	{
 		FILE * file = fopen("/3ds/3DShell/version.txt", "r");
 		fscanf(file, "%d", &updateVer);
@@ -36,7 +36,7 @@ void downloadUpdate(void)
 {
 	Result ret = downloadFile("https://github.com/3DShell-Bot/Updater/releases/download/UPDATER/3DShell.cia", "/3ds/3DShell/3DShell.cia");
 	
-	if (ret == 0)
+	if (R_SUCCEEDED(ret))
 	{
 		screen_draw_string(((320 - screen_get_string_width("Downloaded update", 0.41f, 0.41f)) / 2), 60, 0.41f, 0.41f, RGBA8(251, 251, 251, 255), "Downloaded update");
 		wait(100000000);

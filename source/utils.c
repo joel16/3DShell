@@ -179,7 +179,7 @@ bool isN3DS(void)
 
 void utf2ascii(char* dst, u16* src)
 {
-	if(!src || !dst)
+	if (!src || !dst)
 		return;
 	
 	while(*src)*(dst++)=(*(src++))&0xFF;
@@ -188,7 +188,7 @@ void utf2ascii(char* dst, u16* src)
 
 void utfn2ascii(char* dst, u16* src, int max)
 {
-	if(!src || !dst)return;
+	if (!src || !dst)return;
 	int n=0;
 	while(*src && n<max-1){*(dst++)=(*(src++))&0xFF;n++;}
 	*dst=0x00;

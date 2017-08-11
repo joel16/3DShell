@@ -12,26 +12,26 @@ Result downloadFile(const char * url, const char * path)
 	Result ret = 0;
 	u32 statuscode = 0;
 	u32 contentsize = 0;
-	u8 *buf;
+	u8 * buf;
 	
 	ret = httpcOpenContext(&context, HTTPC_METHOD_GET, url, 0);
-	if (ret != 0) // httpcOpenContext failed
+	if (R_FAILED(ret)) // httpcOpenContext failed
 		return ret;
 	
-	ret = httpcAddRequestHeaderField(&context, "Updater-Agent", "3DShell");
-	if (ret != 0) // httpcAddRequestHeaderField failed
+	ret = httpcAddRequestHeaderField(&context, "User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+	if (R_FAILED(ret)) // httpcAddRequestHeaderField failed
 		return ret;
 	
 	ret = httpcSetSSLOpt(&context, 1<<9);
-	if (ret != 0) // httpcSetSSLOpt failed
+	if (R_FAILED(ret)) // httpcSetSSLOpt failed
 		return ret;
 	
 	ret = httpcBeginRequest(&context);
-	if(ret != 0) // httpcBeginRequest failed
+	if (R_FAILED(ret)) // httpcBeginRequest failed
 		return ret;
 	
 	ret = httpcGetResponseStatusCode(&context, &statuscode);
-	if (ret != 0) // httpcGetResponseStatusCode failed
+	if (R_FAILED(ret)) // httpcGetResponseStatusCode failed
 	{
 		httpcCloseContext(&context);
 		return ret;
@@ -43,7 +43,7 @@ Result downloadFile(const char * url, const char * path)
 		{
 			char newUrl[1024];
 			ret = httpcGetResponseHeader(&context, (char*)"Location", newUrl, 1024);
-			if (ret != 0)
+			if (R_FAILED(ret))
 			
 				return ret;
 			
@@ -59,13 +59,13 @@ Result downloadFile(const char * url, const char * path)
 	}
 	
 	ret = httpcGetDownloadSizeState(&context, NULL, &contentsize);
-	if (ret != 0) // httpcGetDownloadSizeState failed
+	if (R_FAILED(ret)) // httpcGetDownloadSizeState failed
 	{
 		httpcCloseContext(&context);
 		return ret;
 	}
 	
-	buf = (u8*)malloc(contentsize);
+	buf = (u8 *)malloc(contentsize);
 	if (buf == NULL) // Malloc failed
 		return -2;
 	

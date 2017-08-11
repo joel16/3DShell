@@ -15,14 +15,14 @@ static void task_apt_hook(APT_HookType hook, void* param)
 			svcClearEvent(task_suspend_event);
 			break;
 		case APTHOOK_ONSLEEP:
-			if(R_SUCCEEDED(gspLcdInit()))
+			if (R_SUCCEEDED(gspLcdInit()))
 			{
 				GSPLCD_PowerOnBacklight(GSPLCD_SCREEN_BOTH);
 				gspLcdExit();
 			}
 			break;
 		case APTHOOK_ONWAKEUP:
-			if(R_SUCCEEDED(gspLcdInit()))
+			if (R_SUCCEEDED(gspLcdInit()))
 			{
 				(lcd ? GSPLCD_PowerOnBacklight : GSPLCD_PowerOffBacklight)(GSPLCD_SCREEN_BOTH);
 				gspLcdExit();
@@ -53,13 +53,13 @@ void task_exit(void)
 
 	aptUnhook(&cookie);
 
-	if(task_pause_event != 0) 
+	if (task_pause_event != 0) 
 	{
 		svcCloseHandle(task_pause_event);
 		task_pause_event = 0;
 	}
 
-	if(task_suspend_event != 0) 
+	if (task_suspend_event != 0) 
 	{
 		svcCloseHandle(task_suspend_event);
 		task_suspend_event = 0;

@@ -303,11 +303,11 @@ void mainMenu(int clearindex)
 		updateList(CLEAR);
 	
 /*turnOnBGM:
-	if(fileExists(fsArchive, "/3ds/dspfirm.cdc"))
+	if (fileExists(fsArchive, "/3ds/dspfirm.cdc"))
 	{
 		if (fileExists(fsArchive, "/3ds/3DShell/bgm.ogg"))
 		{
-			if((!(isPlaying)) && (bgmEnable == true))
+			if ((!(isPlaying)) && (bgmEnable == true))
 				audio_load_ogg("/3ds/3DShell/bgm.ogg");
 		}
 	}
@@ -484,7 +484,7 @@ turnOffBGM:
 		if (kPressed & KEY_START) // exit
 			break;
 		
-		if(fileCount > 0)
+		if (fileCount > 0)
 		{
 			// Position Decrement
 			if (kPressed & KEY_DUP)
@@ -492,7 +492,7 @@ turnOffBGM:
 				wait(100000000);
 				
 				// Decrease Position
-				if(position > 0) 
+				if (position > 0) 
 					position--;
 
 				// Rewind Pointer
@@ -508,7 +508,7 @@ turnOffBGM:
 				wait(100000000);
 				
 				// Increase Position
-				if(position < (fileCount - 1)) 
+				if (position < (fileCount - 1)) 
 					position++;
 
 				// Rewind Pointer
@@ -522,7 +522,7 @@ turnOffBGM:
 			{
 				wait(66666666);
 				
-				if(position > 0) 
+				if (position > 0) 
 					position--;
 
 				else position = fileCount - 1;
@@ -534,7 +534,7 @@ turnOffBGM:
 			{
 				wait(66666666);
 				
-				if(position < (fileCount - 1)) 
+				if (position < (fileCount - 1)) 
 					position++;
 				
 				else position = 0;
@@ -696,7 +696,7 @@ turnOffBGM:
 				selectionY = 0; 
 				wait(100000000);
 					
-				if(paste() == 0)
+				if (paste() == 0)
 				{
 					copyF = false;
 					updateList(CLEAR);
@@ -724,7 +724,7 @@ turnOffBGM:
 					selectionY = 0;
 					wait(100000000);
 				
-					if(paste() == 0)
+					if (paste() == 0)
 					{
 						cutF = false;
 						updateList(CLEAR);
@@ -740,7 +740,7 @@ int main(int argc, char *argv[])
 {
 	initServices();
 	
-	if(setjmp(exitJmp)) 
+	if (setjmp(exitJmp)) 
 	{
 		termServices();
 		return 0;
