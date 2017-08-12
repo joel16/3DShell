@@ -292,6 +292,8 @@ void displayFTP()
 	task_exit();
 	ftp_exit();
 	DEFAULT_STATE = STATE_HOME;
+	updateList(CLEAR);
+	displayFiles();
 }
 
 void mainMenu(int clearindex)
