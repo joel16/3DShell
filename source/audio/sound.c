@@ -8,12 +8,6 @@ void ogg_thread(void *data);
 
 bool isPlaying = false;
 
-void audio_init() 
-{
-	ndspInit();
-    ndspSetOutputMode(NDSP_OUTPUT_STEREO);
-}
-
 struct sound* sound_create(enum channel chan) 
 {
 	struct sound *new_sound = (struct sound*)malloc(sizeof(struct sound));
@@ -130,9 +124,4 @@ void sound_stop(struct sound *sound)
 	// memset (buffer, 0, size);
 	
 	isPlaying = false;
-}
-
-void audio_stop(void) 
-{
-    ndspExit();
 }

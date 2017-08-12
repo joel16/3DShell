@@ -94,7 +94,7 @@ void updateList(int clearindex)
 			
 			if(entriesRead)
 			{
-				utfn2ascii(&dname[0], info.name, 255);
+				u16_to_u8(&dname[0], info.name, 0xFF);
 				
 				// Ingore null filename
 				if(dname[0] == '\0') 

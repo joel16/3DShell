@@ -219,7 +219,7 @@ int copy_folder_recursive(char * a, char * b)
 			
 			if (entriesRead)
 			{
-				utf2ascii(&dname[0], info.name);
+				u16_to_u8(&dname[0], info.name, 0xFF);
 				
 				// Valid filename
 				if (strlen(dname) > 0)

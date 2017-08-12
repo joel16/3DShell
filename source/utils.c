@@ -177,19 +177,12 @@ bool isN3DS(void)
 		return false;
 }
 
-void utf2ascii(char* dst, u16* src)
+void u16_to_u8(char* buf, const u16* input, size_t bufsize)
 {
-	if (!src || !dst)
-		return;
+	ssize_t units = utf16_to_utf8((uint8_t*)buf, input, bufsize);
 	
-	while(*src)*(dst++)=(*(src++))&0xFF;
-	*dst=0x00;
-}
-
-void utfn2ascii(char* dst, u16* src, int max)
-{
-	if (!src || !dst)return;
-	int n=0;
-	while(*src && n<max-1){*(dst++)=(*(src++))&0xFF;n++;}
-	*dst=0x00;
+	if (units < 0) 
+		units = 0;
+	
+	buf[units] = 0;
 }

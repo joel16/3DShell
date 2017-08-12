@@ -30,7 +30,6 @@ u8 getRegion(void);
 u8 getLanguage(void);
 const char * getUsername(void);
 bool isN3DS(void);
-void utf2ascii(char * dst, u16* src);
-void utfn2ascii(char * dst, u16* src, int max);
+void u16_to_u8(char* buf, const u16* input, size_t bufsize);
 
 #endif

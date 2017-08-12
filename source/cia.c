@@ -1,6 +1,7 @@
 #include "cia.h"
 #include "clock.h"
 #include "common.h"
+#include "fs.h"
 #include "language.h"
 #include "power.h"
 #include "screen.h"
@@ -79,31 +80,24 @@ AppCategory categoryFromId(u16 id)
 	return CATEGORY_APP;
 }
 
-SMDH getCiaSMDH(const char * cia)
+SMDH parseSMDH(const char * cia) 
 {
 	SMDH smdh;
-
-	FILE * file = fopen(cia, "rb");
-	if (!file)
-		return smdh;
-
-	if (fseek(file, -0x36C0, SEEK_END) != 0)
+    Handle handle;
+	
+	if (R_SUCCEEDED(fsOpen(&handle, cia, FS_OPEN_READ))) 
 	{
-		fclose(file);
-		return smdh;
+		u32 bytesRead = 0;
+		if ((R_SUCCEEDED(FSFILE_Read(handle, &bytesRead, 0, &smdh, sizeof(SMDH)))) && (bytesRead == sizeof(SMDH))) 
+		{
+			if ((smdh.magic[0] == 'S') && (smdh.magic[1] == 'M') && (smdh.magic[2] == 'D') && (smdh.magic[3] == 'H')) 
+			{
+				FSFILE_Close(handle);
+				return smdh;
+			}
+		}
+		FSFILE_Close(handle);
 	}
-
-	size_t bytesRead = fread(&smdh, sizeof(SMDH), 1, file);
-	if (bytesRead < 0)
-	{
-		fclose(file);
-		return smdh;
-	}
-
-	fclose(file);
-
-	if (smdh.magic[0] != 'S' || smdh.magic[1] != 'M' || smdh.magic[2] != 'D' || smdh.magic[3] != 'H')
-		return smdh;
 	
 	return smdh;
 }
@@ -245,34 +239,34 @@ Cia getCiaInfo(const char * path, FS_MediaType mediaType)
 	FSFILE_Close(fileHandle);
 	
 	cia.titleID = info.titleID;
-	cia.uniqueID = ((u32*) &info.titleID)[0];
+	cia.uniqueID = ((u32 *) &info.titleID)[0];
 	cia.mediaType = mediaType;
 	cia.platform = platformFromId(((u16*) &info.titleID)[3]);
 	cia.category = categoryFromId(((u16*) &info.titleID)[2]);
 	cia.version = info.version;
 	cia.size = info.size;																																															
 	
-	SMDH smdh = getCiaSMDH(path);
+	SMDH smdh = parseSMDH(path);
 	
 	if (smdh.titles != NULL)
 	{
 		char buffer[512];
 		if (smdh.titles[language].shortDescription != NULL)
 		{
-			memset(buffer, 0, 64 + 1);
-			utfn2ascii(buffer, smdh.titles[language].shortDescription, 64 + 1);
+			memset(buffer, 0, 0x41);
+			u16_to_u8(buffer, smdh.titles[language].shortDescription, 0x41);
 			strcpy(cia.title, buffer);
 		}
 		if (smdh.titles[language].longDescription != NULL)
 		{
-			memset(buffer, 0, 128 + 1);
-			utfn2ascii(buffer, smdh.titles[language].longDescription, 128 + 1);
+			memset(buffer, 0, 0x81);
+			u16_to_u8(buffer, smdh.titles[language].longDescription, 0x81);
 			strcpy(cia.description, buffer);
 		}
 		if (smdh.titles[language].publisher != NULL)
 		{
-			memset(buffer, 0, 64 + 1);
-			utfn2ascii(buffer, smdh.titles[language].publisher, 64 + 1);
+			memset(buffer, 0, 0x41);
+			u16_to_u8(buffer, smdh.titles[language].publisher, 0x41);
 			strcpy(cia.author, buffer);
 		}
 	}
@@ -283,17 +277,16 @@ Cia getCiaInfo(const char * path, FS_MediaType mediaType)
 Result removeTitle(u64 titleID, FS_MediaType media)
 {
 	u32 count = 0;
-	Result ret = AM_GetTitleCount(media, &count);
 	
-	if (ret) 
+	Result ret = AM_GetTitleCount(media, &count);
+	if (R_FAILED(ret))
 		return ret;
 	
 	u32 read = 0;
 	u64 * titleIDs = malloc(count * sizeof(u64));
 	
 	ret = AM_GetTitleList(&read, media, count, titleIDs);
-	
-	if (ret)
+	if (R_FAILED(ret))
 		return ret;
 	
 	for (unsigned int i = 0; i < read; i++) 
@@ -301,13 +294,15 @@ Result removeTitle(u64 titleID, FS_MediaType media)
 		if (titleIDs[i] == titleID) 
 		{
 			ret = AM_DeleteAppTitle(media, titleID);
+			if (R_FAILED(ret))
+				return ret;
 			break;
 		}
 	}
 	
 	free(titleIDs);
 	
-	if (ret) 
+	if (R_FAILED(ret))
 		return ret;
 	
 	return 0;
@@ -322,19 +317,27 @@ Result installCIA(const char * path, FS_MediaType media, bool update)
 	u32 read = 0x1000;
 	
 	Result ret = FSUSER_OpenFileDirectly(&fileHandle, ARCHIVE_SDMC, fsMakePath(PATH_ASCII, ""), fsMakePath(PATH_ASCII, path), FS_OPEN_READ, 0);
+	if (R_FAILED(ret))
+		return ret;
 	
 	ret = AM_GetCiaFileInfo(media, &title, fileHandle);
+	if (R_FAILED(ret))
+		return ret;
 	
 	if (!update) // As long as we aren't updating 3DShell, remove the title before installing.
 	{
 		ret = removeTitle(title.titleID, media);
-		if (ret) 
+		if (R_FAILED(ret))
 			return ret;
 	}
 	
 	ret = FSFILE_GetSize(fileHandle, &size);
+	if (R_FAILED(ret))
+		return ret;
 	
 	ret = AM_StartCiaInstall(media, &ciaHandle);
+	if (R_FAILED(ret))
+		return ret;
 	
 	u8 * cia_buffer = malloc(read);
 	
@@ -349,10 +352,11 @@ Result installCIA(const char * path, FS_MediaType media, bool update)
 	free(cia_buffer);
 	
 	ret = AM_FinishCiaInstall(ciaHandle);
+	if (R_FAILED(ret))
+		return ret;
 
 	ret = svcCloseHandle(fileHandle);
-	
-	if (ret)
+	if (R_FAILED(ret))
 		return ret;
 	
 	return 2;
@@ -371,7 +375,7 @@ int displayCIA(const char * path)
 {	
 	bool update;
 	
-	if (strncmp(fileName, "3DShell.cia", 11) == 0)
+	if (strncmp(fileName, "3DShell.cia", 12) == 0)
 		update = true;
 	
 	screen_clear(GFX_TOP, RGBA8(245, 245, 245, 255));
@@ -385,7 +389,7 @@ int displayCIA(const char * path)
 	getSizeString(size, cia.size);
 	
 	/*char requiredSpace[16];
-	getSizeString(size, cia.requiredSpace);*/
+	getSizeString(size, cia.requiredSize);*/
 	
 	int pBar = 34, xlim = 300;
 		
@@ -419,7 +423,7 @@ int displayCIA(const char * path)
 		digitalTime();
 		
 		screen_draw_texture(TEXTURE_CIA_LARGE_ICON, 15, 28);
-		screen_draw_stringf(78, 28, 0.41f, 0.41f, RGBA8(0, 0, 0, 255), "%s v%u (%016llX)", fileName, cia.version, cia.titleID);
+		screen_draw_stringf(78, 28, 0.41f, 0.41f, RGBA8(0, 0, 0, 255), "%s v%d.%d.%d (%016llX)", fileName, ((cia.version & 0xFC00) >> 10), ((cia.version & 0x03F0) >> 4), (cia.version & 0x000F), cia.titleID);
 		screen_draw_stringf(78, 44, 0.41f, 0.41f, RGBA8(0, 0, 0, 255), "%s %s by %s", platformString(cia.platform), categoryString(cia.category), cia.author);
 		screen_draw_stringf(78, 60, 0.41f, 0.41f, RGBA8(0, 0, 0, 255), "%s", size);
 		
@@ -455,7 +459,7 @@ int displayCIA(const char * path)
 		{
 			if (((touchInRect((300 - screen_get_string_width("INSTALL", 0.41f, 0.41f)), 300, 220, 240)) && (kPressed & KEY_TOUCH)) || (kPressed & KEY_A))
 			{
-				wait(100000000);
+				//wait(100000000);
 				isInstalling = 1;
 			}
 			else if (((touchInRect((300 - (screen_get_string_width("CANCEL", 0.41f, 0.41f) + screen_get_string_width("INSTALL", 0.41f, 0.41f) + 20)), ((300 - 20) - screen_get_string_width("INSTALL", 0.41f, 0.41f)), 220, 240)) && (kPressed & KEY_TOUCH))  || (kPressed & KEY_B))
@@ -468,7 +472,7 @@ int displayCIA(const char * path)
 		{
 			if (((touchInRect((300 - screen_get_string_width("OPEN", 0.41f, 0.41f)), 300, 220, 240)) && (kPressed & KEY_TOUCH)) || (kPressed & KEY_A))
 			{
-				wait(100000000);
+				//wait(100000000);
 				launchCIA(cia.titleID, cia.mediaType);
 			}
 			else if (((touchInRect((300 - (screen_get_string_width("DONE", 0.41f, 0.41f) + screen_get_string_width("OPEN", 0.41f, 0.41f) + 20)), ((300 - 20) - screen_get_string_width("OPEN", 0.41f, 0.41f)), 220, 240)) && (kPressed & KEY_TOUCH)) || (kPressed & KEY_B))
