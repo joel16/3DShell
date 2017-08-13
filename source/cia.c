@@ -83,7 +83,7 @@ AppCategory categoryFromId(u16 id)
 SMDH parseSMDH(const char * cia) 
 {
 	SMDH smdh;
-    Handle handle;
+	Handle handle;
 	
 	if (R_SUCCEEDED(fsOpen(&handle, cia, FS_OPEN_READ))) 
 	{
@@ -131,16 +131,18 @@ u8* flipBitmap24(u8 * flip_bitmap, Bitmap * result)
 Cia getCiaInfo(const char * path, FS_MediaType mediaType)
 {
 	Handle fileHandle;
-	AM_TitleEntry info;
+	AM_TitleEntry titleInfo;
 	Cia cia;
 	
-	Result ret = FSUSER_OpenFileDirectly(&fileHandle, ARCHIVE_SDMC, fsMakePath(PATH_ASCII, ""), fsMakePath(PATH_ASCII, path), FS_OPEN_READ, 0);
+	Result ret = fsOpen(&fileHandle, path, FS_OPEN_READ);
 	
-	ret = AM_GetCiaFileInfo(mediaType, &info, fileHandle);
-	//ret = AM_GetCiaRequiredSpace(&cia.requiredSpace, mediaType, fileHandle);
+	ret = AM_GetCiaFileInfo(mediaType, &titleInfo, fileHandle);
+	
+	ret = AM_GetCiaRequiredSpace(&cia.requiredSize, mediaType, fileHandle);
+	
 	ret = AM_GetCiaCoreVersion(&cia.coreVersion, fileHandle);
 	
-	if (ret)
+	if (R_FAILED(ret))
 		return cia;
 	
 	// Got the Bitmap stuff from lpp-3DS by Rinnegatamante, from here:
@@ -238,13 +240,13 @@ Cia getCiaInfo(const char * path, FS_MediaType mediaType)
 	
 	FSFILE_Close(fileHandle);
 	
-	cia.titleID = info.titleID;
-	cia.uniqueID = ((u32 *) &info.titleID)[0];
+	cia.titleID = titleInfo.titleID;
+	cia.uniqueID = ((u32 *) &titleInfo.titleID)[0];
 	cia.mediaType = mediaType;
-	cia.platform = platformFromId(((u16*) &info.titleID)[3]);
-	cia.category = categoryFromId(((u16*) &info.titleID)[2]);
-	cia.version = info.version;
-	cia.size = info.size;																																															
+	cia.platform = platformFromId(((u16*) &titleInfo.titleID)[3]);
+	cia.category = categoryFromId(((u16*) &titleInfo.titleID)[2]);
+	cia.version = titleInfo.version;
+	cia.size = titleInfo.size;																																															
 	
 	SMDH smdh = parseSMDH(path);
 	
@@ -371,7 +373,7 @@ void launchCIA(u64 titleId, FS_MediaType mediaType)
 	APT_DoApplicationJump(param, sizeof(param), hmac);
 }
 
-int displayCIA(const char * path)
+Result displayCIA(const char * path)
 {	
 	bool update;
 	
