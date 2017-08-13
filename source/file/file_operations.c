@@ -18,7 +18,7 @@
 */
 int copymode = NOTHING_TO_COPY;
 
-void createFolder(void)
+Result createFolder(void)
 {
 	char tempFolder[256];
 	strcpy(tempFolder, keyboard_3ds_get(256, "", "Enter name"));
@@ -31,12 +31,14 @@ void createFolder(void)
 	
 	strcat(path, tempFolder);
 	
-	makeDir(fsArchive, path);
+	Result ret = makeDir(fsArchive, path);
 	
 	mainMenu(CLEAR);	
+	
+	return ret;
 }
 
-int renameFile(void)
+Result renameFile(void)
 {
 	File * file = findindex(position);
 
@@ -55,14 +57,19 @@ int renameFile(void)
 	strcpy(name, keyboard_3ds_get(255, file->name, "Enter name"));
 	strcat(newPath, name);
 	
-	fsRename(fsArchive, oldPath, newPath);
+	Result ret = 0;
+	
+	if (file->isDir)
+		ret = fsRenameDir(fsArchive, oldPath, newPath);
+	else
+		ret = fsRenameFile(fsArchive, oldPath, newPath);
 	
 	mainMenu(CLEAR);
 	
-	return 0;
+	return ret;
 }
 
-int delete(void)
+Result delete(void)
 {
 	// Find file
 	File * file = findindex(position);
@@ -88,13 +95,17 @@ int delete(void)
 	// Puzzle path
 	strcpy(path, cwd);
 	strcpy(path + strlen(path), file->name);
+	
+	Result ret = 0;
 
 	// Delete folder
 	if (file->isDir)
-		return fsRmdirRecursive(fsArchive, path);
+		ret = fsRmdirRecursive(fsArchive, path);
 	// Delete file
 	else 
-		return fsRemove(fsArchive, path);
+		ret = fsRemove(fsArchive, path);
+	
+	return ret;
 }
 
 // Copy file or folder

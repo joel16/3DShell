@@ -148,9 +148,16 @@ Result fsRmdirRecursive(FS_Archive archive, const char * path)
     return R_SUCCEEDED(ret)? 0 : -1;
 }
 
-Result fsRename(FS_Archive archive, const char * old_filename, const char * new_filename)
+Result fsRenameFile(FS_Archive archive, const char * old_filename, const char * new_filename)
 {
     Result ret = FSUSER_RenameFile(archive, fsMakePath(PATH_ASCII, old_filename), archive, fsMakePath(PATH_ASCII, new_filename));
+
+    return R_SUCCEEDED(ret)? 0 : -1;
+}
+
+Result fsRenameDir(FS_Archive archive, const char * old_filename, const char * new_filename)
+{
+    Result ret = FSUSER_RenameDirectory(archive, fsMakePath(PATH_ASCII, old_filename), archive, fsMakePath(PATH_ASCII, new_filename));
 
     return R_SUCCEEDED(ret)? 0 : -1;
 }

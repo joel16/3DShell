@@ -2967,7 +2967,7 @@ FTP_DECLARE(RNTO)
 	}
 
 	/* rename the file */
-	rc = fsRename(fsArchive, rnfr, session->buffer);
+	rc = fsRenameFile(fsArchive, rnfr, session->buffer);
 	if (rc != 0)
 	{
 		ftp_send_response(session, 550, "failed to rename file/directory\r\n");

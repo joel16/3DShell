@@ -18,9 +18,9 @@ extern int copymode;
 int selected;
 char selected_file[255][255]; // 255 slots, of length 255
 
-void createFolder(void);
-int renameFile(void);
-int delete(void);
+Result createFolder(void);
+Result renameFile(void);
+Result delete(void);
 void copy(int flag);
 int copy_file(char * a, char * b);
 int copy_folder_recursive(char * a, char * b);
