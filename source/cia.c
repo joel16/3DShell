@@ -9,7 +9,7 @@
 #include "utils.h"
 #include "wifi.h"
 
-const char * platformString(AppPlatform platform) 
+static const char * platformString(AppPlatform platform) 
 {
 	switch(platform) 
 	{
@@ -26,7 +26,7 @@ const char * platformString(AppPlatform platform)
 	}	
 }
 
-const char * categoryString(AppCategory category) 
+static const char * categoryString(AppCategory category) 
 {
 	switch(category) 
 	{
@@ -47,7 +47,7 @@ const char * categoryString(AppCategory category)
 	}
 }
 
-AppPlatform platformFromId(u16 id)
+static AppPlatform platformFromId(u16 id)
 {
 	switch(id) 
 	{
@@ -64,7 +64,7 @@ AppPlatform platformFromId(u16 id)
     }
 }
 
-AppCategory categoryFromId(u16 id) 
+static AppCategory categoryFromId(u16 id) 
 {
 	if ((id & 0x8000) == 0x8000) 
 		return CATEGORY_TWL;
@@ -80,55 +80,29 @@ AppCategory categoryFromId(u16 id)
 	return CATEGORY_APP;
 }
 
-SMDH parseSMDH(const char * cia) 
+static Result parseSMDH(const char * cia, SMDH * smdh) 
 {
-	SMDH smdh;
 	Handle handle;
 	
 	if (R_SUCCEEDED(fsOpen(&handle, cia, FS_OPEN_READ))) 
 	{
 		u32 bytesRead = 0;
-		if ((R_SUCCEEDED(FSFILE_Read(handle, &bytesRead, 0, &smdh, sizeof(SMDH)))) && (bytesRead == sizeof(SMDH))) 
+		
+		if (R_SUCCEEDED(FSFILE_Read(handle, &bytesRead, 0, smdh, sizeof(SMDH))) && bytesRead == sizeof(SMDH)) 
 		{
-			if ((smdh.magic[0] == 'S') && (smdh.magic[1] == 'M') && (smdh.magic[2] == 'D') && (smdh.magic[3] == 'H')) 
+			if (smdh->magic[0] == 'S' && smdh->magic[1] == 'M' && smdh->magic[2] == 'D' && smdh->magic[3] == 'H') 
 			{
-				FSFILE_Close(handle);
-				return smdh;
+				return FSFILE_Close(handle);
 			}
 		}
-		FSFILE_Close(handle);
-	}
-	
-	return smdh;
-}
-
-void putPixel565(u8 * dst, u8 x, u8 y, u16 v)
-{
-	dst[(x+(47-y)*48)*3+0]=(v&0x1F)<<3;
-	dst[(x+(47-y)*48)*3+1]=((v>>5)&0x3F)<<2;
-	dst[(x+(47-y)*48)*3+2]=((v>>11)&0x1F)<<3;
-}
-
-u8* flipBitmap24(u8 * flip_bitmap, Bitmap * result)
-{
-	if (!result) 
-		return NULL;
-	
-	int x, y;
-	
-	for (y = 0; y < result->height; y++)
-	{
-		for (x = 0; x < result->width; x++)
-		{
-			int idx = (x+y * result->width) * 3;
-			*(u32*)(&(flip_bitmap[idx])) = ((*(u32*)&(result->pixels[(x + (result->height - y - 1) * result->width)*3]) & 0x00FFFFFF) | (*(u32*)(&(flip_bitmap[idx])) & 0xFF000000));
-		}
-	}
 		
-	return flip_bitmap;
+		return FSFILE_Close(handle);
+	}	
+	
+	return 0;
 }
 
-Cia getCiaInfo(const char * path, FS_MediaType mediaType)
+static Cia getCiaInfo(const char * path, FS_MediaType mediaType)
 {
 	Handle fileHandle;
 	AM_TitleEntry titleInfo;
@@ -145,101 +119,6 @@ Cia getCiaInfo(const char * path, FS_MediaType mediaType)
 	if (R_FAILED(ret))
 		return cia;
 	
-	// Got the Bitmap stuff from lpp-3DS by Rinnegatamante, from here:
-	char* largeIconData = (char*)malloc(0x36C0);
-	ret = AM_GetCiaIcon((void*)largeIconData, fileHandle);
-	char * buffer = (char*)&largeIconData[0x24C0];
-	u16* icon_buffer = (u16*)buffer;
-	
-	Bitmap * bitmap = (Bitmap*)malloc(sizeof(Bitmap));
-	bitmap->width = 48;
-	bitmap->height = 48;
-	bitmap->pixels = (u8*)malloc(6912);
-	bitmap->bitperpixel = 24;
-	
-	// convert RGB565 to 24 Bitmap
-	int tile_size = 16;
-	int tile_number = 1;
-	int extra_x = 0;
-	int extra_y = 0;
-	int i = 0;
-	int tile_x[16] = {0, 1, 0, 1, 2, 3, 2, 3, 0, 1, 0, 1, 2, 3, 2, 3};
-	int tile_y[16] = {0, 0, 1, 1, 0, 0, 1, 1, 2, 2, 3, 3, 2, 2, 3, 3};
-	
-	while (tile_number < 37)
-	{
-		while (i < (tile_size))
-		{
-			putPixel565(bitmap->pixels, tile_x[i-((tile_number - 1)<<6)] + extra_x, tile_y[i-((tile_number - 1)<<6)] + extra_y, icon_buffer[i]);
-			putPixel565(bitmap->pixels, 4+tile_x[i-((tile_number - 1)<<6)] + extra_x, tile_y[i-((tile_number - 1)<<6)] + extra_y, icon_buffer[i + 16]);
-			putPixel565(bitmap->pixels, tile_x[i-((tile_number - 1)<<6)] + extra_x, 4 + tile_y[i-((tile_number - 1)<<6)] + extra_y, icon_buffer[i + 32]);
-			putPixel565(bitmap->pixels, 4+tile_x[i-((tile_number - 1)<<6)] + extra_x, 4 + tile_y[i-((tile_number - 1)<<6)] + extra_y, icon_buffer[i + 48]);
-			i++;
-		}
-			
-		if (tile_number % 6 == 0)
-		{
-			extra_x = 0;
-			extra_y = extra_y + 8;
-		}
-		else 
-			extra_x = extra_x + 8;
-		
-		tile_number++;
-		tile_size = tile_size + 64;
-		i = i + 48;
-	}
-	
-	bitmap->magic = 0x4C494D47;
-	
-	u8 * real_pixels = 0;
-	u8 * flipped = (u8*)malloc(bitmap->width * bitmap->height * (bitmap->bitperpixel >> 3));
-	flipped = flipBitmap24(flipped, bitmap);
-	int length = (bitmap->width * bitmap->height) << 2;
-	
-	if (bitmap->bitperpixel == 24)
-	{		
-		real_pixels = (u8*)malloc(length);
-		int i = 0;
-		int z = 0;
-		
-		while (i < length)
-		{
-			real_pixels[i] = flipped[z+2];
-			real_pixels[i+1] = flipped[z+1];
-			real_pixels[i+2] = flipped[z];
-			real_pixels[i+3] = 0xFF;
-			i = i + 4;
-			z = z + 3;
-		}
-		
-		free(flipped);
-	} // To here.
-	
-	for(u32 x = 0; x < bitmap->width; x++) 
-	{
-		for(u32 y = 0; y < bitmap->height; y++) 
-		{
-			u32 pos = (y * bitmap->width + x) * 4;
-
-			u8 c1 = real_pixels[pos + 0];
-			u8 c2 = real_pixels[pos + 1];
-			u8 c3 = real_pixels[pos + 2];
-			u8 c4 = real_pixels[pos + 3];
-
-			real_pixels[pos + 0] = c4;
-			real_pixels[pos + 1] = c3;
-			real_pixels[pos + 2] = c2;
-			real_pixels[pos + 3] = c1;
-		}
-	}
-	
-	screen_load_texture_untiled(TEXTURE_CIA_LARGE_ICON, real_pixels, (bitmap->width *  bitmap->height * 4), bitmap->width, bitmap->height, GPU_RGBA8, true);
-	
-	free(real_pixels);
-	
-	FSFILE_Close(fileHandle);
-	
 	cia.titleID = titleInfo.titleID;
 	cia.uniqueID = ((u32 *) &titleInfo.titleID)[0];
 	cia.mediaType = mediaType;
@@ -248,35 +127,29 @@ Cia getCiaInfo(const char * path, FS_MediaType mediaType)
 	cia.version = titleInfo.version;
 	cia.size = titleInfo.size;																																															
 	
-	SMDH smdh = parseSMDH(path);
+	SMDH smdh;
 	
-	if (smdh.titles != NULL)
-	{
-		char buffer[512];
-		if (smdh.titles[language].shortDescription != NULL)
-		{
-			memset(buffer, 0, 0x41);
-			u16_to_u8(buffer, smdh.titles[language].shortDescription, 0x41);
-			strcpy(cia.title, buffer);
-		}
-		if (smdh.titles[language].longDescription != NULL)
-		{
-			memset(buffer, 0, 0x81);
-			u16_to_u8(buffer, smdh.titles[language].longDescription, 0x81);
-			strcpy(cia.description, buffer);
-		}
-		if (smdh.titles[language].publisher != NULL)
-		{
-			memset(buffer, 0, 0x41);
-			u16_to_u8(buffer, smdh.titles[language].publisher, 0x41);
-			strcpy(cia.author, buffer);
-		}
+	if (R_SUCCEEDED(parseSMDH(path, &smdh)))
+	{		
+		CFG_Language language;
+		CFGU_GetSystemLanguage(&language);
+
+		char * largeIconData = (char *)malloc(0x36C0);
+		AM_GetCiaIcon((void *)largeIconData, fileHandle);
+		char * buffer = (char *)&largeIconData[0x24C0];
+			
+		screen_load_texture_tiled(TEXTURE_CIA_LARGE_ICON, buffer, sizeof(smdh.largeIcon), 48, 48, GPU_RGB565, false);
+		
+		u16_to_u8(cia.title, smdh.titles[language].shortDescription, 0x41);
+		u16_to_u8(cia.description, smdh.titles[language].longDescription, 0x80);
+		u16_to_u8(cia.author, smdh.titles[language].publisher, 0x41);
 	}
 	
+	FSFILE_Close(fileHandle);
 	return cia;
 }
 
-Result removeTitle(u64 titleID, FS_MediaType media)
+static Result removeTitle(u64 titleID, FS_MediaType media)
 {
 	u32 count = 0;
 	
@@ -364,7 +237,7 @@ Result installCIA(const char * path, FS_MediaType media, bool update)
 	return 2;
 }
 
-void launchCIA(u64 titleId, FS_MediaType mediaType)
+static void launchCIA(u64 titleId, FS_MediaType mediaType)
 {
 	u8 param[0x300];
 	u8 hmac[0x20];
