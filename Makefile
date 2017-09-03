@@ -29,17 +29,18 @@ include $(DEVKITARM)/3ds_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
-SOURCES		:=	source source/audio source/file source/graphics source/net source/unzip
+SOURCES		:=	source source/audio source/file source/graphics source/quirc source/net source/unzip
 DATA		:=	data
-INCLUDES	:=	include include/audio include/file include/graphics include/net include/unzip
+INCLUDES	:=	include include/audio include/dr_libs include/file include/graphics include/quirc include/net include/unzip
 ROMFS		:=	romfs
 
 APP_TITLE		:= 3DShell
 APP_DESCRIPTION	:= Multi-purpose GUI File Manager
 APP_AUTHOR		:= Joel16
 
-VERSION_MAJOR := 2
+VERSION_MAJOR := 3
 VERSION_MINOR := 0
+VERSION_MICRO := 0
 
 APP_PRODUCT_CODE 	:= CTR-3D-SHEL
 APP_UNIQUE_ID 		:= 0x16200
@@ -64,7 +65,7 @@ ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
 CFLAGS	:=	-g -Wall -Werror -O2 -mword-relocations \
 			-fomit-frame-pointer -ffunction-sections \
-			-DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) \
+			-DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO) \
 			$(ARCH)
 
 CFLAGS	+=	$(INCLUDE) -DARM11 -D_3DS
@@ -74,7 +75,7 @@ CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:= -lcitro3d -lctru -lm -lz
+LIBS	:= -lmpg123 -lvorbisidec -logg -lcitro3d -lctru -lm -lz
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing

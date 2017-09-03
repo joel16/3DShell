@@ -1,9 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <stdlib.h>
-
-#include <png.h>
+#include <3ds.h>
 
 #define SDK(a,b,c,d) ((a<<24)|(b<<16)|(c<<8)|d)
 
@@ -11,25 +9,19 @@
 
 #define wait(nanoSec) svcSleepThread(nanoSec);
 
-typedef struct 
-{
-	u32 magic;
-	u8* pixels;
-	int width;
-	int height;
-	u16 bitperpixel;
-} Bitmap;
-
 void installDirectories(void);
+u64 getFreeStorage(FS_SystemMediaType mediaType);
+u64 getTotalStorage(FS_SystemMediaType mediaType);
+u64 getUsedStorage(FS_SystemMediaType mediaType);
 void getSizeString(char * string, uint64_t size);
-int touchGetX(void);
-int touchGetY(void);
-void setConfig(const char * path, bool set);
+u16 touchGetX(void);
+u16 touchGetY(void);
+Result setConfig(const char * path, bool set);
 const char * getLastNChars(char * str, int n);
 u8 getRegion(void);
 u8 getLanguage(void);
 const char * getUsername(void);
 bool isN3DS(void);
-void u16_to_u8(char* buf, const u16* input, size_t bufsize);
+void u16_to_u8(char * buf, const u16 * input, size_t bufsize);
 
 #endif

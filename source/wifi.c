@@ -1,5 +1,5 @@
 #include "common.h"
-#include "screen.h"
+#include "graphics/screen.h"
 #include "wifi.h"
 
 void drawWifiStatus(int x, int y)
@@ -12,6 +12,6 @@ void drawWifiStatus(int x, int y)
 		screen_draw_texture(TEXTURE_WIFI_2, x, y);
 	else if (osGetWifiStrength() == 3)
 		screen_draw_texture(TEXTURE_WIFI_3, x, y);
-	else 
+	else
 		screen_draw_texture(TEXTURE_WIFI_NULL, x, y);
 }

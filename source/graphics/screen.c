@@ -1,7 +1,12 @@
-/*
-	Please do NOT use this without my permission. It's one thing to keep things open source,
-	but another when a user scraps your work and slaps their name onto it.
-*/
+#include <citro3d.h>
+
+#include <errno.h>
+#include <malloc.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <wchar.h>
 
 #include "libnsbmp.h"
 #include "lodepng.h"
@@ -908,6 +913,67 @@ void screen_draw_stringf(float x, float y, float scaleX, float scaleY, u32 color
 void screen_draw_string_wrap(float x, float y, float scaleX, float scaleY, u32 color, float wrapX, const char * text) 
 {
 	screen_draw_string_internal(text, x, y, scaleX, scaleY, color, true, false, wrapX);
+}
+
+static void screen_draw_wstring_internal(const wchar_t * wtext, float x, float y, float scaleX, float scaleY, u32 color, bool wrap, bool baseline, float wrapX) 
+{
+	if (wtext == NULL)
+		return;
+	
+	u32 size = wcslen(wtext) * sizeof(wchar_t);
+	char text[size];
+	memset(text, 0, size);
+	utf32_to_utf8((uint8_t*)text, (uint32_t*)wtext, size);
+	text[size - 1] = '\0';
+	
+	screen_draw_string(x, y, scaleX, scaleY, color, text);
+}
+
+void screen_draw_wstring(float x, float y, float scaleX, float scaleY, u32 color, const wchar_t * wtext) 
+{
+	screen_draw_wstring_internal(wtext, x, y, scaleX, scaleY, color, false, false, 0);
+}
+
+static void screen_get_wstring_size_internal(float * w, float * h, const wchar_t * wtext, float scaleX, float scaleY, bool oneLine, bool wrap, float wrapWidth) 
+{
+	u32 size = wcslen(wtext) * sizeof(wchar_t);
+	char text[size];
+	memset(text, 0, size);
+	utf32_to_utf8((uint8_t*)text, (uint32_t*)wtext, size);
+	text[size - 1] = '\0';
+
+	screen_get_string_size_internal(w, h, text, scaleX, scaleY, oneLine, wrap, wrapWidth);
+}
+
+void screen_get_wstring_size(float * width, float * height, const wchar_t * text, float scaleX, float scaleY) 
+{
+	screen_get_wstring_size_internal(width, height, text, scaleX, scaleY, false, false, 0);
+}
+
+void screen_draw_wstringf(float x, float y, float scaleX, float scaleY, u32 color, const wchar_t * text, ...) 
+{
+	wchar_t buffer[256];
+	va_list args;
+	va_start(args, text);
+	vswprintf(buffer, 256, text, args);
+	screen_draw_wstring_internal(buffer, x, y, scaleX, scaleY, color, false, false, 0);
+	va_end(args);
+}
+
+float screen_get_wstring_width(const wchar_t * text, float scaleX, float scaleY)
+{
+	float width = 0.0;
+	screen_get_wstring_size(&width, NULL, text, scaleX, scaleY);
+	
+	return width;
+}
+
+float screen_get_wstring_height(const wchar_t * text, float scaleX, float scaleY)
+{
+	float height = 0.0;
+	screen_get_wstring_size(NULL, &height, text, scaleX, scaleY);
+	
+	return height;
 }
 
 static void * screen_pool_memalign(u32 size, u32 alignment)

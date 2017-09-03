@@ -23,8 +23,8 @@ Result renameFile(void);
 Result delete(void);
 void copy(int flag);
 int copy_file(char * a, char * b);
-int copy_folder_recursive(char * a, char * b);
-int paste(void);
-void saveLastDirectory(void);
+Result copy_folder_recursive(char * a, char * b);
+Result paste(void);
+Result saveLastDirectory(void);
 
 #endif

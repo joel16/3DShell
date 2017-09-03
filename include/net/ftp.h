@@ -1,4 +1,5 @@
-#pragma once
+#ifndef FTP_H
+#define FTP_H
 
 /*! Loop status */
 typedef enum
@@ -12,3 +13,5 @@ typedef enum
 int ftp_init(void);
 void ftp_loop(void);
 void ftp_exit(void);
+
+#endif

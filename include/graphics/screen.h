@@ -7,13 +7,6 @@
 #define SCREEN_H
 
 #include <3ds.h>
-#include <citro3d.h>
-
-#include <errno.h>
-#include <malloc.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 #define TOP_SCREEN_WIDTH			400
 #define BOTTOM_SCREEN_WIDTH			320
@@ -54,6 +47,11 @@ float screen_get_string_height(const char * text, float scaleX, float scaleY);
 void screen_draw_string(float x, float y, float scaleX, float scaleY, u32 color, const char * text);
 void screen_draw_stringf(float x, float y, float scaleX, float scaleY, u32 color, const char * text, ...);
 void screen_draw_string_wrap(float x, float y, float scaleX, float scaleY, u32 color, float wrapX, const char * text);
+float screen_get_wstring_width(const wchar_t * text, float scaleX, float scaleY);
+void screen_get_wstring_size(float * width, float * height, const wchar_t * text, float scaleX, float scaleY);
+float screen_get_wstring_height(const wchar_t * text, float scaleX, float scaleY);
+void screen_draw_wstring(float x, float y, float scaleX, float scaleY, u32 color, const wchar_t * wtext);
+void screen_draw_wstringf(float x, float y, float scaleX, float scaleY, u32 color, const wchar_t * text, ...);
 void screen_draw_rect(float x, float y, float width, float height, u32 color);
 
 #endif

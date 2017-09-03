@@ -1,21 +1,28 @@
 #include "mcu.h"
 
+static Handle mcuHandle;
+
 Result mcuInit(void)
 {
-    return srvGetServiceHandle(&mcuhwcHandle, "mcu::HWC");
+    return srvGetServiceHandle(&mcuHandle, "mcu::HWC");
 }
 
 Result mcuExit(void)
 {
-    return svcCloseHandle(mcuhwcHandle);
+    return svcCloseHandle(mcuHandle);
 }
 
-Result mcuGetBatteryLevel(u8* out)
+Result MCU_GetBatteryLevel(u8 * out)
 {
-    u32* ipc = getThreadCommandBuffer();
-    ipc[0] = 0x50000;
-    Result ret = svcSendSyncRequest(mcuhwcHandle);
-    if(ret < 0) return ret;
-	*out = ipc[2];
-    return ipc[1];
+	Result ret = 0;
+	u32 * cmdbuf = getThreadCommandBuffer();
+
+	cmdbuf[0] = IPC_MakeHeader(0x05, 0, 0); // 0x00050000
+
+	if (R_FAILED(ret = svcSendSyncRequest(mcuHandle)))
+		return ret;
+
+	*out = cmdbuf[2];
+
+	return cmdbuf[1];
 }

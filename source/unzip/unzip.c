@@ -44,7 +44,7 @@ extern "C" {
 #include <malloc.h>
 #include <sys/stat.h>
 
-#include "unzip.h"
+#include "unzip/unzip.h"
 
 /******************************************************************************
  ** UnZip *********************************************************************
@@ -304,7 +304,7 @@ static unsigned long ZipLocateCentralDir(FILE *file)
 		{
 			break;
 		}
-			
+
 
 		if(fread(buf, (unsigned int)ureadsize, 1, file) != 1)
 		{
@@ -318,12 +318,12 @@ static unsigned long ZipLocateCentralDir(FILE *file)
 				uposfound = ureadpos + i;
 				break;
 			}
-		}	
+		}
 
 		if (uposfound != 0)
 		{
 			break;
-		}	
+		}
 	}
 
 	FreePatch(buf);

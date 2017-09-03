@@ -21,8 +21,8 @@ typedef struct
 	unsigned int error;
 } FSFILE;
 
-void openArchive(FS_ArchiveID id);
-void closeArchive(void);
+Result openArchive(FS_Archive * archive, FS_ArchiveID id);
+Result closeArchive(FS_Archive archive);
 Result makeDir(FS_Archive archive, const char * path);
 bool fileExists(FS_Archive archive, const char * path);
 bool dirExists(FS_Archive archive, const char * path);
@@ -34,7 +34,6 @@ Result fsRmdirRecursive(FS_Archive archive, const char * path);
 Result fsRenameFile(FS_Archive archive, const char * old_filename, const char * new_filename);
 Result fsRenameDir(FS_Archive archive, const char * old_filename, const char * new_filename);
 Result fsOpen(Handle * handle, const char * path, u32 flags);
-Result fsClose(Handle filehandle);
 Result writeFile(const char * path, const char * buf);
 
 #endif

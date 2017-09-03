@@ -3,10 +3,8 @@
 
 #include <3ds.h>
 
-Handle mcuhwcHandle;
-
 Result mcuInit(void);
 Result mcuExit(void);
-Result mcuGetBatteryLevel(u8* out);
+Result MCU_GetBatteryLevel(u8 * out);
 
 #endif

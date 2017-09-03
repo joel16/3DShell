@@ -1,4 +1,4 @@
-#include "net.h"
+#include "net/net.h"
 
 Result downloadFile(const char * url, const char * path)
 {
