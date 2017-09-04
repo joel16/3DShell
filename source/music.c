@@ -133,8 +133,8 @@ void musicPlayer(char * path)
 		screen_select(GFX_TOP);
 		screen_draw_texture(TEXTURE_MUSIC_TOP_BG, 0, 0);
 
-		drawWifiStatus(270, 2);
-		drawBatteryStatus(295, 2);
+		drawWifiStatus();
+		drawBatteryStatus();
 		digitalTime();
 
 		screen_draw_stringf(5, 25, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s", fileName);

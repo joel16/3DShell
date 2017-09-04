@@ -293,8 +293,8 @@ Result displayCIA(const char * path)
 		
 		screen_draw_rect(0, 0, 400, 16, RGBA8(117, 117, 117, 255));
 		
-		drawWifiStatus(270, 2);
-		drawBatteryStatus(295, 2);
+		drawWifiStatus();
+		drawBatteryStatus();
 		digitalTime();
 		
 		screen_draw_texture(TEXTURE_CIA_LARGE_ICON, 15, 28);

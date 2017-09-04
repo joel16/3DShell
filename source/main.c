@@ -499,8 +499,6 @@ void mainMenu(int clearindex)
 			// Position Decrement
 			if (kPressed & KEY_DUP)
 			{
-				wait(100000000);
-
 				// Decrease Position
 				if (position > 0)
 					position--;
@@ -515,8 +513,6 @@ void mainMenu(int clearindex)
 			// Position Increment
 			else if (kPressed & KEY_DDOWN)
 			{
-				wait(100000000);
-
 				// Increase Position
 				if (position < (fileCount - 1))
 					position++;
@@ -530,7 +526,7 @@ void mainMenu(int clearindex)
 
 			if (kHeld & KEY_CPAD_UP)
 			{
-				wait(66666666);
+				wait(60000000);
 
 				if (position > 0)
 					position--;
@@ -542,7 +538,7 @@ void mainMenu(int clearindex)
 
 			else if (kHeld & KEY_CPAD_DOWN)
 			{
-				wait(66666666);
+				wait(60000000);
 
 				if (position < (fileCount - 1))
 					position++;
@@ -554,7 +550,7 @@ void mainMenu(int clearindex)
 
 			else if (kPressed & KEY_A)
 			{
-				wait(66666666);
+				wait(60000000);
 
 				if (IF_THEME)
 				{
@@ -598,7 +594,7 @@ void mainMenu(int clearindex)
 
 			else if ((strcmp(cwd, ROOT_PATH) != 0) && (kPressed & KEY_B))
 			{
-				wait(66666666);
+				wait(60000000);
 
 				if (IF_THEME)
 				{

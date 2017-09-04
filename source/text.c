@@ -35,8 +35,8 @@ int displayText(char * path)
 
 		//sf2d_draw_texture(textView, 0, 0);
 
-		drawWifiStatus(270, 2);
-		drawBatteryStatus(295, 2);
+		drawWifiStatus();
+		drawBatteryStatus();
 		digitalTime();
 
 		//sftd_draw_textf(font, 40, 27, RGBA8(251, 251, 251, 255), 11, "%s", fileName);

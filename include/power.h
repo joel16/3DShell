@@ -11,6 +11,6 @@
 #define TEXTURE_BATTERY_100 42
 #define TEXTURE_BATTERY_CHARGE 43
 
-void drawBatteryStatus(int x, int y);
+void drawBatteryStatus(void);
 
 #endif

@@ -7,6 +7,6 @@
 #define TEXTURE_WIFI_2 47
 #define TEXTURE_WIFI_3 48
 
-void drawWifiStatus(int x, int y);
+void drawWifiStatus(void);
 
 #endif

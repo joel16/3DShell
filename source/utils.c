@@ -144,6 +144,7 @@ u16 touchGetX(void)
 {
 	touchPosition pos;
 	hidTouchRead(&pos);
+	
 	return pos.px;
 }
 
@@ -151,6 +152,7 @@ u16 touchGetY(void)
 {
 	touchPosition pos;
 	hidTouchRead(&pos);
+	
 	return pos.py;
 }
 
@@ -165,7 +167,9 @@ Result setConfig(const char * path, bool set) // using individual txt files for 
 const char * getLastNChars(char * str, int n)
 {
 	int len = strlen(str);
-	const char *last_n = &str[len - n];
+	
+	const char * last_n = &str[len - n];
+	
 	return last_n;
 }
 
@@ -192,12 +196,12 @@ u8 getLanguage(void)
 const char * getUsername(void)
 {
 	u8 data[0x1C];
-	static wchar_t whcar_username[0x1C];
+	static wchar_t whcar_username[0x13];
 	char * username = (char *)malloc(0x1C);
 
 	if (R_SUCCEEDED(CFGU_GetConfigInfoBlk2(0x1C, 0x000A0000, data)))
 	{
-		for (int i = 0; i < 0x1C; i++)
+		for (int i = 0; i < 0x13; i++)
 			whcar_username[i] = (wchar_t)((u16 *)data)[i];
 	}
 
