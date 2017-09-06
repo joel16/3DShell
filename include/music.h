@@ -12,7 +12,6 @@ enum file_types
 	FILE_TYPE_WAV,
 	FILE_TYPE_FLAC,
 	FILE_TYPE_VORBIS,
-	FILE_TYPE_OPUS,
 	FILE_TYPE_MP3
 };
 
@@ -25,14 +24,6 @@ struct decoder_fn
 	uint64_t (* decode)(void*);
 	void (* exit)(void);
 };
-
-/**
- * Obtains audio file type. Lifted from ctrmus with permission.
- *
- * \param	file	File location.
- * \return			file_types enum or 0 on unsupported file or error.
- */
-//static enum file_types getMusicFileType(const char *file);
 
 /**
  * Play an audio file.

@@ -22,15 +22,14 @@ struct audio
 	LightEvent stopEvent;
 };
 
-enum channel
+enum channel_e
 {
 	BGM = 0,
 	SFX
 };
 
-bool audio_isPlaying(struct audio * audio);
-bool audio_isPaused(struct audio * audio);
-bool audio_togglePlayback(struct audio * audio);
-void audio_stop(struct audio * audio);
+bool audio_isPlaying(enum channel_e);
+bool audio_isPaused(enum channel_e);
+bool audio_togglePlayback(enum channel_e);
 
 #endif

@@ -1,10 +1,8 @@
 #include <3ds.h>
 #include <stdio.h>
 
+#include "audio.h"
 #include "audio/flac.h"
-#include "audio/mp3.h"
-#include "audio/ogg.h"
-#include "audio/opus.h"
 #include "audio/vorbis.h"
 #include "clock.h"
 #include "common.h"
@@ -15,7 +13,15 @@
 #include "utils.h"
 #include "wifi.h"
 
-static struct audio * music;
+static volatile bool stop = true;
+
+/**
+ * Stops current playback. Playback thread should exit as a result.
+ */
+static void stopPlayback(void)
+{
+	stop = true;
+}
 
 /**
  * Obtains audio file type. Lifted from ctrmus with permission.
@@ -61,9 +67,7 @@ static enum file_types getMusicFileType(const char *file)
 
 		// "OggS"
 		case 0x5367674F:
-			if(isOpus(file) == 0)
-				file_type = FILE_TYPE_OPUS;
-			else if(isFlac(file) == 0)
+			if(isFlac(file) == 0)
 				file_type = FILE_TYPE_FLAC;
 			else if(isVorbis(file) == 0)
 				file_type = FILE_TYPE_VORBIS;
@@ -89,46 +93,172 @@ err:
 }
 
 /**
+ * Should only be called from a new thread only, and have only one playback
+ * thread at time. This function has not been written for more than one
+ * playback thread in mind.
+ *
+ * \param	pathIn	File location.
+ */
+void playFile(void* pathIn)
+{
+	struct decoder_fn decoder;
+	const char*		file = pathIn;
+	int16_t*		buffer1 = NULL;
+	int16_t*		buffer2 = NULL;
+	ndspWaveBuf		waveBuf[2];
+	bool			lastbuf = false;
+	int				ret = -1;
+
+	/* Reset previous stop command */
+	stop = false;
+
+	switch(getMusicFileType(file))
+	{
+#if 0
+		case FILE_TYPE_WAV:
+			setWav(&decoder);
+			break;
+#endif
+
+		case FILE_TYPE_FLAC:
+			setFlac(&decoder);
+			break;
+
+#if 0
+		case FILE_TYPE_OPUS:
+			setOpus(&decoder);
+			break;
+
+		case FILE_TYPE_MP3:
+			setMp3(&decoder);
+			break;
+
+		case FILE_TYPE_VORBIS:
+			setVorbis(&decoder);
+			break;
+#endif
+		default:
+			goto out;
+	}
+
+	if((ret = (*decoder.init)(file)) != 0)
+		goto out;
+
+	if((*decoder.channels)() > 2 || (*decoder.channels)() < 1)
+		goto out;
+
+	buffer1 = linearAlloc(decoder.buffSize * sizeof(int16_t));
+	buffer2 = linearAlloc(decoder.buffSize * sizeof(int16_t));
+
+	ndspChnReset(SFX);
+	ndspChnWaveBufClear(SFX);
+	ndspSetOutputMode(NDSP_OUTPUT_STEREO);
+	ndspChnSetInterp(SFX, NDSP_INTERP_POLYPHASE);
+	ndspChnSetRate(SFX, (*decoder.rate)());
+	ndspChnSetFormat(SFX,
+			(*decoder.channels)() == 2 ? NDSP_FORMAT_STEREO_PCM16 :
+			NDSP_FORMAT_MONO_PCM16);
+
+	memset(waveBuf, 0, sizeof(waveBuf));
+	waveBuf[0].nsamples = (*decoder.decode)(&buffer1[0]) / (*decoder.channels)();
+	waveBuf[0].data_vaddr = &buffer1[0];
+	ndspChnWaveBufAdd(SFX, &waveBuf[0]);
+
+	waveBuf[1].nsamples = (*decoder.decode)(&buffer2[0]) / (*decoder.channels)();
+	waveBuf[1].data_vaddr = &buffer2[0];
+	ndspChnWaveBufAdd(SFX, &waveBuf[1]);
+
+	/**
+	 * There may be a chance that the music has not started by the time we get
+	 * to the while loop. So we ensure that music has started here.
+	 */
+	while(ndspChnIsPlaying(SFX) == false);
+
+	while(stop == false)
+	{
+		svcSleepThread(100 * 1000);
+
+		/* When the last buffer has finished playing, break. */
+		if(lastbuf == true && waveBuf[0].status == NDSP_WBUF_DONE &&
+				waveBuf[1].status == NDSP_WBUF_DONE)
+			break;
+
+		if(ndspChnIsPaused(SFX) == true || lastbuf == true)
+			continue;
+
+		if(waveBuf[0].status == NDSP_WBUF_DONE)
+		{
+			size_t read = (*decoder.decode)(&buffer1[0]);
+
+			if(read <= 0)
+			{
+				lastbuf = true;
+				continue;
+			}
+			else if(read < decoder.buffSize)
+				waveBuf[0].nsamples = read / (*decoder.channels)();
+
+			ndspChnWaveBufAdd(SFX, &waveBuf[0]);
+		}
+
+		if(waveBuf[1].status == NDSP_WBUF_DONE)
+		{
+			size_t read = (*decoder.decode)(&buffer2[0]);
+
+			if(read <= 0)
+			{
+				lastbuf = true;
+				continue;
+			}
+			else if(read < decoder.buffSize)
+				waveBuf[1].nsamples = read / (*decoder.channels)();
+
+			ndspChnWaveBufAdd(SFX, &waveBuf[1]);
+		}
+
+		DSP_FlushDataCache(buffer1, decoder.buffSize * sizeof(int16_t));
+		DSP_FlushDataCache(buffer2, decoder.buffSize * sizeof(int16_t));
+	}
+
+	(*decoder.exit)();
+
+out:
+	linearFree(buffer1);
+	linearFree(buffer2);
+
+	threadExit(0);
+	return;
+}
+
+/**
  * Play an audio file.
  *
  * \param path	File path.
  */
 void musicPlayer(char * path)
 {
-	enum file_types file_type = getMusicFileType(path);
+	s32 prio;
+	static Thread thread = NULL;
 
-	/* Unsupported file */
-	if(file_type == FILE_TYPE_ERROR)
-		return;
-
-	//TODO
-	music = mp3_create(SFX);
-
-	if (music != NULL)
-		mp3_load(path, music);
-	else
-		music->status = -1;
+	svcGetThreadPriority(&prio, CUR_THREAD_HANDLE);
+	thread = threadCreate(playFile, path, 32 * 1024, prio - 1, -2, false);
 
 	while (aptMainLoop())
 	{
 		hidScanInput();
 
+		if (kPressed & KEY_A)
+			audio_togglePlayback(SFX);
+
 		screen_begin_frame();
 		screen_select(GFX_BOTTOM);
 		screen_draw_texture(TEXTURE_MUSIC_BOTTOM_BG, 0, 0);
 
-		if (!(audio_isPaused(music)))
-		{
+		/* TODO: Check if music has stopped, and show a stop texture. */
+		if (!(audio_isPaused(SFX)))
 			screen_draw_texture(TEXTURE_MUSIC_PAUSE, ((320 - screen_get_texture_width(TEXTURE_MUSIC_PAUSE)) / 2) - 2, ((240 - screen_get_texture_height(TEXTURE_MUSIC_PAUSE)) / 2));
-			if (kPressed & KEY_A)
-				audio_togglePlayback(music);
-		}
 		else
-		{
 			screen_draw_texture(TEXTURE_MUSIC_PLAY, ((320 - screen_get_texture_width(TEXTURE_MUSIC_PLAY)) / 2) - 2, ((240 - screen_get_texture_height(TEXTURE_MUSIC_PLAY)) / 2));
-			if (kPressed & KEY_A)
-				audio_togglePlayback(music);
-		}
 
 		screen_select(GFX_TOP);
 		screen_draw_texture(TEXTURE_MUSIC_TOP_BG, 0, 0);
@@ -137,13 +267,13 @@ void musicPlayer(char * path)
 		drawBatteryStatus();
 		digitalTime();
 
-		screen_draw_stringf(5, 25, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s", fileName);
+		screen_draw_stringf(5, 25, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s", path);
 
 		screen_end_frame();
 
 		if (kPressed & KEY_B)
 		{
-			// wait(100000000);
+			stopPlayback();
 			break;
 		}
 
@@ -151,5 +281,8 @@ void musicPlayer(char * path)
 			captureScreenshot();
 	}
 
-	audio_stop(music);
+	threadJoin(thread, U64_MAX);
+	threadFree(thread);
+
+	return;
 }
