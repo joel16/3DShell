@@ -3,6 +3,7 @@
 
 #include "audio.h"
 #include "audio/flac.h"
+#include "audio/mp3.h"
 #include "audio/vorbis.h"
 #include "clock.h"
 #include "common.h"
@@ -132,11 +133,11 @@ static void playFile(void* pathIn)
 			setFlac(&decoder);
 			break;
 
-#if 0
 		case FILE_TYPE_MP3:
 			setMp3(&decoder);
 			break;
 
+#if 0
 		case FILE_TYPE_VORBIS:
 			setVorbis(&decoder);
 			break;

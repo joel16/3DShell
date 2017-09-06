@@ -1,3 +1,4 @@
+#include <3ds.h>
 #include <string.h>
 #include <stdlib.h>
 
