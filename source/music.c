@@ -5,6 +5,7 @@
 #include "audio/flac.h"
 #include "audio/mp3.h"
 #include "audio/vorbis.h"
+#include "audio/wav.h"
 #include "clock.h"
 #include "common.h"
 #include "graphics/screen.h"
@@ -123,11 +124,9 @@ static void playFile(void* pathIn)
 
 	switch(getMusicFileType(file))
 	{
-#if 0
 		case FILE_TYPE_WAV:
 			setWav(&decoder);
 			break;
-#endif
 
 		case FILE_TYPE_FLAC:
 			setFlac(&decoder);
