@@ -26,4 +26,12 @@ Current features:
 - Minimal CIA installer
 - File's time-stamp
 - Browsing CTRNAND
+- MP3, vorbis (ogg), flac and wav playback support. (All thanks to deltabeard/MaK11-12)
+
+Credits:
+--------------------------------------------------------------------------------
+- deltabeard/MaK11-12 for sound support.
+- Steveice10 for allowing me to use his screen.c C3D code as a template to build and make  modifications on.
+- preetisketch for the banner.
+
 
