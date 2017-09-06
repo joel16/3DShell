@@ -26,6 +26,14 @@ struct decoder_fn
 };
 
 /**
+ * Obtains file type.
+ *
+ * \param	file	File location.
+ * \return			file_types enum or 0 on error and errno set.
+ */
+enum file_types getMusicFileType(const char *file);
+
+/**
  * Play an audio file.
  *
  * \param path	File path.

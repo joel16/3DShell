@@ -37,7 +37,7 @@ static bool isPlaying(void)
  * \param	file	File location.
  * \return			file_types enum or 0 on unsupported file or error.
  */
-static enum file_types getMusicFileType(const char *file)
+enum file_types getMusicFileType(const char *file)
 {
 	FILE* ftest = fopen(file, "rb");
 	uint32_t fileSig;
@@ -133,10 +133,6 @@ static void playFile(void* pathIn)
 			break;
 
 #if 0
-		case FILE_TYPE_OPUS:
-			setOpus(&decoder);
-			break;
-
 		case FILE_TYPE_MP3:
 			setMp3(&decoder);
 			break;

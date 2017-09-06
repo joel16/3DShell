@@ -11,6 +11,7 @@
 #include "language.h"
 #include "main.h"
 #include "mcu.h"
+#include "music.h"
 #include "net/net.h"
 #include "music.h"
 #include "power.h"
@@ -482,7 +483,7 @@ void openFile(void)
 	 * Using the magic number of the file to check if it's a supported audio
 	 * file.
 	 */
-	else
+	else if(getMusicFileType(path) != 0)
 		musicPlayer(path);
 }
 
