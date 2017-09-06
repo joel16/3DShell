@@ -24,6 +24,14 @@ static void stopPlayback(void)
 }
 
 /**
+ * Returns whether music is playing or paused.
+ */
+static bool isPlaying(void)
+{
+	return !stop;
+}
+
+/**
  * Obtains audio file type. Lifted from ctrmus with permission.
  *
  * \param	file	File location.
@@ -99,7 +107,7 @@ err:
  *
  * \param	pathIn	File location.
  */
-void playFile(void* pathIn)
+static void playFile(void* pathIn)
 {
 	struct decoder_fn decoder;
 	const char*		file = pathIn;
@@ -223,6 +231,7 @@ void playFile(void* pathIn)
 	(*decoder.exit)();
 
 out:
+	stopPlayback();
 	linearFree(buffer1);
 	linearFree(buffer2);
 
@@ -240,10 +249,13 @@ void musicPlayer(char * path)
 	s32 prio;
 	static Thread thread = NULL;
 
+	/* Reset previous stop command */
+	stop = false;
+
 	svcGetThreadPriority(&prio, CUR_THREAD_HANDLE);
 	thread = threadCreate(playFile, path, 32 * 1024, prio - 1, -2, false);
 
-	while (aptMainLoop())
+	while (isPlaying())
 	{
 		hidScanInput();
 
@@ -254,7 +266,6 @@ void musicPlayer(char * path)
 		screen_select(GFX_BOTTOM);
 		screen_draw_texture(TEXTURE_MUSIC_BOTTOM_BG, 0, 0);
 
-		/* TODO: Check if music has stopped, and show a stop texture. */
 		if (!(audio_isPaused(SFX)))
 			screen_draw_texture(TEXTURE_MUSIC_PAUSE, ((320 - screen_get_texture_width(TEXTURE_MUSIC_PAUSE)) / 2) - 2, ((240 - screen_get_texture_height(TEXTURE_MUSIC_PAUSE)) / 2));
 		else
