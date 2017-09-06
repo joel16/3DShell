@@ -11,7 +11,6 @@
 #include "mcu.h"
 #include "net/net.h"
 #include "music.h"
-#include "audio/ogg.h"
 #include "power.h"
 #include "graphics/screen.h"
 #include "qr_decoder.h"
@@ -286,7 +285,7 @@ void displayFTP()
 
 		u32 wifiStatus = 0;
 		ACU_GetWifiStatus(&wifiStatus);
-		
+
 		if (!(wifiStatus))
 		{
 			screen_draw_string(((320 - screen_get_string_width(lang_ftp[language][3], 0.41f, 0.41f)) / 2), 40, 0.41f, 0.41f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][3]);
@@ -295,16 +294,16 @@ void displayFTP()
 		else
 		{
 			screen_draw_string(((320 - screen_get_string_width(lang_ftp[language][0], 0.41f, 0.41f)) / 2), 40, 0.41f, 0.41f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][0]);
-			
+
 			u32 ip = gethostid();
 			sprintf(buf, "IP: %lu.%lu.%lu.%lu:5000", ip & 0xFF, (ip>>8)&0xFF, (ip>>16)&0xFF, (ip>>24)&0xFF);
-			
+
 			screen_draw_string(((320 - screen_get_string_width(buf, 0.41f, 0.41f)) / 2), 60, 0.41f, 0.41f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), buf);
 			screen_draw_string(((320 - screen_get_string_width(lang_ftp[language][1], 0.41f, 0.41f)) / 2), 80, 0.41f, 0.41f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][1]);
 		}
-		
+
 		screen_draw_string(((320 - screen_get_string_width(lang_ftp[language][2], 0.41f, 0.41f)) / 2), 100, 0.41f, 0.41f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][2]);
-		
+
 		screen_end_frame();
 	}
 
@@ -487,7 +486,7 @@ void mainMenu(int clearindex)
 			else
 				displayFiles();
 		}
-		
+
 		if (kPressed & KEY_Y) // exit
 			drawQrDec();
 

@@ -38,3 +38,10 @@ output/
 
 # Dev environment
 tags
+*.swp
+
+# 3DS executables
+3DShell.3dsx
+3DShell.bin
+3DShell.cia
+3DShell.smdh

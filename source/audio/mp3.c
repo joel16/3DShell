@@ -1,121 +1,119 @@
+/* Obtained from ctrmus source with permission. */
+
+#include <mpg123.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "audio/mp3.h"
+#include "music.h"
 
-static uint32_t rate;
-static uint8_t channels;
+static size_t*			buffSize;
+static mpg123_handle	*mh = NULL;
+static uint32_t			rate;
+static uint8_t			channels;
 
-void mp3_thread(void * data);
-
-struct audio * mp3_create(enum channel chan)
+/**
+ * Set decoder parameters for MP3.
+ *
+ * \param	decoder Structure to store parameters.
+ */
+void setMp3(struct decoder_fn* decoder)
 {
-	struct audio * new_audio = (struct audio *)malloc(sizeof(struct audio));
-
-	if (new_audio == NULL)
-		return NULL;
-
-	new_audio->block_pos = 0;
-	new_audio->block = false;
-	new_audio->channel = chan;
-
-	memset(&(new_audio->waveBuf[0]), 0, sizeof(ndspWaveBuf));
-	memset(&(new_audio->waveBuf[1]), 0, sizeof(ndspWaveBuf));
-
-	memset(new_audio->mix, 0, sizeof(new_audio->mix));
-	new_audio->mix[0] =
-	new_audio->mix[1] = 1.0;
-
-	ndspChnSetInterp(new_audio->channel, NDSP_INTERP_LINEAR);
-	ndspChnSetRate(new_audio->channel, 44100);
-	ndspChnSetFormat(new_audio->channel, NDSP_FORMAT_STEREO_PCM16);
-	ndspChnSetMix(new_audio->channel, new_audio->mix);
-
-	return new_audio;
+	decoder->init = &initMp3;
+	decoder->rate = &rateMp3;
+	decoder->channels = &channelMp3;
+	/*
+	 * buffSize changes depending on input file. So we set buffSize later when
+	 * decoder is initialised.
+	 */
+	buffSize = &(decoder->buffSize);
+	decoder->decode = &decodeMp3;
+	decoder->exit = &exitMp3;
 }
 
-void mp3_load(const char * name, struct audio * audio)
+/**
+ * Initialise MP3 decoder.
+ *
+ * \param	file	Location of MP3 file to play.
+ * \return			0 on success, else failure.
+ */
+int initMp3(const char* file)
 {
 	int err = 0;
 	int encoding = 0;
 
-	if ((err = mpg123_init()) != MPG123_OK)
-		return;
+	if((err = mpg123_init()) != MPG123_OK)
+		return err;
 
-	if ((audio->mpg123 = mpg123_new(NULL, &err)) == NULL)
-		return;
-
-	audio->filename = strdup(name);
-
-	if (mpg123_open(audio->mpg123, name) != MPG123_OK || mpg123_getformat(audio->mpg123, (long *) &rate, (int *) &audio->channel, &encoding) != MPG123_OK)
-		return;
-
-	mpg123_format_none(audio->mpg123);
-	mpg123_format(audio->mpg123, rate, channels, encoding);
-
-	const unsigned long sample_size = 4;
-	const unsigned long buffer_size = mpg123_outblock(audio->mpg123) * 16;
-	const unsigned long num_samples = (buffer_size / sample_size);
-
-	audio->waveBuf[0].nsamples =
-	audio->waveBuf[1].nsamples = num_samples;
-
-	audio->waveBuf[0].status =
-	audio->waveBuf[1].status = NDSP_WBUF_DONE;
-
-	audio->waveBuf[0].data_vaddr = linearAlloc(buffer_size);
-	audio->waveBuf[1].data_vaddr = linearAlloc(buffer_size);
-
-	LightEvent_Init(&audio->stopEvent, RESET_ONESHOT);
-	audio->thread = threadCreate(mp3_thread, audio, 0x1000, 0x3F, -2, false);
-}
-
-void mp3_loop(struct audio * audio)
-{
-	// if (mus_failure <= 0) return;
-	size_t done = 0;
-	long size = audio->waveBuf[audio->block].nsamples * 4 - audio->block_pos;
-
-	if (audio->waveBuf[audio->block].status == NDSP_WBUF_DONE)
+	if((mh = mpg123_new(NULL, &err)) == NULL)
 	{
-		read:
-		//audio->status = ov_read(&audio->vf, (char*)audio->waveBuf[audio->block].data_vaddr + audio->block_pos, size, &audio->section);
-		audio->status = mpg123_read(audio->mpg123, (unsigned char *)audio->waveBuf[audio->block].data_vaddr + audio->block_pos, size, &done);
-
-		if (audio->status <= 0)
-		{
-			mpg123_close(audio->mpg123);
-
-			if (audio->status < 0)
-				ndspChnReset(audio->channel);
-			else
-			{
-				// Clarity? Forget that, I don't want to make an new variable. >_<
-				audio->status = mpg123_open(audio->mpg123, audio->filename);
-				goto read; // TODO: Better way to do this?
-			}
-
-		}
-		else
-		{
-			audio->block_pos += audio->status;
-			if (audio->status == size)
-			{
-				audio->block_pos = 0;
-				ndspChnWaveBufAdd(audio->channel, &audio->waveBuf[audio->block]);
-				audio->block = !audio->block;
-			}
-		}
+		//printf("Error: %s\n", mpg123_plain_strerror(err));
+		return err;
 	}
+
+	if(mpg123_open(mh, file) != MPG123_OK ||
+			mpg123_getformat(mh, (long *) &rate, (int *) &channels, &encoding) != MPG123_OK)
+	{
+		//printf("Trouble with mpg123: %s\n", mpg123_strerror(mh));
+		return -1;
+	}
+
+	/*
+	 * Ensure that this output format will not change (it might, when we allow
+	 * it).
+	 */
+	mpg123_format_none(mh);
+	mpg123_format(mh, rate, channels, encoding);
+
+	/*
+	 * Buffer could be almost any size here, mpg123_outblock() is just some
+	 * recommendation. The size should be a multiple of the PCM frame size.
+	 */
+	*buffSize = mpg123_outblock(mh) * 16;
+
+	return 0;
 }
 
-void mp3_thread(void * data)
+/**
+ * Get sampling rate of MP3 file.
+ *
+ * \return	Sampling rate.
+ */
+uint32_t rateMp3(void)
 {
-	struct audio * audio = (struct audio *)data;
+	return rate;
+}
 
-	while (!(LightEvent_TryWait(&audio->stopEvent)))
-		mp3_loop(audio);
+/**
+ * Get number of channels of MP3 file.
+ *
+ * \return	Number of channels for opened file.
+ */
+uint8_t channelMp3(void)
+{
+	return channels;
+}
 
-	LightEvent_Clear(&audio->stopEvent);
+/**
+ * Decode part of open MP3 file.
+ *
+ * \param buffer	Decoded output.
+ * \return			Samples read for each channel.
+ */
+uint64_t decodeMp3(void* buffer)
+{
+	size_t done = 0;
+	mpg123_read(mh, buffer, *buffSize, &done);
+	return done / (sizeof(int16_t));
+}
+
+/**
+ * Free MP3 decoder.
+ */
+void exitMp3(void)
+{
+	mpg123_close(mh);
+	mpg123_delete(mh);
+	mpg123_exit();
 }
