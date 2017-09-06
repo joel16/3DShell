@@ -137,11 +137,10 @@ static void playFile(void* pathIn)
 			setMp3(&decoder);
 			break;
 
-#if 0
 		case FILE_TYPE_VORBIS:
 			setVorbis(&decoder);
 			break;
-#endif
+
 		default:
 			goto out;
 	}
