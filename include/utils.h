@@ -7,7 +7,7 @@
 
 #define touchInRect(x1, x2, y1, y2) ((touchGetX() >= (x1) && touchGetX() <= (x2)) && (touchGetY() >= (y1) && touchGetY() <= (y2)))
 
-#define wait(nanoSec) svcSleepThread(nanoSec);
+#define wait(msec) svcSleepThread(10000000 * (s64)msec)
 
 void installDirectories(void);
 u64 getFreeStorage(FS_SystemMediaType mediaType);

@@ -65,7 +65,7 @@ int displayText(char * path)
 
 		if (kPressed & KEY_B)
 		{
-			wait(100000000);
+			wait(1);
 			break;
 		}
 

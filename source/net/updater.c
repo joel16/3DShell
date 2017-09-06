@@ -39,7 +39,7 @@ void downloadUpdate(void)
 	if (R_SUCCEEDED(ret))
 	{
 		screen_draw_string(((320 - screen_get_string_width("Downloaded update", 0.41f, 0.41f)) / 2), 60, 0.41f, 0.41f, RGBA8(251, 251, 251, 255), "Downloaded update");
-		wait(100000000);
+		wait(1);
 		installUpdate();
 	}
 }
@@ -50,7 +50,7 @@ void installUpdate(void)
 
 	//installCIA("/3ds/3DShell/3DShell.cia");
 
-	wait(200000000);
+	wait(1);
 
 	mainMenu(CLEAR);
 }

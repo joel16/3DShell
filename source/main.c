@@ -335,22 +335,22 @@ void mainMenu(int clearindex)
 
 		if ((kPressed & KEY_TOUCH) && (touchInRect(0, 22, 0, 20)))
 		{
-			wait(100000000);
+			wait(1);
 			DEFAULT_STATE = STATE_HOME;
 		}
 		else if ((kPressed & KEY_TOUCH) && (touchInRect(23, 47, 0, 20)))
 		{
-			wait(100000000);
+			wait(1);
 			DEFAULT_STATE = STATE_OPTIONS;
 		}
 		else if ((kPressed & KEY_TOUCH) && (touchInRect(48, 73, 0, 20)))
 		{
-			wait(100000000);
+			wait(1);
 			DEFAULT_STATE = STATE_SETTINGS;
 		}
 		/*else if ((kPressed & KEY_TOUCH) && (touchInRect(74, 97, 0, 20)))
 		{
-			wait(100000000);
+			wait(1);
 			DEFAULT_STATE = STATE_UPDATE;
 		}
 
@@ -372,7 +372,7 @@ void mainMenu(int clearindex)
 
 		if ((kPressed & KEY_TOUCH) && (touchInRect(280, 320, 90, 112)) && (IF_SETTINGS))
 		{
-			wait(100000000);
+			wait(1);
 			if (sysProtection == false)
 			{
 				setConfig("/3ds/3DShell/sysProtection.txt", true);
@@ -387,7 +387,7 @@ void mainMenu(int clearindex)
 
 		else if ((kPressed & KEY_TOUCH) && (touchInRect(283, 303, 125, 145)) && (IF_SETTINGS))
 		{
-			wait(100000000);
+			wait(1);
 			DEFAULT_STATE = STATE_THEME;
 			strcpy(cwd, "/3ds/3DShell/themes/");
 			updateList(CLEAR);
@@ -396,7 +396,7 @@ void mainMenu(int clearindex)
 
 		else if ((kPressed & KEY_TOUCH) && (touchInRect(280, 320, 170, 192)) && (IF_SETTINGS))
 		{
-			wait(100000000);
+			wait(1);
 			if (isHiddenEnabled == false)
 			{
 				setConfig("/3ds/3DShell/isHidden.txt", true);
@@ -413,7 +413,7 @@ void mainMenu(int clearindex)
 
 		if (((kPressed & KEY_TOUCH) && (touchInRect(98, 123, 0, 20))) || (kPressed & KEY_SELECT))
 		{
-			wait(100000000);
+			wait(1);
 			DEFAULT_STATE = STATE_FTP;
 		}
 
@@ -424,7 +424,7 @@ void mainMenu(int clearindex)
 
 		/*if ((kPressed & KEY_TOUCH) && (touchInRect(124, 147, 0, 20)))
 		{
-			wait(100000000);
+			wait(1);
 			DEFAULT_STATE = STATE_DOWNLOAD;
 		}
 
@@ -445,7 +445,7 @@ void mainMenu(int clearindex)
 
 		if ((kPressed & KEY_TOUCH) && (touchInRect(148, 173, 0, 20))) // SD
 		{
-			wait(100000000);
+			wait(1);
 
 			writeFile("/3ds/3DShell/lastdir.txt", START_PATH);
 
@@ -461,7 +461,7 @@ void mainMenu(int clearindex)
 		}
 		else if ((kPressed & KEY_TOUCH) && (touchInRect(174, 199, 0, 20))) // CTR-NAND
 		{
-			wait(100000000);
+			wait(1);
 			strcpy(cwd, START_PATH);
 
 			BROWSE_STATE = STATE_NAND;
@@ -525,7 +525,7 @@ void mainMenu(int clearindex)
 
 			if (kHeld & KEY_CPAD_UP)
 			{
-				wait(60000000);
+				wait(6);
 
 				if (position > 0)
 					position--;
@@ -537,7 +537,7 @@ void mainMenu(int clearindex)
 
 			else if (kHeld & KEY_CPAD_DOWN)
 			{
-				wait(60000000);
+				wait(6);
 
 				if (position < (fileCount - 1))
 					position++;
@@ -549,7 +549,7 @@ void mainMenu(int clearindex)
 
 			else if (kPressed & KEY_A)
 			{
-				wait(60000000);
+				wait(1);
 
 				if (IF_THEME)
 				{
@@ -565,7 +565,7 @@ void mainMenu(int clearindex)
 						writeFile("/3ds/3DShell/theme.bin", theme_dir);
 						writeFile("/3ds/3DShell/colours.bin", colour_dir);
 
-						wait(1000000);
+						wait(1);
 
 						loadTheme();
 						reloadTheme();
@@ -581,7 +581,7 @@ void mainMenu(int clearindex)
 						writeFile("/3ds/3DShell/theme.bin", theme_dir);
 						writeFile("/3ds/3DShell/colours.bin", colour_dir);
 
-						wait(1000000);
+						wait(1);
 
 						loadTheme();
 						reloadTheme();
@@ -593,7 +593,7 @@ void mainMenu(int clearindex)
 
 			else if ((strcmp(cwd, ROOT_PATH) != 0) && (kPressed & KEY_B))
 			{
-				wait(60000000);
+				wait(1);
 
 				if (IF_THEME)
 				{
@@ -608,7 +608,7 @@ void mainMenu(int clearindex)
 					else
 						strcpy(cwd, START_PATH);
 
-					wait(1000000);
+					wait(1);
 
 					DEFAULT_STATE = STATE_SETTINGS;
 					updateList(CLEAR);
@@ -625,14 +625,14 @@ void mainMenu(int clearindex)
 
 			/*else if ((strcmp(cwd, ROOT_PATH) != 0) && (kPressed & KEY_X))
 			{
-				wait(100000000);
+				wait(1);
 
 				decodeQr();
 			}*/
 
 			if ((kPressed & KEY_TOUCH) && (touchInRect(37, 282, 179, 217)) && (IF_OPTIONS)) // Cancel
 			{
-				wait(100000000);
+				wait(1);
 				copyF = false;
 				cutF = false;
 				DEFAULT_STATE = STATE_HOME;
@@ -643,7 +643,7 @@ void mainMenu(int clearindex)
 				selectionX = 0;
 				selectionY = 0;
 
-				wait(100000000);
+				wait(1);
 
 				properties = true;
 				displayProperties();
@@ -654,7 +654,7 @@ void mainMenu(int clearindex)
 				selectionX = 0;
 				selectionY = 1;
 
-				wait(100000000);
+				wait(1);
 
 				createFolder();
 			}
@@ -666,7 +666,7 @@ void mainMenu(int clearindex)
 					selectionX = 0;
 					selectionY = 2;
 
-					wait(100000000);
+					wait(1);
 
 					deleteDialog = true;
 					drawDeletionDialog();
@@ -680,7 +680,7 @@ void mainMenu(int clearindex)
 					selectionX = 1;
 					selectionY = 0;
 
-					wait(100000000);
+					wait(1);
 
 					renameFile();
 				}
@@ -690,7 +690,7 @@ void mainMenu(int clearindex)
 			{
 				selectionX = 1;
 				selectionY = 1;
-				wait(100000000);
+				wait(1);
 				copy(COPY_KEEP_ON_FINISH);
 				copyF = true;
 				displayFiles();
@@ -699,7 +699,7 @@ void mainMenu(int clearindex)
 			{
 				selectionX = 0;
 				selectionY = 0;
-				wait(100000000);
+				wait(1);
 
 				if (paste() == 0)
 				{
@@ -715,7 +715,7 @@ void mainMenu(int clearindex)
 				{
 					selectionX = 1;
 					selectionY = 2;
-					wait(100000000);
+					wait(1);
 					copy(COPY_DELETE_ON_FINISH);
 					cutF = true;
 					displayFiles();
@@ -727,7 +727,7 @@ void mainMenu(int clearindex)
 				{
 					selectionX = 0;
 					selectionY = 0;
-					wait(100000000);
+					wait(1);
 
 					if (paste() == 0)
 					{

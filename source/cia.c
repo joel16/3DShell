@@ -334,12 +334,12 @@ Result displayCIA(const char * path)
 		{
 			if (((touchInRect((300 - screen_get_string_width("INSTALL", 0.41f, 0.41f)), 300, 220, 240)) && (kPressed & KEY_TOUCH)) || (kPressed & KEY_A))
 			{
-				//wait(100000000);
+				//wait(1);
 				isInstalling = 1;
 			}
 			else if (((touchInRect((300 - (screen_get_string_width("CANCEL", 0.41f, 0.41f) + screen_get_string_width("INSTALL", 0.41f, 0.41f) + 20)), ((300 - 20) - screen_get_string_width("INSTALL", 0.41f, 0.41f)), 220, 240)) && (kPressed & KEY_TOUCH))  || (kPressed & KEY_B))
 			{
-				wait(100000000);
+				wait(1);
 				break;
 			}
 		}
@@ -347,12 +347,12 @@ Result displayCIA(const char * path)
 		{
 			if (((touchInRect((300 - screen_get_string_width("OPEN", 0.41f, 0.41f)), 300, 220, 240)) && (kPressed & KEY_TOUCH)) || (kPressed & KEY_A))
 			{
-				//wait(100000000);
+				//wait(1);
 				launchCIA(cia.titleID, cia.mediaType);
 			}
 			else if (((touchInRect((300 - (screen_get_string_width("DONE", 0.41f, 0.41f) + screen_get_string_width("OPEN", 0.41f, 0.41f) + 20)), ((300 - 20) - screen_get_string_width("OPEN", 0.41f, 0.41f)), 220, 240)) && (kPressed & KEY_TOUCH)) || (kPressed & KEY_B))
 			{
-				wait(100000000);
+				wait(1);
 				break;
 			}
 		}

@@ -82,13 +82,13 @@ void displayImage(char * path)
 
 		if (kHeld & KEY_DUP) // Zoom in
 		{
-			wait(5000000);
+			wait(5);
 			if (scale < zoom_max)
 				scale += zoom_factor;
 		}
 		else if (kHeld & KEY_DDOWN) // Zoom out
 		{
-			wait(5000000);
+			wait(5);
 			if (scale > zoom_min) // Don't zoom out any further than a 1/4 of the image.
 				scale -= zoom_factor;
 		}
@@ -142,7 +142,7 @@ void displayImage(char * path)
 			}
 			else
 			{
-				wait(100000000);
+				wait(1);
 				break;
 			}
 		}

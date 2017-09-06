@@ -267,7 +267,7 @@ void displayFiles(void)
 
 		screen_draw_string(((320 - (screen_get_string_width(lang_update[language][3], 0.44f, 0.44f))) / 2), 80, 0.44f, 0.44f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_update[language][3]);
 
-		wait(300000000);
+		wait(1);
 		longjmp(exitJmp, 1);
 	}
 	else*/
