@@ -121,4 +121,6 @@ u64 readWav(void * buffer)
 void exitWav(void)
 {
 	FSFILE_Close(pWav);
+	bytesRead = 0;
+	offset = 0;
 }
