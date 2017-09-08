@@ -5,20 +5,20 @@
 
 #include "music.h"
 
-void setVorbis(struct decoder_fn* decoder);
+void setVorbis(struct decoder_fn * decoder);
 
-int initVorbis(const char* file);
+int initVorbis(const char * file);
 
-uint32_t rateVorbis(void);
+u32 rateVorbis(void);
 
-uint8_t channelVorbis(void);
+u8 channelVorbis(void);
 
-uint64_t decodeVorbis(void* buffer);
+u64 decodeVorbis(void * buffer);
 
 void exitVorbis(void);
 
-int playVorbis(const char* in);
+int playVorbis(const char * in);
 
-uint64_t fillVorbisBuffer(char* bufferOut);
+u64 fillVorbisBuffer(char * bufferOut);
 
-int isVorbis(const char* in);
+int isVorbis(const char * in);

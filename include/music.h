@@ -1,6 +1,8 @@
 #ifndef MUSIC_H
 #define MUSIC_H
 
+#include <3ds.h>
+
 #define TEXTURE_MUSIC_TOP_BG 52
 #define TEXTURE_MUSIC_BOTTOM_BG 53
 #define TEXTURE_MUSIC_PLAY 54
@@ -18,10 +20,10 @@ enum file_types
 struct decoder_fn
 {
 	int (* init)(const char* file);
-	uint32_t (* rate)(void);
-	uint8_t (* channels)(void);
+	u32 (* rate)(void);
+	u8 (* channels)(void);
 	size_t buffSize;
-	uint64_t (* decode)(void*);
+	u64 (* decode)(void*);
 	void (* exit)(void);
 };
 

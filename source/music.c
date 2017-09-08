@@ -1,4 +1,3 @@
-#include <3ds.h>
 #include <stdio.h>
 
 #include "audio.h"
@@ -8,6 +7,7 @@
 #include "audio/wav.h"
 #include "clock.h"
 #include "common.h"
+#include "fs.h"
 #include "graphics/screen.h"
 #include "music.h"
 #include "power.h"
@@ -39,29 +39,33 @@ static bool isPlaying(void)
  * \param	file	File location.
  * \return			file_types enum or 0 on unsupported file or error.
  */
-enum file_types getMusicFileType(const char *file)
+enum file_types getMusicFileType(const char * file)
 {
-	FILE* ftest = fopen(file, "rb");
-	uint32_t fileSig;
+	Handle handle;
+	
+	u32 fileSig = 0, bytesRead = 0;
+	u64 offset = 0;
+	
 	enum file_types file_type = FILE_TYPE_ERROR;
-
+	
 	/* Failure opening file */
-	if(ftest == NULL)
+	if (R_FAILED(fsOpen(&handle, file, FS_OPEN_READ))) 
 		return -1;
-
-	if(fread(&fileSig, 4, 1, ftest) == 0)
+	
+	if (R_FAILED(FSFILE_Read(handle, &bytesRead, offset, &fileSig, 4)))
 		goto err;
+	
+	offset += bytesRead;
 
 	switch(fileSig)
 	{
 		// "RIFF"
 		case 0x46464952:
-			if(fseek(ftest, 4, SEEK_CUR) != 0)
-				break;
+			offset += 4; // fseek(handle, 4, SEEK_CUR)
 
 			// "WAVE"
 			// Check required as AVI file format also uses "RIFF".
-			if(fread(&fileSig, 4, 1, ftest) == 0)
+			if (R_FAILED(FSFILE_Read(handle, &bytesRead, offset, &fileSig, 4)))
 				break;
 
 			if(fileSig != 0x45564157)
@@ -89,16 +93,14 @@ enum file_types getMusicFileType(const char *file)
 			 * MP3 without ID3 tag, ID3v1 tag is at the end of file, or MP3
 			 * with ID3 tag at the beginning  of the file.
 			 */
-			if((fileSig << 16) == 0xFBFF0000 ||
-					(fileSig << 16) == 0xFAFF0000 ||
-					(fileSig << 8) == 0x33444900)
+			if((fileSig << 16) == 0xFBFF0000 || (fileSig << 16) == 0xFAFF0000 || (fileSig << 8) == 0x33444900)
 				file_type = FILE_TYPE_MP3;
 
 			break;
 	}
 
 err:
-	fclose(ftest);
+	FSFILE_Close(handle);
 	return file_type;
 }
 
@@ -109,15 +111,15 @@ err:
  *
  * \param	pathIn	File location.
  */
-static void playFile(void* pathIn)
+static void playFile(void * pathIn)
 {
 	struct decoder_fn decoder;
-	const char*		file = pathIn;
-	int16_t*		buffer1 = NULL;
-	int16_t*		buffer2 = NULL;
-	ndspWaveBuf		waveBuf[2];
-	bool			lastbuf = false;
-	int				ret = -1;
+	const char * file = pathIn;
+	s16 * buffer1 = NULL;
+	s16 * buffer2 = NULL;
+	ndspWaveBuf waveBuf[2];
+	bool lastbuf = false;
+	Result ret = -1;
 
 	/* Reset previous stop command */
 	stop = false;
@@ -150,17 +152,15 @@ static void playFile(void* pathIn)
 	if((*decoder.channels)() > 2 || (*decoder.channels)() < 1)
 		goto out;
 
-	buffer1 = linearAlloc(decoder.buffSize * sizeof(int16_t));
-	buffer2 = linearAlloc(decoder.buffSize * sizeof(int16_t));
+	buffer1 = linearAlloc(decoder.buffSize * sizeof(s16));
+	buffer2 = linearAlloc(decoder.buffSize * sizeof(s16));
 
 	ndspChnReset(SFX);
 	ndspChnWaveBufClear(SFX);
 	ndspSetOutputMode(NDSP_OUTPUT_STEREO);
 	ndspChnSetInterp(SFX, NDSP_INTERP_POLYPHASE);
 	ndspChnSetRate(SFX, (*decoder.rate)());
-	ndspChnSetFormat(SFX,
-			(*decoder.channels)() == 2 ? NDSP_FORMAT_STEREO_PCM16 :
-			NDSP_FORMAT_MONO_PCM16);
+	ndspChnSetFormat(SFX, (*decoder.channels)() == 2 ? NDSP_FORMAT_STEREO_PCM16 : NDSP_FORMAT_MONO_PCM16);
 
 	memset(waveBuf, 0, sizeof(waveBuf));
 	waveBuf[0].nsamples = (*decoder.decode)(&buffer1[0]) / (*decoder.channels)();
@@ -182,11 +182,10 @@ static void playFile(void* pathIn)
 		svcSleepThread(100 * 1000);
 
 		/* When the last buffer has finished playing, break. */
-		if(lastbuf == true && waveBuf[0].status == NDSP_WBUF_DONE &&
-				waveBuf[1].status == NDSP_WBUF_DONE)
+		if((lastbuf == true) && (waveBuf[0].status == NDSP_WBUF_DONE) && (waveBuf[1].status == NDSP_WBUF_DONE))
 			break;
 
-		if(ndspChnIsPaused(SFX) == true || lastbuf == true)
+		if((ndspChnIsPaused(SFX) == true) || (lastbuf == true))
 			continue;
 
 		if(waveBuf[0].status == NDSP_WBUF_DONE)
@@ -219,8 +218,10 @@ static void playFile(void* pathIn)
 			ndspChnWaveBufAdd(SFX, &waveBuf[1]);
 		}
 
-		DSP_FlushDataCache(buffer1, decoder.buffSize * sizeof(int16_t));
-		DSP_FlushDataCache(buffer2, decoder.buffSize * sizeof(int16_t));
+		if (R_FAILED(DSP_FlushDataCache(buffer1, decoder.buffSize * sizeof(s16))))
+			return;
+		if (R_FAILED(DSP_FlushDataCache(buffer2, decoder.buffSize * sizeof(s16))))
+			return;
 	}
 
 	(*decoder.exit)();
@@ -249,7 +250,7 @@ void musicPlayer(char * path)
 
 	svcGetThreadPriority(&prio, CUR_THREAD_HANDLE);
 	thread = threadCreate(playFile, path, 32 * 1024, prio - 1, -2, false);
-
+	
 	while (isPlaying())
 	{
 		hidScanInput();
@@ -273,15 +274,18 @@ void musicPlayer(char * path)
 		drawBatteryStatus();
 		digitalTime();
 
-		screen_draw_stringf(5, 25, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s", path);
+		screen_draw_stringf(5, 25, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s", fileName);
 
 		screen_end_frame();
 
-		if (kPressed & KEY_B)
+		if ((kPressed & KEY_B) || ((touchInRect(114, 204, 76, 164)) && (kPressed & KEY_TOUCH)))
 		{
 			stopPlayback();
 			break;
 		}
+		
+		if (kPressed & KEY_SELECT)
+			return;
 
 		if ((kHeld & KEY_L) && (kHeld & KEY_R))
 			captureScreenshot();

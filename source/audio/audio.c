@@ -16,7 +16,6 @@ bool audio_isPaused(enum channel_e channel)
 
 bool audio_togglePlayback(enum channel_e channel)
 {
-	bool paused = ndspChnIsPaused(channel);
-	ndspChnSetPaused(channel, !paused);
-	return !paused;
+	ndspChnSetPaused(channel, !(ndspChnIsPaused(channel)));
+	return !(ndspChnIsPaused(channel));
 }

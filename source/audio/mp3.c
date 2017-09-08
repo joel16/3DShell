@@ -1,6 +1,5 @@
 /* Obtained from ctrmus source with permission. */
 
-#include <mpg123.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,17 +7,17 @@
 #include "audio/mp3.h"
 #include "music.h"
 
-static size_t*			buffSize;
-static mpg123_handle	*mh = NULL;
-static uint32_t			rate;
-static uint8_t			channels;
+static size_t * buffSize;
+static mpg123_handle * mh = NULL;
+static u32 rate;
+static u8 channels;
 
 /**
  * Set decoder parameters for MP3.
  *
  * \param	decoder Structure to store parameters.
  */
-void setMp3(struct decoder_fn* decoder)
+void setMp3(struct decoder_fn * decoder)
 {
 	decoder->init = &initMp3;
 	decoder->rate = &rateMp3;
@@ -52,8 +51,7 @@ int initMp3(const char* file)
 		return err;
 	}
 
-	if(mpg123_open(mh, file) != MPG123_OK ||
-			mpg123_getformat(mh, (long *) &rate, (int *) &channels, &encoding) != MPG123_OK)
+	if(mpg123_open(mh, file) != MPG123_OK || mpg123_getformat(mh, (long *) &rate, (int *) &channels, &encoding) != MPG123_OK)
 	{
 		//printf("Trouble with mpg123: %s\n", mpg123_strerror(mh));
 		return -1;
@@ -70,7 +68,7 @@ int initMp3(const char* file)
 	 * Buffer could be almost any size here, mpg123_outblock() is just some
 	 * recommendation. The size should be a multiple of the PCM frame size.
 	 */
-	*buffSize = mpg123_outblock(mh) * 16;
+	*buffSize = (mpg123_outblock(mh) * 16);
 
 	return 0;
 }
@@ -80,7 +78,7 @@ int initMp3(const char* file)
  *
  * \return	Sampling rate.
  */
-uint32_t rateMp3(void)
+u32 rateMp3(void)
 {
 	return rate;
 }
@@ -90,7 +88,7 @@ uint32_t rateMp3(void)
  *
  * \return	Number of channels for opened file.
  */
-uint8_t channelMp3(void)
+u8 channelMp3(void)
 {
 	return channels;
 }
@@ -101,7 +99,7 @@ uint8_t channelMp3(void)
  * \param buffer	Decoded output.
  * \return			Samples read for each channel.
  */
-uint64_t decodeMp3(void* buffer)
+u64 decodeMp3(void * buffer)
 {
 	size_t done = 0;
 	mpg123_read(mh, buffer, *buffSize, &done);

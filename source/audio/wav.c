@@ -4,20 +4,23 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "fs.h"
 #include "audio/wav.h"
 #include "music.h"
 
-static const size_t	buffSize	= 16 * 1024;
-static FILE*		pWav		= NULL;
-static char			header[45];
-static uint8_t		channels;
+static const size_t	buffSize = 16 * 1024;
+static Handle pWav;
+static char header[45];
+static u8 channels;
+static u32 bytesRead = 0;
+static u64 offset = 0;
 
 /**
  * Set decoder parameters for WAV.
  *
  * \param	decoder Structure to store parameters.
  */
-void setWav(struct decoder_fn* decoder)
+void setWav(struct decoder_fn * decoder)
 {
 	decoder->init = &initWav;
 	decoder->rate = &rateWav;
@@ -33,16 +36,16 @@ void setWav(struct decoder_fn* decoder)
  * \param	file	Location of WAV file to play.
  * \return			0 on success, else failure.
  */
-int initWav(const char* file)
+int initWav(const char * file)
 {
-	pWav = fopen(file, "rb");
-
-	if(pWav == NULL)
+	if (R_FAILED(fsOpen(&pWav, file, FS_OPEN_READ))) 
 		return -1;
-
+	
 	/* TODO: No need to read the first number of bytes */
-	if(fread(header, 1, 44, pWav) == 0)
+	if (R_FAILED(FSFILE_Read(pWav, &bytesRead, offset, header, 44)))
 		return -1;
+	
+	offset += bytesRead;
 
 	/**
 	 * http://www.topherlee.com/software/pcm-tut-wavformat.html and
@@ -59,7 +62,7 @@ int initWav(const char* file)
 
 	/* TODO: This should be moved to get file type */
 	/* Only support 16 bit PCM WAV */
-	if(((header[35]<<8) + (header[34])) != 16)
+	if (((header[35]<<8) + (header[34])) != 16)
 		return -1;
 
 	channels = (header[23]<<8) + (header[22]);
@@ -85,8 +88,7 @@ int initWav(const char* file)
  */
 uint32_t rateWav(void)
 {
-	return (header[27]<<24) + (header[26]<<16) + (header[25]<<8) +
-		(header[24]);
+	return (header[27]<<24) + (header[26]<<16) + (header[25]<<8) + (header[24]);
 }
 
 /**
@@ -94,7 +96,7 @@ uint32_t rateWav(void)
  *
  * \return	Number of channels for opened file.
  */
-uint8_t channelWav(void)
+u8 channelWav(void)
 {
 	return channels;
 }
@@ -105,9 +107,12 @@ uint8_t channelWav(void)
  * \param buffer	Output.
  * \return			Samples read for each channel.
  */
-uint64_t readWav(void* buffer)
-{
-	return fread(buffer, 1, buffSize, pWav) / sizeof(int16_t);
+u64 readWav(void * buffer)
+{	
+	FSFILE_Read(pWav, &bytesRead, offset, buffer, buffSize);
+	offset += bytesRead;
+	
+	return bytesRead / sizeof(u16);
 }
 
 /**
@@ -115,5 +120,5 @@ uint64_t readWav(void* buffer)
  */
 void exitWav(void)
 {
-	fclose(pWav);
+	FSFILE_Close(pWav);
 }

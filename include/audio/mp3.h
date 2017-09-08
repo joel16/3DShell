@@ -1,5 +1,7 @@
 /* Obtained from ctrmus source with permission. */
 
+#include <mpg123.h>
+
 #include "music.h"
 
 /**
@@ -7,7 +9,7 @@
  *
  * \param	decoder Structure to store parameters.
  */
-void setMp3(struct decoder_fn* decoder);
+void setMp3(struct decoder_fn * decoder);
 
 /**
  * Initialise MP3 decoder.
@@ -15,21 +17,21 @@ void setMp3(struct decoder_fn* decoder);
  * \param	file	Location of MP3 file to play.
  * \return			0 on success, else failure.
  */
-int initMp3(const char* file);
+int initMp3(const char * file);
 
 /**
  * Get sampling rate of MP3 file.
  *
  * \return	Sampling rate.
  */
-uint32_t rateMp3(void);
+u32 rateMp3(void);
 
 /**
  * Get number of channels of MP3 file.
  *
  * \return	Number of channels for opened file.
  */
-uint8_t channelMp3(void);
+u8 channelMp3(void);
 
 /**
  * Decode part of open MP3 file.
@@ -37,7 +39,7 @@ uint8_t channelMp3(void);
  * \param buffer	Decoded output.
  * \return			Samples read for each channel.
  */
-uint64_t decodeMp3(void* buffer);
+u64 decodeMp3(void * buffer);
 
 /**
  * Free MP3 decoder.

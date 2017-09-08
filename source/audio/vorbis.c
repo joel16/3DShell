@@ -7,17 +7,17 @@
 #include "audio/vorbis.h"
 #include "music.h"
 
-static OggVorbis_File	vorbisFile;
-static vorbis_info		*vi;
-static FILE				*f;
-static const size_t		buffSize = 8 * 4096;
+static OggVorbis_File vorbisFile;
+static vorbis_info * vi;
+static FILE * f;
+static const size_t buffSize = (8 * 4096);
 
 /**
  * Set decoder parameters for Vorbis.
  *
  * \param	decoder	Structure to store parameters.
  */
-void setVorbis(struct decoder_fn* decoder)
+void setVorbis(struct decoder_fn * decoder)
 {
 	decoder->init = &initVorbis;
 	decoder->rate = &rateVorbis;
@@ -33,17 +33,17 @@ void setVorbis(struct decoder_fn* decoder)
  * \param	file	Location of vorbis file to play.
  * \return			0 on success, else failure.
  */
-int initVorbis(const char* file)
+int initVorbis(const char * file)
 {
 	int err = -1;
 
-	if((f = fopen(file, "rb")) == NULL)
+	if ((f = fopen(file, "rb")) == NULL)
 		goto out;
 
-	if(ov_open(f, &vorbisFile, NULL, 0) < 0)
+	if (ov_open(f, &vorbisFile, NULL, 0) < 0)
 		goto out;
 
-	if((vi = ov_info(&vorbisFile, -1)) == NULL)
+	if ((vi = ov_info(&vorbisFile, -1)) == NULL)
 		goto out;
 
 	err = 0;
@@ -57,7 +57,7 @@ out:
  *
  * \return	Sampling rate.
  */
-uint32_t rateVorbis(void)
+u32 rateVorbis(void)
 {
 	return vi->rate;
 }
@@ -67,7 +67,7 @@ uint32_t rateVorbis(void)
  *
  * \return	Number of channels for opened file.
  */
-uint8_t channelVorbis(void)
+u8 channelVorbis(void)
 {
 	return vi->channels;
 }
@@ -79,7 +79,7 @@ uint8_t channelVorbis(void)
  * \return			Samples read for each channel. 0 for end of file, negative
  *					for error.
  */
-uint64_t decodeVorbis(void* buffer)
+u64 decodeVorbis(void * buffer)
 {
 	return fillVorbisBuffer(buffer);
 }
@@ -100,26 +100,21 @@ void exitVorbis(void)
  * \param bufferOut		Pointer to buffer.
  * \return				Samples read per channel.
  */
-uint64_t fillVorbisBuffer(char* bufferOut)
+u64 fillVorbisBuffer(char * bufferOut)
 {
-	uint64_t samplesRead = 0;
+	u64 samplesRead = 0;
 	int samplesToRead = buffSize;
 
 	while(samplesToRead > 0)
 	{
 		static int current_section;
-		int samplesJustRead =
-			ov_read(&vorbisFile, bufferOut,
-					samplesToRead > 4096 ? 4096	: samplesToRead,
-					&current_section);
+		
+		int samplesJustRead = ov_read(&vorbisFile, bufferOut, samplesToRead > 4096 ? 4096 : samplesToRead, &current_section);
 
-		if(samplesJustRead < 0)
+		if (samplesJustRead < 0)
 			return samplesJustRead;
-		else if(samplesJustRead == 0)
-		{
-			/* End of file reached. */
+		else if (samplesJustRead == 0) /* End of file reached. */	
 			break;
-		}
 
 		samplesRead += samplesJustRead;
 		samplesToRead -= samplesJustRead;
@@ -135,13 +130,13 @@ uint64_t fillVorbisBuffer(char* bufferOut)
  * \param in	Input file.
  * \return		0 if Vorbis file, else not or failure.
  */
-int isVorbis(const char *in)
+int isVorbis(const char * in)
 {
-	FILE *ft = fopen(in, "r");
+	FILE * ft = fopen(in, "r");
 	OggVorbis_File testvf;
 	int err;
 
-	if(ft == NULL)
+	if (ft == NULL)
 		return -1;
 
 	err = ov_test(ft, &testvf, NULL, 0);

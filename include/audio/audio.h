@@ -1,6 +1,8 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
+#include "music.h"
+
 enum channel_e
 {
 	BGM = 0,

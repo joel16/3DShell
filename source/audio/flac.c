@@ -6,7 +6,7 @@
 #include "audio/flac.h"
 #include "music.h"
 
-static drflac*		pFlac;
+static drflac * pFlac;
 static const size_t	buffSize = 16 * 1024;
 
 /**
@@ -14,7 +14,7 @@ static const size_t	buffSize = 16 * 1024;
  *
  * \param	decoder Structure to store parameters.
  */
-void setFlac(struct decoder_fn* decoder)
+void setFlac(struct decoder_fn * decoder)
 {
 	decoder->init = &initFlac;
 	decoder->rate = &rateFlac;
@@ -30,7 +30,7 @@ void setFlac(struct decoder_fn* decoder)
  * \param	file	Location of flac file to play.
  * \return			0 on success, else failure.
  */
-int initFlac(const char* file)
+int initFlac(const char * file)
 {
 	pFlac = drflac_open_file(file);
 
@@ -42,7 +42,7 @@ int initFlac(const char* file)
  *
  * \return	Sampling rate.
  */
-uint32_t rateFlac(void)
+u32 rateFlac(void)
 {
 	return pFlac->sampleRate;
 }
@@ -52,7 +52,7 @@ uint32_t rateFlac(void)
  *
  * \return	Number of channels for opened file.
  */
-uint8_t channelFlac(void)
+u8 channelFlac(void)
 {
 	return pFlac->channels;
 }
@@ -63,7 +63,7 @@ uint8_t channelFlac(void)
  * \param buffer	Decoded output.
  * \return			Samples read for each channel.
  */
-uint64_t decodeFlac(void* buffer)
+u64 decodeFlac(void * buffer)
 {
 	return drflac_read_s16(pFlac, buffSize, buffer);
 }
@@ -82,12 +82,12 @@ void exitFlac(void)
  * \param in	Input file.
  * \return		0 if Flac file, else not or failure.
  */
-int isFlac(const char* in)
+int isFlac(const char * in)
 {
 	int err = -1;
-	drflac* pFlac = drflac_open_file(in);
+	drflac * pFlac = drflac_open_file(in);
 
-	if(pFlac != NULL)
+	if (pFlac != NULL)
 		err = 0;
 
 	drflac_close(pFlac);
