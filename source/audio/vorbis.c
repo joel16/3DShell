@@ -121,7 +121,7 @@ u64 fillVorbisBuffer(char * bufferOut)
 		bufferOut += samplesJustRead;
 	}
 
-	return samplesRead / sizeof(int16_t);
+	return samplesRead / sizeof(s16);
 }
 
 /**
@@ -134,12 +134,11 @@ int isVorbis(const char * in)
 {
 	FILE * ft = fopen(in, "r");
 	OggVorbis_File testvf;
-	int err;
-
+	
 	if (ft == NULL)
 		return -1;
 
-	err = ov_test(ft, &testvf, NULL, 0);
+	int err = ov_test(ft, &testvf, NULL, 0);
 
 	ov_clear(&testvf);
 	fclose(ft);

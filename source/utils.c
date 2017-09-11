@@ -2,95 +2,82 @@
 #include "file/fs.h"
 #include "utils.h"
 
-void installDirectories(void)
+const char * configFile = 
+	"lastdir=%s\n"
+	"bgm=%d\n"
+	"systemProtection=%d\n"
+	"showHiddenFiles=%d\n"
+	"showHiddenFiles=%d\n";
+
+void loadConfig(void)
+{
+	Handle handle;
+	
+	if (!fileExists(fsArchive, "/3ds/data/3DShell/config.cfg"))
+	{
+		if (R_FAILED(fsOpen(&handle, "/3ds/data/3DShell/config.cfg", FS_OPEN_CREATE | FS_OPEN_WRITE)))
+			return;
+	
+		// set these to the following by default:
+		bgmEnable = 0;
+		sysProtection = 1;
+		isHiddenEnabled = 1;
+		
+		char * tempbuf = (char *)malloc(1024);
+		u32 size = snprintf(tempbuf, 1024, configFile, START_PATH, bgmEnable, sysProtection, isHiddenEnabled);
+		
+		FSFILE_SetSize(handle, (u64)size);
+		
+		u32 byteswritten = 0;
+		FSFILE_Write(handle, &byteswritten, 0, (u32 *)tempbuf, size, FS_WRITE_FLUSH);
+	
+		FSFILE_Close(handle);
+		free(tempbuf);
+	}
+	
+	if (R_FAILED(fsOpen(&handle, "/3ds/data/3DShell/config.cfg", FS_OPEN_READ)))
+		return;
+	
+	u64 size64 = 0;
+	u32 size = 0;
+	
+	if (R_SUCCEEDED(FSFILE_GetSize(handle, &size64)))
+		size = (u32)size64;
+	
+	char * tempbuf = (char *)malloc(size + 1);
+	u32 bytesread = 0;
+	FSFILE_Read(handle, &bytesread, 0, (u32 *)tempbuf, size);
+	tempbuf[size] = '\0';
+	
+	char tempPath[250];
+	
+	sscanf(tempbuf, configFile, tempPath, &bgmEnable, &sysProtection, &isHiddenEnabled);
+	
+	if (dirExists(fsArchive, tempPath)) // Incase a directory previously visited had been deleted, set start path to sdmc:/ to avoid errors.
+		strcpy(cwd, tempPath);
+	else
+		strcpy(cwd, START_PATH);
+	
+	FSFILE_Close(handle);
+	free(tempbuf);
+}
+
+void makeDirectories(void)
 {
 	if (BROWSE_STATE != STATE_NAND)
 	{
 		if (!(dirExists(fsArchive, "/3ds/")))
 			makeDir(fsArchive, "/3ds");
-		if (!(dirExists(fsArchive, "/3ds/3DShell/")))
-			makeDir(fsArchive, "/3ds/3DShell");
-		if (!(dirExists(fsArchive, "/3ds/3DShell/themes/")))
-			makeDir(fsArchive, "/3ds/3DShell/themes");
-		if (!(dirExists(fsArchive, "/3ds/3DShell/themes/default/")))
-			makeDir(fsArchive, "/3ds/3DShell/themes/default");
-		if (!(dirExists(fsArchive, "/3ds/3DShell/colours/")))
-			makeDir(fsArchive, "/3ds/3DShell/colours");
-
-		if (fileExists(fsArchive, "/3ds/3DShell/lastdir.txt"))
-		{
-			char buf[250];
-
-			FILE * read = fopen("/3ds/3DShell/lastdir.txt", "r");
-			fscanf(read, "%s", buf);
-			fclose(read);
-
-			if (dirExists(fsArchive, buf)) // Incase a directory previously visited had been deleted, set start path to sdmc:/ to avoid errors.
-				strcpy(cwd, buf);
-			else
-				strcpy(cwd, START_PATH);
-		}
-		else
-		{
-			writeFile("/3ds/3DShell/lastdir.txt", START_PATH);
-			strcpy(cwd, START_PATH); // Set Start Path to "sdmc:/" if lastDir.txt hasn't been created.
-		}
-
-		/*if (!fileExists(fsArchive, "/3ds/3DShell/bgm.txt"))
-		{
-			setBgm(true);
-		}
-		else
-		{
-			int initBgm = 0;
-
-			FILE * read = fopen("/3ds/3DShell/bgm.txt", "r");
-			fscanf(read, "%d", &initBgm);
-			fclose(read);
-
-			if (initBgm == 0)
-				bgmEnable = false;
-			else
-				bgmEnable = true;
-		}*/
-
-		if (!fileExists(fsArchive, "/3ds/3DShell/sysProtection.txt")) // Initially set it to true
-		{
-			setConfig("/3ds/3DShell/sysProtection.txt", true);
-			sysProtection = true;
-		}
-		else
-		{
-			int info = 0;
-
-			FILE * read = fopen("/3ds/3DShell/sysProtection.txt", "r");
-			fscanf(read, "%d", &info);
-			fclose(read);
-
-			if (info)
-				sysProtection = true;
-			else
-				sysProtection = false;
-		}
-
-		if (!fileExists(fsArchive, "/3ds/3DShell/isHidden.txt")) // Initially set it to true
-		{
-			setConfig("/3ds/3DShell/isHidden.txt", true);
-			isHiddenEnabled = true;
-		}
-		else
-		{
-			int info = 0;
-
-			FILE * read = fopen("/3ds/3DShell/isHidden.txt", "r");
-			fscanf(read, "%d", &info);
-			fclose(read);
-
-			if (info)
-				isHiddenEnabled = true;
-			else
-				isHiddenEnabled = false;
-		}
+		if (!(dirExists(fsArchive, "/3ds/data/")))
+			makeDir(fsArchive, "/3ds/data");
+		if (!(dirExists(fsArchive, "/3ds/data/3DShell/")))
+			makeDir(fsArchive, "/3ds/data/3DShell");
+		if (!(dirExists(fsArchive, "/3ds/data/3DShell/themes/")))
+			makeDir(fsArchive, "/3ds/data/3DShell/themes");
+		if (!(dirExists(fsArchive, "/3ds/data/3DShell/themes/default/")))
+			makeDir(fsArchive, "/3ds/data/3DShell/themes/default");
+		if (!(dirExists(fsArchive, "/3ds/data/3DShell/colours/")))
+			makeDir(fsArchive, "/3ds/data/3DShell/colours");
 	}
 }
 

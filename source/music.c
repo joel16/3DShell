@@ -170,7 +170,7 @@ static void playFile(void * pathIn)
 	waveBuf[1].nsamples = (*decoder.decode)(&buffer2[0]) / (*decoder.channels)();
 	waveBuf[1].data_vaddr = &buffer2[0];
 	ndspChnWaveBufAdd(SFX, &waveBuf[1]);
-
+	
 	/**
 	 * There may be a chance that the music has not started by the time we get
 	 * to the while loop. So we ensure that music has started here.
@@ -255,7 +255,7 @@ void musicPlayer(char * path)
 	{
 		hidScanInput();
 
-		if (kPressed & KEY_A)
+		if ((kPressed & KEY_A) || ((touchInRect(114, 204, 76, 164)) && (kPressed & KEY_TOUCH)))
 			audio_togglePlayback(SFX);
 
 		screen_begin_frame();
@@ -278,7 +278,7 @@ void musicPlayer(char * path)
 
 		screen_end_frame();
 
-		if ((kPressed & KEY_B) || ((touchInRect(114, 204, 76, 164)) && (kPressed & KEY_TOUCH)))
+		if (kPressed & KEY_B)
 		{
 			stopPlayback();
 			break;

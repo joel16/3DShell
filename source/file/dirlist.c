@@ -223,7 +223,7 @@ void displayFiles(void)
 		screen_draw_string(10, 30, 0.44f, 0.44f, RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255), lang_settings[language][0]);
 
 		screen_draw_string(10, 50, 0.44f, 0.44f, RGBA8(Settings_text_min_colour.r, Settings_text_min_colour.g, Settings_text_min_colour.b, 255), lang_settings[language][5]); // Grey'd out - cannot be accessed yet.
-		screen_draw_stringf(10, 62, 0.44f, 0.44f, RGBA8(Settings_text_min_colour.r, Settings_text_min_colour.g, Settings_text_min_colour.b, 255), "%s (/3ds/3DShell/bgm.ogg)", lang_settings[language][6]);
+		screen_draw_stringf(10, 62, 0.44f, 0.44f, RGBA8(Settings_text_min_colour.r, Settings_text_min_colour.g, Settings_text_min_colour.b, 255), "(/3ds/data/3DShell/bgm.ogg)", lang_settings[language][6]);
 
 		screen_draw_string(10, 90, 0.44f, 0.44f, RGBA8(Settings_text_colour.r, Settings_text_colour.g, Settings_text_colour.b, 255), lang_settings[language][1]);
 		screen_draw_string(10, 102, 0.44f, 0.44f, RGBA8(Settings_text_min_colour.r, Settings_text_min_colour.g, Settings_text_min_colour.b, 255), lang_settings[language][2]);
@@ -259,7 +259,7 @@ void displayFiles(void)
 		screen_draw_texture(TEXTURE_UPDATE_ICON_SELECTED, 75, 0);
 		screen_draw_string(((320 - (screen_get_string_width(lang_update[language][0], 0.44f, 0.44f))) / 2), 40, 0.44f, 0.44f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_update[language][0]);
 
-		Result ret = installCIA("/3ds/3DShell/3DShell.cia", MEDIATYPE_SD, true);
+		Result ret = installCIA("/3ds/data/3DShell/3DShell.cia", MEDIATYPE_SD, true);
 		if (ret != 0)
 			screen_draw_string(((320 - (screen_get_string_width(lang_update[language][1], 0.44f, 0.44f))) / 2), 60, 0.44f, 0.44f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_update[language][1]);
 		else
@@ -380,7 +380,7 @@ void displayFiles(void)
 				screen_draw_texture(TEXTURE_FOLDER_ICON, 30, 58 + (38 * printed));
 			else if ((strncasecmp(file->ext, "3ds", 3) == 0) || (strncasecmp(file->ext, "cia", 3) == 0))
 				screen_draw_texture(TEXTURE_APP_ICON, 30, 58 + (38 * printed));
-			else if (strncasecmp(file->ext, "mp3", 3) == 0)
+			else if ((strncasecmp(file->ext, "mp3", 3) == 0) || (strncasecmp(file->ext, "ogg", 3) == 0) || (strncasecmp(file->ext, "wav", 3) == 0) || (strncasecmp(file->ext, "fla", 3) == 0) || (strncasecmp(file->ext, "bcs", 3) == 0))
 				screen_draw_texture(TEXTURE_AUDIO_ICON, 30, 58 + (38 * printed));
 			else if ((strncasecmp(file->ext, "jpg", 3) == 0) || (strncasecmp(file->ext, "png", 3) == 0) || (strncasecmp(file->ext, "gif", 3) == 0) || (strncasecmp(file->ext, "bmp", 3) == 0))
 				screen_draw_texture(TEXTURE_IMG_ICON, 30, 58 + (38 * printed));

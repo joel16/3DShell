@@ -9,7 +9,8 @@
 
 #define wait(msec) svcSleepThread(10000000 * (s64)msec)
 
-void installDirectories(void);
+void loadConfig(void);
+void makeDirectories(void);
 u64 getFreeStorage(FS_SystemMediaType mediaType);
 u64 getTotalStorage(FS_SystemMediaType mediaType);
 u64 getUsedStorage(FS_SystemMediaType mediaType);

@@ -51,8 +51,8 @@ void createFontColours(char * path, int r, int g, int b)
 
 void loadTheme(void)
 {
-	strcpy(theme_dir, setFileDefaultsChar("/3ds/3DShell/theme.bin", "romfs:/res", theme_dir));
-	strcpy(colour_dir, setFileDefaultsChar("/3ds/3DShell/colours.bin", "/3ds/3DShell", colour_dir));
+	strcpy(theme_dir, setFileDefaultsChar("/3ds/data/3DShell/theme.bin", "romfs:/res", theme_dir));
+	strcpy(colour_dir, setFileDefaultsChar("/3ds/data/3DShell/colours.bin", "/3ds/data/3DShell", colour_dir));
 
 	char background_res[100] = "/background.png";
 	char selector_res[100] = "/selector.png";

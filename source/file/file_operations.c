@@ -370,5 +370,5 @@ Result paste(void)
 
 Result saveLastDirectory(void)
 {
-	return writeFile("/3ds/3DShell/lastdir.txt", cwd);
+	return writeFile("/3ds/data/3DShell/lastdir.txt", cwd);
 }

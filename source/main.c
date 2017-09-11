@@ -51,7 +51,8 @@ void initServices(void)
 	amInit();
 	AM_QueryAvailableExternalTitleDatabase(NULL);
 
-	installDirectories();
+	makeDirectories();
+	loadConfig();
 
 	loadTheme();
 
@@ -137,7 +138,7 @@ void initServices(void)
 	DEFAULT_STATE = STATE_HOME;
 	BROWSE_STATE = STATE_SD;
 
-	/*if (fileExists(fsArchive, "/3ds/3DShell/bgm.ogg")) // Initally create this to avoid crashes
+	/*if (fileExists(fsArchive, "/3ds/data/3DShell/bgm.ogg")) // Initally create this to avoid crashes
 	{
 		bgm = ogg_create(BGM);
 		if (bgm != NULL)
@@ -375,12 +376,12 @@ void mainMenu(int clearindex)
 			wait(1);
 			if (sysProtection == false)
 			{
-				setConfig("/3ds/3DShell/sysProtection.txt", true);
+				setConfig("/3ds/data/3DShell/sysProtection.txt", true);
 				sysProtection = true;
 			}
 			else
 			{
-				setConfig("/3ds/3DShell/sysProtection.txt", false);
+				setConfig("/3ds/data/3DShell/sysProtection.txt", false);
 				sysProtection = false;
 			}
 		}
@@ -389,7 +390,7 @@ void mainMenu(int clearindex)
 		{
 			wait(1);
 			DEFAULT_STATE = STATE_THEME;
-			strcpy(cwd, "/3ds/3DShell/themes/");
+			strcpy(cwd, "/3ds/data/3DShell/themes/");
 			updateList(CLEAR);
 			displayFiles();
 		}
@@ -399,12 +400,12 @@ void mainMenu(int clearindex)
 			wait(1);
 			if (isHiddenEnabled == false)
 			{
-				setConfig("/3ds/3DShell/isHidden.txt", true);
+				setConfig("/3ds/data/3DShell/isHidden.txt", true);
 				isHiddenEnabled = true;
 			}
 			else
 			{
-				setConfig("/3ds/3DShell/isHidden.txt", false);
+				setConfig("/3ds/data/3DShell/isHidden.txt", false);
 				isHiddenEnabled = false;
 			}
 			updateList(CLEAR);
@@ -447,7 +448,7 @@ void mainMenu(int clearindex)
 		{
 			wait(1);
 
-			writeFile("/3ds/3DShell/lastdir.txt", START_PATH);
+			writeFile("/3ds/data/3DShell/lastdir.txt", START_PATH);
 
 			strcpy(cwd, START_PATH);
 
@@ -560,10 +561,10 @@ void mainMenu(int clearindex)
 					if ((strncmp(fileName, "default", 7) == 0))
 					{
 						strcpy(theme_dir, "romfs:/res");
-						strcpy(colour_dir, "/3ds/3DShell");
+						strcpy(colour_dir, "/3ds/data/3DShell");
 
-						writeFile("/3ds/3DShell/theme.bin", theme_dir);
-						writeFile("/3ds/3DShell/colours.bin", colour_dir);
+						writeFile("/3ds/data/3DShell/theme.bin", theme_dir);
+						writeFile("/3ds/data/3DShell/colours.bin", colour_dir);
 
 						wait(1);
 
@@ -578,8 +579,8 @@ void mainMenu(int clearindex)
 						strcat(theme_dir, fileName);
 						strcat(colour_dir, fileName);
 
-						writeFile("/3ds/3DShell/theme.bin", theme_dir);
-						writeFile("/3ds/3DShell/colours.bin", colour_dir);
+						writeFile("/3ds/data/3DShell/theme.bin", theme_dir);
+						writeFile("/3ds/data/3DShell/colours.bin", colour_dir);
 
 						wait(1);
 
@@ -599,7 +600,7 @@ void mainMenu(int clearindex)
 				{
 					char buf[250];
 
-					FILE * read = fopen("/3ds/3DShell/lastdir.txt", "r");
+					FILE * read = fopen("/3ds/data/3DShell/lastdir.txt", "r");
 					fscanf(read, "%s", buf);
 					fclose(read);
 
