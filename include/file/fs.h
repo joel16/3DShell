@@ -34,6 +34,6 @@ Result fsRmdirRecursive(FS_Archive archive, const char * path);
 Result fsRenameFile(FS_Archive archive, const char * old_filename, const char * new_filename);
 Result fsRenameDir(FS_Archive archive, const char * old_filename, const char * new_filename);
 Result fsOpen(Handle * handle, const char * path, u32 flags);
-Result writeFile(const char * path, const char * buf);
+Result fsWrite(const char * path, const char * buf);
 
 #endif

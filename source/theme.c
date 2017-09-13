@@ -22,7 +22,7 @@ struct colour Settings_text_min_colour;
 char * setFileDefaultsChar(char path[], char data[], char var[])
 {
 	if (!(fileExists(fsArchive, path)))
-		writeFile(path, data);
+		fsWrite(path, data);
 
 	FILE * file;
 	file = fopen(path, "r");
@@ -45,7 +45,7 @@ void createFontColours(char * path, int r, int g, int b)
 	{
 		char buf[11];
 		snprintf(buf, 12, "%d\n%d\n%d", r, g, b);
-		writeFile(path, buf);
+		fsWrite(path, buf);
 	}
 }
 

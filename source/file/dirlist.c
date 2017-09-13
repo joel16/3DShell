@@ -133,7 +133,7 @@ void updateList(int clearindex)
 					// Set read-Only flag
 					item->isHidden = info.attributes & FS_ATTRIBUTE_HIDDEN;
 
-					if ((isHiddenEnabled) && (item->isHidden))
+					if ((!isHiddenEnabled) && (item->isHidden))
 						continue;
 
 					// Copy file extension

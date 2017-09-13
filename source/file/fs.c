@@ -1,4 +1,6 @@
+#include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "file/dirlist.h"
 #include "file/fs.h"
@@ -113,17 +115,18 @@ char * getFileModifiedTime(char * path)
 
 u64 getFileSize(FS_Archive archive, const char * path)
 {
-	u64 st_size = 0;
 	Handle handle;
+	Result ret = 0;
+	u64 st_size = 0;
 
-	if (R_FAILED(FSUSER_OpenFile(&handle, archive, fsMakePath(PATH_ASCII, path), FS_OPEN_READ, 0)))
-		return 0;
+	if (R_FAILED(ret = FSUSER_OpenFile(&handle, archive, fsMakePath(PATH_ASCII, path), FS_OPEN_READ, 0)))
+		return ret;
 
-	if (R_FAILED(FSFILE_GetSize(handle, &st_size)))
-		return 0;
+	if (R_FAILED(ret = FSFILE_GetSize(handle, &st_size)))
+		return ret;
 
-	if (R_FAILED(FSFILE_Close(handle)))
-		return 0;
+	if (R_FAILED(ret = FSFILE_Close(handle)))
+		return ret;
 
 	return st_size;
 }
@@ -165,34 +168,31 @@ Result fsOpen(Handle * handle, const char * path, u32 flags)
 	return FSUSER_OpenFileDirectly(handle, id, fsMakePath(PATH_EMPTY, ""), fsMakePath(PATH_ASCII, path), flags, 0);
 }
 
-Result writeFile(const char * path, const char * buf)
+Result fsWrite(const char * path, const char * buf)
 {
 	Handle handle;
+	Result ret = 0;
+	
 	u32 len = strlen(buf);
-	u64 size;
-	u32 written;
+	u64 size = 0;
+	u32 bytesWritten = 0;
 
 	if (fileExists(fsArchive, path))
 		fsRemove(fsArchive, path);
 
-	Result ret = fsOpen(&handle, path, (FS_OPEN_WRITE | FS_OPEN_CREATE));
-	if (R_FAILED(ret))
+	if (R_FAILED(ret = fsOpen(&handle, path, (FS_OPEN_WRITE | FS_OPEN_CREATE))))
 		return ret;
 
-	ret = FSFILE_GetSize(handle, &size);
-	if (R_FAILED(ret))
+	if (R_FAILED(ret = FSFILE_GetSize(handle, &size)))
 		return ret;
 
-	ret = FSFILE_SetSize(handle, size + len);
-	if (R_FAILED(ret))
+	if (R_FAILED(ret = FSFILE_SetSize(handle, size + len)))
 		return ret;
 
-	ret = FSFILE_Write(handle, &written, size, buf, len, FS_WRITE_FLUSH);
-	if (R_FAILED(ret))
+	if (R_FAILED(ret = FSFILE_Write(handle, &bytesWritten, size, buf, len, FS_WRITE_FLUSH)))
 		return ret;
 
-	ret = FSFILE_Close(handle);
-	if (R_FAILED(ret))
+	if (R_FAILED(ret = FSFILE_Close(handle)))
 		return ret;
 
 	return 0;

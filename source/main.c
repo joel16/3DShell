@@ -53,6 +53,7 @@ void initServices(void)
 
 	makeDirectories();
 	loadConfig();
+	getLastDirectory();
 
 	loadTheme();
 
@@ -357,17 +358,16 @@ void mainMenu(int clearindex)
 
 		else if ((kPressed & KEY_TOUCH) && (touchInRect(280, 320, 50, 72)) && (IF_SETTINGS))
 		{
+			wait(1);
 			if (bgmEnable == false)
 			{
-				setBgm(true);
 				bgmEnable = true;
-				goto turnOnBGM;
+				saveConfig(bgmEnable, sysProtection, isHiddenEnabled);
 			}
-			else if (bgmEnable == true)
+			else
 			{
-				setBgm(false);
 				bgmEnable = false;
-				goto turnOffBGM;
+				saveConfig(bgmEnable, sysProtection, isHiddenEnabled);
 			}
 		}*/
 
@@ -376,13 +376,13 @@ void mainMenu(int clearindex)
 			wait(1);
 			if (sysProtection == false)
 			{
-				setConfig("/3ds/data/3DShell/sysProtection.txt", true);
 				sysProtection = true;
+				saveConfig(bgmEnable, sysProtection, isHiddenEnabled);
 			}
 			else
 			{
-				setConfig("/3ds/data/3DShell/sysProtection.txt", false);
 				sysProtection = false;
+				saveConfig(bgmEnable, sysProtection, isHiddenEnabled);
 			}
 		}
 
@@ -400,13 +400,13 @@ void mainMenu(int clearindex)
 			wait(1);
 			if (isHiddenEnabled == false)
 			{
-				setConfig("/3ds/data/3DShell/isHidden.txt", true);
 				isHiddenEnabled = true;
+				saveConfig(bgmEnable, sysProtection, isHiddenEnabled);
 			}
 			else
 			{
-				setConfig("/3ds/data/3DShell/isHidden.txt", false);
 				isHiddenEnabled = false;
+				saveConfig(bgmEnable, sysProtection, isHiddenEnabled);
 			}
 			updateList(CLEAR);
 			displayFiles();
@@ -448,7 +448,7 @@ void mainMenu(int clearindex)
 		{
 			wait(1);
 
-			writeFile("/3ds/data/3DShell/lastdir.txt", START_PATH);
+			fsWrite("/3ds/data/3DShell/lastdir.txt", START_PATH);
 
 			strcpy(cwd, START_PATH);
 
@@ -563,8 +563,8 @@ void mainMenu(int clearindex)
 						strcpy(theme_dir, "romfs:/res");
 						strcpy(colour_dir, "/3ds/data/3DShell");
 
-						writeFile("/3ds/data/3DShell/theme.bin", theme_dir);
-						writeFile("/3ds/data/3DShell/colours.bin", colour_dir);
+						fsWrite("/3ds/data/3DShell/theme.bin", theme_dir);
+						fsWrite("/3ds/data/3DShell/colours.bin", colour_dir);
 
 						wait(1);
 
@@ -579,8 +579,8 @@ void mainMenu(int clearindex)
 						strcat(theme_dir, fileName);
 						strcat(colour_dir, fileName);
 
-						writeFile("/3ds/data/3DShell/theme.bin", theme_dir);
-						writeFile("/3ds/data/3DShell/colours.bin", colour_dir);
+						fsWrite("/3ds/data/3DShell/theme.bin", theme_dir);
+						fsWrite("/3ds/data/3DShell/colours.bin", colour_dir);
 
 						wait(1);
 

@@ -2,64 +2,114 @@
 #include "file/fs.h"
 #include "utils.h"
 
-const char * configFile = 
-	"lastdir=%s\n"
+const char * configFile =
 	"bgm=%d\n"
 	"systemProtection=%d\n"
-	"showHiddenFiles=%d\n"
 	"showHiddenFiles=%d\n";
 
-void loadConfig(void)
+Result saveConfig(bool bgm, bool protection, bool hidden)
+{
+	Result ret = 0;
+	
+	char * buf = (char *)malloc(1024);
+	snprintf(buf, 1024, configFile, bgm, protection, hidden);
+	
+	if (R_FAILED(ret = fsWrite("/3ds/data/3DShell/config.cfg", buf)))
+		return ret;
+	
+	free(buf);
+	return 0;
+}	
+	
+Result loadConfig(void)
 {
 	Handle handle;
+	Result ret = 0;
 	
 	if (!fileExists(fsArchive, "/3ds/data/3DShell/config.cfg"))
 	{
-		if (R_FAILED(fsOpen(&handle, "/3ds/data/3DShell/config.cfg", FS_OPEN_CREATE | FS_OPEN_WRITE)))
-			return;
-	
 		// set these to the following by default:
 		bgmEnable = 0;
 		sysProtection = 1;
-		isHiddenEnabled = 1;
+		isHiddenEnabled = 0;
 		
-		char * tempbuf = (char *)malloc(1024);
-		u32 size = snprintf(tempbuf, 1024, configFile, START_PATH, bgmEnable, sysProtection, isHiddenEnabled);
-		
-		FSFILE_SetSize(handle, (u64)size);
-		
-		u32 byteswritten = 0;
-		FSFILE_Write(handle, &byteswritten, 0, (u32 *)tempbuf, size, FS_WRITE_FLUSH);
-	
-		FSFILE_Close(handle);
-		free(tempbuf);
+		return saveConfig(bgmEnable, sysProtection, isHiddenEnabled);
 	}
 	
-	if (R_FAILED(fsOpen(&handle, "/3ds/data/3DShell/config.cfg", FS_OPEN_READ)))
-		return;
+	if (R_FAILED(ret = fsOpen(&handle, "/3ds/data/3DShell/config.cfg", FS_OPEN_READ)))
+		return ret;
 	
 	u64 size64 = 0;
 	u32 size = 0;
 	
-	if (R_SUCCEEDED(FSFILE_GetSize(handle, &size64)))
+	if (R_FAILED(ret = FSFILE_GetSize(handle, &size64)))
+		return ret;
+		
+	size = (u32)size64;
+	
+	char * buf = (char *)malloc(size + 1);
+	u32 bytesread = 0;
+	
+	if (R_FAILED(ret = FSFILE_Read(handle, &bytesread, 0, (u32 *)buf, size)))
+		return ret;
+	
+	buf[size] = '\0';
+	
+	sscanf(buf, configFile, &bgmEnable, &sysProtection, &isHiddenEnabled);
+	
+	if (R_FAILED(ret = FSFILE_Close(handle)))
+		return ret;
+	
+	free(buf);
+	return 0;
+}
+
+Result getLastDirectory(void)
+{
+	Handle handle;
+	Result ret = 0;
+	
+	if (!fileExists(fsArchive, "/3ds/data/3DShell/lastdir.txt"))
+	{
+		fsWrite("/3ds/data/3DShell/lastdir.txt", START_PATH);
+		strcpy(cwd, START_PATH); // Set Start Path to "sdmc:/" if lastDir.txt hasn't been created.
+	}
+	else
+	{
+		if (R_FAILED(ret = fsOpen(&handle, "/3ds/data/3DShell/lastdir.txt", FS_OPEN_READ)))
+			return ret;
+	
+		u64 size64 = 0;
+		u32 size = 0;
+	
+		if (R_FAILED(ret = FSFILE_GetSize(handle, &size64)))
+			return ret;
+		
 		size = (u32)size64;
 	
-	char * tempbuf = (char *)malloc(size + 1);
-	u32 bytesread = 0;
-	FSFILE_Read(handle, &bytesread, 0, (u32 *)tempbuf, size);
-	tempbuf[size] = '\0';
+		char * buf = (char *)malloc(size + 1);
+		u32 bytesread = 0;
+		
+		if (R_FAILED(ret = FSFILE_Read(handle, &bytesread, 0, (u32 *)buf, size)))
+			return ret;
+		
+		buf[size] = '\0';
 	
-	char tempPath[250];
+		char tempPath[250];
+		sscanf(buf, "%s", tempPath);
 	
-	sscanf(tempbuf, configFile, tempPath, &bgmEnable, &sysProtection, &isHiddenEnabled);
+		if (dirExists(fsArchive, tempPath)) // Incase a directory previously visited had been deleted, set start path to sdmc:/ to avoid errors.
+			strcpy(cwd, tempPath);
+		else
+			strcpy(cwd, START_PATH);
 	
-	if (dirExists(fsArchive, tempPath)) // Incase a directory previously visited had been deleted, set start path to sdmc:/ to avoid errors.
-		strcpy(cwd, tempPath);
-	else
-		strcpy(cwd, START_PATH);
+		if (R_FAILED(ret = FSFILE_Close(handle)))
+			return ret;
+		
+		free(buf);
+	}
 	
-	FSFILE_Close(handle);
-	free(tempbuf);
+	return 0;
 }
 
 void makeDirectories(void)
@@ -146,9 +196,9 @@ u16 touchGetY(void)
 Result setConfig(const char * path, bool set) // using individual txt files for configs for now (plan to change this later when there's more options)
 {
 	if (set)
-		return writeFile(path, "1");
+		return fsWrite(path, "1");
 
-	return writeFile(path, "0");
+	return fsWrite(path, "0");
 }
 
 const char * getLastNChars(char * str, int n)
