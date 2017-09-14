@@ -20,13 +20,13 @@ void displayImage(char * path)
 
 	File * file = findindex(position);
 
-	if ((strncmp(file->ext, "png", 3) == 0) || (strncmp(file->ext, "PNG", 3) == 0))
+	if (strncasecmp(file->ext, "png", 3) == 0)
 		screen_load_texture_png(TEXTURE_GALLERY_IMAGE, path, true);
-	else if ((strncmp(file->ext, "gif", 3) == 0) || (strncmp(file->ext, "GIF", 3) == 0))
+	else if (strncasecmp(file->ext, "gif", 3) == 0)
 		screen_load_texture_gif(TEXTURE_GALLERY_IMAGE, path, true);
-	else if ((strncmp(file->ext, "jpg", 3) == 0) || (strncmp(file->ext, "JPG", 3) == 0))
+	else if (strncasecmp(file->ext, "jpg", 3) == 0)
 		screen_load_texture_jpg(TEXTURE_GALLERY_IMAGE, path, true);
-	else if ((strncmp(file->ext, "bmp", 3) == 0) || (strncmp(file->ext, "BMP", 3) == 0))
+	else if (strncasecmp(file->ext, "bmp", 3) == 0)
 		screen_load_texture_bmp(TEXTURE_GALLERY_IMAGE, path, true);
 
 	int galleryBarY = 0, galleryBarLimY = -35, nameY = 11, nameLimY = -11;
