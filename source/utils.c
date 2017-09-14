@@ -3,9 +3,9 @@
 #include "utils.h"
 
 const char * configFile =
-	"bgm=%d\n"
-	"systemProtection=%d\n"
-	"showHiddenFiles=%d\n";
+	"bgm = %d\n"
+	"systemProtection = %d\n"
+	"showHiddenFiles = %d";
 
 Result saveConfig(bool bgm, bool protection, bool hidden)
 {
@@ -126,8 +126,6 @@ void makeDirectories(void)
 			makeDir(fsArchive, "/3ds/data/3DShell/themes");
 		if (!(dirExists(fsArchive, "/3ds/data/3DShell/themes/default/")))
 			makeDir(fsArchive, "/3ds/data/3DShell/themes/default");
-		if (!(dirExists(fsArchive, "/3ds/data/3DShell/colours/")))
-			makeDir(fsArchive, "/3ds/data/3DShell/colours");
 	}
 }
 

@@ -18,8 +18,7 @@ struct colour
    int	b;
 };
 
-char * setFileDefaultsChar(char path[], char data[], char var[]);
-void replaceAsset(char arr[], char path[], char img_path[], char redirect_path[]);
+Result saveThemeConfig(char * themePath, char * coloursPath);
 void loadTheme(void);
 void reloadTheme(void);
 

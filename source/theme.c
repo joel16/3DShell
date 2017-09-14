@@ -19,17 +19,153 @@ struct colour Settings_title_text_colour;
 struct colour Settings_text_colour;
 struct colour Settings_text_min_colour;
 
-char * setFileDefaultsChar(char path[], char data[], char var[])
+const char * themeConfig =
+	"theme = %s\n"
+	"colours = %s";
+	
+const char * coloursConfig =
+	"storage = RGBA(%d, %d, %d, 255)\n"
+	"topscreen_bar = RGBA(%d, %d, %d, 255)\n"
+	"topscreen_text = RGBA(%d, %d, %d, 255)\n"
+	"topscreen_text_min = RGBA(%d, %d, %d, 255)\n"
+	"bottomscreen_bg = RGBA(%d, %d, %d, 255)\n"
+	"bottomscreen_bar = RGBA(%d, %d, %d, 255)\n"
+	"bottomscreen_text = RGBA(%d, %d, %d, 255)\n"
+	"options_selector = RGBA(%d, %d, %d, 255)\n"
+	"options_title_text = RGBA(%d, %d, %d, 255)\n"
+	"options_text = RGBA(%d, %d, %d, 255)\n"
+	"settings_bg = RGBA(%d, %d, %d, 255)\n"
+	"settings_title_text = RGBA(%d, %d, %d, 255)\n"
+	"settins_text = RGBA(%d, %d, %d, 255)\n"
+	"settings_text_min = RGBA(%d, %d, %d, 255)";
+
+Result saveThemeConfig(char * themePath, char * coloursPath)
 {
-	if (!(fileExists(fsArchive, path)))
-		fsWrite(path, data);
+	Result ret = 0;
+	
+	char * buf = (char *)malloc(1024);
+	snprintf(buf, 1024, themeConfig, themePath, coloursPath);
+	
+	if (R_FAILED(ret = fsWrite("/3ds/data/3DShell/theme.cfg", buf)))
+		return ret;
+	
+	free(buf);
+	return 0;
+}
+	
+static Result loadThemeConfig(void)
+{
+	Handle handle;
+	Result ret = 0;
+	
+	if (!fileExists(fsArchive, "/3ds/data/3DShell/theme.cfg"))	
+		saveThemeConfig("romfs:/res", "/3ds/data/3DShell/themes/default");
+	
+	if (R_FAILED(ret = fsOpen(&handle, "/3ds/data/3DShell/theme.cfg", FS_OPEN_READ)))
+		return ret;
+	
+	u64 size64 = 0;
+	u32 size = 0;
+	
+	if (R_FAILED(ret = FSFILE_GetSize(handle, &size64)))
+		return ret;
+		
+	size = (u32)size64;
+	
+	char * buf = (char *)malloc(size + 1);
+	u32 bytesread = 0;
+	
+	if (R_FAILED(ret = FSFILE_Read(handle, &bytesread, 0, (u32 *)buf, size)))
+		return ret;
+	
+	buf[size] = '\0';
+	
+	sscanf(buf, themeConfig, theme_dir, colour_dir);
+	
+	if (R_FAILED(ret = FSFILE_Close(handle)))
+		return ret;
+	
+	free(buf);
+	return 0;
+}
 
-	FILE * file;
-	file = fopen(path, "r");
-	fscanf(file, "%s", var);
-	fclose(file);
+static Result createFontColours(void)
+{
+	Result ret = 0;
+	
+	char * buf = (char *)malloc(1024);
+	snprintf(buf, 1024, coloursConfig,  48, 174, 222,
+										255, 255, 255,
+										0, 0, 0,
+										95, 95, 95,
+										30, 136, 229,
+										25, 118, 210,
+										251, 251, 251,
+										237, 237, 237,
+										32, 32, 32,
+										120, 120, 120,
+										251, 251, 251,
+										30, 136, 229,
+										32, 32, 32,
+										120, 120, 120);
+	
+	if (R_FAILED(ret = fsWrite("/3ds/data/3DShell/themes/default/colours.cfg", buf)))
+		return ret;
+	
+	free(buf);
+	return 0;
+}
 
-	return var;
+static Result loadFontColours(void)
+{
+	Handle handle;
+	Result ret = 0;
+	
+	if (!fileExists(fsArchive, "/3ds/data/3DShell/themes/default/colours.cfg"))		
+		createFontColours();
+	
+	char colours_cfg[100] = "/colours.cfg";
+	strcat(colour_dir, colours_cfg);
+	
+	if (R_FAILED(ret = fsOpen(&handle, colour_dir, FS_OPEN_READ)))
+		return ret;
+	
+	u64 size64 = 0;
+	u32 size = 0;
+	
+	if (R_FAILED(ret = FSFILE_GetSize(handle, &size64)))
+		return ret;
+		
+	size = (u32)size64;
+	
+	char * buf = (char *)malloc(size + 1);
+	u32 bytesread = 0;
+	
+	if (R_FAILED(ret = FSFILE_Read(handle, &bytesread, 0, (u32 *)buf, size)))
+		return ret;
+	
+	buf[size] = '\0';
+	
+	sscanf(buf, coloursConfig, &Storage_colour.r, &Storage_colour.g, &Storage_colour.b,
+								&TopScreen_bar_colour.r, &TopScreen_bar_colour.g, &TopScreen_bar_colour.b,
+								&TopScreen_colour.r, &TopScreen_colour.g, &TopScreen_colour.b,
+								&TopScreen_min_colour.r, &TopScreen_min_colour.g, &TopScreen_min_colour.b,
+								&BottomScreen_colour.r, &BottomScreen_colour.g, &BottomScreen_colour.b,
+								&BottomScreen_bar_colour.r, &BottomScreen_bar_colour.g, &BottomScreen_bar_colour.b,
+								&BottomScreen_text_colour.r, &BottomScreen_text_colour.g, &BottomScreen_text_colour.b,
+								&Options_select_colour.r, &Options_select_colour.g, &Options_select_colour.b,
+								&Options_title_text_colour.r, &Options_title_text_colour.g, &Options_title_text_colour.b,
+								&Options_text_colour.r, &Options_text_colour.g, &Options_text_colour.b,
+								&Settings_colour.r, &Settings_colour.g, &Settings_colour.b,
+								&Settings_title_text_colour.r, &Settings_title_text_colour.g, &Settings_title_text_colour.b,
+								&Settings_text_colour.r, &Settings_text_colour.g, &Settings_text_colour.b,
+								&Settings_text_min_colour.r, &Settings_text_min_colour.g, &Settings_text_min_colour.b);
+	
+	if (R_FAILED(ret = FSFILE_Close(handle)))
+		return ret;
+	
+	free(buf);
+	return 0;
 }
 
 void replaceAsset(char arr[], char path[], char img_path[], char redirect_path[])
@@ -39,21 +175,10 @@ void replaceAsset(char arr[], char path[], char img_path[], char redirect_path[]
 	strcpy(redirect_path, arr);
 }
 
-void createFontColours(char * path, int r, int g, int b)
-{
-	if (!(fileExists(fsArchive, path)))
-	{
-		char buf[11];
-		snprintf(buf, 12, "%d\n%d\n%d", r, g, b);
-		fsWrite(path, buf);
-	}
-}
-
 void loadTheme(void)
 {
-	strcpy(theme_dir, setFileDefaultsChar("/3ds/data/3DShell/theme.bin", "romfs:/res", theme_dir));
-	strcpy(colour_dir, setFileDefaultsChar("/3ds/data/3DShell/colours.bin", "/3ds/data/3DShell", colour_dir));
-
+	loadThemeConfig();
+	
 	char background_res[100] = "/background.png";
 	char selector_res[100] = "/selector.png";
 	char folder_res[100] = "/folder.png";
@@ -69,21 +194,6 @@ void loadTheme(void)
 	char options_res[100] = "/options.png";
 	char properties_res[100] = "/properties.png";
 	char deletion_res[100] = "/delete.png";
-
-	char storage_res[100] = "/colours/storage.txt";
-	char topScreen_res[100] = "/colours/topScreen.txt";
-	char topScreen_min_res[100] = "/colours/topScreenMin.txt";
-	char topScreen_bar_res[100] = "/colours/topScreenBar.txt";
-	char bottomScreen_res[100] = "/colours/bottomScreen.txt";
-	char bottomScreen_bar_res[100] = "/colours/bottomScreenBar.txt";
-	char bottomScreen_text_res[100] = "/colours/bottomScreenText.txt";
-	char options_select_res[100] = "/colours/optionsSelect.txt";
-	char options_text_res[100] = "/colours/optionsText.txt";
-	char options_title_text_res[100] = "/colours/optionsTitleText.txt";
-	char settings_colour_res[100] = "/colours/settingsColour.txt";
-	char settings_title_text_res[100] = "/colours/settingsTitleText.txt";
-	char settings_text_res[100] = "/colours/settingsText.txt";
-	char settings_text_min_res[100] = "/colours/settingsTextMin.txt";
 
 	replaceAsset(temp_arr, theme_dir, background_res, background_path);
 	replaceAsset(temp_arr, theme_dir, selector_res, selector_path);
@@ -101,93 +211,7 @@ void loadTheme(void)
 	replaceAsset(temp_arr, theme_dir, properties_res, properties_path);
 	replaceAsset(temp_arr, theme_dir, deletion_res, deletion_path);
 
-	replaceAsset(temp_arr, colour_dir, storage_res, storage_path);
-	replaceAsset(temp_arr, colour_dir, topScreen_res, topScreen_path);
-	replaceAsset(temp_arr, colour_dir, topScreen_min_res, topScreen_min_path);
-	replaceAsset(temp_arr, colour_dir, topScreen_bar_res, topScreen_bar_path);
-	replaceAsset(temp_arr, colour_dir, bottomScreen_res, bottomScreen_path);
-	replaceAsset(temp_arr, colour_dir, bottomScreen_bar_res, bottomScreen_bar_path);
-	replaceAsset(temp_arr, colour_dir, bottomScreen_text_res, bottomScreen_text_path);
-	replaceAsset(temp_arr, colour_dir, options_select_res, options_select_path);
-	replaceAsset(temp_arr, colour_dir, options_text_res, options_text_path);
-	replaceAsset(temp_arr, colour_dir, options_title_text_res, options_title_text_path);
-	replaceAsset(temp_arr, colour_dir, settings_colour_res, settings_colour_path);
-	replaceAsset(temp_arr, colour_dir, settings_title_text_res, settings_title_text_path);
-	replaceAsset(temp_arr, colour_dir, settings_text_res, settings_text_path);
-	replaceAsset(temp_arr, colour_dir, settings_text_min_res, settings_text_min_path);
-
-	FILE * file;
-
-	createFontColours(storage_path, 48, 174, 222);
-	createFontColours(topScreen_path, 0, 0, 0);
-	createFontColours(topScreen_min_path, 95, 95, 95);
-	createFontColours(topScreen_bar_path, 255, 255, 255);
-	createFontColours(bottomScreen_path, 30, 136, 229);
-	createFontColours(bottomScreen_bar_path, 25, 118, 210);
-	createFontColours(bottomScreen_text_path, 251, 251, 251);
-	createFontColours(options_select_path, 237, 237, 237);
-	createFontColours(options_text_path, 120, 120, 120);
-	createFontColours(options_title_text_path, 32, 32, 32);
-	createFontColours(settings_colour_path, 251, 251, 251);
-	createFontColours(settings_title_text_path, 30, 136, 229);
-	createFontColours(settings_text_path, 32, 32, 32);
-	createFontColours(settings_text_min_path, 120, 120, 120);
-
-	file = fopen(storage_path, "r");
-	fscanf(file, "%d %d %d", &Storage_colour.r, &Storage_colour.g, &Storage_colour.b);
-	fclose(file);
-
-	file = fopen(topScreen_path, "r");
-	fscanf(file, "%d %d %d", &TopScreen_colour.r, &TopScreen_colour.g, &TopScreen_colour.b);
-	fclose(file);
-
-	file = fopen(topScreen_min_path, "r");
-	fscanf(file, "%d %d %d", &TopScreen_min_colour.r, &TopScreen_min_colour.g, &TopScreen_min_colour.b);
-	fclose(file);
-
-	file = fopen(topScreen_bar_path, "r");
-	fscanf(file, "%d %d %d", &TopScreen_bar_colour.r, &TopScreen_bar_colour.g, &TopScreen_bar_colour.b);
-	fclose(file);
-
-	file = fopen(bottomScreen_path, "r");
-	fscanf(file, "%d %d %d", &BottomScreen_colour.r, &BottomScreen_colour.g, &BottomScreen_colour.b);
-	fclose(file);
-
-	file = fopen(bottomScreen_bar_path, "r");
-	fscanf(file, "%d %d %d", &BottomScreen_bar_colour.r, &BottomScreen_bar_colour.g, &BottomScreen_bar_colour.b);
-	fclose(file);
-
-	file = fopen(bottomScreen_text_path, "r");
-	fscanf(file, "%d %d %d", &BottomScreen_text_colour.r, &BottomScreen_text_colour.g, &BottomScreen_text_colour.b);
-	fclose(file);
-
-	file = fopen(options_select_path, "r");
-	fscanf(file, "%d %d %d", &Options_select_colour.r, &Options_select_colour.g, &Options_select_colour.b);
-	fclose(file);
-
-	file = fopen(options_text_path, "r");
-	fscanf(file, "%d %d %d", &Options_text_colour.r, &Options_text_colour.g, &Options_text_colour.b);
-	fclose(file);
-
-	file = fopen(options_title_text_path, "r");
-	fscanf(file, "%d %d %d", &Options_title_text_colour.r, &Options_title_text_colour.g, &Options_title_text_colour.b);
-	fclose(file);
-
-	file = fopen(settings_colour_path, "r");
-	fscanf(file, "%d %d %d", &Settings_colour.r, &Settings_colour.g, &Settings_colour.b);
-	fclose(file);
-
-	file = fopen(settings_title_text_path, "r");
-	fscanf(file, "%d %d %d", &Settings_title_text_colour.r, &Settings_title_text_colour.g, &Settings_title_text_colour.b);
-	fclose(file);
-
-	file = fopen(settings_text_path, "r");
-	fscanf(file, "%d %d %d", &Settings_text_colour.r, &Settings_text_colour.g, &Settings_text_colour.b);
-	fclose(file);
-
-	file = fopen(settings_text_min_path, "r");
-	fscanf(file, "%d %d %d", &Settings_text_min_colour.r, &Settings_text_min_colour.g, &Settings_text_min_colour.b);
-	fclose(file);
+	loadFontColours();
 }
 
 void reloadTheme(void)
@@ -228,61 +252,5 @@ void reloadTheme(void)
 	screen_load_texture_png(TEXTURE_CHECK_ICON, check_path, true);
 	screen_load_texture_png(TEXTURE_UNCHECK_ICON, uncheck_path, true);
 
-	FILE * file;
-
-	file = fopen(storage_path, "r");
-	fscanf(file, "%d %d %d", &Storage_colour.r, &Storage_colour.g, &Storage_colour.b);
-	fclose(file);
-
-	file = fopen(topScreen_path, "r");
-	fscanf(file, "%d %d %d", &TopScreen_colour.r, &TopScreen_colour.g, &TopScreen_colour.b);
-	fclose(file);
-
-	file = fopen(topScreen_min_path, "r");
-	fscanf(file, "%d %d %d", &TopScreen_min_colour.r, &TopScreen_min_colour.g, &TopScreen_min_colour.b);
-	fclose(file);
-
-	file = fopen(topScreen_bar_path, "r");
-	fscanf(file, "%d %d %d", &TopScreen_bar_colour.r, &TopScreen_bar_colour.g, &TopScreen_bar_colour.b);
-	fclose(file);
-
-	file = fopen(bottomScreen_path, "r");
-	fscanf(file, "%d %d %d", &BottomScreen_colour.r, &BottomScreen_colour.g, &BottomScreen_colour.b);
-	fclose(file);
-
-	file = fopen(bottomScreen_bar_path, "r");
-	fscanf(file, "%d %d %d", &BottomScreen_bar_colour.r, &BottomScreen_bar_colour.g, &BottomScreen_bar_colour.b);
-	fclose(file);
-
-	file = fopen(bottomScreen_text_path, "r");
-	fscanf(file, "%d %d %d", &BottomScreen_text_colour.r, &BottomScreen_text_colour.g, &BottomScreen_text_colour.b);
-	fclose(file);
-
-	file = fopen(options_select_path, "r");
-	fscanf(file, "%d %d %d", &Options_select_colour.r, &Options_select_colour.g, &Options_select_colour.b);
-	fclose(file);
-
-	file = fopen(options_text_path, "r");
-	fscanf(file, "%d %d %d", &Options_text_colour.r, &Options_text_colour.g, &Options_text_colour.b);
-	fclose(file);
-
-	file = fopen(options_title_text_path, "r");
-	fscanf(file, "%d %d %d", &Options_title_text_colour.r, &Options_title_text_colour.g, &Options_title_text_colour.b);
-	fclose(file);
-
-	file = fopen(settings_colour_path, "r");
-	fscanf(file, "%d %d %d", &Settings_colour.r, &Settings_colour.g, &Settings_colour.b);
-	fclose(file);
-
-	file = fopen(settings_title_text_path, "r");
-	fscanf(file, "%d %d %d", &Settings_title_text_colour.r, &Settings_title_text_colour.g, &Settings_title_text_colour.b);
-	fclose(file);
-
-	file = fopen(settings_text_path, "r");
-	fscanf(file, "%d %d %d", &Settings_text_colour.r, &Settings_text_colour.g, &Settings_text_colour.b);
-	fclose(file);
-
-	file = fopen(settings_text_min_path, "r");
-	fscanf(file, "%d %d %d", &Settings_text_min_colour.r, &Settings_text_min_colour.g, &Settings_text_min_colour.b);
-	fclose(file);
+	loadFontColours();
 }

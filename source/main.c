@@ -561,10 +561,9 @@ void mainMenu(int clearindex)
 					if ((strncmp(fileName, "default", 7) == 0))
 					{
 						strcpy(theme_dir, "romfs:/res");
-						strcpy(colour_dir, "/3ds/data/3DShell");
+						strcpy(colour_dir, "/3ds/data/3DShell/themes/default");
 
-						fsWrite("/3ds/data/3DShell/theme.bin", theme_dir);
-						fsWrite("/3ds/data/3DShell/colours.bin", colour_dir);
+						saveThemeConfig(theme_dir, colour_dir);
 
 						wait(1);
 
@@ -579,8 +578,7 @@ void mainMenu(int clearindex)
 						strcat(theme_dir, fileName);
 						strcat(colour_dir, fileName);
 
-						fsWrite("/3ds/data/3DShell/theme.bin", theme_dir);
-						fsWrite("/3ds/data/3DShell/colours.bin", colour_dir);
+						saveThemeConfig(theme_dir, colour_dir);
 
 						wait(1);
 
