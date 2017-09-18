@@ -37,7 +37,7 @@ static Result qrInit(void)
 
 	qrDec = quirc_new();
 	
-	if (quirc_resize(qrDec, IMAGE_WIDTH, IMAGE_HEIGHT))
+	if (quirc_resize(qrDec, IMAGE_WIDTH, IMAGE_HEIGHT) < 0)
 		return 0;
 	
 	return 0;
