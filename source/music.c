@@ -7,6 +7,7 @@
 #include "audio/wav.h"
 #include "clock.h"
 #include "common.h"
+#include "file/dirlist.h"
 #include "fs.h"
 #include "graphics/screen.h"
 #include "music.h"
@@ -56,7 +57,7 @@ enum file_types getMusicFileType(const char * file)
 		goto err;
 	
 	offset += bytesRead;
-
+	
 	switch(fileSig)
 	{
 		// "RIFF"
@@ -68,7 +69,7 @@ enum file_types getMusicFileType(const char * file)
 			if (R_FAILED(FSFILE_Read(handle, &bytesRead, offset, &fileSig, 4)))
 				break;
 
-			if(fileSig != 0x45564157)
+			if (fileSig != 0x45564157)
 				break;
 
 			file_type = FILE_TYPE_WAV;
@@ -81,21 +82,16 @@ enum file_types getMusicFileType(const char * file)
 
 		// "OggS"
 		case 0x5367674F:
-			if(isFlac(file) == 0)
+			if (isFlac(file) == 0)
 				file_type = FILE_TYPE_FLAC;
-			else if(isVorbis(file) == 0)
+			else if (isVorbis(file) == 0)
 				file_type = FILE_TYPE_VORBIS;
 
 			break;
-
-		default:
-			/*
-			 * MP3 without ID3 tag, ID3v1 tag is at the end of file, or MP3
-			 * with ID3 tag at the beginning  of the file.
-			 */
-			if((fileSig << 16) == 0xFBFF0000 || (fileSig << 16) == 0xFAFF0000 || (fileSig << 8) == 0x33444900)
-				file_type = FILE_TYPE_MP3;
-
+			
+		// MP3 file with an ID3v2 container
+		case 0x03334449:
+			file_type = FILE_TYPE_MP3;
 			break;
 	}
 
@@ -146,10 +142,10 @@ static void playFile(void * pathIn)
 			goto out;
 	}
 
-	if((ret = (*decoder.init)(file)) != 0)
+	if ((ret = (*decoder.init)(file)) != 0)
 		goto out;
 
-	if((*decoder.channels)() > 2 || (*decoder.channels)() < 1)
+	if ((*decoder.channels)() > 2 || (*decoder.channels)() < 1)
 		goto out;
 
 	buffer1 = linearAlloc(decoder.buffSize * sizeof(s16));
@@ -182,37 +178,37 @@ static void playFile(void * pathIn)
 		svcSleepThread(100 * 1000);
 
 		/* When the last buffer has finished playing, break. */
-		if((lastbuf == true) && (waveBuf[0].status == NDSP_WBUF_DONE) && (waveBuf[1].status == NDSP_WBUF_DONE))
+		if ((lastbuf == true) && (waveBuf[0].status == NDSP_WBUF_DONE) && (waveBuf[1].status == NDSP_WBUF_DONE))
 			break;
 
-		if((ndspChnIsPaused(SFX) == true) || (lastbuf == true))
+		if ((ndspChnIsPaused(SFX) == true) || (lastbuf == true))
 			continue;
 
-		if(waveBuf[0].status == NDSP_WBUF_DONE)
+		if (waveBuf[0].status == NDSP_WBUF_DONE)
 		{
 			size_t read = (*decoder.decode)(&buffer1[0]);
 
-			if(read <= 0)
+			if (read <= 0)
 			{
 				lastbuf = true;
 				continue;
 			}
-			else if(read < decoder.buffSize)
+			else if (read < decoder.buffSize)
 				waveBuf[0].nsamples = read / (*decoder.channels)();
 
 			ndspChnWaveBufAdd(SFX, &waveBuf[0]);
 		}
 
-		if(waveBuf[1].status == NDSP_WBUF_DONE)
+		if (waveBuf[1].status == NDSP_WBUF_DONE)
 		{
 			size_t read = (*decoder.decode)(&buffer2[0]);
 
-			if(read <= 0)
+			if (read <= 0)
 			{
 				lastbuf = true;
 				continue;
 			}
-			else if(read < decoder.buffSize)
+			else if (read < decoder.buffSize)
 				waveBuf[1].nsamples = read / (*decoder.channels)();
 
 			ndspChnWaveBufAdd(SFX, &waveBuf[1]);
@@ -251,6 +247,9 @@ void musicPlayer(char * path)
 	svcGetThreadPriority(&prio, CUR_THREAD_HANDLE);
 	thread = threadCreate(playFile, path, 32 * 1024, prio - 1, -2, false);
 	
+	File * file = findindex(position);
+	bool isMP3 = (strncasecmp(file->ext, "mp3", 3) == 0);
+	
 	while (isPlaying())
 	{
 		hidScanInput();
@@ -274,8 +273,20 @@ void musicPlayer(char * path)
 		drawBatteryStatus();
 		digitalTime();
 
-		screen_draw_stringf(5, 25, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s", fileName);
-
+		if (isMP3) // Only print out ID3 tag info for MP3
+		{	
+			screen_draw_stringf(5, 20, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s", fileName);
+			screen_draw_stringf(5, 36, 0.45f, 0.45f, RGBA8(255, 255, 255, 255), "%s", ID3.artist);
+		
+			screen_draw_stringf(184, 64, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s", ID3.title);
+			screen_draw_stringf(184, 84, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s", ID3.album);
+			screen_draw_stringf(184, 104, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s", ID3.year);
+			screen_draw_stringf(184, 124, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s", ID3.genre);	
+		}
+		
+		else
+			screen_draw_stringf(5, 25, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s", fileName);	
+		
 		screen_end_frame();
 
 		if (kPressed & KEY_B)

@@ -4,6 +4,20 @@
 
 #include "music.h"
 
+typedef struct 
+{
+	char title[0x1E];
+	char album[0x1E];
+	char artist[0x1E];
+	char year[0x4];
+	char comment[0x1E];
+	char genre[0x1E];
+} ID3v2;
+
+ID3v2 ID3;
+
+char * id3_pic;
+
 /**
  * Set decoder parameters for MP3.
  *
