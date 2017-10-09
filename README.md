@@ -31,6 +31,7 @@ Current features:
 Credits:
 --------------------------------------------------------------------------------
 - deltabeard/MaK11-12 for sound support.
+- mtheall for ftpd.
 - Steveice10 for allowing me to use his screen.c C3D code as a template to build and make  modifications on.
 - preetisketch for the banner.
 
