@@ -28,7 +28,6 @@ Result createFolder(void)
 
 	char path[500];
 	strcpy(path, cwd);
-
 	strcat(path, tempFolder);
 
 	if (R_SUCCEEDED(makeDir(fsArchive, path)))
@@ -39,7 +38,8 @@ Result createFolder(void)
 
 Result renameFile(void)
 {
-	File * file = findindex(position);
+	Result ret = 0;
+	File * file = getFileIndex(position);
 
 	if (file == NULL)
 		return -1;
@@ -56,41 +56,50 @@ Result renameFile(void)
 	strcpy(name, keyboard_3ds_get(255, file->name, "Enter name"));
 	strcat(newPath, name);
 
-	Result ret = 0;
-
 	if (file->isDir)
-		ret = fsRenameDir(fsArchive, oldPath, newPath);
+	{
+		if (R_FAILED(ret = fsRenameDir(fsArchive, oldPath, newPath)))
+			return ret;
+	}
 	else
-		ret = fsRenameFile(fsArchive, oldPath, newPath);
-
-	if (R_SUCCEEDED(ret))
-		mainMenu(CLEAR);
-
+	{
+		if (R_FAILED(ret = fsRenameFile(fsArchive, oldPath, newPath)))
+			return ret;
+	}
+	
+	mainMenu(CLEAR);
 	return 0;
 }
 
 Result delete(void)
 {
-	// Find file
-	File * file = findindex(position);
+	File * file = getFileIndex(position);
 
-	// Not found
 	if (file == NULL)
 		return -1;
+	
+	if (strncmp(file->name, "..", 2) == 0)
+			return -2;
 
 	if (sysProtection)
 	{
-		if ((strncmp(file->name, "..", 2) == 0) || (SYS_FILES))
+		if (SYS_FILES)
 			return -2;
 	}
-	else
+	
+	if ((recycleBin) && (strcmp(cwd, "/3ds/data/3DShell/bin/") != 0))
 	{
-		if (strncmp(file->name, "..", 2) == 0)
-			return -2;
-	}
+		char oldCWD[1024];
+		copy(COPY_DELETE_ON_FINISH);
+		strcpy(oldCWD, cwd);
+		memset(cwd, 0, sizeof(cwd));
+		sprintf(cwd, "/3ds/data/3DShell/bin/");
+		paste();
+		strcpy(cwd, oldCWD);
+		return 0;
+	}	
 
-	// File path
-	char path[1024];
+	char path[1024]; // File path
 
 	// Puzzle path
 	strcpy(path, cwd);
@@ -98,26 +107,25 @@ Result delete(void)
 
 	Result ret = 0;
 
-	// Delete folder
-	if (file->isDir)
-		ret = fsRmdirRecursive(fsArchive, path);
-	// Delete file
-	else
-		ret = fsRemove(fsArchive, path);
-
-	if (R_FAILED(ret))
-		return ret;
-
+	if (file->isDir) // Delete folder
+	{
+		if (R_FAILED(ret = fsRmdirRecursive(fsArchive, path)))
+			return ret;
+	}
+	else // Delete file
+	{
+		if (R_FAILED(ret = fsRemove(fsArchive, path)))
+			return ret;
+	}
+	
 	return 0;
 }
 
 // Copy file or folder
 void copy(int flag)
 {
-	// Find file
-	File * file = findindex(position);
-
-	// Not found
+	File * file = getFileIndex(position);
+	
 	if (file == NULL)
 		return;
 
@@ -125,93 +133,69 @@ void copy(int flag)
 	strcpy(copysource, cwd);
 	strcpy(copysource + strlen(copysource), file->name);
 
-	// Add recursive folder flag
-	if ((file->isDir) && (strncmp(file->name, "..", 2) != 0))
+	if ((file->isDir) && (strncmp(file->name, "..", 2) != 0)) // If directory, add recursive folder flag
 		flag |= COPY_FOLDER_RECURSIVE;
 
-	// Set copy flags
-	copymode = flag;
+	copymode = flag; // Set copy flags
 }
 
-// Copy file from A to B
-int copy_file(char * a, char * b)
+// Copy file from src to dst
+int copy_file(char * src, char * dst)
 {
-	// Chunk size
-	int chunksize = (512 * 1024);
+	int chunksize = (512 * 1024); // Chunk size
+	char * buffer = (char *)malloc(chunksize); // Reading buffer
 
-	// Reading buffer
-	char * buffer = (char *)malloc(chunksize);
+	u64 totalwrite = 0; // Accumulated writing
+	u64 totalread = 0; // Accumulated reading
 
-	// Accumulated writing
-	u64 totalwrite = 0;
+	int result = 0; // Result
 
-	// Accumulated reading
-	u64 totalread = 0;
-
-	// Result
-	int result = 0;
-
-	// Open file for reading
-	int in = open(a, O_RDONLY, 0777);
+	int in = open(src, O_RDONLY, 0777); // Open file for reading
 
 	// Opened file for reading
 	if (in >= 0)
 	{
-		// Delete output file (if existing)
-		fsRemove(fsArchive, b);
+		if (fileExists(fsArchive, dst))
+			fsRemove(fsArchive, dst); // Delete output file (if existing)
 
-		// Open file for writing
-		int out = open(b, O_WRONLY | O_CREAT | O_TRUNC, 0777);
+		int out = open(dst, O_WRONLY | O_CREAT | O_TRUNC, 0777); // Open output file for writing
 
-		// Opened file for writing
-		if (out >= 0)
+		if (out >= 0) // Opened file for writing
 		{
-			// Read byte count
-			u64 b_read = 0;
+			u64 b_read = 0; // Read byte count
 
 			// Copy loop (512KB at a time)
 			while((b_read = read(in, buffer, chunksize)) > 0)
 			{
-				// Accumulate read data
-				totalread += b_read;
-
-				// Write data
-				totalwrite += write(out, buffer, b_read);
+				totalread += b_read; // Accumulate read data
+				totalwrite += write(out, buffer, b_read); // Write data
 			}
 
-			// Close output file
-			close(out);
-
-			// Insufficient copy
-			if (totalread != totalwrite)
+			close(out); // Close output file
+			
+			if (totalread != totalwrite) // Insufficient copy
 				result = -3;
 		}
-
-		// Output open error
-		else
+		
+		else // Output open error
 			result = -2;
-
-		// Close input file
-		close(in);
+			
+		close(in); // Close input file
 	}
 
 	// Input open error
 	else
 		result = -1;
-
-	// Free memory
-	free(buffer);
-
-	// Return result
-	return result;
+	
+	free(buffer); // Free memory
+	return result; // Return result
 }
 
-// Copy folder from A to B
-Result copy_folder_recursive(char * a, char * b)
+// Recursively copy file from src to dst
+Result copy_folder_recursive(char * src, char * dst)
 {
-	// Open working Directory
 	Handle dirHandle;
-	Result directory = FSUSER_OpenDirectory(&dirHandle, fsArchive, fsMakePath(PATH_ASCII, a));
+	Result directory = FSUSER_OpenDirectory(&dirHandle, fsArchive, fsMakePath(PATH_ASCII, src)); // Open working Directory
 
 	u32 entriesRead;
 	static char dname[1024];
@@ -219,8 +203,7 @@ Result copy_folder_recursive(char * a, char * b)
 	// Opened directory
 	if (R_SUCCEEDED(directory))
 	{
-		// Create output directory (is allowed to fail, we can merge folders after all)
-		makeDir(fsArchive, b);
+		makeDir(fsArchive, dst); // Create output directory (is allowed to fail, we can merge folders after all)
 
 		// Iterate files
 		do
@@ -240,31 +223,29 @@ Result copy_folder_recursive(char * a, char * b)
 					if (strlen(dname) > 0)
 					{
 						// Calculate buffer size
-						int insize = strlen(a) + strlen(dname) + 2;
-						int outsize = strlen(b) + strlen(dname) + 2;
+						int insize = strlen(src) + strlen(dname) + 2;
+						int outsize = strlen(dst) + strlen(dname) + 2;
 
 						// Allocate buffer
 						char * inbuffer = (char *)malloc(insize);
 						char * outbuffer = (char *)malloc(outsize);
 
 						// Puzzle input path
-						strcpy(inbuffer, a);
+						strcpy(inbuffer, src);
 						inbuffer[strlen(inbuffer) + 1] = 0;
 						inbuffer[strlen(inbuffer)] = '/';
 						strcpy(inbuffer + strlen(inbuffer), dname);
 
 						// Puzzle output path
-						strcpy(outbuffer, b);
+						strcpy(outbuffer, dst);
 						outbuffer[strlen(outbuffer) + 1] = 0;
 						outbuffer[strlen(outbuffer)] = '/';
 						strcpy(outbuffer + strlen(outbuffer), dname);
 
-						// Another folder
-						if (info.attributes & FS_ATTRIBUTE_DIRECTORY)
+						if (info.attributes & FS_ATTRIBUTE_DIRECTORY) // Another folder
 							copy_folder_recursive(inbuffer, outbuffer); // Copy folder (via recursion)
 
-						// Simple file
-						else
+						else // Simple file
 							copy_file(inbuffer, outbuffer); // Copy file
 
 						// Free buffer
@@ -287,8 +268,7 @@ Result copy_folder_recursive(char * a, char * b)
 // Paste file or folder
 Result paste(void)
 {
-	// No copy source
-	if (copymode == NOTHING_TO_COPY)
+	if (copymode == NOTHING_TO_COPY) // No copy source
 		return -1;
 
 	// Source and target folder are identical
@@ -307,21 +287,16 @@ Result paste(void)
 	if (identical)
 		return -2;
 
-	// Source filename
-	char * filename = lastslash + 1;
+	char * filename = lastslash + 1; // Source filename
 
-	// Required target path buffer size
-	int requiredlength = strlen(cwd) + strlen(filename) + 1;
-
-	// Allocate target path buffer
-	char * copytarget = (char *)malloc(requiredlength);
+	int requiredlength = strlen(cwd) + strlen(filename) + 1; // Required target path buffer size
+	char * copytarget = (char *)malloc(requiredlength); // Allocate target path buffer
 
 	// Puzzle target path
 	strcpy(copytarget, cwd);
 	strcpy(copytarget + strlen(copytarget), filename);
 
-	// Return result
-	Result ret = -3;
+	Result ret = -3; // Return result
 
 	// Recursive folder copy
 	if ((copymode & COPY_FOLDER_RECURSIVE) == COPY_FOLDER_RECURSIVE)
@@ -329,43 +304,34 @@ Result paste(void)
 		// Check files in current folder
 		File * node = files; for(; node != NULL; node = node->next)
 		{
-			// Found a file matching the name (folder = ok, file = not)
-			if (strcmp(filename, node->name) == 0 && !node->isDir)
+			if ((strcmp(filename, node->name) == 0) && (!node->isDir)) // Found a file matching the name (folder = ok, file = not)
 				return -4; // Error out
 		}
 
-		// Copy folder recursively
-		ret = copy_folder_recursive(copysource, copytarget);
+		ret = copy_folder_recursive(copysource, copytarget); // Copy folder recursively
 
-		// Source delete
 		if ((R_SUCCEEDED(ret)) && (copymode & COPY_DELETE_ON_FINISH) == COPY_DELETE_ON_FINISH)
-			fsRmdirRecursive(fsArchive, copysource);
+			fsRmdirRecursive(fsArchive, copysource); // Delete dir
 	}
 
 	// Simple file copy
 	else
 	{
-		// Copy file
-		ret = copy_file(copysource, copytarget);
-
-		// Source delete
+		ret = copy_file(copysource, copytarget); // Copy file
+		
 		if ((R_SUCCEEDED(ret)) && (copymode & COPY_DELETE_ON_FINISH) == COPY_DELETE_ON_FINISH)
-			fsRemove(fsArchive, copysource); // Delete File
+			fsRemove(fsArchive, copysource); // Delete file
 	}
 
 	// Paste success
 	if (R_SUCCEEDED(ret))
 	{
-		// Erase cache data
-		memset(copysource, 0, sizeof(copysource));
+		memset(copysource, 0, sizeof(copysource)); // Erase cache data
 		copymode = NOTHING_TO_COPY;
 	}
 
-	// Free target path buffer
-	free(copytarget);
-
-	// Return result
-	return ret;
+	free(copytarget); // Free target path buffer
+	return ret; // Return result
 }
 
 Result saveLastDirectory(void)

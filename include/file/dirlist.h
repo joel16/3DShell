@@ -14,17 +14,11 @@
 typedef struct File
 {
 	struct File * next; // Next item
-
 	int isDir; // Folder flag
-	
 	int isReadOnly; // Read-only flag
-	
 	int isHidden; // Hidden file flag
-
 	char name[256]; // File name
-	
 	char ext[4]; // File extension
-	
 	u64 size; // File size
 } File;
 
@@ -73,12 +67,12 @@ int selectionX, selectionY, DEFAULT_STATE;
 					
 #define resetSelection() selectionX = -1, selectionY = -1;
 
-void updateList(int clearindex);
+Result updateList(int clearindex);
 void displayFiles(void);
 void recursiveFree(File * node);
 void openFile(void);
 int navigate(int _case);
-File * findindex(int index);
+File * getFileIndex(int index);
 int drawDeletionDialog(void);
 int displayProperties(void);
 

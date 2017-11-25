@@ -3,16 +3,16 @@
 #include "utils.h"
 
 const char * configFile =
-	"bgm = %d\n"
+	"recycleBin = %d\n"
 	"systemProtection = %d\n"
 	"showHiddenFiles = %d";
 
-Result saveConfig(bool bgm, bool protection, bool hidden)
+Result saveConfig(bool recycleBin, bool protection, bool hidden)
 {
 	Result ret = 0;
 	
 	char * buf = (char *)malloc(1024);
-	snprintf(buf, 1024, configFile, bgm, protection, hidden);
+	snprintf(buf, 1024, configFile, recycleBin, protection, hidden);
 	
 	if (R_FAILED(ret = fsWrite("/3ds/data/3DShell/config.cfg", buf)))
 		return ret;
@@ -29,11 +29,11 @@ Result loadConfig(void)
 	if (!fileExists(fsArchive, "/3ds/data/3DShell/config.cfg"))
 	{
 		// set these to the following by default:
-		bgmEnable = 0;
+		recycleBin = 0;
 		sysProtection = 1;
 		isHiddenEnabled = 0;
 		
-		return saveConfig(bgmEnable, sysProtection, isHiddenEnabled);
+		return saveConfig(recycleBin, sysProtection, isHiddenEnabled);
 	}
 	
 	if (R_FAILED(ret = fsOpen(&handle, "/3ds/data/3DShell/config.cfg", FS_OPEN_READ)))
@@ -55,7 +55,7 @@ Result loadConfig(void)
 	
 	buf[size] = '\0';
 	
-	sscanf(buf, configFile, &bgmEnable, &sysProtection, &isHiddenEnabled);
+	sscanf(buf, configFile, &recycleBin, &sysProtection, &isHiddenEnabled);
 	
 	if (R_FAILED(ret = FSFILE_Close(handle)))
 		return ret;
@@ -122,6 +122,8 @@ void makeDirectories(void)
 			makeDir(fsArchive, "/3ds/data");
 		if (!(dirExists(fsArchive, "/3ds/data/3DShell/")))
 			makeDir(fsArchive, "/3ds/data/3DShell");
+		if (!(dirExists(fsArchive, "/3ds/data/3DShell/bin/")))
+			makeDir(fsArchive, "/3ds/data/3DShell/bin");
 		if (!(dirExists(fsArchive, "/3ds/data/3DShell/themes/")))
 			makeDir(fsArchive, "/3ds/data/3DShell/themes");
 		if (!(dirExists(fsArchive, "/3ds/data/3DShell/themes/default/")))
@@ -191,14 +193,6 @@ u16 touchGetY(void)
 	return pos.py;
 }
 
-Result setConfig(const char * path, bool set) // using individual txt files for configs for now (plan to change this later when there's more options)
-{
-	if (set)
-		return fsWrite(path, "1");
-
-	return fsWrite(path, "0");
-}
-
 const char * getLastNChars(char * str, int n)
 {
 	int len = strlen(str);
@@ -208,9 +202,9 @@ const char * getLastNChars(char * str, int n)
 	return last_n;
 }
 
-u8 getRegion(void)
+CFG_Region getRegion(void)
 {
-	u8 region = 0;
+	CFG_Region region = 0;
 
 	if (R_SUCCEEDED(CFGU_SecureInfoGetRegion(&region)))
 		return region;
@@ -218,9 +212,9 @@ u8 getRegion(void)
 	return 0;
 }
 
-u8 getLanguage(void)
+CFG_Language getLanguage(void)
 {
-	u8 language = 0;
+	CFG_Language language = 0;
 
 	if (R_SUCCEEDED(CFGU_GetSystemLanguage(&language)))
 		return language;

@@ -22,8 +22,6 @@ Result createFolder(void);
 Result renameFile(void);
 Result delete(void);
 void copy(int flag);
-int copy_file(char * a, char * b);
-Result copy_folder_recursive(char * a, char * b);
 Result paste(void);
 Result saveLastDirectory(void);
 

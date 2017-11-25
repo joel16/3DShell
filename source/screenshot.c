@@ -1,5 +1,6 @@
-#include "file/fs.h"
+#include "fs.h"
 #include "screenshot.h"
+#include "utils.h"
 
 static int num = 0;
 
@@ -112,6 +113,7 @@ void captureScreenshot(void)
 
 	sprintf(filename, "%s", "screenshot");
 
+	wait(1);
 	generateScreenshotFileName(num, filename, ".bmp");
 
 	while (fileExists(fsArchive, filename))

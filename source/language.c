@@ -131,18 +131,18 @@ const char lang_deletion[][5][100] =
 
 const char lang_settings[][9][100] =
 {
-	{"一般的", "システムファイル防御", "大切なファイルの削除を防止します", "カスタムテーマ", "現在のテーマ:", "BGM", "Enable BGM upon start up."},
-	{"General", "System file protection", "Prevents deletion of system files.", "Custom themes", "Current:", "BGM", "Enable BGM upon start up.", "Show hidden files", "Displays hidden files in file browser."},
-	{"Général", "Protection de fichier système", "Empêche la supprimation des fichiers systèmes.", "Thèmes personnalisés", "Actuel:", "BGM", "Enable BGM upon start up."},
-	{"Allgemein", "Systemdateien-Schutz", "Verhindert das Löschen von Systemdateien.", "Eigene Themen", "Aktuell:", "BGM", "Enable BGM upon start up."},
-	{"Generale", "Protezione file di sistema", "Previene l'eliminazione di file di sistema.", "Temi custom", "Attuale:", "BGM", "Enable BGM upon start up."},
-	{"General", "Protección de archivos del sistema", "Previene la eliminación de archivos del sistema", "Temas personalizados", "Actual:", "BGM", "Enable BGM upon start up."},
-	{"通用", "系统文件保护", "防止系统文件被删除。", "自定义主题", "当前：", "BGM", "Enable BGM upon start up."},
-	{"일반", "시스템 파일 보호", "시스템 파일의 삭제를 방지합니다.", "커스텀 테마", "현재:", "BGM", "Enable BGM upon start up."},
-	{"Algemeen", "System file protection", "Voorkomt het verwijderen van systeembestanden.", "Aangepaste Thema's", "Momenteel:", "BGM", "Enable BGM upon start up."},
-	{"Geral", "Proteção de arquivos do sistema", "Prevenir eliminação de arquivos do sistema", "Customização", "Tema atual:", "BGM", "Enable BGM upon start up."},
-	{"Общее", "Защита файловой системы", "Предотвращать удаление системных файлов.", "Темы", "Текущая:", "BGM", "Enable BGM upon start up."},
-	{"一般", "系統資料保護", "保護系統資料不被刪除", "自製主題", "當前:", "BGM", "Enable BGM upon start up."}
+	{"一般的", "システムファイル防御", "大切なファイルの削除を防止します", "カスタムテーマ", "現在のテーマ:", "Recycle Bin", "Enable 3D-Shell's recyle bin."},
+	{"General", "System file protection", "Prevents deletion of system files.", "Custom themes", "Current:", "Recycle Bin", "Enable 3D-Shell's recyle bin.", "Show hidden files", "Displays hidden files in file browser."},
+	{"Général", "Protection de fichier système", "Empêche la supprimation des fichiers systèmes.", "Thèmes personnalisés", "Actuel:", "Recycle Bin", "Enable 3D-Shell's recyle bin."},
+	{"Allgemein", "Systemdateien-Schutz", "Verhindert das Löschen von Systemdateien.", "Eigene Themen", "Aktuell:", "Recycle Bin", "Enable 3D-Shell's recyle bin."},
+	{"Generale", "Protezione file di sistema", "Previene l'eliminazione di file di sistema.", "Temi custom", "Attuale:", "Recycle Bin", "Enable 3D-Shell's recyle bin."},
+	{"General", "Protección de archivos del sistema", "Previene la eliminación de archivos del sistema", "Temas personalizados", "Actual:", "Recycle Bin", "Enable 3D-Shell's recyle bin."},
+	{"通用", "系统文件保护", "防止系统文件被删除。", "自定义主题", "当前：", "Recycle Bin", "Enable 3D-Shell's recyle bin."},
+	{"일반", "시스템 파일 보호", "시스템 파일의 삭제를 방지합니다.", "커스텀 테마", "현재:", "Recycle Bin", "Enable 3D-Shell's recyle bin."},
+	{"Algemeen", "System file protection", "Voorkomt het verwijderen van systeembestanden.", "Aangepaste Thema's", "Momenteel:", "Recycle Bin", "Enable 3D-Shell's recyle bin."},
+	{"Geral", "Proteção de arquivos do sistema", "Prevenir eliminação de arquivos do sistema", "Customização", "Tema atual:", "Recycle Bin", "Enable 3D-Shell's recyle bin."},
+	{"Общее", "Защита файловой системы", "Предотвращать удаление системных файлов.", "Темы", "Текущая:", "Recycle Bin", "Enable 3D-Shell's recyle bin."},
+	{"一般", "系統資料保護", "保護系統資料不被刪除", "自製主題", "當前:", "Recycle Bin", "Enable 3D-Shell's recyle bin."}
 };
 
 const char lang_themes[][1][100] =

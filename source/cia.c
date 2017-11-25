@@ -280,13 +280,13 @@ Result displayCIA(const char * path)
 		
 		if (isInstalling == 0)
 		{
-			screen_draw_string((300 - screen_get_string_width("INSTALL", 0.41f, 0.41f)), 220, 0.41f, 0.41f, RGBA8(0, 150, 136, 255), "INSTALL");
-			screen_draw_string((300 - (screen_get_string_width("CANCEL", 0.41f, 0.41f) + screen_get_string_width("INSTALL", 0.41f, 0.41f) + 20)), 220, 0.41f, 0.41f, RGBA8(0, 150, 136, 255), "CANCEL");
+			screen_draw_string((300 - screen_get_string_width("INSTALL", 0.45f, 0.45f)), 220, 0.45f, 0.45f, RGBA8(0, 150, 136, 255), "INSTALL");
+			screen_draw_string((300 - (screen_get_string_width("CANCEL", 0.45f, 0.45f) + screen_get_string_width("INSTALL", 0.45f, 0.45f) + 20)), 220, 0.45f, 0.45f, RGBA8(0, 150, 136, 255), "CANCEL");
 		}
 		else if (isInstalling == 2)
 		{
-			screen_draw_string((300 - screen_get_string_width("OPEN", 0.41f, 0.41f)), 220, 0.41f, 0.41f, RGBA8(0, 150, 136, 255), "OPEN");
-			screen_draw_string((300 - (screen_get_string_width("DONE", 0.41f, 0.41f) + screen_get_string_width("OPEN", 0.41f, 0.41f) + 20)), 220, 0.41f, 0.41f, RGBA8(0, 150, 136, 255), "DONE");
+			screen_draw_string((300 - screen_get_string_width("OPEN", 0.45f, 0.45f)), 220, 0.45f, 0.45f, RGBA8(0, 150, 136, 255), "OPEN");
+			screen_draw_string((300 - (screen_get_string_width("DONE", 0.45f, 0.45f) + screen_get_string_width("OPEN", 0.45f, 0.45f) + 20)), 220, 0.45f, 0.45f, RGBA8(0, 150, 136, 255), "DONE");
 		}
 		
 		screen_select(GFX_TOP);
@@ -298,14 +298,14 @@ Result displayCIA(const char * path)
 		digitalTime();
 		
 		screen_draw_texture(TEXTURE_CIA_LARGE_ICON, 15, 28);
-		screen_draw_stringf(78, 28, 0.41f, 0.41f, RGBA8(0, 0, 0, 255), "%s v%d.%d.%d (%016llX)", fileName, ((cia.version & 0xFC00) >> 10), ((cia.version & 0x03F0) >> 4), (cia.version & 0x000F), cia.titleID);
-		screen_draw_stringf(78, 44, 0.41f, 0.41f, RGBA8(0, 0, 0, 255), "%s %s by %s", platformString(cia.platform), categoryString(cia.category), cia.author);
-		screen_draw_stringf(78, 60, 0.41f, 0.41f, RGBA8(0, 0, 0, 255), "%s", size);
+		screen_draw_stringf(78, 28, 0.45f, 0.45f, RGBA8(0, 0, 0, 255), "%s v%d.%d.%d (%016llX)", fileName, ((cia.version & 0xFC00) >> 10), ((cia.version & 0x03F0) >> 4), (cia.version & 0x000F), cia.titleID);
+		screen_draw_stringf(78, 44, 0.45f, 0.45f, RGBA8(0, 0, 0, 255), "%s %s by %s", platformString(cia.platform), categoryString(cia.category), cia.author);
+		screen_draw_stringf(78, 60, 0.45f, 0.45f, RGBA8(0, 0, 0, 255), "%s", size);
 		
 		if (isInstalling == 0)
 		{
-			screen_draw_string(15, 86, 0.41f, 0.41f, RGBA8(0, 0, 0, 255), "Do you want to install this application?");
-			//screen_draw_stringf(15, 116, 0.41f, 0.41f, RGBA8(0, 0, 0, 255), "Program requires: %s", requiredSpace);	
+			screen_draw_string(15, 86, 0.45f, 0.45f, RGBA8(0, 0, 0, 255), "Do you want to install this application?");
+			//screen_draw_stringf(15, 116, 0.45f, 0.45f, RGBA8(0, 0, 0, 255), "Program requires: %s", requiredSpace);	
 		}
 		else if (isInstalling == 1)
 		{
@@ -316,7 +316,7 @@ Result displayCIA(const char * path)
 			screen_draw_rect(0, 130, 100, 3, RGBA8(245, 245, 245, 255));
 			screen_draw_rect(300, 130, 66, 3, RGBA8(245, 245, 245, 255)); 
 	
-			screen_draw_string(((400 - screen_get_string_width("Installing...", 0.41f, 0.41f)) / 2), 146, 0.41f, 0.41f, RGBA8(0, 0, 0, 255), "Installing...");
+			screen_draw_string(((400 - screen_get_string_width("Installing...", 0.45f, 0.45f)) / 2), 146, 0.45f, 0.45f, RGBA8(0, 0, 0, 255), "Installing...");
 			
 			pBar += 4;
 		
@@ -326,18 +326,18 @@ Result displayCIA(const char * path)
 			isInstalling = installCIA(path, MEDIATYPE_SD, update);
 		}
 		else
-			screen_draw_string(((400 - screen_get_string_width("App installed.", 0.41f, 0.41f)) / 2), 146, 0.41f, 0.41f, RGBA8(0, 0, 0, 255), "App installed.");
+			screen_draw_string(((400 - screen_get_string_width("App installed.", 0.45f, 0.45f)) / 2), 146, 0.45f, 0.45f, RGBA8(0, 0, 0, 255), "App installed.");
 		
 		screen_end_frame();
 		
 		if (isInstalling == 0)
 		{
-			if (((touchInRect((300 - screen_get_string_width("INSTALL", 0.41f, 0.41f)), 300, 220, 240)) && (kPressed & KEY_TOUCH)) || (kPressed & KEY_A))
+			if (((touchInRect((300 - screen_get_string_width("INSTALL", 0.45f, 0.45f)), 300, 220, 240)) && (kPressed & KEY_TOUCH)) || (kPressed & KEY_A))
 			{
 				//wait(1);
 				isInstalling = 1;
 			}
-			else if (((touchInRect((300 - (screen_get_string_width("CANCEL", 0.41f, 0.41f) + screen_get_string_width("INSTALL", 0.41f, 0.41f) + 20)), ((300 - 20) - screen_get_string_width("INSTALL", 0.41f, 0.41f)), 220, 240)) && (kPressed & KEY_TOUCH))  || (kPressed & KEY_B))
+			else if (((touchInRect((300 - (screen_get_string_width("CANCEL", 0.45f, 0.45f) + screen_get_string_width("INSTALL", 0.45f, 0.45f) + 20)), ((300 - 20) - screen_get_string_width("INSTALL", 0.45f, 0.45f)), 220, 240)) && (kPressed & KEY_TOUCH))  || (kPressed & KEY_B))
 			{
 				wait(1);
 				break;
@@ -345,12 +345,12 @@ Result displayCIA(const char * path)
 		}
 		else if (isInstalling == 2)
 		{
-			if (((touchInRect((300 - screen_get_string_width("OPEN", 0.41f, 0.41f)), 300, 220, 240)) && (kPressed & KEY_TOUCH)) || (kPressed & KEY_A))
+			if (((touchInRect((300 - screen_get_string_width("OPEN", 0.45f, 0.45f)), 300, 220, 240)) && (kPressed & KEY_TOUCH)) || (kPressed & KEY_A))
 			{
 				//wait(1);
 				launchCIA(cia.titleID, cia.mediaType);
 			}
-			else if (((touchInRect((300 - (screen_get_string_width("DONE", 0.41f, 0.41f) + screen_get_string_width("OPEN", 0.41f, 0.41f) + 20)), ((300 - 20) - screen_get_string_width("OPEN", 0.41f, 0.41f)), 220, 240)) && (kPressed & KEY_TOUCH)) || (kPressed & KEY_B))
+			else if (((touchInRect((300 - (screen_get_string_width("DONE", 0.45f, 0.45f) + screen_get_string_width("OPEN", 0.45f, 0.45f) + 20)), ((300 - 20) - screen_get_string_width("OPEN", 0.45f, 0.45f)), 220, 240)) && (kPressed & KEY_TOUCH)) || (kPressed & KEY_B))
 			{
 				wait(1);
 				break;

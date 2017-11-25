@@ -9,7 +9,7 @@
 
 #define wait(msec) svcSleepThread(10000000 * (s64)msec)
 
-Result saveConfig(bool bgm, bool protection, bool hidden);
+Result saveConfig(bool recycleBin, bool protection, bool hidden);
 Result loadConfig(void);
 Result getLastDirectory(void);
 void makeDirectories(void);
@@ -19,10 +19,9 @@ u64 getUsedStorage(FS_SystemMediaType mediaType);
 void getSizeString(char * string, uint64_t size);
 u16 touchGetX(void);
 u16 touchGetY(void);
-Result setConfig(const char * path, bool set);
 const char * getLastNChars(char * str, int n);
-u8 getRegion(void);
-u8 getLanguage(void);
+CFG_Region getRegion(void);
+CFG_Language getLanguage(void);
 const char * getUsername(void);
 bool isN3DS(void);
 void u16_to_u8(char * buf, const u16 * input, size_t bufsize);

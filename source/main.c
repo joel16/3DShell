@@ -25,8 +25,6 @@ struct colour BottomScreen_colour;
 struct colour BottomScreen_bar_colour;
 struct colour BottomScreen_text_colour;
 
-struct audio * bgm;
-
 void initServices(void)
 {
 	srvInit();
@@ -128,8 +126,6 @@ void initServices(void)
 	if (isN3DS())
 		osSetSpeedupEnable(true);
 
-	//APT_SetAppCpuTimeLimit(80);
-
 	language = 1; //getLanguage();
 
 	sprintf(welcomeMsg, "%s %s! %s", lang_welcome[language][0], getUsername(), lang_welcome[language][1]);
@@ -138,21 +134,10 @@ void initServices(void)
 
 	DEFAULT_STATE = STATE_HOME;
 	BROWSE_STATE = STATE_SD;
-
-	/*if (fileExists(fsArchive, "/3ds/data/3DShell/bgm.ogg")) // Initally create this to avoid crashes
-	{
-		bgm = ogg_create(BGM);
-		if (bgm != NULL)
-			ogg_load("3ds/3DShell/bgm.ogg", bgm);
-		else
-			bgm->status = -1;
-	}*/
 }
 
 void termServices(void)
 {
-	// audio_stop(bgm);
-
 	osSetSpeedupEnable(0);
 
 	screen_unload_texture(TEXTURE_MUSIC_PAUSE);
@@ -247,6 +232,9 @@ void displayFTP()
 	task_init();
 
 	touchPosition touch;
+	
+	char buf[25];
+	u32 wifiStatus = 0;
 
 	while(aptMainLoop())
 	{
@@ -283,28 +271,25 @@ void displayFTP()
 
 		ftp_loop();
 
-		char buf[25];
-
-		u32 wifiStatus = 0;
 		ACU_GetWifiStatus(&wifiStatus);
 
 		if (!(wifiStatus))
 		{
-			screen_draw_string(((320 - screen_get_string_width(lang_ftp[language][3], 0.41f, 0.41f)) / 2), 40, 0.41f, 0.41f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][3]);
+			screen_draw_string(((320 - screen_get_string_width(lang_ftp[language][3], 0.45f, 0.45f)) / 2), 40, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][3]);
 			sprintf(buf, lang_ftp[language][4]);
 		}
 		else
 		{
-			screen_draw_string(((320 - screen_get_string_width(lang_ftp[language][0], 0.41f, 0.41f)) / 2), 40, 0.41f, 0.41f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][0]);
+			screen_draw_string(((320 - screen_get_string_width(lang_ftp[language][0], 0.45f, 0.45f)) / 2), 40, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][0]);
 
 			u32 ip = gethostid();
 			sprintf(buf, "IP: %lu.%lu.%lu.%lu:5000", ip & 0xFF, (ip>>8)&0xFF, (ip>>16)&0xFF, (ip>>24)&0xFF);
 
-			screen_draw_string(((320 - screen_get_string_width(buf, 0.41f, 0.41f)) / 2), 60, 0.41f, 0.41f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), buf);
-			screen_draw_string(((320 - screen_get_string_width(lang_ftp[language][1], 0.41f, 0.41f)) / 2), 80, 0.41f, 0.41f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][1]);
+			screen_draw_string(((320 - screen_get_string_width(buf, 0.45f, 0.45f)) / 2), 60, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), buf);
+			screen_draw_string(((320 - screen_get_string_width(lang_ftp[language][1], 0.45f, 0.45f)) / 2), 80, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][1]);
 		}
 
-		screen_draw_string(((320 - screen_get_string_width(lang_ftp[language][2], 0.41f, 0.41f)) / 2), 100, 0.41f, 0.41f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][2]);
+		screen_draw_string(((320 - screen_get_string_width(lang_ftp[language][2], 0.45f, 0.45f)) / 2), 100, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][2]);
 
 		screen_end_frame();
 	}
@@ -354,22 +339,22 @@ void mainMenu(int clearindex)
 		{
 			wait(1);
 			DEFAULT_STATE = STATE_UPDATE;
-		}
+		}*/
 
 		else if ((kPressed & KEY_TOUCH) && (touchInRect(280, 320, 50, 72)) && (IF_SETTINGS))
 		{
 			wait(1);
-			if (bgmEnable == false)
+			if (recycleBin == false)
 			{
-				bgmEnable = true;
-				saveConfig(bgmEnable, sysProtection, isHiddenEnabled);
+				recycleBin = true;
+				saveConfig(recycleBin, sysProtection, isHiddenEnabled);
 			}
 			else
 			{
-				bgmEnable = false;
-				saveConfig(bgmEnable, sysProtection, isHiddenEnabled);
+				recycleBin = false;
+				saveConfig(recycleBin, sysProtection, isHiddenEnabled);
 			}
-		}*/
+		}
 
 		if ((kPressed & KEY_TOUCH) && (touchInRect(280, 320, 90, 112)) && (IF_SETTINGS))
 		{
@@ -377,12 +362,12 @@ void mainMenu(int clearindex)
 			if (sysProtection == false)
 			{
 				sysProtection = true;
-				saveConfig(bgmEnable, sysProtection, isHiddenEnabled);
+				saveConfig(recycleBin, sysProtection, isHiddenEnabled);
 			}
 			else
 			{
 				sysProtection = false;
-				saveConfig(bgmEnable, sysProtection, isHiddenEnabled);
+				saveConfig(recycleBin, sysProtection, isHiddenEnabled);
 			}
 		}
 
@@ -401,12 +386,12 @@ void mainMenu(int clearindex)
 			if (isHiddenEnabled == false)
 			{
 				isHiddenEnabled = true;
-				saveConfig(bgmEnable, sysProtection, isHiddenEnabled);
+				saveConfig(recycleBin, sysProtection, isHiddenEnabled);
 			}
 			else
 			{
 				isHiddenEnabled = false;
-				saveConfig(bgmEnable, sysProtection, isHiddenEnabled);
+				saveConfig(recycleBin, sysProtection, isHiddenEnabled);
 			}
 			updateList(CLEAR);
 			displayFiles();
@@ -554,7 +539,7 @@ void mainMenu(int clearindex)
 
 				if (IF_THEME)
 				{
-					File * file = findindex(position);
+					File * file = getFileIndex(position);
 
 					strcpy(fileName, file->name);
 

@@ -71,7 +71,7 @@ char fileName[1024];
 /*
 *	Generic definitions
 */
-bool copyF, cutF, properties, deleteDialog, bgmEnable, sysProtection, isHiddenEnabled;
+bool copyF, cutF, properties, deleteDialog, recycleBin, sysProtection, isHiddenEnabled;
 
 jmp_buf exitJmp;
 

@@ -247,7 +247,7 @@ void musicPlayer(char * path)
 	svcGetThreadPriority(&prio, CUR_THREAD_HANDLE);
 	thread = threadCreate(playFile, path, 32 * 1024, prio - 1, -2, false);
 	
-	File * file = findindex(position);
+	File * file = getFileIndex(position);
 	bool isMP3 = (strncasecmp(file->ext, "mp3", 3) == 0);
 	
 	while (isPlaying())

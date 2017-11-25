@@ -18,7 +18,7 @@ void displayImage(char * path)
 	screen_clear(GFX_TOP, RGBA8(33, 39, 43, 255));
 	screen_clear(GFX_BOTTOM, RGBA8(33, 39, 43, 255));
 
-	File * file = findindex(position);
+	File * file = getFileIndex(position);
 
 	if (strncasecmp(file->ext, "png", 3) == 0)
 		screen_load_texture_png(TEXTURE_GALLERY_IMAGE, path, true);
