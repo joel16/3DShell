@@ -29,9 +29,9 @@ include $(DEVKITARM)/3ds_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
-SOURCES		:=	source source/audio source/file source/graphics source/quirc source/net source/unzip
+SOURCES		:=	source source/audio source/file source/graphics source/quirc source/net source/minizip
 DATA		:=	data
-INCLUDES	:=	include include/audio include/dr_libs include/file include/graphics include/quirc include/net include/unzip
+INCLUDES	:=	include include/audio include/dr_libs include/file include/graphics include/quirc include/net include/minizip
 ROMFS		:=	romfs
 
 APP_TITLE		:= 3DShell
