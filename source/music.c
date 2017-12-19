@@ -5,16 +5,14 @@
 #include "audio/mp3.h"
 #include "audio/vorbis.h"
 #include "audio/wav.h"
-#include "clock.h"
 #include "common.h"
 #include "file/dirlist.h"
 #include "fs.h"
 #include "graphics/screen.h"
+#include "menus/status_bar.h"
 #include "music.h"
-#include "power.h"
 #include "screenshot.h"
 #include "utils.h"
-#include "wifi.h"
 
 static volatile bool stop = true;
 

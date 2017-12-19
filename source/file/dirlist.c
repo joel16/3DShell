@@ -1,26 +1,21 @@
 #include "archive.h"
-#include "cia.h"
-#include "clock.h"
 #include "common.h"
 #include "compile_date.h"
 #include "file/dirlist.h"
 #include "file/file_operations.h"
 #include "file/fs.h"
-#include "net/ftp.h"
 #include "gallery.h"
 #include "language.h"
 #include "main.h"
-#include "mcu.h"
+#include "menus/status_bar.h"
 #include "music.h"
+#include "net/ftp.h"
 #include "net/net.h"
-#include "power.h"
 #include "graphics/screen.h"
 #include "screenshot.h"
 #include "text.h"
 #include "theme.h"
-#include "net/updater.h"
 #include "utils.h"
-#include "wifi.h"
 
 struct colour Storage_colour;
 struct colour TopScreen_colour;
@@ -193,6 +188,36 @@ void displayFiles(void)
 	else
 		screen_draw_texture(TEXTURE_HOME_ICON, -2, -2);
 
+	if (DEFAULT_STATE == STATE_OPTIONS)
+	{
+		screen_draw_texture(TEXTURE_OPTIONS_ICON_SELECTED, 25, 0);
+
+		screen_draw_texture(TEXTURE_OPTIONS, 37, 20);
+
+		screen_draw_rect(37 + (selectionX * 123), 56 + (selectionY * 37), 123, 37, RGBA8(Options_select_colour.r, Options_select_colour.g, Options_select_colour.b, 255));
+
+		screen_draw_string(42, 36, 0.45f, 0.45f, RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255), lang_options[language][0]);
+		screen_draw_string(232, 196, 0.45f, 0.45f, RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255), lang_options[language][8]);
+
+		screen_draw_string(47, 72, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][1]);
+		screen_draw_string(47, 109, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][3]);
+		screen_draw_string(47, 146, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][5]);
+
+		screen_draw_string(170, 72, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][2]);
+
+		if (copyF == false)
+			screen_draw_string(170, 109, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][4]);
+		else
+			screen_draw_string(170, 109, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][7]);
+
+		if (cutF == false)
+			screen_draw_string(170, 146, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][6]);
+		else
+			screen_draw_string(170, 146, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][7]);
+	}
+	else
+		screen_draw_texture(TEXTURE_OPTIONS_ICON, 25, 0);
+
 	if (DEFAULT_STATE == STATE_SETTINGS)
 	{
 		screen_draw_texture(TEXTURE_SETTINGS_ICON_SELECTED, 50, 1);
@@ -239,60 +264,17 @@ void displayFiles(void)
 	if (DEFAULT_STATE == STATE_THEME)
 		screen_draw_string(((320 - screen_get_string_width(lang_themes[language][0], 0.45f, 0.45f)) / 2), 40, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_themes[language][0]);
 
-	if (DEFAULT_STATE == STATE_DOWNLOAD)
-	{
-		screen_draw_texture(TEXTURE_DOWNLOAD_ICON_SELECTED, 125, 0);
-
-		screen_draw_rect(0, 20, 320, 220, RGBA8(Settings_colour.r, Settings_colour.g, Settings_colour.b, 255));
-
-		screen_draw_stringf(10, 40, 0.45f, 0.45f, RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255), "Enter URL: %s", dl_url);
-
-		screen_draw_stringf(10, 60, 0.45f, 0.45f, RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255), "%lu", dl_size);
-	}
-	else
-		screen_draw_texture(TEXTURE_DOWNLOAD_ICON, 125, 0);
-
 	if (BROWSE_STATE == STATE_SD)
-		screen_draw_texture(TEXTURE_SD_ICON_SELECTED, 150, 0);
+		screen_draw_texture(TEXTURE_SD_ICON_SELECTED, 125, 0);
 	else
-		screen_draw_texture(TEXTURE_SD_ICON, 150, 0);
+		screen_draw_texture(TEXTURE_SD_ICON, 125, 0);
 
 	if (BROWSE_STATE == STATE_NAND)
-		screen_draw_texture(TEXTURE_NAND_ICON_SELECTED, 175, 0);
+		screen_draw_texture(TEXTURE_NAND_ICON_SELECTED, 150, 0);
 	else
-		screen_draw_texture(TEXTURE_NAND_ICON, 175, 0);
+		screen_draw_texture(TEXTURE_NAND_ICON, 150, 0);
 
 	screen_draw_texture(TEXTURE_SEARCH_ICON, (320 - screen_get_texture_width(TEXTURE_SEARCH_ICON)), -2);
-
-	if (DEFAULT_STATE == STATE_OPTIONS)
-	{
-		screen_draw_texture(TEXTURE_OPTIONS_ICON_SELECTED, 25, 0);
-
-		screen_draw_texture(TEXTURE_OPTIONS, 37, 20);
-
-		screen_draw_rect(37 + (selectionX * 123), 56 + (selectionY * 37), 123, 37, RGBA8(Options_select_colour.r, Options_select_colour.g, Options_select_colour.b, 255));
-
-		screen_draw_string(42, 36, 0.45f, 0.45f, RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255), lang_options[language][0]);
-		screen_draw_string(232, 196, 0.45f, 0.45f, RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255), lang_options[language][8]);
-
-		screen_draw_string(47, 72, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][1]);
-		screen_draw_string(47, 109, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][3]);
-		screen_draw_string(47, 146, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][5]);
-
-		screen_draw_string(170, 72, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][2]);
-
-		if (copyF == false)
-			screen_draw_string(170, 109, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][4]);
-		else
-			screen_draw_string(170, 109, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][7]);
-
-		if (cutF == false)
-			screen_draw_string(170, 146, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][6]);
-		else
-			screen_draw_string(170, 146, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][7]);
-	}
-	else
-		screen_draw_texture(TEXTURE_OPTIONS_ICON, 25, 0);
 
 	screen_select(GFX_TOP);
 
@@ -343,7 +325,7 @@ void displayFiles(void)
 				screen_draw_texture(TEXTURE_SYSTEM_ICON, 30, 58 + (38 * printed));
 			else if (strncasecmp(file->ext, "txt", 3) == 0)
 				screen_draw_texture(TEXTURE_TXT_ICON, 30, 58 + (38 * printed));
-			else if ((strncasecmp(file->ext, "rar", 3) == 0) || (strncasecmp(file->ext, "zip", 3) == 0))
+			else if (strncasecmp(file->ext, "zip", 3) == 0)
 				screen_draw_texture(TEXTURE_ZIP_ICON, 30, 58 + (38 * printed));
 			else
 				screen_draw_texture(TEXTURE_FILE_ICON, 30, 58 + (38 * printed));
@@ -424,8 +406,6 @@ void openFile(void)
 	}
 	else if (strncasecmp(file->ext, "png", 3) == 0 || strncasecmp(file->ext, "jpg", 3) == 0 || strncasecmp(file->ext, "gif", 3) == 0 || strncasecmp(file->ext, "bmp", 3) == 0)
 		displayImage(path);
-	else if (strncasecmp(file->ext, "cia", 3) == 0)
-		displayCIA(path);
 	else if (strncasecmp(file->ext, "zip", 3) == 0)
 	{
 		extractZip(path, cwd);
@@ -582,9 +562,9 @@ int displayProperties(void)
 		screen_draw_string(((320 - screen_get_string_width(lang_properties[language][1], 0.45f, 0.45f)) / 2), 50, 0.45f, 0.45f, RGBA8(Options_title_text_colour.r, Options_title_text_colour.g, Options_title_text_colour.b, 255), lang_properties[language][1]);
 
 		screen_draw_string(42, 74, 0.45f, 0.45f, RGBA8(Options_title_text_colour.r, Options_title_text_colour.g, Options_title_text_colour.b, 255), lang_properties[language][2]);
-			screen_draw_stringf(100, 74, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), "%.36s", fileName);
+			screen_draw_stringf(100, 74, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), "%.28s", fileName);
 		screen_draw_string(42, 94, 0.45f, 0.45f, RGBA8(Options_title_text_colour.r, Options_title_text_colour.g, Options_title_text_colour.b, 255), lang_properties[language][3]);
-			screen_draw_stringf(100, 94, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), "%s", path);
+			screen_draw_stringf(100, 94, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), "%.28s", path);
 
 		screen_draw_string(42, 114, 0.45f, 0.45f, RGBA8(Options_title_text_colour.r, Options_title_text_colour.g, Options_title_text_colour.b, 255), lang_properties[language][4]);
 
@@ -612,7 +592,7 @@ int displayProperties(void)
 		if (!(file->isDir))
 		{
 			screen_draw_string(42, 134, 0.45f, 0.45f, RGBA8(Options_title_text_colour.r, Options_title_text_colour.g, Options_title_text_colour.b, 255), lang_properties[language][5]);
-			screen_draw_stringf(100, 134, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), "%s", fileSize);
+			screen_draw_stringf(100, 134, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), "%.28s", fileSize);
 		}
 
 		screen_end_frame();

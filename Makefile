@@ -35,9 +35,9 @@ TARGET      := $(subst $e ,_,$(notdir $(APP_TITLE)))
 OUTDIR      := out
 BUILD       := build
 RESOURCES   := resources
-SOURCES     := source source/audio source/file source/graphics source/quirc source/net source/minizip
+SOURCES     := source source/audio source/file source/graphics source/menus source/minizip source/net 
 DATA        := data
-INCLUDES    := include include/audio include/dr_libs include/file include/graphics include/quirc include/net include/minizip
+INCLUDES    := include include/audio include/dr_libs include/file include/graphics include/menus include/minizip include/net
 ROMFS       := romfs
 
 ICON        := $(RESOURCES)/ic_launcher_filemanager.png

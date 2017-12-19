@@ -1,11 +1,9 @@
 #include "common.h"
-#include "clock.h"
 #include "file/dirlist.h"
-#include "power.h"
+#include "menus/status_bar.h"
 #include "screenshot.h"
 #include "text.h"
 #include "utils.h"
-#include "wifi.h"
 
 int displayText(char * path)
 {

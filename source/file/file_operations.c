@@ -2,9 +2,9 @@
 #include "file/dirlist.h"
 #include "file/file_operations.h"
 #include "file/fs.h"
-#include "keyboard.h"
-#include "main.h"
 #include "graphics/screen.h"
+#include "keyboard.h"
+#include "menus/menu_main.h"
 #include "utils.h"
 
 #include <fcntl.h>
@@ -24,14 +24,14 @@ Result createFolder(void)
 	strcpy(tempFolder, keyboard_3ds_get(256, "", "Enter name"));
 
 	if (strncmp(tempFolder, "", 1) == 0)
-		mainMenu(KEEP);
+		menu_main(KEEP);
 
 	char path[500];
 	strcpy(path, cwd);
 	strcat(path, tempFolder);
 
 	if (R_SUCCEEDED(makeDir(fsArchive, path)))
-		mainMenu(CLEAR);
+		menu_main(CLEAR);
 
 	return 0;
 }
@@ -67,7 +67,7 @@ Result renameFile(void)
 			return ret;
 	}
 	
-	mainMenu(CLEAR);
+	menu_main(CLEAR);
 	return 0;
 }
 

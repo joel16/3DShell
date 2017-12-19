@@ -16,6 +16,4 @@ char welcomeMsg[100];
 */
 char currDate[100];
 
-void mainMenu(int clearindex);
-
 #endif
