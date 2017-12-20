@@ -6,7 +6,6 @@
 
 #include "fs.h"
 #include "audio/wav.h"
-#include "music.h"
 
 static const size_t	buffSize = 16 * 1024;
 static Handle pWav;

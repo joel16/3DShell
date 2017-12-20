@@ -1,27 +1,22 @@
 #include "common.h"
 #include "file/dirlist.h"
 #include "file/fs.h"
-#include "gallery.h"
 #include "graphics/screen.h"
 #include "language.h"
 #include "main.h"
+#include "menus/menu_gallery.h"
 #include "menus/menu_main.h"
+#include "menus/menu_music.h"
 #include "menus/status_bar.h"
 #include "net/net.h"
-#include "music.h"
 #include "theme.h"
 #include "utils.h"
 
 void initServices(void)
 {
-	srvInit();
-	fsInit();
-	sdmcInit();
 	openArchive(&fsArchive, ARCHIVE_SDMC);
-	aptInit();
 	mcuHwcInit();
 	ptmuInit();
-	hidInit();
 	cfguInit();
 	acInit();
 	httpcInit(0);
@@ -199,14 +194,9 @@ void termServices(void)
 	httpcExit();
 	acExit();
 	cfguExit();
-	hidExit();
 	ptmuExit();
 	mcuHwcExit();
-	aptExit();
 	closeArchive(fsArchive);
-	sdmcExit();
-	fsExit();
-	srvExit();
 }
 
 int main(int argc, char *argv[])

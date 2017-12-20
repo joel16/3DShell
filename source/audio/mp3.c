@@ -9,7 +9,6 @@
 #include <string.h>
 
 #include "audio/mp3.h"
-#include "music.h"
 
 static size_t * buffSize;
 static mpg123_handle * mh = NULL;

@@ -1,11 +1,11 @@
 #include "common.h"
 #include "file/dirlist.h"
 #include "menus/status_bar.h"
+#include "menus/menu_text.h"
 #include "screenshot.h"
-#include "text.h"
 #include "utils.h"
 
-int displayText(char * path)
+int menu_displayText(char * path)
 {
 	//sf2d_texture * textView = sfil_load_PNG_file("romfs:/res/textview.png", SF2D_PLACE_RAM); setBilinearFilter(textView);
 

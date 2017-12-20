@@ -42,6 +42,12 @@ extern File * files;
 */
 int selectionX, selectionY, DEFAULT_STATE;
 
+/*
+*	Auto-hide scroll bar
+*/
+//u64 scroll_time;
+//int scroll_x;
+
 #define STATE_HOME 0
 #define STATE_OPTIONS 1
 #define STATE_SETTINGS 2

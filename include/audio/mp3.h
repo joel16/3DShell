@@ -2,7 +2,7 @@
 
 #include <mpg123.h>
 
-#include "music.h"
+#include "menus/menu_music.h"
 
 typedef struct 
 {

@@ -4,7 +4,6 @@
 #include <dr_libs/dr_flac.h>
 
 #include "audio/flac.h"
-#include "music.h"
 
 static drflac * pFlac;
 static const size_t	buffSize = 16 * 1024;

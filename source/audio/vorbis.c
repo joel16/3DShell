@@ -5,7 +5,6 @@
 #include <string.h>
 
 #include "audio/vorbis.h"
-#include "music.h"
 
 static OggVorbis_File vorbisFile;
 static vorbis_info * vi;

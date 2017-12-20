@@ -1,5 +1,5 @@
-#ifndef MUSIC_H
-#define MUSIC_H
+#ifndef MENU_MUSIC_H
+#define MENU_MUSIC_H
 
 #include <3ds.h>
 
@@ -42,6 +42,6 @@ enum file_types getMusicFileType(const char *file);
  *
  * \param path	File path.
  */
-void musicPlayer(char * path);
+void menu_musicPlayer(char * path);
 
 #endif

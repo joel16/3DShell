@@ -1,7 +1,7 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
-#include "music.h"
+#include "menus/menu_music.h"
 
 enum channel_e
 {

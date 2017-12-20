@@ -1,11 +1,11 @@
 #include "common.h"
 #include "file/dirlist.h"
-#include "gallery.h"
 #include "graphics/screen.h"
+#include "menus/menu_gallery.h"
 #include "screenshot.h"
 #include "utils.h"
 
-void displayImage(char * path)
+void menu_displayImage(char * path)
 {
 	float scale = 1.0f, zoom_factor = 0.025f;
 	float zoom_min = 0.25f, zoom_max = 4.0f;

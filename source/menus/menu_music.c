@@ -10,7 +10,7 @@
 #include "fs.h"
 #include "graphics/screen.h"
 #include "menus/status_bar.h"
-#include "music.h"
+#include "menus/menu_music.h"
 #include "screenshot.h"
 #include "utils.h"
 
@@ -234,7 +234,7 @@ out:
  *
  * \param path	File path.
  */
-void musicPlayer(char * path)
+void menu_musicPlayer(char * path)
 {
 	s32 prio;
 	static Thread thread = NULL;
@@ -289,6 +289,7 @@ void musicPlayer(char * path)
 
 		if (kPressed & KEY_B)
 		{
+			wait(1);
 			stopPlayback();
 			break;
 		}
