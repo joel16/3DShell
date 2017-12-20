@@ -55,9 +55,9 @@ static int cmpstringp(const void *p1, const void *p2)
    	    char entryNameA[0x200] = {'\0'}, entryNameB[0x200] = {'\0'};
 
    	    u16_to_u8((u8 *) entryNameA, entryA->name, sizeof(entryNameA) - 1);
-       	u16_to_u8((u8 *) entryNameB, entryB->name, sizeof(entryNameB) - 1);
+   	    u16_to_u8((u8 *) entryNameB, entryB->name, sizeof(entryNameB) - 1);
 
-       	return strcasecmp(entryNameA, entryNameB);
+   	    return strcasecmp(entryNameA, entryNameB);
    	}
 }
 
@@ -91,7 +91,7 @@ Result updateList(int clearindex)
 		}
 
 		u32 entryCount = 0;
-        FS_DirectoryEntry* entries = (FS_DirectoryEntry*) calloc(MAX_FILES, sizeof(FS_DirectoryEntry));
+		FS_DirectoryEntry* entries = (FS_DirectoryEntry*) calloc(MAX_FILES, sizeof(FS_DirectoryEntry));
 		
 		if (R_SUCCEEDED(ret = FSDIR_Read(dirHandle, &entryCount, MAX_FILES, entries)))
 		{
