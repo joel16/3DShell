@@ -87,13 +87,13 @@ Result delete(void)
 			return -2;
 	}
 	
-	if ((recycleBin) && (strcmp(cwd, "/3ds/data/3DShell/bin/") != 0))
+	if ((recycleBin) && (strcmp(cwd, "/3ds/3DShell/bin/") != 0))
 	{
 		char oldCWD[1024];
 		copy(COPY_DELETE_ON_FINISH);
 		strcpy(oldCWD, cwd);
 		memset(cwd, 0, sizeof(cwd));
-		sprintf(cwd, "/3ds/data/3DShell/bin/");
+		sprintf(cwd, "/3ds/3DShell/bin/");
 		paste();
 		strcpy(cwd, oldCWD);
 		return 0;
@@ -336,5 +336,5 @@ Result paste(void)
 
 Result saveLastDirectory(void)
 {
-	return fsWrite("/3ds/data/3DShell/lastdir.txt", cwd);
+	return fsWrite("/3ds/3DShell/lastdir.txt", cwd);
 }

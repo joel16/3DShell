@@ -46,7 +46,7 @@ Result saveThemeConfig(char * themePath, char * coloursPath)
 	char * buf = (char *)malloc(1024);
 	snprintf(buf, 1024, themeConfig, themePath, coloursPath);
 	
-	if (R_FAILED(ret = fsWrite("/3ds/data/3DShell/theme.cfg", buf)))
+	if (R_FAILED(ret = fsWrite("/3ds/3DShell/theme.cfg", buf)))
 		return ret;
 	
 	free(buf);
@@ -58,10 +58,10 @@ static Result loadThemeConfig(void)
 	Handle handle;
 	Result ret = 0;
 	
-	if (!fileExists(fsArchive, "/3ds/data/3DShell/theme.cfg"))	
-		saveThemeConfig("romfs:/res", "/3ds/data/3DShell/themes/default");
+	if (!fileExists(fsArchive, "/3ds/3DShell/theme.cfg"))	
+		saveThemeConfig("romfs:/res", "/3ds/3DShell/themes/default");
 	
-	if (R_FAILED(ret = fsOpen(&handle, "/3ds/data/3DShell/theme.cfg", FS_OPEN_READ)))
+	if (R_FAILED(ret = fsOpen(&handle, "/3ds/3DShell/theme.cfg", FS_OPEN_READ)))
 		return ret;
 	
 	u64 size64 = 0;
@@ -109,7 +109,7 @@ static Result createFontColours(void)
 										32, 32, 32,
 										120, 120, 120);
 	
-	if (R_FAILED(ret = fsWrite("/3ds/data/3DShell/themes/default/colours.cfg", buf)))
+	if (R_FAILED(ret = fsWrite("/3ds/3DShell/themes/default/colours.cfg", buf)))
 		return ret;
 	
 	free(buf);
@@ -121,7 +121,7 @@ static Result loadFontColours(void)
 	Handle handle;
 	Result ret = 0;
 	
-	if (!fileExists(fsArchive, "/3ds/data/3DShell/themes/default/colours.cfg"))		
+	if (!fileExists(fsArchive, "/3ds/3DShell/themes/default/colours.cfg"))		
 		createFontColours();
 	
 	char colours_cfg[100] = "/colours.cfg";

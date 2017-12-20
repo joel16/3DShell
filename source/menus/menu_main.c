@@ -225,7 +225,7 @@ void menu_main(int clearindex)
 		{
 			wait(1);
 			DEFAULT_STATE = STATE_THEME;
-			strcpy(cwd, "/3ds/data/3DShell/themes/");
+			strcpy(cwd, "/3ds/3DShell/themes/");
 			updateList(CLEAR);
 			displayFiles();
 		}
@@ -258,11 +258,11 @@ void menu_main(int clearindex)
 			menu_displayFTP();
 		}
 
-		if ((kPressed & KEY_TOUCH) && (touchInRect(0, 320, 40, 54)))
+		if ((kPressed & KEY_TOUCH) && (touchInRect(124, 147, 0, 20))) // SD
 		{
 			wait(1);
 			
-			fsWrite("/3ds/data/3DShell/lastdir.txt", START_PATH);
+			fsWrite("/3ds/3DShell/lastdir.txt", START_PATH);
 			strcpy(cwd, START_PATH);
 			BROWSE_STATE = STATE_SD;
 			closeArchive(fsArchive);
@@ -272,7 +272,7 @@ void menu_main(int clearindex)
 			displayFiles();
 		}
 
-		else if ((kPressed & KEY_TOUCH) && (touchInRect(148, 173, 0, 20))) // SD
+		else if ((kPressed & KEY_TOUCH) && (touchInRect(148, 173, 0, 20))) // CTR NAND
 		{
 			wait(1);
 			strcpy(cwd, START_PATH);
@@ -376,7 +376,7 @@ void menu_main(int clearindex)
 					if ((strncmp(fileName, "default", 7) == 0))
 					{
 						strcpy(theme_dir, "romfs:/res");
-						strcpy(colour_dir, "/3ds/data/3DShell/themes/default");
+						strcpy(colour_dir, "/3ds/3DShell/themes/default");
 
 						saveThemeConfig(theme_dir, colour_dir);
 
@@ -413,7 +413,7 @@ void menu_main(int clearindex)
 				{
 					char buf[250];
 
-					FILE * read = fopen("/3ds/data/3DShell/lastdir.txt", "r");
+					FILE * read = fopen("/3ds/3DShell/lastdir.txt", "r");
 					fscanf(read, "%s", buf);
 					fclose(read);
 

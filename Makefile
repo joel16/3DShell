@@ -43,6 +43,7 @@ ROMFS       := romfs
 ICON        := $(RESOURCES)/ic_launcher_filemanager.png
 BANNER      := $(RESOURCES)/banner.png
 JINGLE      := $(RESOURCES)/banner.wav
+LOGO        := $(RESOURCES)/logo.bin
 ICON_FLAGS  := nosavebackups,visible
 
 # CIA

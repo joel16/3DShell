@@ -14,7 +14,7 @@ Result saveConfig(bool recycleBin, bool protection, bool hidden)
 	char * buf = (char *)malloc(1024);
 	snprintf(buf, 1024, configFile, recycleBin, protection, hidden);
 	
-	if (R_FAILED(ret = fsWrite("/3ds/data/3DShell/config.cfg", buf)))
+	if (R_FAILED(ret = fsWrite("/3ds/3DShell/config.cfg", buf)))
 		return ret;
 	
 	free(buf);
@@ -26,7 +26,7 @@ Result loadConfig(void)
 	Handle handle;
 	Result ret = 0;
 	
-	if (!fileExists(fsArchive, "/3ds/data/3DShell/config.cfg"))
+	if (!fileExists(fsArchive, "/3ds/3DShell/config.cfg"))
 	{
 		// set these to the following by default:
 		recycleBin = 0;
@@ -36,7 +36,7 @@ Result loadConfig(void)
 		return saveConfig(recycleBin, sysProtection, isHiddenEnabled);
 	}
 	
-	if (R_FAILED(ret = fsOpen(&handle, "/3ds/data/3DShell/config.cfg", FS_OPEN_READ)))
+	if (R_FAILED(ret = fsOpen(&handle, "/3ds/3DShell/config.cfg", FS_OPEN_READ)))
 		return ret;
 	
 	u64 size64 = 0;
@@ -69,14 +69,14 @@ Result getLastDirectory(void)
 	Handle handle;
 	Result ret = 0;
 	
-	if (!fileExists(fsArchive, "/3ds/data/3DShell/lastdir.txt"))
+	if (!fileExists(fsArchive, "/3ds/3DShell/lastdir.txt"))
 	{
-		fsWrite("/3ds/data/3DShell/lastdir.txt", START_PATH);
+		fsWrite("/3ds/3DShell/lastdir.txt", START_PATH);
 		strcpy(cwd, START_PATH); // Set Start Path to "sdmc:/" if lastDir.txt hasn't been created.
 	}
 	else
 	{
-		if (R_FAILED(ret = fsOpen(&handle, "/3ds/data/3DShell/lastdir.txt", FS_OPEN_READ)))
+		if (R_FAILED(ret = fsOpen(&handle, "/3ds/3DShell/lastdir.txt", FS_OPEN_READ)))
 			return ret;
 	
 		u64 size64 = 0;
@@ -112,22 +112,38 @@ Result getLastDirectory(void)
 	return 0;
 }
 
+static void recursiveMakeDir(const char *dir) 
+{
+	char tmp[256];
+	char *p = NULL;
+	size_t len;
+
+	snprintf(tmp, sizeof(tmp),"%s",dir);
+	len = strlen(tmp);
+
+	if (tmp[len - 1] == '/')
+		tmp[len - 1] = 0;
+
+	for (p = tmp + 1; *p; p++)
+	{
+		if (*p == '/') 
+		{
+			*p = 0;
+			makeDir(fsArchive, tmp);
+			*p = '/';
+		}
+		makeDir(fsArchive, tmp);
+	}
+}
+
 void makeDirectories(void)
 {
 	if (BROWSE_STATE != STATE_NAND)
 	{
-		if (!(dirExists(fsArchive, "/3ds/")))
-			makeDir(fsArchive, "/3ds");
-		if (!(dirExists(fsArchive, "/3ds/data/")))
-			makeDir(fsArchive, "/3ds/data");
-		if (!(dirExists(fsArchive, "/3ds/data/3DShell/")))
-			makeDir(fsArchive, "/3ds/data/3DShell");
-		if (!(dirExists(fsArchive, "/3ds/data/3DShell/bin/")))
-			makeDir(fsArchive, "/3ds/data/3DShell/bin");
-		if (!(dirExists(fsArchive, "/3ds/data/3DShell/themes/")))
-			makeDir(fsArchive, "/3ds/data/3DShell/themes");
-		if (!(dirExists(fsArchive, "/3ds/data/3DShell/themes/default/")))
-			makeDir(fsArchive, "/3ds/data/3DShell/themes/default");
+		if (!(dirExists(fsArchive, "/3ds/3DShell/themes/default/")))
+			recursiveMakeDir("/3ds/3DShell/themes/default");
+		if (!(dirExists(fsArchive, "/3ds/3DShell/bin/")))
+			recursiveMakeDir("/3ds/3DShell/bin");
 	}
 }
 
