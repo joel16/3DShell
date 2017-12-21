@@ -31,6 +31,8 @@ struct colour Settings_text_min_colour;
 
 void menu_displayMainMenu(void)
 {
+	screen_select(GFX_BOTTOM);
+	
 	screen_draw_rect(0, 0, 320, 240, RGBA8(BottomScreen_colour.r, BottomScreen_colour.g, BottomScreen_colour.b, 255));
 	screen_draw_rect(0, 0, 320, 20, RGBA8(BottomScreen_bar_colour.r, BottomScreen_bar_colour.g, BottomScreen_bar_colour.b, 255));
 

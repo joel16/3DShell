@@ -173,8 +173,6 @@ void recursiveFree(File * node)
 void displayFiles(void)
 {
 	screen_begin_frame();
-	screen_select(GFX_BOTTOM);
-
 	menu_displayMainMenu();
 	
 	int i = 0;

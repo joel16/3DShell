@@ -88,9 +88,12 @@ enum file_types getMusicFileType(const char * file)
 			break;
 			
 		// MP3 file with an ID3v2 container
-		case 0x03334449:
-			file_type = FILE_TYPE_MP3;
-			break;
+		default:
+			if ((fileSig << 16) == 0xFBFF0000 || (fileSig << 16) == 0xFAFF0000 || (fileSig << 8) == 0x33444900)
+			{
+				file_type = FILE_TYPE_MP3;
+				break;
+			}
 	}
 
 err:

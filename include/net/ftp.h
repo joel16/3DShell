@@ -8,6 +8,8 @@ typedef enum
   LOOP_EXIT,     /*!< Terminate looping */
 } loop_status_t;
 
+char ftp_accepted_connection[50], ftp_file_transfer[50];
+
 int           ftp_init(void);
 loop_status_t ftp_loop(void);
 void          ftp_exit(void);

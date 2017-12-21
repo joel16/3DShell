@@ -916,6 +916,8 @@ ftp_session_new(int listen_fd)
   console_print(CYAN "accepted connection from %s:%u\n" RESET,
                 inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
 
+  snprintf(ftp_accepted_connection, 50, "Accepted connection: %s:%u", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+
   /* allocate a new session */
   session = (ftp_session_t*)calloc(1, sizeof(ftp_session_t));
   if (session == NULL)
@@ -2092,7 +2094,10 @@ retrieve_transfer(ftp_session_t *session)
       if (R_FAILED(rc))
         ftp_send_response(session, 451, "Failed to read file\r\n");
       else
+      {
         ftp_send_response(session, 226, "OK\r\n");
+        memset(ftp_file_transfer, 0, 50); // Empty transfer status
+      }
       return LOOP_EXIT;
     }
 
@@ -2154,7 +2159,10 @@ store_transfer(ftp_session_t *session)
       ftp_session_set_state(session, COMMAND_STATE, CLOSE_PASV | CLOSE_DATA);
 
       if (rc == RS_SUCCESS)
+      {
         ftp_send_response(session, 226, "OK\r\n");
+        memset(ftp_file_transfer, 0, 50); // Empty transfer status
+      }
       else
         ftp_send_response(session, 426, "Connection broken during transfer\r\n");
       return LOOP_EXIT;
@@ -3214,6 +3222,7 @@ FTP_DECLARE(REST)
 FTP_DECLARE(RETR)
 {
   console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  snprintf(ftp_file_transfer, 50, "Sending: %s", args ? args : "");
 
   /* open the file to retrieve */
   return ftp_xfer_file(session, args, XFER_FILE_RETR);
@@ -3446,6 +3455,7 @@ FTP_DECLARE(STAT)
 FTP_DECLARE(STOR)
 {
   console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
+  snprintf(ftp_file_transfer, 50, "Receiving: %s", args ? args : "");
 
   /* open the file to store */
   return ftp_xfer_file(session, args, XFER_FILE_STOR);

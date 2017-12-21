@@ -9,6 +9,7 @@
 #include "theme.h"
 #include "utils.h"
 
+struct colour Storage_colour;
 struct colour BottomScreen_colour;
 struct colour BottomScreen_bar_colour;
 struct colour BottomScreen_text_colour;
@@ -22,6 +23,8 @@ void menu_displayFTP()
 	
 	char buf[25];
 	u32 wifiStatus = 0;
+
+	int pBar = 0, xlim = 270;
 
 	while(aptMainLoop())
 	{
@@ -72,14 +75,35 @@ void menu_displayFTP()
 			sprintf(buf, "IP: %lu.%lu.%lu.%lu:5000", ip & 0xFF, (ip>>8)&0xFF, (ip>>16)&0xFF, (ip>>24)&0xFF);
 
 			screen_draw_string(((320 - screen_get_string_width(buf, 0.45f, 0.45f)) / 2), 60, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), buf);
-			screen_draw_string(((320 - screen_get_string_width(lang_ftp[language][1], 0.45f, 0.45f)) / 2), 80, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][1]);
+
+			if (strlen(ftp_accepted_connection) != 0)
+				screen_draw_string(((320 - screen_get_string_width(ftp_accepted_connection, 0.45f, 0.45f)) / 2), 80, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), ftp_accepted_connection);
+
+			screen_draw_string(((320 - screen_get_string_width(lang_ftp[language][1], 0.45f, 0.45f)) / 2), 100, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][1]);
+
+			if (strlen(ftp_file_transfer) != 0)
+			{
+				screen_draw_rect(50, 140, 220, 3, RGBA8(BottomScreen_bar_colour.r, BottomScreen_bar_colour.g, BottomScreen_bar_colour.b, 255));
+				screen_draw_rect(pBar, 140, 40, 3, RGBA8(255, 255, 255, 255));
+
+				// Boundary stuff
+				screen_draw_rect(0, 140, 50, 3, RGBA8(BottomScreen_colour.r, BottomScreen_colour.g, BottomScreen_colour.b, 255));
+				screen_draw_rect(270, 140, 50, 3, RGBA8(BottomScreen_colour.r, BottomScreen_colour.g, BottomScreen_colour.b, 255)); 
+				pBar += 4;
+				
+				if (pBar >= xlim)
+					pBar = 34;
+				
+				screen_draw_string(((320 - screen_get_string_width(ftp_file_transfer, 0.45f, 0.45f)) / 2), 150, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), ftp_file_transfer);
+			}
 		}
 
-		screen_draw_string(((320 - screen_get_string_width(lang_ftp[language][2], 0.45f, 0.45f)) / 2), 100, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][2]);
+		screen_draw_string(((320 - screen_get_string_width(lang_ftp[language][2], 0.45f, 0.45f)) / 2), 120, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][2]);
 
 		screen_end_frame();
 	}
 
+	memset(ftp_accepted_connection, 0, 20); // Empty accepted connection address
 	task_exit();
 	ftp_exit();
 	DEFAULT_STATE = STATE_HOME;
