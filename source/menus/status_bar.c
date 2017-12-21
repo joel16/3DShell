@@ -5,6 +5,7 @@
 #include "graphics/screen.h"
 #include "language.h"
 #include "main.h"
+#include "menus/menu_music.h"
 #include "menus/status_bar.h"
 #include "theme.h"
 
@@ -133,3 +134,12 @@ void drawWifiStatus(void)
 	}	
 }
 
+void drawStatusBar(void)
+{
+	if (isPlaying())
+		screen_draw_texture(TEXTURE_MUSIC_STATUS, 4, 1);
+
+	drawWifiStatus();
+	drawBatteryStatus();
+	digitalTime();
+}

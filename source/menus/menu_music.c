@@ -27,7 +27,7 @@ static void stopPlayback(void)
 /**
  * Returns whether music is playing or paused.
  */
-static bool isPlaying(void)
+bool isPlaying(void)
 {
 	return !stop;
 }
@@ -262,14 +262,12 @@ void menu_musicPlayer(char * path)
 		if (!(audio_isPaused(SFX)))
 			screen_draw_texture(TEXTURE_MUSIC_PAUSE, ((320 - screen_get_texture_width(TEXTURE_MUSIC_PAUSE)) / 2) - 2, ((240 - screen_get_texture_height(TEXTURE_MUSIC_PAUSE)) / 2));
 		else
-			screen_draw_texture(TEXTURE_MUSIC_PLAY, ((320 - screen_get_texture_width(TEXTURE_MUSIC_PLAY)) / 2) - 2, ((240 - screen_get_texture_height(TEXTURE_MUSIC_PLAY)) / 2));
+			screen_draw_texture(TEXTURE_MUSIC_PLAY, ((320 - screen_get_texture_width(TEXTURE_MUSIC_PLAY)) / 2), ((240 - screen_get_texture_height(TEXTURE_MUSIC_PLAY)) / 2));
 
 		screen_select(GFX_TOP);
 		screen_draw_texture(TEXTURE_MUSIC_TOP_BG, 0, 0);
 
-		drawWifiStatus();
-		drawBatteryStatus();
-		digitalTime();
+		drawStatusBar();
 
 		if (isMP3) // Only print out ID3 tag info for MP3
 		{	

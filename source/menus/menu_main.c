@@ -138,9 +138,7 @@ void menu_displayMainMenu(void)
 
 	screen_draw_stringf(84, 28, 0.45f, 0.45f, RGBA8(TopScreen_bar_colour.r, TopScreen_bar_colour.g, TopScreen_bar_colour.b, 255), "%.35s", cwd); // Display current path
 
-	drawWifiStatus();
-	drawBatteryStatus();
-	digitalTime();
+	drawStatusBar();
 
 	u64 totalStorage = getTotalStorage(BROWSE_STATE? SYSTEM_MEDIATYPE_CTR_NAND : SYSTEM_MEDIATYPE_SD);
 	u64 usedStorage = getUsedStorage(BROWSE_STATE? SYSTEM_MEDIATYPE_CTR_NAND : SYSTEM_MEDIATYPE_SD);

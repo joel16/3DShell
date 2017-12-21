@@ -102,6 +102,7 @@ void initServices(void)
 	screen_load_texture_png(TEXTURE_MUSIC_TOP_BG, "romfs:/res/music/background_top.png", true);
 	screen_load_texture_png(TEXTURE_MUSIC_PLAY, "romfs:/res/music/play.png", true);
 	screen_load_texture_png(TEXTURE_MUSIC_PAUSE, "romfs:/res/music/pause.png", true);
+	screen_load_texture_png(TEXTURE_MUSIC_STATUS, "romfs:/res/music/ic_album.png", true);
 
 	if (isN3DS())
 		osSetSpeedupEnable(true);

@@ -33,9 +33,7 @@ int menu_displayText(char * path)
 
 		//sf2d_draw_texture(textView, 0, 0);
 
-		drawWifiStatus();
-		drawBatteryStatus();
-		digitalTime();
+		drawStatusBar();
 
 		//sftd_draw_textf(font, 40, 27, RGBA8(251, 251, 251, 255), 11, "%s", fileName);
 		//sftd_draw_textf(font, 10, 58, RGBA8(0, 0, 0, 255), 11, "%s", line);

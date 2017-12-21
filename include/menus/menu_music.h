@@ -3,11 +3,12 @@
 
 #include <3ds.h>
 
-#define TEXTURE_MUSIC_TOP_BG 49
+#define TEXTURE_MUSIC_TOP_BG    49
 #define TEXTURE_MUSIC_BOTTOM_BG 50
-#define TEXTURE_MUSIC_PLAY 51
-#define TEXTURE_MUSIC_PAUSE 52
-#define TEXTURE_MUSIC_ICON 53
+#define TEXTURE_MUSIC_PLAY      51
+#define TEXTURE_MUSIC_PAUSE     52
+#define TEXTURE_MUSIC_ICON      53
+#define TEXTURE_MUSIC_STATUS    54
 
 enum file_types
 {
@@ -28,6 +29,9 @@ struct decoder_fn
 	u64 (* decode)(void*);
 	void (* exit)(void);
 };
+
+// Returns true if playing.
+bool isPlaying(void);
 
 /**
  * Obtains file type.
