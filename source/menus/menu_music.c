@@ -274,13 +274,14 @@ void menu_musicPlayer(char * path)
 
 		if (isMP3) // Only print out ID3 tag info for MP3
 		{	
+			screen_draw_texture(TEXTURE_MUSIC_COVER, 0, 55);
 			screen_draw_stringf(5, 20, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s", fileName);
 			screen_draw_stringf(5, 36, 0.45f, 0.45f, RGBA8(255, 255, 255, 255), "%s", ID3.artist);
 		
-			screen_draw_stringf(184, 64, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s", ID3.title);
-			screen_draw_stringf(184, 84, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s", ID3.album);
-			screen_draw_stringf(184, 104, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s", ID3.year);
-			screen_draw_stringf(184, 124, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s", ID3.genre);	
+			screen_draw_stringf(184, 64, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.title);
+			screen_draw_stringf(184, 84, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.album);
+			screen_draw_stringf(184, 104, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.year);
+			screen_draw_stringf(184, 124, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.genre);	
 		}
 		
 		else
@@ -304,6 +305,13 @@ void menu_musicPlayer(char * path)
 
 	threadJoin(thread, U64_MAX);
 	threadFree(thread);
+	
+	// Clear ID3
+	memset(ID3.artist, 0, 30);
+	memset(ID3.title, 0, 30);
+	memset(ID3.album, 0, 30);
+	memset(ID3.year, 0, 4);
+	memset(ID3.genre, 0, 30);
 
 	return;
 }

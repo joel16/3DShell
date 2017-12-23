@@ -7,7 +7,7 @@
 #define TEXTURE_MUSIC_BOTTOM_BG 50
 #define TEXTURE_MUSIC_PLAY      51
 #define TEXTURE_MUSIC_PAUSE     52
-#define TEXTURE_MUSIC_ICON      53
+#define TEXTURE_MUSIC_COVER     53
 #define TEXTURE_MUSIC_STATUS    54
 
 enum file_types

@@ -6,15 +6,15 @@
 
 typedef struct 
 {
-	char title[0x1E];
-	char album[0x1E];
-	char artist[0x1E];
-	char year[0x4];
+	char title[0x1F];
+	char album[0x1F];
+	char artist[0x1F];
+	char year[0x5];
 	char comment[0x1E];
-	char genre[0x1E];
-} ID3v2;
+	char genre[0x1F];
+} ID3_Tag;
 
-ID3v2 ID3;
+ID3_Tag ID3;
 
 char * id3_pic;
 
