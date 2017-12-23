@@ -5,10 +5,16 @@
 #include "graphics/screen.h"
 #include "keyboard.h"
 #include "menus/menu_main.h"
+#include "theme.h"
 #include "utils.h"
 
 #include <fcntl.h>
 #include <unistd.h>
+
+struct colour Storage_colour;
+struct colour Settings_title_text_colour;
+struct colour BottomScreen_colour;
+struct colour Options_title_text_colour;
 
 /*
 *	Copy Mode
@@ -17,6 +23,31 @@
 *	1  : Move
 */
 int copymode = NOTHING_TO_COPY;
+
+void drawProgress(char * src, u32 offset, u32 size)
+{
+	screen_begin_frame();
+	screen_select(GFX_BOTTOM);
+
+	screen_draw_rect(0, 0, 320, 240, RGBA8(BottomScreen_colour.r, BottomScreen_colour.g, BottomScreen_colour.b, 255));
+
+	screen_draw_texture(TEXTURE_DELETE, ((320 - (screen_get_texture_width(TEXTURE_DELETE))) / 2), 
+		((240 - (screen_get_texture_height(TEXTURE_DELETE))) / 2));
+
+	screen_draw_stringf(((320 - (screen_get_texture_width(TEXTURE_DELETE))) / 2) + 10, ((240 - (screen_get_texture_height(TEXTURE_DELETE))) / 2) + 20, 
+		0.45f, 0.45f, RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255), "%s", copymode == 1? 
+		"Moving" : "Copying");
+
+	screen_draw_stringf(((320 - (screen_get_string_width(src, 0.45f, 0.45f))) / 2), ((240 - (screen_get_texture_height(TEXTURE_DELETE))) / 2) + 45, 
+		0.45f, 0.45f, RGBA8(Options_title_text_colour.r, Options_title_text_colour.g, Options_title_text_colour.b, 255), "%.40s", src);
+
+	screen_draw_rect(((320 - (screen_get_texture_width(TEXTURE_DELETE))) / 2) + 20, ((240 - (screen_get_texture_height(TEXTURE_DELETE))) / 2) + 70, 
+		240, 4, RGBA8(200, 200, 200, 255));
+	screen_draw_rect(((320 - (screen_get_texture_width(TEXTURE_DELETE))) / 2) + 20, ((240 - (screen_get_texture_height(TEXTURE_DELETE))) / 2) + 70, 
+		(double)offset / (double)size * 240.0, 4, RGBA8(Storage_colour.r, Storage_colour.g, Storage_colour.b, 255));
+
+	screen_end_frame();
+}
 
 Result createFolder(void)
 {
@@ -151,6 +182,7 @@ int copy_file(char * src, char * dst)
 	int result = 0; // Result
 
 	int in = open(src, O_RDONLY, 0777); // Open file for reading
+	u64 size = getFileSize(fsArchive, src);
 
 	// Opened file for reading
 	if (in >= 0)
@@ -169,6 +201,7 @@ int copy_file(char * src, char * dst)
 			{
 				totalread += b_read; // Accumulate read data
 				totalwrite += write(out, buffer, b_read); // Write data
+				drawProgress(src, totalread, size);
 			}
 
 			close(out); // Close output file

@@ -87,7 +87,7 @@ void menu_displayFTP()
 			if (isTransfering)
 			{
 				screen_draw_rect(50, 140, 220, 3, RGBA8(BottomScreen_bar_colour.r, BottomScreen_bar_colour.g, BottomScreen_bar_colour.b, 255));
-				screen_draw_rect(pBar, 140, 40, 3, RGBA8(255, 255, 255, 255));
+				screen_draw_rect(pBar, 140, 40, 3, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255));
 
 				// Boundary stuff
 				screen_draw_rect(0, 140, 50, 3, RGBA8(BottomScreen_colour.r, BottomScreen_colour.g, BottomScreen_colour.b, 255));
