@@ -82,6 +82,9 @@ void menu_displayFTP()
 			screen_draw_string(((320 - screen_get_string_width(lang_ftp[language][1], 0.45f, 0.45f)) / 2), 100, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][1]);
 
 			if (strlen(ftp_file_transfer) != 0)
+				screen_draw_string(((320 - screen_get_string_width(ftp_file_transfer, 0.45f, 0.45f)) / 2), 150, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), ftp_file_transfer);
+
+			if (isTransfering)
 			{
 				screen_draw_rect(50, 140, 220, 3, RGBA8(BottomScreen_bar_colour.r, BottomScreen_bar_colour.g, BottomScreen_bar_colour.b, 255));
 				screen_draw_rect(pBar, 140, 40, 3, RGBA8(255, 255, 255, 255));
@@ -93,8 +96,6 @@ void menu_displayFTP()
 				
 				if (pBar >= xlim)
 					pBar = 34;
-				
-				screen_draw_string(((320 - screen_get_string_width(ftp_file_transfer, 0.45f, 0.45f)) / 2), 150, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), ftp_file_transfer);
 			}
 		}
 
@@ -104,6 +105,7 @@ void menu_displayFTP()
 	}
 
 	memset(ftp_accepted_connection, 0, 20); // Empty accepted connection address
+	memset(ftp_file_transfer, 0, 50); // Empty transfer status
 	task_exit();
 	ftp_exit();
 	DEFAULT_STATE = STATE_HOME;
