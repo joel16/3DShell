@@ -1,5 +1,7 @@
 #pragma once
 
+#include <3ds.h>
+
 /*! Loop status */
 typedef enum
 {
@@ -8,6 +10,7 @@ typedef enum
   LOOP_EXIT,     /*!< Terminate looping */
 } loop_status_t;
 
+bool isTransfering;
 char ftp_accepted_connection[50], ftp_file_transfer[50];
 
 int           ftp_init(void);

@@ -27,7 +27,6 @@
 #include <unistd.h>
 
 #ifdef _3DS
-#include <3ds.h>
 #define lstat stat
 #else
 #include <stdbool.h>
@@ -1871,7 +1870,12 @@ list_transfer(ftp_session_t *session)
     if (session->data_fd == session->cmd_fd)
       rc = 213;
     else
+    {
       rc = 226;
+      memset(ftp_file_transfer, 0, 50); // Empty transfer status
+      isTransfering = false;
+    }
+      
 
     /* check  if this was for a file */
     if (session->dp == NULL)
@@ -2096,6 +2100,7 @@ retrieve_transfer(ftp_session_t *session)
       else
       {
         ftp_send_response(session, 226, "OK\r\n");
+        isTransfering = false;
         memset(ftp_file_transfer, 0, 50); // Empty transfer status
       }
       return LOOP_EXIT;
@@ -2161,7 +2166,7 @@ store_transfer(ftp_session_t *session)
       if (rc == RS_SUCCESS)
       {
         ftp_send_response(session, 226, "OK\r\n");
-        memset(ftp_file_transfer, 0, 50); // Empty transfer status
+        //memset(ftp_file_transfer, 0, 50); // Empty transfer status
       }
       else
         ftp_send_response(session, 426, "Connection broken during transfer\r\n");
@@ -3223,6 +3228,7 @@ FTP_DECLARE(RETR)
 {
   console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
   snprintf(ftp_file_transfer, 50, "Sending: %s", args ? args : "");
+  isTransfering = true;
 
   /* open the file to retrieve */
   return ftp_xfer_file(session, args, XFER_FILE_RETR);
@@ -3456,6 +3462,7 @@ FTP_DECLARE(STOR)
 {
   console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
   snprintf(ftp_file_transfer, 50, "Receiving: %s", args ? args : "");
+  isTransfering = true;
 
   /* open the file to store */
   return ftp_xfer_file(session, args, XFER_FILE_STOR);
