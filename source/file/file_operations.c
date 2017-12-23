@@ -87,7 +87,7 @@ Result delete(void)
 			return -2;
 	}
 	
-	if ((recycleBin) && (strcmp(cwd, "/3ds/3DShell/bin/") != 0))
+	if ((recycleBin) && !(strstr(cwd, "/3ds/3DShell/bin/") != NULL))
 	{
 		char oldCWD[1024];
 		copy(COPY_DELETE_ON_FINISH);
