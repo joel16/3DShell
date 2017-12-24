@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 
 #include "archive.h"
+#include "file/file_operations.h"
 #include "file/fs.h"
 #include "minizip/unzip.h"
 #include "utils.h"
@@ -66,6 +67,7 @@ Result unzExtractCurrentFile(unzFile * unzHandle, int * path)
 			out = fopen(write, "wb");
 		}
 
+		u64 position = 0;
 		do
 		{
 			res = unzReadCurrentFile(unzHandle, buf, bufsize);
@@ -73,8 +75,8 @@ Result unzExtractCurrentFile(unzFile * unzHandle, int * path)
 			if (res < 0)
 				break;
 
-			if (res > 0)
-				fwrite(buf, 1, res, out);
+			position = fwrite(buf, 1, res, out);
+			drawProgress("Extracting", filenameWithoutPath, position, bufsize);
 		} 
 		while (res > 0);
 

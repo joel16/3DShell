@@ -18,6 +18,7 @@ extern int copymode;
 int selected;
 char selected_file[255][255]; // 255 slots, of length 255
 
+void drawProgress(char * msg, char * src, u32 offset, u32 size);
 Result createFolder(void);
 Result renameFile(void);
 Result delete(void);
