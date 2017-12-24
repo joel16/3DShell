@@ -1,4 +1,4 @@
-# 3DShell ![Github latest downloads](https://img.shields.io/github/downloads/joel16/3DShell/total.svg)
+# 3DShell ![Build Status](https://travis-ci.org/joel16/3DShell.svg?branch=master) ![Github latest downloads](https://img.shields.io/github/downloads/joel16/3DShell/total.svg)
 
 ![3DShell Banner](http://i.imgur.com/Z2pzVVZ.png)
 
