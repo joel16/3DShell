@@ -38,7 +38,7 @@ void drawProgress(char * msg, char * src, u32 offset, u32 size)
 		0.45f, 0.45f, RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255), msg);
 
 	screen_draw_stringf(((320 - (screen_get_string_width(src, 0.45f, 0.45f))) / 2), ((240 - (screen_get_texture_height(TEXTURE_DELETE))) / 2) + 45, 
-		0.45f, 0.45f, RGBA8(Options_title_text_colour.r, Options_title_text_colour.g, Options_title_text_colour.b, 255), "%.40s", src);
+		0.45f, 0.45f, RGBA8(Options_title_text_colour.r, Options_title_text_colour.g, Options_title_text_colour.b, 255), "%s", src);
 
 	screen_draw_rect(((320 - (screen_get_texture_width(TEXTURE_DELETE))) / 2) + 20, ((240 - (screen_get_texture_height(TEXTURE_DELETE))) / 2) + 70, 
 		240, 4, RGBA8(200, 200, 200, 255));
@@ -200,7 +200,7 @@ int copy_file(char * src, char * dst)
 			{
 				totalread += b_read; // Accumulate read data
 				totalwrite += write(out, buffer, b_read); // Write data
-				drawProgress(copymode == 1? "Moving" : "Copying", src, totalread, size);
+				drawProgress(copymode == 1? "Moving" : "Copying", basename(src), totalread, size);
 			}
 
 			close(out); // Close output file

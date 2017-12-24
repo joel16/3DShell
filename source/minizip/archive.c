@@ -13,7 +13,6 @@ Result unzExtractCurrentFile(unzFile * unzHandle, int * path)
 {
 	Result res = 0;
 	char filename[256];
-	char * filenameWithoutPath;
 	unsigned int bufsize = (64 * 1024);
 
 	unz_file_info file_info;
@@ -27,14 +26,7 @@ Result unzExtractCurrentFile(unzFile * unzHandle, int * path)
 	if (!buf)
 		return 0;
 
-	char * p = filenameWithoutPath = filename;
-	while ((*p) != '\0')
-	{
-		if (((*p) == '/') || ((*p) == '\\'))
-			filenameWithoutPath = p + 1;
-		
-		p++;
-	}
+	char * filenameWithoutPath = basename(filename);
 
 	if ((*filenameWithoutPath) == '\0')
 	{
@@ -67,7 +59,6 @@ Result unzExtractCurrentFile(unzFile * unzHandle, int * path)
 			out = fopen(write, "wb");
 		}
 
-		u64 position = 0;
 		do
 		{
 			res = unzReadCurrentFile(unzHandle, buf, bufsize);
@@ -75,8 +66,8 @@ Result unzExtractCurrentFile(unzFile * unzHandle, int * path)
 			if (res < 0)
 				break;
 
-			position = fwrite(buf, 1, res, out);
-			drawProgress("Extracting", filenameWithoutPath, position, bufsize);
+			if (res > 0)
+				fwrite(buf, 1, res, out);
 		} 
 		while (res > 0);
 
@@ -91,10 +82,11 @@ Result unzExtractCurrentFile(unzFile * unzHandle, int * path)
 	return res;
 }
 
-Result unzExtractAll(unzFile * unzHandle)
+Result unzExtractAll(const char * src, unzFile * unzHandle)
 {
 	Result res = 0;
 	int path = 0;
+	char * filename = basename(src);
 	
 	unz_global_info global_info;
 	memset(&global_info, 0, sizeof(unz_global_info));
@@ -107,6 +99,8 @@ Result unzExtractAll(unzFile * unzHandle)
 
 	for (unsigned int i = 0; i < global_info.number_entry; i++)
 	{
+		drawProgress("Extracting", filename, i, global_info.number_entry);
+
 		if ((res = unzExtractCurrentFile(unzHandle, &path)) != UNZ_OK)
 			break;
 
@@ -142,7 +136,7 @@ Result extractZip(const char * src, const char * dst)
 	if (unzHandle == NULL) // not found
 		return -1;
 
-	Result res = unzExtractAll(unzHandle);
+	Result res = unzExtractAll(src, unzHandle);
 	res = unzClose(unzHandle);
 
 	return res;

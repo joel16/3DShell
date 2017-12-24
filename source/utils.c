@@ -112,7 +112,13 @@ Result getLastDirectory(void)
 	return 0;
 }
 
-static void recursiveMakeDir(const char *dir) 
+char * basename(const char * filename)
+{
+	char *p = strrchr (filename, '/');
+	return p ? p + 1 : (char *) filename;
+}
+
+static void recursiveMakeDir(const char * dir) 
 {
 	char tmp[256];
 	char *p = NULL;

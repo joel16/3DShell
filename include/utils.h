@@ -12,6 +12,7 @@
 Result saveConfig(bool recycleBin, bool protection, bool hidden);
 Result loadConfig(void);
 Result getLastDirectory(void);
+char * basename(const char * filename);
 void makeDirectories(void);
 u64 getFreeStorage(FS_SystemMediaType mediaType);
 u64 getTotalStorage(FS_SystemMediaType mediaType);
