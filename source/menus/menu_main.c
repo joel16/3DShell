@@ -63,12 +63,12 @@ void menu_displayMainMenu(void)
 
 		screen_draw_string(170, 72, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][2]);
 
-		if (copyF == false)
+		if (!copyF)
 			screen_draw_string(170, 109, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][4]);
 		else
 			screen_draw_string(170, 109, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][7]);
 
-		if (cutF == false)
+		if (!cutF)
 			screen_draw_string(170, 146, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][6]);
 		else
 			screen_draw_string(170, 146, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][7]);
@@ -261,10 +261,11 @@ void menu_main(int clearindex)
 		if ((kPressed & KEY_TOUCH) && (touchInRect(124, 147, 0, 20))) // SD
 		{
 			wait(1);
-			
 			fsWrite("/3ds/3DShell/lastdir.txt", START_PATH);
 			strcpy(cwd, START_PATH);
+			
 			BROWSE_STATE = STATE_SD;
+			
 			closeArchive(fsArchive);
 			openArchive(&fsArchive, ARCHIVE_SDMC);
 
@@ -502,7 +503,7 @@ void menu_main(int clearindex)
 				copyF = true;
 				displayFiles();
 			}
-			else if (((copyF == true) && (deleteDialog == false)) && (kPressed & KEY_TOUCH) && (touchInRect(161, 284, 94, 130)) && (IF_OPTIONS))
+			else if (((copyF) && (deleteDialog == false)) && (kPressed & KEY_TOUCH) && (touchInRect(161, 284, 94, 130)) && (IF_OPTIONS))
 			{
 				selectionX = 0;
 				selectionY = 0;
@@ -528,7 +529,7 @@ void menu_main(int clearindex)
 					displayFiles();
 				}
 			}
-			else if (((cutF == true) && (deleteDialog == false)) && (kPressed & KEY_TOUCH) && (touchInRect(161, 284, 131, 167)) && (IF_OPTIONS))
+			else if (((cutF) && (deleteDialog == false)) && (kPressed & KEY_TOUCH) && (touchInRect(161, 284, 131, 167)) && (IF_OPTIONS))
 			{
 				if (((BROWSE_STATE == STATE_NAND) && (!sysProtection)) || (BROWSE_STATE == STATE_SD))
 				{
