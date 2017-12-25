@@ -499,6 +499,12 @@ void menu_main(int clearindex)
 				selectionX = 1;
 				selectionY = 1;
 				wait(1);
+
+				if (BROWSE_STATE == STATE_NAND) 
+					copyFromNand = true;
+				else
+					copyFromSD = true;
+				
 				copy(COPY_KEEP_ON_FINISH);
 				copyF = true;
 				displayFiles();
@@ -511,6 +517,8 @@ void menu_main(int clearindex)
 
 				if (paste() == 0)
 				{
+					copyFromNand = false;
+					copyFromSD = false;
 					copyF = false;
 					updateList(CLEAR);
 					displayFiles();
@@ -524,6 +532,12 @@ void menu_main(int clearindex)
 					selectionX = 1;
 					selectionY = 2;
 					wait(1);
+
+					if (BROWSE_STATE == STATE_NAND) 
+						copyFromNand = true;
+					else
+						copyFromSD = true;
+
 					copy(COPY_DELETE_ON_FINISH);
 					cutF = true;
 					displayFiles();
@@ -539,6 +553,8 @@ void menu_main(int clearindex)
 
 					if (paste() == 0)
 					{
+						copyFromNand = false;
+						copyFromSD = false;
 						cutF = false;
 						updateList(CLEAR);
 						displayFiles();

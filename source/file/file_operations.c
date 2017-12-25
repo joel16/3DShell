@@ -223,6 +223,60 @@ int copy_file(char * src, char * dst)
 	return result; // Return result
 }
 
+Result copy_file_archive(FS_Archive srcArchive, FS_Archive destArchive, FS_ArchiveID srcArchiveID, FS_ArchiveID destArchiveID, char * src, char * dest)
+{
+	int chunksize = (512 * 1024);
+	char * buffer = (char *)malloc(chunksize);
+
+	u32 bytesWritten = 0, bytesRead = 0;
+	u64 offset = 0;
+	Result ret = 0;
+	
+	Handle inputHandle, outputHandle;
+
+	Result in = FSUSER_OpenFileDirectly(&inputHandle, srcArchiveID, fsMakePath(PATH_EMPTY, ""), fsMakePath(PATH_ASCII, src), FS_OPEN_READ, 0);
+	
+	u64 size = getFileSize(srcArchive, src);
+
+	if (R_SUCCEEDED(in))
+	{
+		// Delete output file (if existing)
+		FSUSER_DeleteFile(destArchive, fsMakePath(PATH_ASCII, dest));
+
+		Result out = FSUSER_OpenFileDirectly(&outputHandle, destArchiveID, fsMakePath(PATH_EMPTY, ""), fsMakePath(PATH_ASCII, dest), (FS_OPEN_CREATE | FS_OPEN_WRITE), 0);
+		
+		if (R_SUCCEEDED(out))
+		{
+			// Copy loop (512KB at a time)
+			do
+			{
+				ret = FSFILE_Read(inputHandle, &bytesRead, offset, buffer, chunksize);
+				
+				bytesWritten += FSFILE_Write(outputHandle, &bytesWritten, offset, buffer, size, FS_WRITE_FLUSH);
+				drawProgress(copymode == 1? "Moving" : "Copying", basename(src), bytesRead, size);
+				
+				if (bytesWritten == bytesRead)
+					break;
+			}
+			while(bytesRead);
+
+			ret = FSFILE_Close(outputHandle);
+			
+			if (bytesRead != bytesWritten) 
+				return ret;
+		}
+		else 
+			return out;
+
+		FSFILE_Close(inputHandle);
+	}
+	else 
+		return in;
+
+	free(buffer);
+	return 0;
+}
+
 // Recursively copy file from src to dst
 Result copy_folder_recursive(char * src, char * dst)
 {
@@ -275,10 +329,9 @@ Result copy_folder_recursive(char * src, char * dst)
 						strcpy(outbuffer + strlen(outbuffer), dname);
 
 						if (info.attributes & FS_ATTRIBUTE_DIRECTORY) // Another folder
-							copy_folder_recursive(inbuffer, outbuffer); // Copy folder (via recursion)
-
-						else // Simple file
-							copy_file(inbuffer, outbuffer); // Copy file
+							copy_folder_recursive(inbuffer, outbuffer); // Copy folder (via recursion)	
+						
+						else copy_file(inbuffer, outbuffer); // Copy file
 
 						// Free buffer
 						free(inbuffer);
@@ -349,7 +402,25 @@ Result paste(void)
 	// Simple file copy
 	else
 	{
-		ret = copy_file(copysource, copytarget); // Copy file
+		if (copyFromNand)
+		{
+			FS_Archive sd, nand;
+			openArchive(&sd, ARCHIVE_SDMC);
+			openArchive(&nand, ARCHIVE_NAND_CTR_FS);
+			ret = copy_file_archive(nand, sd, ARCHIVE_NAND_CTR_FS, ARCHIVE_SDMC, copysource, copytarget);
+			closeArchive(sd);
+			closeArchive(nand);
+		}
+		else if ((copyFromSD) && (BROWSE_STATE == STATE_NAND))
+		{
+			FS_Archive sd, nand;
+			openArchive(&sd, ARCHIVE_SDMC);
+			openArchive(&nand, ARCHIVE_NAND_CTR_FS);
+			ret = copy_file_archive(sd, nand, ARCHIVE_SDMC, ARCHIVE_NAND_CTR_FS, copysource, copytarget);
+			closeArchive(sd);
+			closeArchive(nand);
+		}	
+		else ret = copy_file(copysource, copytarget); // Copy file
 		
 		if ((R_SUCCEEDED(ret)) && (copymode & COPY_DELETE_ON_FINISH) == COPY_DELETE_ON_FINISH)
 			fsRemove(fsArchive, copysource); // Delete file
