@@ -6,29 +6,63 @@
 #include "file/fs.h"
 #include "utils.h"
 
-Result openArchive(FS_Archive * archive, FS_ArchiveID id)
+
+Result openArchive(FS_Archive * archive, FS_ArchiveID archiveID)
 {
-	return FSUSER_OpenArchive(archive, id, fsMakePath(PATH_EMPTY, ""));
+	Result ret = 0;
+
+	if (R_FAILED(ret = FSUSER_OpenArchive(archive, archiveID, fsMakePath(PATH_EMPTY, ""))))
+		return ret;
+
+	return 0;
 }
 
 Result closeArchive(FS_Archive archive)
 {
-	return FSUSER_CloseArchive(archive);
+	Result ret = 0;
+
+	if (R_FAILED(ret = FSUSER_CloseArchive(archive)))
+		return ret;
+
+	return 0;
 }
 
 Result makeDir(FS_Archive archive, const char * path)
-{
-	if ((!archive) || (!path))
-		return -1;
+{	
+	Result ret = 0;
 
-	return FSUSER_CreateDirectory(archive, fsMakePath(PATH_ASCII, path), 0);
+	if (R_FAILED(ret = FSUSER_CreateDirectory(archive, fsMakePath(PATH_ASCII, path), 0)))
+		return ret;
+	
+	return 0;
+}
+
+void recursiveMakeDir(FS_Archive archive, const char * dir) 
+{
+	char tmp[256];
+	char *p = NULL;
+	size_t len;
+
+	snprintf(tmp, sizeof(tmp), "%s",dir);
+	len = strlen(tmp);
+
+	if (tmp[len - 1] == '/')
+		tmp[len - 1] = 0;
+
+	for (p = tmp + 1; *p; p++)
+	{
+		if (*p == '/') 
+		{
+			*p = 0;
+			makeDir(archive, tmp);
+			*p = '/';
+		}
+		makeDir(archive, tmp);
+	}
 }
 
 bool fileExists(FS_Archive archive, const char * path)
 {
-	if ((!path) || (!archive))
-		return false;
-
 	Handle handle;
 
 	if (R_FAILED(FSUSER_OpenFile(&handle, archive, fsMakePath(PATH_ASCII, path), FS_OPEN_READ, 0)))
@@ -42,9 +76,6 @@ bool fileExists(FS_Archive archive, const char * path)
 
 bool dirExists(FS_Archive archive, const char * path)
 {
-	if ((!path) || (!archive))
-		return false;
-
 	Handle handle;
 
 	if (R_FAILED(FSUSER_OpenDirectory(&handle, archive, fsMakePath(PATH_ASCII, path))))
@@ -58,7 +89,7 @@ bool dirExists(FS_Archive archive, const char * path)
 
 char * getFileModifiedTime(char * path)
 {
-	static char timeStr[30];
+	static char timeStr[20];
 	u64 mtime = 0;
 
 	if (R_SUCCEEDED(sdmc_getmtime(path, &mtime)))
@@ -81,33 +112,12 @@ char * getFileModifiedTime(char * path)
 		int month = timeStruct->tm_mon + 1; // January being 0
 		int year = timeStruct->tm_year + 1900;
 
-		switch(getRegion())
-		{
-			case CFG_REGION_JPN:
-				sprintf(timeStr, "%d/%d/%d %2i:%02i %s", year, month, day, hours, minutes, amOrPm ? "AM" : "PM");
-				break;
-			case CFG_REGION_USA: // This is the worst one
-				sprintf(timeStr, "%d/%d/%d %2i:%02i %s", month, day, year, hours, minutes, amOrPm ? "AM" : "PM");
-				break;
-			case CFG_REGION_EUR:
-				sprintf(timeStr, "%d/%d/%d %2i:%02i %s", day, month, year, hours, minutes, amOrPm ? "AM" : "PM");
-				break;
-			case CFG_REGION_AUS:
-				sprintf(timeStr, "%d/%d/%d %2i:%02i %s", day, month, year, hours, minutes, amOrPm ? "AM" : "PM");
-				break;
-			case CFG_REGION_CHN:
-				sprintf(timeStr, "%d/%d/%d %2i:%02i %s", year, month, day, hours, minutes, amOrPm ? "AM" : "PM");
-				break;
-			case CFG_REGION_KOR:
-				sprintf(timeStr, "%d/%d/%d %2i:%02i %s", year, month, day, hours, minutes, amOrPm ? "AM" : "PM");
-				break;
-			case CFG_REGION_TWN:
-				sprintf(timeStr, "%d/%d/%d %2i:%02i %s", year, month, day, hours, minutes, amOrPm ? "AM" : "PM");
-				break;
-			default:
-				sprintf(timeStr, "%d/%d/%d %2i:%02i %s", day, month, year, hours, minutes, amOrPm ? "AM" : "PM");
-				break;
-		}
+		if ((getRegion() == CFG_REGION_JPN) || (getRegion() == CFG_REGION_CHN) || (getRegion() == CFG_REGION_KOR) || (getRegion() == CFG_REGION_TWN))
+			snprintf(timeStr, sizeof(timeStr), "%d/%d/%d %2i:%02i %s", year, month, day, hours, minutes, amOrPm ? "AM" : "PM");
+		else if (getRegion() == CFG_REGION_USA) // This is the worst one
+			snprintf(timeStr, sizeof(timeStr), "%d/%d/%d %2i:%02i %s", month, day, year, hours, minutes, amOrPm ? "AM" : "PM");
+		else 
+			snprintf(timeStr, sizeof(timeStr), "%d/%d/%d %2i:%02i %s", day, month, year, hours, minutes, amOrPm ? "AM" : "PM");
 	}
 
 	return timeStr;
@@ -133,42 +143,65 @@ u64 getFileSize(FS_Archive archive, const char * path)
 
 Result fsRemove(FS_Archive archive, const char * filename)
 {
-	return FSUSER_DeleteFile(archive, fsMakePath(PATH_ASCII, filename));
+	Result ret = 0;
+
+	if (R_FAILED(ret = FSUSER_DeleteFile(archive, fsMakePath(PATH_ASCII, filename))))
+		return ret;
+	
+	return 0;
 }
 
 Result fsRmdir(FS_Archive archive, const char * path)
 {
-	return FSUSER_DeleteDirectory(archive, fsMakePath(PATH_ASCII, path));
+	Result ret = 0;
+
+	if (R_FAILED(ret = FSUSER_DeleteDirectory(archive, fsMakePath(PATH_ASCII, path))))
+		return ret;
+	
+	return 0;
 }
 
 Result fsRmdirRecursive(FS_Archive archive, const char * path)
 {
-	return FSUSER_DeleteDirectoryRecursively(archive, fsMakePath(PATH_ASCII, path));
+	Result ret = 0;
+
+	if (R_FAILED(ret = FSUSER_DeleteDirectoryRecursively(archive, fsMakePath(PATH_ASCII, path))))
+		return ret;
+	
+	return 0;
 }
 
 Result fsRenameFile(FS_Archive archive, const char * old_filename, const char * new_filename)
 {
-	return FSUSER_RenameFile(archive, fsMakePath(PATH_ASCII, old_filename), archive, fsMakePath(PATH_ASCII, new_filename));
+	Result ret = 0;
+
+	if (R_FAILED(ret = FSUSER_RenameFile(archive, fsMakePath(PATH_ASCII, old_filename), archive, fsMakePath(PATH_ASCII, new_filename))))
+		return ret;
+	
+	return 0;
 }
 
 Result fsRenameDir(FS_Archive archive, const char * old_filename, const char * new_filename)
 {
-	return FSUSER_RenameDirectory(archive, fsMakePath(PATH_ASCII, old_filename), archive, fsMakePath(PATH_ASCII, new_filename));
+	Result ret = 0;
+
+	if (R_FAILED(ret = FSUSER_RenameDirectory(archive, fsMakePath(PATH_ASCII, old_filename), archive, fsMakePath(PATH_ASCII, new_filename))))
+		return ret;
+	
+	return 0;
 }
 
-Result fsOpen(Handle * handle, const char * path, u32 flags)
+Result fsOpen(Handle * handle, FS_Archive archive, const char * path, u32 flags)
 {
-	FS_ArchiveID id;
+	Result ret = 0;
 
-	if (BROWSE_STATE == STATE_SD)
-		id = ARCHIVE_SDMC;
-	else
-		id = ARCHIVE_NAND_CTR_FS;
-
-	return FSUSER_OpenFileDirectly(handle, id, fsMakePath(PATH_EMPTY, ""), fsMakePath(PATH_ASCII, path), flags, 0);
+	if (R_FAILED(ret = FSUSER_OpenFile(handle, archive, fsMakePath(PATH_ASCII, path), flags, 0)))
+		return ret;
+	
+	return 0;
 }
 
-Result fsWrite(const char * path, const char * buf)
+Result fsWrite(FS_Archive archive, const char * path, const char * buf)
 {
 	Handle handle;
 	Result ret = 0;
@@ -177,10 +210,10 @@ Result fsWrite(const char * path, const char * buf)
 	u64 size = 0;
 	u32 bytesWritten = 0;
 
-	if (fileExists(fsArchive, path))
-		fsRemove(fsArchive, path);
+	if (fileExists(archive, path))
+		fsRemove(archive, path);
 
-	if (R_FAILED(ret = fsOpen(&handle, path, (FS_OPEN_WRITE | FS_OPEN_CREATE))))
+	if (R_FAILED(ret = fsOpen(&handle, archive, path, (FS_OPEN_WRITE | FS_OPEN_CREATE))))
 		return ret;
 
 	if (R_FAILED(ret = FSFILE_GetSize(handle, &size)))

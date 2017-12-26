@@ -17,7 +17,7 @@ static int generateScreenshot(const char * path)
 	u8 * gfxTopLeft = gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL);
 
 	// Open file for writing screenshot
-	fsOpen(&handle, path, (FS_OPEN_CREATE | FS_OPEN_WRITE));
+	fsOpen(&handle, fsArchive, path, (FS_OPEN_CREATE | FS_OPEN_WRITE));
 
 	// Some
 	u8 * buffer = (u8*)malloc(size + 576000);

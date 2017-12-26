@@ -48,7 +48,7 @@ enum file_types getMusicFileType(const char * file)
 	enum file_types file_type = FILE_TYPE_ERROR;
 	
 	/* Failure opening file */
-	if (R_FAILED(fsOpen(&handle, file, FS_OPEN_READ))) 
+	if (R_FAILED(fsOpen(&handle, fsArchive, file, FS_OPEN_READ))) 
 		return -1;
 	
 	if (R_FAILED(FSFILE_Read(handle, &bytesRead, offset, &fileSig, 4)))

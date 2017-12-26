@@ -37,7 +37,7 @@ void setWav(struct decoder_fn * decoder)
  */
 int initWav(const char * file)
 {
-	if (R_FAILED(fsOpen(&pWav, file, FS_OPEN_READ))) 
+	if (R_FAILED(fsOpen(&pWav, fsArchive, file, FS_OPEN_READ))) 
 		return -1;
 	
 	/* TODO: No need to read the first number of bytes */

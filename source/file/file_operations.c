@@ -439,5 +439,5 @@ Result paste(void)
 
 Result saveLastDirectory(void)
 {
-	return fsWrite("/3ds/3DShell/lastdir.txt", cwd);
+	return fsWrite(fsArchive, "/3ds/3DShell/lastdir.txt", cwd);
 }

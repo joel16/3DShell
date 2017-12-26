@@ -261,7 +261,7 @@ void menu_main(int clearindex)
 		if ((kPressed & KEY_TOUCH) && (touchInRect(124, 147, 0, 20))) // SD
 		{
 			wait(1);
-			fsWrite("/3ds/3DShell/lastdir.txt", START_PATH);
+			fsWrite(fsArchive, "/3ds/3DShell/lastdir.txt", START_PATH);
 			strcpy(cwd, START_PATH);
 			
 			BROWSE_STATE = STATE_SD;

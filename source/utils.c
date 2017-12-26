@@ -12,9 +12,9 @@ Result saveConfig(bool recycleBin, bool protection, bool hidden)
 	Result ret = 0;
 	
 	char * buf = (char *)malloc(1024);
-	snprintf(buf, 1024, configFile, recycleBin, protection, hidden);
+	snprintf(buf, sizeof(buf), configFile, recycleBin, protection, hidden);
 	
-	if (R_FAILED(ret = fsWrite("/3ds/3DShell/config.cfg", buf)))
+	if (R_FAILED(ret = fsWrite(fsArchive, "/3ds/3DShell/config.cfg", buf)))
 		return ret;
 	
 	free(buf);
@@ -36,7 +36,7 @@ Result loadConfig(void)
 		return saveConfig(recycleBin, sysProtection, isHiddenEnabled);
 	}
 	
-	if (R_FAILED(ret = fsOpen(&handle, "/3ds/3DShell/config.cfg", FS_OPEN_READ)))
+	if (R_FAILED(ret = fsOpen(&handle, fsArchive, "/3ds/3DShell/config.cfg", FS_OPEN_READ)))
 		return ret;
 	
 	u64 size64 = 0;
@@ -71,12 +71,12 @@ Result getLastDirectory(void)
 	
 	if (!fileExists(fsArchive, "/3ds/3DShell/lastdir.txt"))
 	{
-		fsWrite("/3ds/3DShell/lastdir.txt", START_PATH);
+		fsWrite(fsArchive, "/3ds/3DShell/lastdir.txt", START_PATH);
 		strcpy(cwd, START_PATH); // Set Start Path to "sdmc:/" if lastDir.txt hasn't been created.
 	}
 	else
 	{
-		if (R_FAILED(ret = fsOpen(&handle, "/3ds/3DShell/lastdir.txt", FS_OPEN_READ)))
+		if (R_FAILED(ret = fsOpen(&handle, fsArchive, "/3ds/3DShell/lastdir.txt", FS_OPEN_READ)))
 			return ret;
 	
 		u64 size64 = 0;
@@ -118,38 +118,14 @@ char * basename(const char * filename)
 	return p ? p + 1 : (char *) filename;
 }
 
-static void recursiveMakeDir(const char * dir) 
-{
-	char tmp[256];
-	char *p = NULL;
-	size_t len;
-
-	snprintf(tmp, sizeof(tmp),"%s",dir);
-	len = strlen(tmp);
-
-	if (tmp[len - 1] == '/')
-		tmp[len - 1] = 0;
-
-	for (p = tmp + 1; *p; p++)
-	{
-		if (*p == '/') 
-		{
-			*p = 0;
-			makeDir(fsArchive, tmp);
-			*p = '/';
-		}
-		makeDir(fsArchive, tmp);
-	}
-}
-
 void makeDirectories(void)
 {
 	if (BROWSE_STATE != STATE_NAND)
 	{
 		if (!(dirExists(fsArchive, "/3ds/3DShell/themes/default/")))
-			recursiveMakeDir("/3ds/3DShell/themes/default");
+			recursiveMakeDir(fsArchive, "/3ds/3DShell/themes/default");
 		if (!(dirExists(fsArchive, "/3ds/3DShell/bin/")))
-			recursiveMakeDir("/3ds/3DShell/bin");
+			recursiveMakeDir(fsArchive, "/3ds/3DShell/bin");
 	}
 }
 
