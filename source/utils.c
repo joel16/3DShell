@@ -12,7 +12,7 @@ Result saveConfig(bool recycleBin, bool protection, bool hidden)
 	Result ret = 0;
 	
 	char * buf = (char *)malloc(1024);
-	snprintf(buf, sizeof(buf), configFile, recycleBin, protection, hidden);
+	snprintf(buf, 1024, configFile, recycleBin, protection, hidden);
 	
 	if (R_FAILED(ret = fsWrite(fsArchive, "/3ds/3DShell/config.cfg", buf)))
 		return ret;

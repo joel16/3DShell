@@ -28,8 +28,10 @@ void initServices(void)
 	ndspInit();
 	ndspSetOutputMode(NDSP_OUTPUT_STEREO);
 
-	amInit();
-	AM_QueryAvailableExternalTitleDatabase(NULL);
+	if (isN3DS())
+		osSetSpeedupEnable(true);
+
+	APT_SetAppCpuTimeLimit(30);
 
 	makeDirectories();
 	loadConfig();
@@ -104,9 +106,6 @@ void initServices(void)
 	screen_load_texture_png(TEXTURE_MUSIC_PAUSE, "romfs:/res/music/pause.png", true);
 	screen_load_texture_png(TEXTURE_MUSIC_STATUS, "romfs:/res/music/ic_album.png", true);
 
-	if (isN3DS())
-		osSetSpeedupEnable(true);
-
 	language = 1; //getLanguage();
 
 	sprintf(welcomeMsg, "%s %s! %s", lang_welcome[language][0], getUsername(), lang_welcome[language][1]);
@@ -119,8 +118,6 @@ void initServices(void)
 
 void termServices(void)
 {
-	osSetSpeedupEnable(0);
-
 	screen_unload_texture(TEXTURE_MUSIC_PAUSE);
 	screen_unload_texture(TEXTURE_MUSIC_PLAY);
 	screen_unload_texture(TEXTURE_MUSIC_TOP_BG);
@@ -187,7 +184,9 @@ void termServices(void)
 	screen_unload_texture(TEXTURE_PROPERTIES);
 	screen_unload_texture(TEXTURE_DELETE);
 
-	amExit();
+	if (isN3DS())
+		osSetSpeedupEnable(false);
+	
 	ndspExit();
 	screen_exit();
 	romfsExit();

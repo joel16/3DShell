@@ -915,7 +915,7 @@ ftp_session_new(int listen_fd)
   console_print(CYAN "accepted connection from %s:%u\n" RESET,
                 inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
 
-  snprintf(ftp_accepted_connection, 50, "Accepted connection: %s:%u", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
+  snprintf(ftp_accepted_connection, sizeof(ftp_accepted_connection), "Accepted connection: %s:%u", inet_ntoa(addr.sin_addr), ntohs(addr.sin_port));
 
   /* allocate a new session */
   session = (ftp_session_t*)calloc(1, sizeof(ftp_session_t));
@@ -3227,7 +3227,7 @@ FTP_DECLARE(REST)
 FTP_DECLARE(RETR)
 {
   console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
-  snprintf(ftp_file_transfer, 50, "Sending: %s", args ? args : "");
+  snprintf(ftp_file_transfer, sizeof(ftp_file_transfer), "Sending: %s", args ? args : "");
   isTransfering = true;
 
   /* open the file to retrieve */
@@ -3461,7 +3461,7 @@ FTP_DECLARE(STAT)
 FTP_DECLARE(STOR)
 {
   console_print(CYAN "%s %s\n" RESET, __func__, args ? args : "");
-  snprintf(ftp_file_transfer, 50, "Receiving: %s", args ? args : "");
+  snprintf(ftp_file_transfer, sizeof(ftp_file_transfer), "Receiving: %s", args ? args : "");
   isTransfering = true;
 
   /* open the file to store */

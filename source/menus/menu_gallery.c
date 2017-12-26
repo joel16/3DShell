@@ -142,7 +142,7 @@ void menu_displayImage(char * path)
 			}
 			else
 			{
-				wait(1);
+				wait(10);
 				break;
 			}
 		}

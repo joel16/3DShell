@@ -291,7 +291,7 @@ void menu_musicPlayer(char * path)
 
 		if (kPressed & KEY_B)
 		{
-			wait(1);
+			wait(10);
 			stopPlayback();
 			break;
 		}

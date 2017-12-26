@@ -11,7 +11,7 @@ typedef enum
 } loop_status_t;
 
 bool isTransfering;
-char ftp_accepted_connection[50], ftp_file_transfer[50];
+char ftp_accepted_connection[50], ftp_file_transfer[100];
 
 int           ftp_init(void);
 loop_status_t ftp_loop(void);
