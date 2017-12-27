@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 #include "audio.h"
 #include "audio/flac.h"

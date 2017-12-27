@@ -1,3 +1,9 @@
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
 #include "common.h"
 #include "file/dirlist.h"
 #include "file/file_operations.h"
@@ -7,9 +13,6 @@
 #include "menus/menu_main.h"
 #include "theme.h"
 #include "utils.h"
-
-#include <fcntl.h>
-#include <unistd.h>
 
 struct colour Storage_colour;
 struct colour Settings_title_text_colour;
@@ -223,34 +226,32 @@ int copy_file(char * src, char * dst)
 	return result; // Return result
 }
 
-Result copy_file_archive(FS_Archive srcArchive, FS_Archive destArchive, FS_ArchiveID srcArchiveID, FS_ArchiveID destArchiveID, char * src, char * dest)
+Result copy_file_archive(FS_Archive srcArchive, FS_Archive destArchive, FS_ArchiveID srcArchiveID, FS_ArchiveID destArchiveID, char * src, char * dst)
 {
 	int chunksize = (512 * 1024);
 	char * buffer = (char *)malloc(chunksize);
 
 	u32 bytesWritten = 0, bytesRead = 0;
 	u64 offset = 0;
-	Result ret = 0;
 	
 	Handle inputHandle, outputHandle;
 
-	Result in = FSUSER_OpenFileDirectly(&inputHandle, srcArchiveID, fsMakePath(PATH_EMPTY, ""), fsMakePath(PATH_ASCII, src), FS_OPEN_READ, 0);
+	Result in = 0, out = 0, ret = 0;
 	
 	u64 size = getFileSize(srcArchive, src);
 
-	if (R_SUCCEEDED(in))
+	if (R_SUCCEEDED(in = FSUSER_OpenFileDirectly(&inputHandle, srcArchiveID, fsMakePath(PATH_EMPTY, ""), fsMakePath(PATH_ASCII, src), FS_OPEN_READ, 0)))
 	{
-		// Delete output file (if existing)
-		FSUSER_DeleteFile(destArchive, fsMakePath(PATH_ASCII, dest));
-
-		Result out = FSUSER_OpenFileDirectly(&outputHandle, destArchiveID, fsMakePath(PATH_EMPTY, ""), fsMakePath(PATH_ASCII, dest), (FS_OPEN_CREATE | FS_OPEN_WRITE), 0);
+		if (fileExists(fsArchive, dst))
+			fsRemove(fsArchive, dst); // Delete output file (if existing)
 		
-		if (R_SUCCEEDED(out))
+		if (R_SUCCEEDED(out = FSUSER_OpenFileDirectly(&outputHandle, destArchiveID, fsMakePath(PATH_EMPTY, ""), fsMakePath(PATH_ASCII, dst), (FS_OPEN_CREATE | FS_OPEN_WRITE), 0)))
 		{
 			// Copy loop (512KB at a time)
 			do
 			{
-				ret = FSFILE_Read(inputHandle, &bytesRead, offset, buffer, chunksize);
+				if (R_FAILED(ret = FSFILE_Read(inputHandle, &bytesRead, offset, buffer, chunksize)))
+					return ret;
 				
 				bytesWritten += FSFILE_Write(outputHandle, &bytesWritten, offset, buffer, size, FS_WRITE_FLUSH);
 				drawProgress(copymode == 1? "Moving" : "Copying", basename(src), bytesRead, size);
@@ -260,15 +261,17 @@ Result copy_file_archive(FS_Archive srcArchive, FS_Archive destArchive, FS_Archi
 			}
 			while(bytesRead);
 
-			ret = FSFILE_Close(outputHandle);
+			if (R_FAILED(ret = FSFILE_Close(outputHandle)))
+				return ret;
 			
 			if (bytesRead != bytesWritten) 
-				return ret;
+				return -3;
 		}
 		else 
 			return out;
 
-		FSFILE_Close(inputHandle);
+		if (R_FAILED(ret = FSFILE_Close(inputHandle)))
+			return ret;
 	}
 	else 
 		return in;
@@ -281,36 +284,32 @@ Result copy_file_archive(FS_Archive srcArchive, FS_Archive destArchive, FS_Archi
 Result copy_folder_recursive(char * src, char * dst)
 {
 	Handle dirHandle;
-	Result directory = FSUSER_OpenDirectory(&dirHandle, fsArchive, fsMakePath(PATH_ASCII, src)); // Open working Directory
-
-	u32 entriesRead;
-	static char dname[1024];
+	Result ret = 0; // Open working Directory
 
 	// Opened directory
-	if (R_SUCCEEDED(directory))
+	if (R_SUCCEEDED(ret = FSUSER_OpenDirectory(&dirHandle, fsArchive, fsMakePath(PATH_ASCII, src))))
 	{
 		makeDir(fsArchive, dst); // Create output directory (is allowed to fail, we can merge folders after all)
+
+		u32 entryCount = 0;
+		FS_DirectoryEntry* entries = (FS_DirectoryEntry*) calloc(MAX_FILES, sizeof(FS_DirectoryEntry));
+		char name[255] = {'\0'};
 
 		// Iterate files
 		do
 		{
-			static FS_DirectoryEntry info;
-			memset(&info, 0, sizeof(FS_DirectoryEntry));
-
-			entriesRead = 0;
-
-			if (R_SUCCEEDED(FSDIR_Read(dirHandle, &entriesRead, 1, &info)))
+			if (R_SUCCEEDED(ret = FSDIR_Read(dirHandle, &entryCount, 1, entries)))
 			{
-				if (entriesRead)
+				if (entryCount)
 				{
-					u16_to_u8(&dname[0], info.name, 0xFF);
+					u16_to_u8(&name[0], entries->name, 0xFF);
 
 					// Valid filename
-					if (strlen(dname) > 0)
+					if (strlen(name) > 0)
 					{
 						// Calculate buffer size
-						int insize = strlen(src) + strlen(dname) + 2;
-						int outsize = strlen(dst) + strlen(dname) + 2;
+						int insize = strlen(src) + strlen(name) + 2;
+						int outsize = strlen(dst) + strlen(name) + 2;
 
 						// Allocate buffer
 						char * inbuffer = (char *)malloc(insize);
@@ -320,15 +319,15 @@ Result copy_folder_recursive(char * src, char * dst)
 						strcpy(inbuffer, src);
 						inbuffer[strlen(inbuffer) + 1] = 0;
 						inbuffer[strlen(inbuffer)] = '/';
-						strcpy(inbuffer + strlen(inbuffer), dname);
+						strcpy(inbuffer + strlen(inbuffer), name);
 
 						// Puzzle output path
 						strcpy(outbuffer, dst);
 						outbuffer[strlen(outbuffer) + 1] = 0;
 						outbuffer[strlen(outbuffer)] = '/';
-						strcpy(outbuffer + strlen(outbuffer), dname);
+						strcpy(outbuffer + strlen(outbuffer), name);
 
-						if (info.attributes & FS_ATTRIBUTE_DIRECTORY) // Another folder
+						if (entries->attributes & FS_ATTRIBUTE_DIRECTORY) // Another folder
 							copy_folder_recursive(inbuffer, outbuffer); // Copy folder (via recursion)	
 						
 						else copy_file(inbuffer, outbuffer); // Copy file
@@ -339,15 +338,21 @@ Result copy_folder_recursive(char * src, char * dst)
 					}
 				}
 			}
+			else 
+				return ret;
 		}
-		while(entriesRead);
+		while(entryCount);
+
+		free(entries);
 
 		// Close directory
-		if (R_SUCCEEDED(FSDIR_Close(dirHandle)))
-			return 0; // Return success
+		if (R_FAILED(ret = FSDIR_Close(dirHandle)))
+			return ret; // Return success
 	}
+	else
+		return ret;
 
-	return directory;
+	return 0;
 }
 
 // Paste file or folder

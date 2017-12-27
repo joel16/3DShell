@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "common.h"
 #include "file/dirlist.h"
 #include "menus/status_bar.h"

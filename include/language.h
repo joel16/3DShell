@@ -3,7 +3,7 @@
 
 #include <3ds.h>
 
-u8 language;
+CFG_Language language;
 
 const char lang_welcome[12][3][100];
 const char lang_months[12][12][50];

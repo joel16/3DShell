@@ -3,9 +3,6 @@
 
 #include <3ds.h>
 
-#include <string.h>
-#include <time.h>
-
 FS_Archive fsArchive;
 
 int BROWSE_STATE;

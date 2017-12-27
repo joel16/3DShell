@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <string.h>
+
 #include "common.h"
 #include "file/dirlist.h"
 #include "file/file_operations.h"

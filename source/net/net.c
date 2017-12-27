@@ -1,3 +1,7 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "net/net.h"
 
 Result downloadFile(const char * url, const char * path)

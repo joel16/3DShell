@@ -1,3 +1,6 @@
+#include <stdlib.h>
+#include <string.h>
+
 #include "archive.h"
 #include "common.h"
 #include "compile_date.h"
@@ -15,8 +18,6 @@
 #include "screenshot.h"
 #include "theme.h"
 #include "utils.h"
-
-#define MAX_FILES 1024
 
 struct colour TopScreen_colour;
 struct colour TopScreen_min_colour;
@@ -41,6 +42,7 @@ int fileCount = 0;
 */
 File * files = NULL;
 
+// Sort directories alphabetically. Folder first, then files.
 static int cmpstringp(const void *p1, const void *p2) 
 {
    	FS_DirectoryEntry* entryA = (FS_DirectoryEntry*) p1;
@@ -105,7 +107,7 @@ Result updateList(int clearindex)
 				if (name[0] == '\0') // Ingore null filenames
 					continue;
 						
-				if (strncmp(name, ".", 1) == 0) // Ignore "." in all Directories
+				if ((!isHiddenEnabled) && (strncmp(name, ".", 1) == 0)) // Ignore "." in all Directories
 					continue;
 
 				if (strcmp(cwd, ROOT_PATH) == 0 && strncmp(name, "..", 2) == 0) // Ignore ".." in Root Directory
@@ -142,6 +144,10 @@ Result updateList(int clearindex)
 				fileCount++; // Increment file count
 			}
 		}
+		else 
+			return ret;
+
+		free(entries);
 
 		if (R_FAILED(ret = FSDIR_Close(dirHandle))) // Close directory
 			return ret;
@@ -432,11 +438,12 @@ int displayProperties(void)
 	strcpy(fileName, file->name);
 
 	strcpy(path, cwd);
-	strcpy(fullPath, cwd);
-	strcpy(fullPath + strlen(fullPath), fileName);
 
 	char fileSize[16];
-	getSizeString(fileSize, file->size);
+	if (!(file->isDir))
+		getSizeString(fileSize, file->size);
+
+	u32 totalSize = 0, directories = 0, files = 0;
 
 	while(properties == true)
 	{

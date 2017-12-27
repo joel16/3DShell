@@ -1,3 +1,5 @@
+#include <3ds.h>
+
 #include "task.h"
 
 static bool task_quit;

@@ -1,3 +1,6 @@
+#include <math.h>
+#include <string.h>
+
 #include "common.h"
 #include "file/dirlist.h"
 #include "graphics/screen.h"
@@ -71,7 +74,7 @@ void menu_displayImage(char * path)
 			nameY = nameLimY;
 
 		screen_draw_texture(TEXTURE_GALLERY_BAR, 0, galleryBarY);
-		screen_draw_stringf(30, nameY, 0.41f, 0.41f, RGBA8(255, 255, 255, 255), "%.60s", fileName);
+		screen_draw_stringf(30, nameY, 0.45f, 0.45f, RGBA8(255, 255, 255, 255), "%.60s", fileName);
 
 		if (kPressed & KEY_TOUCH)
 		{

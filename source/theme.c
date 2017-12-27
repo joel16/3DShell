@@ -1,3 +1,7 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "file/fs.h"
 #include "common.h"
 #include "graphics/screen.h"

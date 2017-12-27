@@ -4,9 +4,10 @@
 #include <3ds.h>
 
 #define CLEAR 1
-#define KEEP 0
+#define KEEP  0
 
 #define FILES_PER_PAGE 5
+#define MAX_FILES      1024
 
 /*
 *	File struct

@@ -2,13 +2,8 @@
 #define COMMON_H
 
 #include <3ds.h>
-#include <citro3d.h>
 
 #include <setjmp.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #define ROOT_PATH "/"
 #define START_PATH ROOT_PATH
