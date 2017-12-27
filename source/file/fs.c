@@ -200,6 +200,25 @@ Result fsOpen(Handle * handle, FS_Archive archive, const char * path, u32 flags)
 	return 0;
 }
 
+Result fsRead(FS_Archive archive, const char * path, u64 size, char * buf)
+{
+	Handle handle;
+	Result ret = 0;
+
+	u32 bytesread = 0;
+
+	if (R_FAILED(ret = fsOpen(&handle, archive, path, FS_OPEN_READ)))
+		return ret;
+	
+	if (R_FAILED(ret = FSFILE_Read(handle, &bytesread, 0, (u32 *)buf, size)))
+		return ret;
+
+	if (R_FAILED(ret = FSFILE_Close(handle)))
+		return ret;
+
+	return 0;
+}
+
 Result fsWrite(FS_Archive archive, const char * path, const char * buf)
 {
 	Handle handle;

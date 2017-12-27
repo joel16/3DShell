@@ -344,10 +344,8 @@ Result copy_folder_recursive(char * src, char * dst)
 		while(entryCount);
 
 		free(entries);
-
-		// Close directory
-		if (R_FAILED(ret = FSDIR_Close(dirHandle)))
-			return ret; // Return success
+		if (R_FAILED(ret = FSDIR_Close(dirHandle))) // Close directory
+			return ret;
 	}
 	else
 		return ret;

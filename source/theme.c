@@ -65,30 +65,20 @@ static Result loadThemeConfig(void)
 	if (!fileExists(fsArchive, "/3ds/3DShell/theme.cfg"))	
 		saveThemeConfig("romfs:/res", "/3ds/3DShell/themes/default");
 	
-	if (R_FAILED(ret = fsOpen(&handle, fsArchive, "/3ds/3DShell/theme.cfg", FS_OPEN_READ)))
-		return ret;
-	
 	u64 size64 = 0;
 	u32 size = 0;
 	
-	if (R_FAILED(ret = FSFILE_GetSize(handle, &size64)))
-		return ret;
-		
+	size64 = getFileSize(fsArchive, "/3ds/3DShell/theme.cfg");
 	size = (u32)size64;
-	
 	char * buf = (char *)malloc(size + 1);
-	u32 bytesread = 0;
-	
-	if (R_FAILED(ret = FSFILE_Read(handle, &bytesread, 0, (u32 *)buf, size)))
+
+	if (R_FAILED(ret = fsRead(fsArchive, "/3ds/3DShell/theme.cfg", size, buf)))
 		return ret;
 	
 	buf[size] = '\0';
 	
 	sscanf(buf, themeConfig, theme_dir, colour_dir);
-	
-	if (R_FAILED(ret = FSFILE_Close(handle)))
-		return ret;
-	
+
 	free(buf);
 	return 0;
 }
@@ -131,21 +121,14 @@ static Result loadFontColours(void)
 	char colours_cfg[100] = "/colours.cfg";
 	strcat(colour_dir, colours_cfg);
 	
-	if (R_FAILED(ret = fsOpen(&handle, fsArchive, colour_dir, FS_OPEN_READ)))
-		return ret;
-	
 	u64 size64 = 0;
 	u32 size = 0;
 	
-	if (R_FAILED(ret = FSFILE_GetSize(handle, &size64)))
-		return ret;
-		
+	size64 = getFileSize(fsArchive, colour_dir);
 	size = (u32)size64;
-	
 	char * buf = (char *)malloc(size + 1);
-	u32 bytesread = 0;
-	
-	if (R_FAILED(ret = FSFILE_Read(handle, &bytesread, 0, (u32 *)buf, size)))
+
+	if (R_FAILED(ret = fsRead(fsArchive, colour_dir, size, buf)))
 		return ret;
 	
 	buf[size] = '\0';
@@ -164,9 +147,6 @@ static Result loadFontColours(void)
 								&Settings_title_text_colour.r, &Settings_title_text_colour.g, &Settings_title_text_colour.b,
 								&Settings_text_colour.r, &Settings_text_colour.g, &Settings_text_colour.b,
 								&Settings_text_min_colour.r, &Settings_text_min_colour.g, &Settings_text_min_colour.b);
-	
-	if (R_FAILED(ret = FSFILE_Close(handle)))
-		return ret;
 	
 	free(buf);
 	return 0;

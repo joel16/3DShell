@@ -67,7 +67,7 @@ int menu_displayText(char * path)
 			break;
 		}
 
-		if ((kHeld & KEY_L) && (kHeld & KEY_R))
+		if (((kHeld & KEY_L) && (kPressed & KEY_R)) || ((kHeld & KEY_R) && (kPressed & KEY_L)))
 			captureScreenshot();
 	}
 

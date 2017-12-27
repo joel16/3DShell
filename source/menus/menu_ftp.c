@@ -8,6 +8,7 @@
 #include "language.h"
 #include "menus/menu_ftp.h"
 #include "net/ftp.h"
+#include "screenshot.h"
 #include "task.h"
 #include "theme.h"
 #include "utils.h"
@@ -50,14 +51,14 @@ void menu_displayFTP()
 		screen_draw_texture(TEXTURE_FTP_ICON_SELECTED, 100, 0);
 
 		if (BROWSE_STATE == STATE_SD)
-			screen_draw_texture(TEXTURE_SD_ICON_SELECTED, 125, 0);
+			screen_draw_texture(TEXTURE_SD_ICON_SELECTED, (320 - screen_get_texture_width(TEXTURE_SD_ICON_SELECTED)) - 55, 0);
 		else
-			screen_draw_texture(TEXTURE_SD_ICON, 125, 0);
+			screen_draw_texture(TEXTURE_SD_ICON, (320 - screen_get_texture_width(TEXTURE_SD_ICON)) - 55, 0);
 
 		if (BROWSE_STATE == STATE_NAND)
-			screen_draw_texture(TEXTURE_NAND_ICON_SELECTED, 150, 0);
+			screen_draw_texture(TEXTURE_NAND_ICON_SELECTED, (320 - screen_get_texture_width(TEXTURE_NAND_ICON_SELECTED)) - 30, 0);
 		else
-			screen_draw_texture(TEXTURE_NAND_ICON, 150, 0);
+			screen_draw_texture(TEXTURE_NAND_ICON, (320 - screen_get_texture_width(TEXTURE_NAND_ICON)) - 30, 0);
 
 		screen_draw_texture(TEXTURE_SEARCH_ICON, (320 - screen_get_texture_width(TEXTURE_SEARCH_ICON)), -2);
 
@@ -105,6 +106,9 @@ void menu_displayFTP()
 		screen_draw_string(((320 - screen_get_string_width(lang_ftp[language][2], 0.45f, 0.45f)) / 2), 120, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][2]);
 
 		screen_end_frame();
+
+		if (((kHeld & KEY_L) && (kPressed & KEY_R)) || ((kHeld & KEY_R) && (kPressed & KEY_L)))
+			captureScreenshot();
 	}
 
 	memset(ftp_accepted_connection, 0, 20); // Empty accepted connection address

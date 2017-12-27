@@ -126,14 +126,14 @@ void menu_displayMainMenu(void)
 		screen_draw_string(((320 - screen_get_string_width(lang_themes[language][0], 0.45f, 0.45f)) / 2), 40, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_themes[language][0]);
 
 	if (BROWSE_STATE == STATE_SD)
-		screen_draw_texture(TEXTURE_SD_ICON_SELECTED, 125, 0);
+		screen_draw_texture(TEXTURE_SD_ICON_SELECTED, (320 - screen_get_texture_width(TEXTURE_SD_ICON_SELECTED)) - 55, 0);
 	else
-		screen_draw_texture(TEXTURE_SD_ICON, 125, 0);
+		screen_draw_texture(TEXTURE_SD_ICON, (320 - screen_get_texture_width(TEXTURE_SD_ICON)) - 55, 0);
 
 	if (BROWSE_STATE == STATE_NAND)
-		screen_draw_texture(TEXTURE_NAND_ICON_SELECTED, 150, 0);
+		screen_draw_texture(TEXTURE_NAND_ICON_SELECTED, (320 - screen_get_texture_width(TEXTURE_NAND_ICON_SELECTED)) - 30, 0);
 	else
-		screen_draw_texture(TEXTURE_NAND_ICON, 150, 0);
+		screen_draw_texture(TEXTURE_NAND_ICON, (320 - screen_get_texture_width(TEXTURE_NAND_ICON)) - 30, 0);
 
 	screen_draw_texture(TEXTURE_SEARCH_ICON, (320 - screen_get_texture_width(TEXTURE_SEARCH_ICON)), -2);
 
@@ -170,7 +170,7 @@ void menu_main(int clearindex)
 		hidScanInput();
 		hidTouchRead(&touch);
 
-		if ((kHeld & KEY_L) && (kHeld & KEY_R))
+		if (((kHeld & KEY_L) && (kPressed & KEY_R)) || ((kHeld & KEY_R) && (kPressed & KEY_L)))
 			captureScreenshot();
 
 		if ((kPressed & KEY_TOUCH) && (touchInRect(0, 22, 0, 20)))
@@ -261,7 +261,8 @@ void menu_main(int clearindex)
 			menu_displayFTP();
 		}
 
-		if ((kPressed & KEY_TOUCH) && (touchInRect(124, 147, 0, 20))) // SD
+		if ((kPressed & KEY_TOUCH) && (touchInRect((320 - screen_get_texture_width(TEXTURE_SD_ICON)) - 55, 
+		((320 - screen_get_texture_width(TEXTURE_SD_ICON)) - 55) + 20, 0, 20))) // SD
 		{
 			wait(1);
 			fsWrite(fsArchive, "/3ds/3DShell/lastdir.txt", START_PATH);
@@ -276,7 +277,8 @@ void menu_main(int clearindex)
 			displayFiles();
 		}
 
-		else if ((kPressed & KEY_TOUCH) && (touchInRect(148, 173, 0, 20))) // CTR NAND
+		else if ((kPressed & KEY_TOUCH) && (touchInRect((320 - screen_get_texture_width(TEXTURE_NAND_ICON)) - 30, 
+		((320 - screen_get_texture_width(TEXTURE_NAND_ICON)) - 30) + 20, 0, 20))) // CTR NAND
 		{
 			wait(1);
 			strcpy(cwd, START_PATH);

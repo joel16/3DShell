@@ -35,34 +35,23 @@ Result loadConfig(void)
 		// set these to the following by default:
 		recycleBin = 0;
 		sysProtection = 1;
-		isHiddenEnabled = 0;
-		
+		isHiddenEnabled = 0;		
 		return saveConfig(recycleBin, sysProtection, isHiddenEnabled);
 	}
-	
-	if (R_FAILED(ret = fsOpen(&handle, fsArchive, "/3ds/3DShell/config.cfg", FS_OPEN_READ)))
-		return ret;
-	
+
 	u64 size64 = 0;
 	u32 size = 0;
-	
-	if (R_FAILED(ret = FSFILE_GetSize(handle, &size64)))
-		return ret;
-		
+
+	size64 = getFileSize(fsArchive, "/3ds/3DShell/config.cfg");
 	size = (u32)size64;
-	
 	char * buf = (char *)malloc(size + 1);
-	u32 bytesread = 0;
-	
-	if (R_FAILED(ret = FSFILE_Read(handle, &bytesread, 0, (u32 *)buf, size)))
+
+	if (R_FAILED(ret = fsRead(fsArchive, "/3ds/3DShell/config.cfg", size, buf)))
 		return ret;
-	
+
 	buf[size] = '\0';
 	
 	sscanf(buf, configFile, &recycleBin, &sysProtection, &isHiddenEnabled);
-	
-	if (R_FAILED(ret = FSFILE_Close(handle)))
-		return ret;
 	
 	free(buf);
 	return 0;
@@ -80,25 +69,18 @@ Result getLastDirectory(void)
 	}
 	else
 	{
-		if (R_FAILED(ret = fsOpen(&handle, fsArchive, "/3ds/3DShell/lastdir.txt", FS_OPEN_READ)))
-			return ret;
-	
 		u64 size64 = 0;
 		u32 size = 0;
-	
-		if (R_FAILED(ret = FSFILE_GetSize(handle, &size64)))
-			return ret;
-		
+
+		size64 = getFileSize(fsArchive, "/3ds/3DShell/lastdir.txt");
 		size = (u32)size64;
-	
 		char * buf = (char *)malloc(size + 1);
-		u32 bytesread = 0;
-		
-		if (R_FAILED(ret = FSFILE_Read(handle, &bytesread, 0, (u32 *)buf, size)))
+
+		if (R_FAILED(ret = fsRead(fsArchive, "/3ds/3DShell/lastdir.txt", size, buf)))
 			return ret;
-		
+
 		buf[size] = '\0';
-	
+
 		char tempPath[250];
 		sscanf(buf, "%s", tempPath);
 	
@@ -106,9 +88,6 @@ Result getLastDirectory(void)
 			strcpy(cwd, tempPath);
 		else
 			strcpy(cwd, START_PATH);
-	
-		if (R_FAILED(ret = FSFILE_Close(handle)))
-			return ret;
 		
 		free(buf);
 	}

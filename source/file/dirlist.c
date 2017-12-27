@@ -77,18 +77,11 @@ Result updateList(int clearindex)
 		/* Add fake ".." entry except on root */
 		if (strcmp(cwd, ROOT_PATH))
 		{
-			// New list
-			files = (File *)malloc(sizeof(File));
+			files = (File *)malloc(sizeof(File)); // New list
+			memset(files, 0, sizeof(File)); // Clear memory
 
-			// Clear memory
-			memset(files, 0, sizeof(File));
-
-			// Copy file Name
-			strcpy(files->name, "..");
-
-			// Set folder flag
-			files->isDir = 1;
-
+			strcpy(files->name, ".."); // Copy file Name
+			files->isDir = 1; // Set folder flag
 			fileCount++;
 		}
 
@@ -313,10 +306,10 @@ void openFile(void)
 		updateList(CLEAR);
 		displayFiles();
 	}
-	else if (strncasecmp(file->ext, "txt", 3) == 0)
-		menu_displayText(path);
 	else if(getMusicFileType(path) != 0)
 		menu_musicPlayer(path);
+	/*else if (strncasecmp(file->ext, "txt", 3) == 0)
+		menu_displayText(path);*/
 }
 
 // Navigate to Folder
@@ -401,7 +394,7 @@ int drawDeletionDialog(void)
 
 		screen_end_frame();
 
-		if ((kHeld & KEY_L) && (kHeld & KEY_R))
+		if (((kHeld & KEY_L) && (kPressed & KEY_R)) || ((kHeld & KEY_R) && (kPressed & KEY_L)))
 			captureScreenshot();
 
 		if ((kPressed & KEY_A) || ((touchInRect(240, 320, 142, 185))  && (kPressed & KEY_TOUCH)))
@@ -499,7 +492,7 @@ int displayProperties(void)
 
 		screen_end_frame();
 
-		if ((kHeld & KEY_L) && (kHeld & KEY_R))
+		if (((kHeld & KEY_L) && (kPressed & KEY_R)) || ((kHeld & KEY_R) && (kPressed & KEY_L)))
 			captureScreenshot();
 
 		if ((kPressed & KEY_B) || (kPressed & KEY_A) || (touchInRect(36, 284, 192, 220)))
