@@ -43,13 +43,15 @@
 
 #define TEXTURE_TOGGLE_ON 27
 #define TEXTURE_TOGGLE_OFF 28
+#define TEXTURE_RADIO_ON 29
+#define TEXTURE_RADIO_OFF 30
 
-#define TEXTURE_CHECK_ICON 29
-#define TEXTURE_UNCHECK_ICON 30
+#define TEXTURE_CHECK_ICON 31
+#define TEXTURE_UNCHECK_ICON 32
 
-#define TEXTURE_SEARCH_ICON 31
+#define TEXTURE_SEARCH_ICON 33
 
-#define TEXTURE_THEME_ICON 32
+#define TEXTURE_THEME_ICON 34
 
 /*
 *	Current working directory.
@@ -65,6 +67,7 @@ char fileName[255];
 *	Generic definitions
 */
 bool copyF, cutF, properties, deleteDialog, recycleBin, sysProtection, isHiddenEnabled;
+int sortBy;
 
 jmp_buf exitJmp;
 

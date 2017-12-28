@@ -76,6 +76,8 @@ void initServices(void)
 
 	screen_load_texture_png(TEXTURE_TOGGLE_ON, "romfs:/res/toggleOn.png", true);
 	screen_load_texture_png(TEXTURE_TOGGLE_OFF, "romfs:/res/toggleOff.png", true);
+	screen_load_texture_png(TEXTURE_RADIO_ON, "romfs:/res/radio_on.png", true);
+	screen_load_texture_png(TEXTURE_RADIO_OFF, "romfs:/res/radio_off.png", true);
 
 	screen_load_texture_png(TEXTURE_CHECK_ICON, check_path, true);
 	screen_load_texture_png(TEXTURE_UNCHECK_ICON, uncheck_path, true);

@@ -9,7 +9,7 @@
 
 #define wait(msec) svcSleepThread(10000000 * (s64)msec)
 
-Result saveConfig(bool recycleBin, bool protection, bool hidden);
+Result saveConfig(int sortBy, bool recycleBin, bool protection, bool hidden);
 Result loadConfig(void);
 Result getLastDirectory(void);
 char * basename(const char * filename);

@@ -44,7 +44,8 @@ void menu_displayMainMenu(void)
 		screen_draw_texture(TEXTURE_HOME_ICON_SELECTED, -2, -2);
 		screen_draw_string(((320 - screen_get_string_width(welcomeMsg, 0.45f, 0.45f)) / 2), 40, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), welcomeMsg);
 		screen_draw_string(((320 - screen_get_string_width(currDate, 0.45f, 0.45f)) / 2), 60, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), currDate);
-		screen_draw_stringf(2, 225, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), "3DShell %d.%d.%d Beta - %s", VERSION_MAJOR, VERSION_MINOR, VERSION_MICRO, __DATE__);
+		//screen_draw_string(((320 - screen_get_string_width("Press \uE073 to exit the application.", 0.45f, 0.45f)) / 2), 190, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), "Press \uE073 to exit the application.");
+		screen_draw_stringf(2, 225, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), "3DShell %d.%d.%d - %s", VERSION_MAJOR, VERSION_MINOR, VERSION_MICRO, __DATE__);
 	}
 	else
 		screen_draw_texture(TEXTURE_HOME_ICON, -2, -2);
@@ -81,40 +82,73 @@ void menu_displayMainMenu(void)
 
 	if (DEFAULT_STATE == STATE_SETTINGS)
 	{
-		screen_draw_texture(TEXTURE_SETTINGS_ICON_SELECTED, 50, 1);
 		screen_draw_rect(0, 20, 320, 220, RGBA8(Settings_colour.r, Settings_colour.g, Settings_colour.b, 255));
 
 		screen_draw_string(10, 30, 0.45f, 0.45f, RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255), lang_settings[language][0]);
 
-		screen_draw_string(10, 50, 0.45f, 0.45f,  RGBA8(Settings_text_colour.r, Settings_text_colour.g, Settings_text_colour.b, 255), lang_settings[language][5]);
-		screen_draw_string(10, 62, 0.45f, 0.45f, RGBA8(Settings_text_min_colour.r, Settings_text_min_colour.g, Settings_text_min_colour.b, 255), lang_settings[language][6]);
+		screen_draw_string(10, 50, 0.45f, 0.45f,  RGBA8(Settings_text_colour.r, Settings_text_colour.g, Settings_text_colour.b, 255), "Sort by");
+		screen_draw_string(10, 62, 0.45f, 0.45f, RGBA8(Settings_text_min_colour.r, Settings_text_min_colour.g, Settings_text_min_colour.b, 255), "Select from a list of sorting options.");
 
-		screen_draw_string(10, 90, 0.45f, 0.45f, RGBA8(Settings_text_colour.r, Settings_text_colour.g, Settings_text_colour.b, 255), lang_settings[language][1]);
-		screen_draw_string(10, 102, 0.45f, 0.45f, RGBA8(Settings_text_min_colour.r, Settings_text_min_colour.g, Settings_text_min_colour.b, 255), lang_settings[language][2]);
+		screen_draw_string(10, 85, 0.45f, 0.45f,  RGBA8(Settings_text_colour.r, Settings_text_colour.g, Settings_text_colour.b, 255), lang_settings[language][5]);
+		screen_draw_string(10, 97, 0.45f, 0.45f, RGBA8(Settings_text_min_colour.r, Settings_text_min_colour.g, Settings_text_min_colour.b, 255), lang_settings[language][6]);
 
-		screen_draw_string(10, 130, 0.45f, 0.45f, RGBA8(Settings_text_colour.r, Settings_text_colour.g, Settings_text_colour.b, 255), lang_settings[language][3]);
-		screen_draw_stringf(10, 142, 0.45f, 0.45f, RGBA8(Settings_text_min_colour.r, Settings_text_min_colour.g, Settings_text_min_colour.b, 255), "%s %s", lang_settings[language][4], theme_dir);
+		screen_draw_string(10, 120, 0.45f, 0.45f, RGBA8(Settings_text_colour.r, Settings_text_colour.g, Settings_text_colour.b, 255), lang_settings[language][1]);
+		screen_draw_string(10, 132, 0.45f, 0.45f, RGBA8(Settings_text_min_colour.r, Settings_text_min_colour.g, Settings_text_min_colour.b, 255), lang_settings[language][2]);
 
-		screen_draw_string(10, 170, 0.45f, 0.45f, RGBA8(Settings_text_colour.r, Settings_text_colour.g, Settings_text_colour.b, 255), lang_settings[language][7]);
-		screen_draw_stringf(10, 182, 0.45f, 0.45f, RGBA8(Settings_text_min_colour.r, Settings_text_min_colour.g, Settings_text_min_colour.b, 255), "%s", lang_settings[language][8]);
+		screen_draw_string(10, 155, 0.45f, 0.45f, RGBA8(Settings_text_colour.r, Settings_text_colour.g, Settings_text_colour.b, 255), lang_settings[language][3]);
+		screen_draw_stringf(10, 167, 0.45f, 0.45f, RGBA8(Settings_text_min_colour.r, Settings_text_min_colour.g, Settings_text_min_colour.b, 255), "%s %s", lang_settings[language][4], theme_dir);
+
+		screen_draw_string(10, 190, 0.45f, 0.45f, RGBA8(Settings_text_colour.r, Settings_text_colour.g, Settings_text_colour.b, 255), lang_settings[language][7]);
+		screen_draw_stringf(10, 202, 0.45f, 0.45f, RGBA8(Settings_text_min_colour.r, Settings_text_min_colour.g, Settings_text_min_colour.b, 255), "%s", lang_settings[language][8]);
 
 		if (recycleBin)
-			screen_draw_texture(TEXTURE_TOGGLE_ON, 280, 50);
-		else
-			screen_draw_texture(TEXTURE_TOGGLE_OFF, 280, 50);
-
-		if (sysProtection)
 			screen_draw_texture(TEXTURE_TOGGLE_ON, 280, 90);
 		else
 			screen_draw_texture(TEXTURE_TOGGLE_OFF, 280, 90);
 
-		if (isHiddenEnabled)
-			screen_draw_texture(TEXTURE_TOGGLE_ON, 280, 170);
+		if (sysProtection)
+			screen_draw_texture(TEXTURE_TOGGLE_ON, 280, 125);
 		else
-			screen_draw_texture(TEXTURE_TOGGLE_OFF, 280, 170);
+			screen_draw_texture(TEXTURE_TOGGLE_OFF, 280, 125);
 
-		screen_draw_texture(TEXTURE_THEME_ICON, 283, 125);
+		if (isHiddenEnabled)
+			screen_draw_texture(TEXTURE_TOGGLE_ON, 280, 195);
+		else
+			screen_draw_texture(TEXTURE_TOGGLE_OFF, 280, 195);
+
+		screen_draw_texture(TEXTURE_THEME_ICON, 283, 155);
 	}
+
+	if (DEFAULT_STATE == STATE_SORT)
+	{
+		screen_draw_rect(0, 20, 320, 220, RGBA8(Settings_colour.r, Settings_colour.g, Settings_colour.b, 255));
+
+		screen_draw_string(10, 30, 0.45f, 0.45f, RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255), "Sorting options");
+
+		screen_draw_string(10, 50, 0.45f, 0.45f,  RGBA8(Settings_text_colour.r, Settings_text_colour.g, Settings_text_colour.b, 255), "None");
+		screen_draw_string(10, 62, 0.45f, 0.45f, RGBA8(Settings_text_min_colour.r, Settings_text_min_colour.g, Settings_text_min_colour.b, 255), "No sorting method is applied.");
+
+		screen_draw_string(10, 85, 0.45f, 0.45f,  RGBA8(Settings_text_colour.r, Settings_text_colour.g, Settings_text_colour.b, 255), "Alphabetical \uE01B");
+		screen_draw_string(10, 97, 0.45f, 0.45f, RGBA8(Settings_text_min_colour.r, Settings_text_min_colour.g, Settings_text_min_colour.b, 255), "Sort alphabetically in ascending order.");
+
+		screen_draw_string(10, 120, 0.45f, 0.45f,  RGBA8(Settings_text_colour.r, Settings_text_colour.g, Settings_text_colour.b, 255), "Alphabetical \uE01C");
+		screen_draw_string(10, 132, 0.45f, 0.45f, RGBA8(Settings_text_min_colour.r, Settings_text_min_colour.g, Settings_text_min_colour.b, 255), "Sort alphabetically in descending order.");
+
+		screen_draw_string(10, 155, 0.45f, 0.45f,  RGBA8(Settings_text_colour.r, Settings_text_colour.g, Settings_text_colour.b, 255), "Size \uE01B");
+		screen_draw_string(10, 167, 0.45f, 0.45f, RGBA8(Settings_text_min_colour.r, Settings_text_min_colour.g, Settings_text_min_colour.b, 255), "Sort by size (largest first).");
+
+		screen_draw_string(10, 190, 0.45f, 0.45f,  RGBA8(Settings_text_colour.r, Settings_text_colour.g, Settings_text_colour.b, 255), "Size \uE01C");
+		screen_draw_string(10, 202, 0.45f, 0.45f, RGBA8(Settings_text_min_colour.r, Settings_text_min_colour.g, Settings_text_min_colour.b, 255), "Sort by size (smallest first).");
+
+		sortBy == 0? screen_draw_texture(TEXTURE_RADIO_ON, 280, 55) : screen_draw_texture(TEXTURE_RADIO_OFF, 280, 55);
+		sortBy == 1? screen_draw_texture(TEXTURE_RADIO_ON, 280, 90) : screen_draw_texture(TEXTURE_RADIO_OFF, 280, 90);
+		sortBy == 2? screen_draw_texture(TEXTURE_RADIO_ON, 280, 125) : screen_draw_texture(TEXTURE_RADIO_OFF, 280, 125);
+		sortBy == 3? screen_draw_texture(TEXTURE_RADIO_ON, 280, 160) : screen_draw_texture(TEXTURE_RADIO_OFF, 280, 160);
+		sortBy == 4? screen_draw_texture(TEXTURE_RADIO_ON, 280, 195) : screen_draw_texture(TEXTURE_RADIO_OFF, 280, 195);
+	}
+
+	if ((DEFAULT_STATE == STATE_SETTINGS) || (DEFAULT_STATE == STATE_SORT))
+		screen_draw_texture(TEXTURE_SETTINGS_ICON_SELECTED, 50, 1);
 	else
 		screen_draw_texture(TEXTURE_SETTINGS_ICON, 50, 1);
 
@@ -194,37 +228,43 @@ void menu_main(int clearindex)
 			DEFAULT_STATE = STATE_UPDATE;
 		}*/
 
-		else if ((kPressed & KEY_TOUCH) && (touchInRect(280, 320, 50, 72)) && (IF_SETTINGS))
+		if ((kPressed & KEY_TOUCH) && (touchInRect(0, 320, 50, 72)) && (IF_SETTINGS))
+		{
+			wait(1);
+			DEFAULT_STATE = STATE_SORT;
+		}
+
+		else if ((kPressed & KEY_TOUCH) && (touchInRect(280, 320, 90, 110)) && (IF_SETTINGS))
 		{
 			wait(1);
 			if (recycleBin == false)
 			{
 				recycleBin = true;
-				saveConfig(recycleBin, sysProtection, isHiddenEnabled);
+				saveConfig(sortBy, recycleBin, sysProtection, isHiddenEnabled);
 			}
 			else
 			{
 				recycleBin = false;
-				saveConfig(recycleBin, sysProtection, isHiddenEnabled);
+				saveConfig(sortBy, recycleBin, sysProtection, isHiddenEnabled);
 			}
 		}
 
-		if ((kPressed & KEY_TOUCH) && (touchInRect(280, 320, 90, 112)) && (IF_SETTINGS))
+		else if ((kPressed & KEY_TOUCH) && (touchInRect(280, 320, 125, 145)) && (IF_SETTINGS))
 		{
 			wait(1);
 			if (sysProtection == false)
 			{
 				sysProtection = true;
-				saveConfig(recycleBin, sysProtection, isHiddenEnabled);
+				saveConfig(sortBy, recycleBin, sysProtection, isHiddenEnabled);
 			}
 			else
 			{
 				sysProtection = false;
-				saveConfig(recycleBin, sysProtection, isHiddenEnabled);
+				saveConfig(sortBy, recycleBin, sysProtection, isHiddenEnabled);
 			}
 		}
 
-		else if ((kPressed & KEY_TOUCH) && (touchInRect(283, 303, 125, 145)) && (IF_SETTINGS))
+		else if ((kPressed & KEY_TOUCH) && (touchInRect(283, 303, 155, 175)) && (IF_SETTINGS))
 		{
 			wait(1);
 			DEFAULT_STATE = STATE_THEME;
@@ -233,21 +273,72 @@ void menu_main(int clearindex)
 			displayFiles();
 		}
 
-		else if ((kPressed & KEY_TOUCH) && (touchInRect(280, 320, 170, 192)) && (IF_SETTINGS))
+		else if ((kPressed & KEY_TOUCH) && (touchInRect(280, 320, 195, 215)) && (IF_SETTINGS))
 		{
 			wait(1);
 			if (isHiddenEnabled == false)
 			{
 				isHiddenEnabled = true;
-				saveConfig(recycleBin, sysProtection, isHiddenEnabled);
+				saveConfig(sortBy, recycleBin, sysProtection, isHiddenEnabled);
 			}
 			else
 			{
 				isHiddenEnabled = false;
-				saveConfig(recycleBin, sysProtection, isHiddenEnabled);
+				saveConfig(sortBy, recycleBin, sysProtection, isHiddenEnabled);
 			}
 			updateList(CLEAR);
 			displayFiles();
+		}
+
+		if ((kPressed & KEY_TOUCH) && (touchInRect(280, 320, 55, 75)) && (IF_SORT))
+		{
+			wait(1);
+			sortBy = 0;
+			saveConfig(sortBy, recycleBin, sysProtection, isHiddenEnabled);
+			updateList(CLEAR);
+			displayFiles();
+		}
+
+		else if ((kPressed & KEY_TOUCH) && (touchInRect(280, 320, 90, 110)) && (IF_SORT))
+		{
+			wait(1);
+			sortBy = 1;
+			saveConfig(sortBy, recycleBin, sysProtection, isHiddenEnabled);
+			updateList(CLEAR);
+			displayFiles();
+		}
+
+		else if ((kPressed & KEY_TOUCH) && (touchInRect(280, 320, 125, 145)) && (IF_SORT))
+		{
+			wait(1);
+			sortBy = 2;
+			saveConfig(sortBy, recycleBin, sysProtection, isHiddenEnabled);
+			updateList(CLEAR);
+			displayFiles();
+		}
+
+		else if ((kPressed & KEY_TOUCH) && (touchInRect(280, 320, 160, 180)) && (IF_SORT))
+		{
+			wait(1);
+			sortBy = 3;
+			saveConfig(sortBy, recycleBin, sysProtection, isHiddenEnabled);
+			updateList(CLEAR);
+			displayFiles();
+		}
+
+		else if ((kPressed & KEY_TOUCH) && (touchInRect(280, 320, 195, 215)) && (IF_SORT))
+		{
+			wait(1);
+			sortBy = 4;
+			saveConfig(sortBy, recycleBin, sysProtection, isHiddenEnabled);
+			updateList(CLEAR);
+			displayFiles();
+		}
+
+		if ((IF_SORT) && (kPressed & KEY_B))
+		{
+			wait(1);
+			DEFAULT_STATE = STATE_SETTINGS;
 		}
 
 		if (((kPressed & KEY_TOUCH) && (touchInRect(98, 123, 0, 20))) || (kPressed & KEY_SELECT))

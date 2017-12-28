@@ -48,19 +48,43 @@ static int cmpstringp(const void *p1, const void *p2)
    	FS_DirectoryEntry* entryA = (FS_DirectoryEntry*) p1;
    	FS_DirectoryEntry* entryB = (FS_DirectoryEntry*) p2;
 
-   	if((entryA->attributes & FS_ATTRIBUTE_DIRECTORY) && !(entryB->attributes & FS_ATTRIBUTE_DIRECTORY))
+   	if ((entryA->attributes & FS_ATTRIBUTE_DIRECTORY) && !(entryB->attributes & FS_ATTRIBUTE_DIRECTORY))
    		return -1;
-	else if(!(entryA->attributes & FS_ATTRIBUTE_DIRECTORY) && (entryB->attributes & FS_ATTRIBUTE_DIRECTORY)) 
-		return 1;
+   	else if (!(entryA->attributes & FS_ATTRIBUTE_DIRECTORY) && (entryB->attributes & FS_ATTRIBUTE_DIRECTORY)) 
+   		return 1;
    	else 
    	{
-   	    char entryNameA[0x200] = {'\0'}, entryNameB[0x200] = {'\0'};
-
-   	    u16_to_u8((u8 *) entryNameA, entryA->name, sizeof(entryNameA) - 1);
-   	    u16_to_u8((u8 *) entryNameB, entryB->name, sizeof(entryNameB) - 1);
-
-   	    return strcasecmp(entryNameA, entryNameB);
+   		if (sortBy == 0)
+   			return 0;
+   		else if (sortBy == 1) // Sort alphabetically (ascending - A to Z)
+   	    {
+   	    	char entryNameA[0x200] = {'\0'}, entryNameB[0x200] = {'\0'};
+   	    	u16_to_u8((u8 *) entryNameA, entryA->name, sizeof(entryNameA) - 1);
+   	    	u16_to_u8((u8 *) entryNameB, entryB->name, sizeof(entryNameB) - 1);
+   	    	return strcasecmp(entryNameA, entryNameB);
+   	    }
+   	    else if (sortBy == 2) // Sort alphabetically (descending - Z to A)
+   	    {
+   	    	char entryNameA[0x200] = {'\0'}, entryNameB[0x200] = {'\0'};
+   	    	u16_to_u8((u8 *) entryNameA, entryA->name, sizeof(entryNameA) - 1);
+   	    	u16_to_u8((u8 *) entryNameB, entryB->name, sizeof(entryNameB) - 1);
+   	    	return strcasecmp(entryNameB, entryNameA);
+   	    }
+   	    else if (sortBy == 3) // Sort by file size (largest first)
+   	    {
+   	    	u64 sizeA = entryA->fileSize;
+   	    	u64 sizeB = entryB->fileSize;
+   	    	return sizeA > sizeB ? -1 : sizeA < sizeB ? 1 : 0;
+   	    }
+   	    else if (sortBy == 4) // Sort by file size (smallest first)
+   	    {
+   	    	u64 sizeA = entryA->fileSize;
+   	    	u64 sizeB = entryB->fileSize;
+   	    	return sizeB > sizeA ? -1 : sizeB < sizeA ? 1 : 0;
+   	    }
    	}
+
+   	return 0;
 }
 
 Result updateList(int clearindex)

@@ -3,12 +3,12 @@
 
 #include <3ds.h>
 
-#define TEXTURE_MUSIC_TOP_BG    49
-#define TEXTURE_MUSIC_BOTTOM_BG 50
-#define TEXTURE_MUSIC_PLAY      51
-#define TEXTURE_MUSIC_PAUSE     52
-#define TEXTURE_MUSIC_COVER     53
-#define TEXTURE_MUSIC_STATUS    54
+#define TEXTURE_MUSIC_TOP_BG    51
+#define TEXTURE_MUSIC_BOTTOM_BG 52
+#define TEXTURE_MUSIC_PLAY      53
+#define TEXTURE_MUSIC_PAUSE     54
+#define TEXTURE_MUSIC_COVER     55
+#define TEXTURE_MUSIC_STATUS    56
 
 enum file_types
 {

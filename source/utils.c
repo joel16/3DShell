@@ -7,16 +7,17 @@
 #include "utils.h"
 
 const char * configFile =
+	"sortBy = %d\n"
 	"recycleBin = %d\n"
 	"systemProtection = %d\n"
 	"showHiddenFiles = %d";
 
-Result saveConfig(bool recycleBin, bool protection, bool hidden)
+Result saveConfig(int sortBy, bool recycleBin, bool protection, bool hidden)
 {
 	Result ret = 0;
 	
 	char * buf = (char *)malloc(1024);
-	snprintf(buf, 1024, configFile, recycleBin, protection, hidden);
+	snprintf(buf, 1024, configFile, sortBy, recycleBin, protection, hidden);
 	
 	if (R_FAILED(ret = fsWrite(fsArchive, "/3ds/3DShell/config.cfg", buf)))
 		return ret;
@@ -33,10 +34,11 @@ Result loadConfig(void)
 	if (!fileExists(fsArchive, "/3ds/3DShell/config.cfg"))
 	{
 		// set these to the following by default:
+		sortBy = 1;
 		recycleBin = 0;
 		sysProtection = 1;
 		isHiddenEnabled = 0;		
-		return saveConfig(recycleBin, sysProtection, isHiddenEnabled);
+		return saveConfig(sortBy, recycleBin, sysProtection, isHiddenEnabled);
 	}
 
 	u64 size64 = 0;
@@ -51,7 +53,7 @@ Result loadConfig(void)
 
 	buf[size] = '\0';
 	
-	sscanf(buf, configFile, &recycleBin, &sysProtection, &isHiddenEnabled);
+	sscanf(buf, configFile, &sortBy, &recycleBin, &sysProtection, &isHiddenEnabled);
 	
 	free(buf);
 	return 0;
