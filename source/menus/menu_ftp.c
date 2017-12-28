@@ -8,7 +8,6 @@
 #include "language.h"
 #include "menus/menu_ftp.h"
 #include "net/ftp.h"
-#include "screenshot.h"
 #include "task.h"
 #include "theme.h"
 #include "utils.h"
@@ -106,9 +105,6 @@ void menu_displayFTP()
 		screen_draw_string(((320 - screen_get_string_width(lang_ftp[language][2], 0.45f, 0.45f)) / 2), 120, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][2]);
 
 		screen_end_frame();
-
-		if (((kHeld & KEY_L) && (kPressed & KEY_R)) || ((kHeld & KEY_R) && (kPressed & KEY_L)))
-			captureScreenshot();
 	}
 
 	memset(ftp_accepted_connection, 0, 20); // Empty accepted connection address
