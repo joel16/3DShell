@@ -84,7 +84,7 @@ Result getLastDirectory(void)
 		buf[size] = '\0';
 
 		char tempPath[250];
-		sscanf(buf, "%s", tempPath);
+		sscanf(buf, "%[^\n]s", tempPath);
 	
 		if (dirExists(fsArchive, tempPath)) // Incase a directory previously visited had been deleted, set start path to sdmc:/ to avoid errors.
 			strcpy(cwd, tempPath);
