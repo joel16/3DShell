@@ -297,8 +297,8 @@ void menu_musicPlayer(char * path)
 			break;
 		}
 		
-		if (kPressed & KEY_SELECT)
-			return;
+		/*if (kPressed & KEY_SELECT) // This feature does not work properly yet (playing music in the background)
+			return;*/
 
 		if (((kHeld & KEY_L) && (kPressed & KEY_R)) || ((kHeld & KEY_R) && (kPressed & KEY_L)))
 			captureScreenshot();

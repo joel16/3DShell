@@ -10,13 +10,13 @@
 
 void menu_displayImage(char * path)
 {
-	float scale = 1.0f, zoom_factor = 0.025f;
+	/*float scale = 1.0f, zoom_factor = 0.025f;
 	float zoom_min = 0.25f, zoom_max = 4.0f;
 	float rad = 0;
 
 	int top_tex_x = 0, top_tex_y = 0;
 	int bottom_tex_x = 40, bottom_tex_y = 240;
-	int view_factor = 4;
+	int view_factor = 4;*/
 
 	screen_clear(GFX_TOP, RGBA8(33, 39, 43, 255));
 	screen_clear(GFX_BOTTOM, RGBA8(33, 39, 43, 255));
@@ -83,7 +83,7 @@ void menu_displayImage(char * path)
 			start = osGetTime();
 		}
 
-		if (kHeld & KEY_DUP) // Zoom in
+		/*if (kHeld & KEY_DUP) // Zoom in
 		{
 			wait(5);
 			if (scale < zoom_max)
@@ -128,13 +128,13 @@ void menu_displayImage(char * path)
 		{
 			top_tex_x -= view_factor;
 			bottom_tex_x -= view_factor;
-		}
+		}*/
 
 		screen_end_frame();
 
 		if (kPressed & KEY_B)
 		{
-			if ((rad != 0) || (scale != 1.0f)) // Basically reset the position before exiting
+			/*if ((rad != 0) || (scale != 1.0f)) // Basically reset the position before exiting
 			{
 				rad = 0;
 				scale = 1.0f;
@@ -144,16 +144,16 @@ void menu_displayImage(char * path)
 				bottom_tex_y = 240;
 			}
 			else
-			{
+			{*/
 				wait(10);
 				break;
-			}
+			//}
 		}
 
 		if (((kHeld & KEY_L) && (kPressed & KEY_R)) || ((kHeld & KEY_R) && (kPressed & KEY_L)))
 			captureScreenshot();
 	}
 
-	//delete image
+	// delete image
 	screen_unload_texture(TEXTURE_GALLERY_IMAGE);
 }

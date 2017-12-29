@@ -67,15 +67,22 @@ void menu_displayMainMenu(void)
 
 		screen_draw_string(170, 72, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][2]);
 
-		if (!copyF)
-			screen_draw_string(170, 109, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][4]);
-		else
+		if (copyF)
+		{
 			screen_draw_string(170, 109, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][7]);
-
-		if (!cutF)
 			screen_draw_string(170, 146, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][6]);
-		else
+		}
+		else if (cutF)
+		{
 			screen_draw_string(170, 146, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][7]);
+			screen_draw_string(170, 109, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][4]);
+		}
+		else
+		{
+			screen_draw_string(170, 109, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][4]);
+			screen_draw_string(170, 146, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][6]);
+		}
+			
 	}
 	else
 		screen_draw_texture(TEXTURE_OPTIONS_ICON, 25, 0);

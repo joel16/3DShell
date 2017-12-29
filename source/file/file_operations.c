@@ -27,6 +27,8 @@ struct colour Options_title_text_colour;
 */
 int copymode = NOTHING_TO_COPY;
 
+static bool isMovingToBin = false;
+
 void drawProgress(char * msg, char * src, u32 offset, u32 size)
 {
 	screen_begin_frame();
@@ -122,6 +124,7 @@ Result delete(void)
 	
 	if ((recycleBin) && !(strstr(cwd, "/3ds/3DShell/bin/") != NULL))
 	{
+		isMovingToBin = true;
 		char oldCWD[1024];
 		copy(COPY_DELETE_ON_FINISH);
 		strcpy(oldCWD, cwd);
@@ -173,7 +176,7 @@ void copy(int flag)
 }
 
 // Copy file from src to dst
-int copy_file(char * src, char * dst)
+int copy_file(char * src, char * dst, bool displayAnim)
 {
 	int chunksize = (512 * 1024); // Chunk size
 	char * buffer = (char *)malloc(chunksize); // Reading buffer
@@ -203,7 +206,12 @@ int copy_file(char * src, char * dst)
 			{
 				totalread += b_read; // Accumulate read data
 				totalwrite += write(out, buffer, b_read); // Write data
-				drawProgress(copymode == 1? "Moving" : "Copying", basename(src), totalread, size);
+
+				if (displayAnim)
+				{
+					if (!isMovingToBin)
+						drawProgress(copymode == 1? "Moving" : "Copying", basename(src), totalread, size);
+				}
 			}
 
 			close(out); // Close output file
@@ -293,57 +301,57 @@ Result copy_folder_recursive(char * src, char * dst)
 
 		u32 entryCount = 0;
 		FS_DirectoryEntry* entries = (FS_DirectoryEntry*) calloc(MAX_FILES, sizeof(FS_DirectoryEntry));
-		char name[255] = {'\0'};
-
-		// Iterate files
-		do
+		
+		if (R_SUCCEEDED(ret = FSDIR_Read(dirHandle, &entryCount, MAX_FILES, entries)))
 		{
-			if (R_SUCCEEDED(ret = FSDIR_Read(dirHandle, &entryCount, 1, entries)))
+			char name[255] = {'\0'};
+			for (u32 i = 0; i < entryCount; i++) 
 			{
-				if (entryCount)
+				u16_to_u8(&name[0], entries[i].name, 254);
+
+				if (strlen(name) > 0)
 				{
-					u16_to_u8(&name[0], entries->name, 0xFF);
+					// Calculate buffer size
+					int insize = strlen(src) + strlen(name) + 2;
+					int outsize = strlen(dst) + strlen(name) + 2;
 
-					// Valid filename
-					if (strlen(name) > 0)
-					{
-						// Calculate buffer size
-						int insize = strlen(src) + strlen(name) + 2;
-						int outsize = strlen(dst) + strlen(name) + 2;
+					// Allocate buffer
+					char * inbuffer = (char *)malloc(insize);
+					char * outbuffer = (char *)malloc(outsize);
 
-						// Allocate buffer
-						char * inbuffer = (char *)malloc(insize);
-						char * outbuffer = (char *)malloc(outsize);
+					// Puzzle input path
+					strcpy(inbuffer, src);
+					inbuffer[strlen(inbuffer) + 1] = 0;
+					inbuffer[strlen(inbuffer)] = '/';
+					strcpy(inbuffer + strlen(inbuffer), name);
 
-						// Puzzle input path
-						strcpy(inbuffer, src);
-						inbuffer[strlen(inbuffer) + 1] = 0;
-						inbuffer[strlen(inbuffer)] = '/';
-						strcpy(inbuffer + strlen(inbuffer), name);
+					// Puzzle output path
+					strcpy(outbuffer, dst);
+					outbuffer[strlen(outbuffer) + 1] = 0;
+					outbuffer[strlen(outbuffer)] = '/';
+					strcpy(outbuffer + strlen(outbuffer), name);
 
-						// Puzzle output path
-						strcpy(outbuffer, dst);
-						outbuffer[strlen(outbuffer) + 1] = 0;
-						outbuffer[strlen(outbuffer)] = '/';
-						strcpy(outbuffer + strlen(outbuffer), name);
-
-						if (entries->attributes & FS_ATTRIBUTE_DIRECTORY) // Another folder
-							copy_folder_recursive(inbuffer, outbuffer); // Copy folder (via recursion)	
+					if (entries[i].attributes & FS_ATTRIBUTE_DIRECTORY) // Another folder
+						copy_folder_recursive(inbuffer, outbuffer); // Copy folder (via recursion)	
 						
-						else copy_file(inbuffer, outbuffer); // Copy file
+					else 
+						copy_file(inbuffer, outbuffer, false); // Copy file
+					
 
-						// Free buffer
-						free(inbuffer);
-						free(outbuffer);
-					}
+					if (!isMovingToBin)
+						drawProgress(copymode == 1? "Moving" : "Copying", basename(name), i, entryCount);
+
+					// Free buffer
+					free(inbuffer);
+					free(outbuffer);
 				}
 			}
-			else 
-				return ret;
 		}
-		while(entryCount);
+		else 
+			return ret;
 
 		free(entries);
+
 		if (R_FAILED(ret = FSDIR_Close(dirHandle))) // Close directory
 			return ret;
 	}
@@ -423,7 +431,8 @@ Result paste(void)
 			closeArchive(sd);
 			closeArchive(nand);
 		}	
-		else ret = copy_file(copysource, copytarget); // Copy file
+		else 
+			ret = copy_file(copysource, copytarget, true); // Copy file
 		
 		if ((R_SUCCEEDED(ret)) && (copymode & COPY_DELETE_ON_FINISH) == COPY_DELETE_ON_FINISH)
 			fsRemove(fsArchive, copysource); // Delete file
