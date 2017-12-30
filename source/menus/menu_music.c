@@ -50,10 +50,16 @@ enum file_types getMusicFileType(const char * file)
 	
 	/* Failure opening file */
 	if (R_FAILED(fsOpen(&handle, fsArchive, file, FS_OPEN_READ))) 
+	{
+		FSFILE_Close(handle);
 		return -1;
+	}
 	
 	if (R_FAILED(FSFILE_Read(handle, &bytesRead, offset, &fileSig, 4)))
-		goto err;
+	{
+		FSFILE_Close(handle);
+		return -2;
+	}
 	
 	offset += bytesRead;
 	
@@ -97,7 +103,6 @@ enum file_types getMusicFileType(const char * file)
 			}
 	}
 
-err:
 	FSFILE_Close(handle);
 	return file_type;
 }

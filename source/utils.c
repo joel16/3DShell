@@ -20,7 +20,10 @@ Result saveConfig(int sortBy, bool recycleBin, bool protection, bool hidden)
 	snprintf(buf, 256, configFile, sortBy, recycleBin, protection, hidden);
 	
 	if (R_FAILED(ret = fsWrite(fsArchive, "/3ds/3DShell/config.cfg", buf)))
+	{
+		free(buf);
 		return ret;
+	}
 	
 	free(buf);
 	return 0;
@@ -49,7 +52,10 @@ Result loadConfig(void)
 	char * buf = (char *)malloc(size + 1);
 
 	if (R_FAILED(ret = fsRead(fsArchive, "/3ds/3DShell/config.cfg", size, buf)))
+	{
+		free(buf);
 		return ret;
+	}
 
 	buf[size] = '\0';
 	
@@ -79,7 +85,10 @@ Result getLastDirectory(void)
 		char * buf = (char *)malloc(size + 1);
 
 		if (R_FAILED(ret = fsRead(fsArchive, "/3ds/3DShell/lastdir.txt", size, buf)))
+		{
+			free(buf);
 			return ret;
+		}
 
 		buf[size] = '\0';
 
@@ -215,6 +224,11 @@ const char * getUsername(void)
 	{
 		for (int i = 0; i < 0x13; i++)
 			whcar_username[i] = (wchar_t)((u16 *)data)[i];
+	}
+	else
+	{
+		free(username);
+		return NULL;
 	}
 
 	wcstombs(username, whcar_username, 0x1C);

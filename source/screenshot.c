@@ -9,36 +9,42 @@
 
 static int num = 0;
 
-static int generateScreenshot(const char * path)
+static Result generateScreenshot(const char * path)
 {
 	int x = 0, y = 0;
 	Handle handle;
 	u32 bytesWritten = 0;
 	u64 offset = 0;
 	size_t size = 0x36;
+	Result ret = 0;
 
 	// Get top/bottom framebuffers
 	u8 * gfxBottom = gfxGetFramebuffer(GFX_BOTTOM, GFX_BOTTOM, NULL, NULL);
 	u8 * gfxTopLeft = gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL);
 
 	// Open file for writing screenshot
-	fsOpen(&handle, fsArchive, path, (FS_OPEN_CREATE | FS_OPEN_WRITE));
+	if (R_FAILED(ret = fsOpen(&handle, fsArchive, path, (FS_OPEN_CREATE | FS_OPEN_WRITE))))
+		return ret;
 
 	// Some
-	u8 * buffer = (u8*)malloc(size + 576000);
-	memset(buffer, 0, size + 576000);
-	buffer[size + 576000] = 0;
+	u8 * buf = (u8*)malloc(size + 576000);
+	memset(buf, 0, size + 576000);
+	buf[size + 576000] = 0;
 
-	FSFILE_SetSize(handle, (u16)(size + 576000));
+	if (R_FAILED(ret = FSFILE_SetSize(handle, (u16)(size + 576000))))
+	{
+		free(buf);
+		return ret;
+	}
 
-	*(u16*)&buffer[0x0] = 0x4D42;
-	*(u32*)&buffer[0x2] = size + 576000;
-	*(u32*)&buffer[0xA] = size;
-	*(u32*)&buffer[0xE] = 0x28;
-	*(u32*)&buffer[0x12] = 400;
-	*(u32*)&buffer[0x16] = 480;
-	*(u32*)&buffer[0x1A] = 0x00180001;
-	*(u32*)&buffer[0x22] = 576000;
+	*(u16*)&buf[0x0] = 0x4D42;
+	*(u32*)&buf[0x2] = size + 576000;
+	*(u32*)&buf[0xA] = size;
+	*(u32*)&buf[0xE] = 0x28;
+	*(u32*)&buf[0x12] = 400;
+	*(u32*)&buf[0x16] = 480;
+	*(u32*)&buf[0x1A] = 0x00180001;
+	*(u32*)&buf[0x22] = 576000;
 
 	// Generate top left
 	u8* framebuf = gfxTopLeft;
@@ -49,9 +55,9 @@ static int generateScreenshot(const char * path)
 		{
 			int si = ((239 - y) + (x * 240)) * 3;
 			int di = size + (x + ((479 - y) * 400)) * 3;
-			buffer[di++] = framebuf[si++];
-			buffer[di++] = framebuf[si++];
-			buffer[di++] = framebuf[si++];
+			buf[di++] = framebuf[si++];
+			buf[di++] = framebuf[si++];
+			buf[di++] = framebuf[si++];
 		}
 	}
 
@@ -64,33 +70,42 @@ static int generateScreenshot(const char * path)
 		{
 			int si = ((239 - y) + (x * 240)) * 3;
 			int di = size + ((x+40) + ((239 - y) * 400)) * 3;
-			buffer[di++] = framebuf[si++];
-			buffer[di++] = framebuf[si++];
-			buffer[di++] = framebuf[si++];
+			buf[di++] = framebuf[si++];
+			buf[di++] = framebuf[si++];
+			buf[di++] = framebuf[si++];
 		}
 
 		// Make adjustments for the smaller width
 		for (x = 0; x < 40; x++)
 		{
 			int di = size + (x + ((239 - y) * 400)) * 3;
-			buffer[di++] = 0;
-			buffer[di++] = 0;
-			buffer[di++] = 0;
+			buf[di++] = 0;
+			buf[di++] = 0;
+			buf[di++] = 0;
 		}
 
 		for (x = 360; x < 400; x++)
 		{
 			int di = size + (x + ((239 - y) * 400)) * 3;
-			buffer[di++] = 0;
-			buffer[di++] = 0;
-			buffer[di++] = 0;
+			buf[di++] = 0;
+			buf[di++] = 0;
+			buf[di++] = 0;
 		}
 	}
 
-	FSFILE_Write(handle, &bytesWritten, offset, (u32 *)buffer, size + 576000, 0x10001);
-	FSFILE_Close(handle);
-	free(buffer);
+	if (R_FAILED(FSFILE_Write(handle, &bytesWritten, offset, (u32 *)buf, size + 576000, 0x10001)))
+	{
+		free(buf);
+		return ret;
+	}
 
+	if (R_FAILED(FSFILE_Close(handle)))
+	{
+		free(buf);
+		return ret;
+	}
+
+	free(buf);
 	return 0;
 }
 

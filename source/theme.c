@@ -51,7 +51,10 @@ Result saveThemeConfig(char * themePath, char * coloursPath)
 	snprintf(buf, 512, themeConfig, themePath, coloursPath);
 	
 	if (R_FAILED(ret = fsWrite(fsArchive, "/3ds/3DShell/theme.cfg", buf)))
+	{
+		free(buf);
 		return ret;
+	}
 	
 	free(buf);
 	return 0;
@@ -73,7 +76,10 @@ static Result loadThemeConfig(void)
 	char * buf = (char *)malloc(size + 1);
 
 	if (R_FAILED(ret = fsRead(fsArchive, "/3ds/3DShell/theme.cfg", size, buf)))
+	{
+		free(buf);
 		return ret;
+	}
 	
 	buf[size] = '\0';
 	
@@ -104,7 +110,10 @@ static Result createFontColours(void)
 										120, 120, 120);
 	
 	if (R_FAILED(ret = fsWrite(fsArchive, "/3ds/3DShell/themes/default/colours.cfg", buf)))
+	{
+		free(buf);
 		return ret;
+	}
 	
 	free(buf);
 	return 0;
@@ -129,7 +138,10 @@ static Result loadFontColours(void)
 	char * buf = (char *)malloc(size + 1);
 
 	if (R_FAILED(ret = fsRead(fsArchive, colour_dir, size, buf)))
+	{
+		free(buf);
 		return ret;
+	}
 	
 	buf[size] = '\0';
 	

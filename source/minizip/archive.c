@@ -24,7 +24,7 @@ Result unzExtractCurrentFile(unzFile * unzHandle, int * path)
 
 	void * buf = (void *)malloc(bufsize);
 	if (!buf)
-		return 0;
+		return -2;
 
 	char * filenameWithoutPath = basename(filename);
 
@@ -45,6 +45,7 @@ Result unzExtractCurrentFile(unzFile * unzHandle, int * path)
 		if ((res = unzOpenCurrentFile(unzHandle)) != UNZ_OK)
 		{
 			unzClose(unzHandle);
+			free(buf);
 			return res;
 		}
 
@@ -75,10 +76,10 @@ Result unzExtractCurrentFile(unzFile * unzHandle, int * path)
 
 		res = unzCloseCurrentFile(unzHandle);
 	}
-
+	
 	if (buf)
 		free(buf);
-
+	
 	return res;
 }
 

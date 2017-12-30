@@ -161,8 +161,11 @@ Result updateList(int clearindex)
 				fileCount++; // Increment file count
 			}
 		}
-		else 
+		else
+		{
+			free(entries);
 			return ret;
+		}
 
 		free(entries);
 
