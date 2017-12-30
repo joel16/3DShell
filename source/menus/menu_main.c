@@ -81,8 +81,7 @@ void menu_displayMainMenu(void)
 		{
 			screen_draw_string(170, 109, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][4]);
 			screen_draw_string(170, 146, 0.45f, 0.45f, RGBA8(Options_text_colour.r, Options_text_colour.g, Options_text_colour.b, 255), lang_options[language][6]);
-		}
-			
+		}	
 	}
 	else
 		screen_draw_texture(TEXTURE_OPTIONS_ICON, 25, 0);
@@ -182,7 +181,7 @@ void menu_displayMainMenu(void)
 
 	screen_draw_texture(TEXTURE_BACKGROUND, 0, 0);
 
-	screen_draw_stringf(84, 28, 0.45f, 0.45f, RGBA8(TopScreen_bar_colour.r, TopScreen_bar_colour.g, TopScreen_bar_colour.b, 255), "%.35s", cwd); // Display current path
+	screen_draw_stringf(84, 28, 0.45f, 0.45f, RGBA8(TopScreen_bar_colour.r, TopScreen_bar_colour.g, TopScreen_bar_colour.b, 255), "%.33s", cwd); // Display current path
 
 	drawStatusBar();
 

@@ -115,7 +115,7 @@ Result updateList(int clearindex)
 		if (R_SUCCEEDED(ret = FSDIR_Read(dirHandle, &entryCount, MAX_FILES, entries)))
 		{
 			qsort(entries, entryCount, sizeof(FS_DirectoryEntry), cmpstringp);
-			char name[255] = {'\0'};
+			u8 name[255] = {'\0'};
 
 			for (u32 i = 0; i < entryCount; i++) 
 			{

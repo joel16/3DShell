@@ -304,7 +304,7 @@ Result copy_folder_recursive(char * src, char * dst)
 		
 		if (R_SUCCEEDED(ret = FSDIR_Read(dirHandle, &entryCount, MAX_FILES, entries)))
 		{
-			char name[255] = {'\0'};
+			u8 name[255] = {'\0'};
 			for (u32 i = 0; i < entryCount; i++) 
 			{
 				u16_to_u8(&name[0], entries[i].name, 254);
@@ -335,8 +335,41 @@ Result copy_folder_recursive(char * src, char * dst)
 						copy_folder_recursive(inbuffer, outbuffer); // Copy folder (via recursion)	
 						
 					else 
-						copy_file(inbuffer, outbuffer, false); // Copy file
-					
+					{
+						if (copyFromNand)
+						{
+							FS_Archive sd, nand;
+							openArchive(&sd, ARCHIVE_SDMC);
+							openArchive(&nand, ARCHIVE_NAND_CTR_FS);
+
+							ret = copy_file_archive(nand, sd, ARCHIVE_NAND_CTR_FS, ARCHIVE_SDMC, inbuffer, outbuffer);
+
+							closeArchive(sd);
+							closeArchive(nand);
+
+							if (R_FAILED(ret))
+								return ret;
+						}
+						else if ((copyFromSD) && (BROWSE_STATE == STATE_NAND))
+						{
+							FS_Archive sd, nand;
+							openArchive(&sd, ARCHIVE_SDMC);
+							openArchive(&nand, ARCHIVE_NAND_CTR_FS);
+							
+							ret = copy_file_archive(sd, nand, ARCHIVE_SDMC, ARCHIVE_NAND_CTR_FS, inbuffer, outbuffer);
+							
+							closeArchive(sd);
+							closeArchive(nand);
+
+							if (R_FAILED(ret))
+								return ret;
+						}	
+						else 
+						{
+							if (R_FAILED(ret = ret = copy_file(inbuffer, outbuffer, false))) // Copy file
+								return ret;
+						}
+					}
 
 					if (!isMovingToBin)
 						drawProgress(copymode == 1? "Moving" : "Copying", basename(name), i, entryCount);

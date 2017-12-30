@@ -18,7 +18,7 @@ typedef struct File
 	int isDir; // Folder flag
 	int isReadOnly; // Read-only flag
 	int isHidden; // Hidden file flag
-	char name[256]; // File name
+	u8 name[256]; // File name
 	char ext[4]; // File extension
 	u64 size; // File size
 } File;

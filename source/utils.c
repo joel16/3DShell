@@ -16,8 +16,8 @@ Result saveConfig(int sortBy, bool recycleBin, bool protection, bool hidden)
 {
 	Result ret = 0;
 	
-	char * buf = (char *)malloc(1024);
-	snprintf(buf, 1024, configFile, sortBy, recycleBin, protection, hidden);
+	char * buf = (char *)malloc(256);
+	snprintf(buf, 256, configFile, sortBy, recycleBin, protection, hidden);
 	
 	if (R_FAILED(ret = fsWrite(fsArchive, "/3ds/3DShell/config.cfg", buf)))
 		return ret;
@@ -83,7 +83,7 @@ Result getLastDirectory(void)
 
 		buf[size] = '\0';
 
-		char tempPath[250];
+		char tempPath[256];
 		sscanf(buf, "%[^\n]s", tempPath);
 	
 		if (dirExists(fsArchive, tempPath)) // Incase a directory previously visited had been deleted, set start path to sdmc:/ to avoid errors.
