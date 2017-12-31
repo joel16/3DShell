@@ -16,7 +16,7 @@ Current features:
 - Renaming files/folders
 - File/folder deletion
 - Copy/Cut files and folders
-- FTP server
+- FTP server (Press select or tap the ftp icon to toggle)
 - Image preview (If the image is around 400 * 480 which is the size of both screens, the image will be split in half and displayed. Have a look at the screenshots below). Support for the following image formats. PNG, JPG, GIF[un-animated], (untested ->) HDR, PIC, PNM, PSD, TGA)
 - Zip file extraction.
 - Searching for directories (allows you to quickly visit a directory by clicking the search icon on the top right (bottom screen).)
@@ -26,7 +26,8 @@ Current features:
 - File's time-stamp
 - Browsing CTRNAND
 - MP3, vorbis (ogg), flac and wav playback support. (All thanks to deltabeard/MaK11-12)
-
+- Dir list Sorting (alphabetical - ascending, alphabetical - descending, size - largest to smallest, and size - smallest to largest)
+- Recycle bin (Places files in /3ds/3DShell/bin instead of deleting them)
 
 Building from source:
 --------------------------------------------------------------------------------
