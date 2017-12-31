@@ -93,8 +93,8 @@ static Result createFontColours(void)
 {
 	Result ret = 0;
 	
-	char * buf = (char *)malloc(512);
-	snprintf(buf, 512, coloursConfig,  48, 174, 222,
+	char * buf = (char *)malloc(1024);
+	snprintf(buf, 1024, coloursConfig,  48, 174, 222,
 										255, 255, 255,
 										0, 0, 0,
 										95, 95, 95,
