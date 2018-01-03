@@ -3,7 +3,6 @@
 
 #include "archive.h"
 #include "common.h"
-#include "compile_date.h"
 #include "file/dirlist.h"
 #include "file/file_operations.h"
 #include "file/fs.h"

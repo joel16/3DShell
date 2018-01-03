@@ -45,7 +45,7 @@ void menu_displayMainMenu(void)
 		screen_draw_string(((320 - screen_get_string_width(welcomeMsg, 0.45f, 0.45f)) / 2), 40, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), welcomeMsg);
 		screen_draw_string(((320 - screen_get_string_width(currDate, 0.45f, 0.45f)) / 2), 60, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), currDate);
 		//screen_draw_string(((320 - screen_get_string_width("Press \uE073 to exit the application.", 0.45f, 0.45f)) / 2), 190, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), "Press \uE073 to exit the application.");
-		screen_draw_stringf(2, 225, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), "3DShell %d.%d.%d - %s", VERSION_MAJOR, VERSION_MINOR, VERSION_MICRO, __DATE__);
+		screen_draw_stringf(2, 225, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), "3DShell %d.%d.%d - %s", VERSION_MAJOR, VERSION_MINOR, VERSION_MICRO, GITVERSION);
 	}
 	else
 		screen_draw_texture(TEXTURE_HOME_ICON, -2, -2);
