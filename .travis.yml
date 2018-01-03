@@ -22,4 +22,11 @@ before_install:
 install:  chmod 755 -R $TRAVIS_BUILD_DIR
 
 script:
-  - make clean && make
+  - sh resources/.build.sh
+  
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: $GITHUB_TOKEN # Set in travis-ci.org dashboard
+  on:
+    branch: master

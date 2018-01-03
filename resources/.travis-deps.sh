@@ -10,6 +10,7 @@ perl devkitARMupdate.pl
 # Get latest ctrulib and overwrite bundled one
 cd ctrulib/libctru && make ; cd -
 cp -rf ctrulib/libctru/ ${DEVKITPRO}
+rm -rf ctrulib
 
 # Get latest version of Citro3D
 git clone --recursive https://github.com/fincs/citro3d.git
@@ -48,7 +49,6 @@ rm -rf Project_CTR
 mkdir ${DEVKITPRO}/portlibs && mkdir ${PORTLIBS}/
 git clone https://github.com/devkitPro/3ds_portlibs.git
 cd 3ds_portlibs
-
 make zlib
 make install-zlib
 make libogg
@@ -61,12 +61,15 @@ rm -rf 3ds_portlibs
 # Build and install mpg123 (from fork)
 git clone https://github.com/deltabeard/3ds_portlibs.git
 cd 3ds_portlibs
-
 make mpg123
 cp mpg123-*/src/libmpg123/.libs/libmpg123.a ${DEVKITPRO}/portlibs/armv6k/lib/
 cp mpg123-*/src/libmpg123/libmpg123.la ${DEVKITPRO}/portlibs/armv6k/lib/
 cp mpg123-*/libmpg123.pc ${DEVKITPRO}/portlibs/armv6k/lib/pkgconfig/
 cp mpg123-*/src/libmpg123/mpg123.h ${DEVKITPRO}/portlibs/armv6k/include/
 cp mpg123-*/src/libmpg123/fmt123.h ${DEVKITPRO}/portlibs/armv6k/include/
+cd ../
+rm -rf 3ds_portlibs
 
-cd -
+# devkitArm
+rm *.bz2
+rm devkitARMupdate.pl
