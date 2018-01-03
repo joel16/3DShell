@@ -17,7 +17,7 @@ void drawBatteryStatus(void)
 {
 	u8 batteryPercent = 0;
 
-	if (R_SUCCEEDED(mcuHwcGetBatteryLevel(&batteryPercent)))
+	if (R_SUCCEEDED(MCUHWC_GetBatteryLevel(&batteryPercent)))
 	{
 		if (batteryPercent == 0)
 			screen_draw_texture(TEXTURE_BATTERY_0, 280, 1);
