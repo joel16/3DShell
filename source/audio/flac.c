@@ -3,10 +3,11 @@
 #define DR_FLAC_IMPLEMENTATION
 #include <dr_libs/dr_flac.h>
 
-#include "audio/flac.h"
+#include "flac.h"
 
 static drflac * pFlac;
-static const size_t	buffSize = 16 * 1024;
+static const drflac_uint64 buffSize = 16 * 1024;
+static drflac_uint64 samplesRead;
 
 /**
  * Set decoder parameters for flac.
@@ -64,7 +65,8 @@ u8 channelFlac(void)
  */
 u64 decodeFlac(void * buffer)
 {
-	return drflac_read_s16(pFlac, buffSize, buffer);
+	samplesRead = drflac_read_s16(pFlac, buffSize, buffer);
+	return samplesRead;
 }
 
 /**

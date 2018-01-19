@@ -2,17 +2,20 @@
 #include <string.h>
 
 #include "audio.h"
-#include "audio/flac.h"
-#include "audio/mp3.h"
-#include "audio/vorbis.h"
-#include "audio/wav.h"
+#include "flac.h"
+#include "mp3.h"
+#include "vorbis.h"
+#include "wav.h"
+
 #include "common.h"
-#include "file/dirlist.h"
+#include "dir_list.h"
 #include "fs.h"
-#include "graphics/screen.h"
-#include "menus/status_bar.h"
-#include "menus/menu_music.h"
+#include "menu_music.h"
+#include "pp2d.h"
 #include "screenshot.h"
+#include "status_bar.h"
+#include "textures.h"
+#include "touch.h"
 #include "utils.h"
 
 static volatile bool stop = true;
@@ -20,7 +23,7 @@ static volatile bool stop = true;
 /**
  * Stops current playback. Playback thread should exit as a result.
  */
-static void stopPlayback(void)
+static void Music_StopPlayback(void)
 {
 	stop = true;
 }
@@ -28,7 +31,7 @@ static void stopPlayback(void)
 /**
  * Returns whether music is playing or paused.
  */
-bool isPlaying(void)
+bool Music_IsPlaying(void)
 {
 	return !stop;
 }
@@ -39,7 +42,7 @@ bool isPlaying(void)
  * \param	file	File location.
  * \return			file_types enum or 0 on unsupported file or error.
  */
-enum file_types getMusicFileType(const char * file)
+enum file_types Music_GetMusicFileType(const char * file)
 {
 	Handle handle;
 	
@@ -49,7 +52,7 @@ enum file_types getMusicFileType(const char * file)
 	enum file_types file_type = FILE_TYPE_ERROR;
 	
 	/* Failure opening file */
-	if (R_FAILED(fsOpen(&handle, fsArchive, file, FS_OPEN_READ))) 
+	if (R_FAILED(FS_Open(&handle, archive, file, FS_OPEN_READ))) 
 	{
 		FSFILE_Close(handle);
 		return -1;
@@ -67,17 +70,8 @@ enum file_types getMusicFileType(const char * file)
 	{
 		// "RIFF"
 		case 0x46464952:
-			offset += 4; // fseek(handle, 4, SEEK_CUR)
-
-			// "WAVE"
-			// Check required as AVI file format also uses "RIFF".
-			if (R_FAILED(FSFILE_Read(handle, &bytesRead, offset, &fileSig, 4)))
-				break;
-
-			if (fileSig != 0x45564157)
-				break;
-
-			file_type = FILE_TYPE_WAV;
+			if (isWav(file) == 0)
+				file_type = FILE_TYPE_WAV;
 			break;
 
 		// "fLaC"
@@ -114,7 +108,7 @@ enum file_types getMusicFileType(const char * file)
  *
  * \param	pathIn	File location.
  */
-static void playFile(void * pathIn)
+static void Music_PlayFile(void * pathIn)
 {
 	struct decoder_fn decoder;
 	const char * file = pathIn;
@@ -127,7 +121,7 @@ static void playFile(void * pathIn)
 	/* Reset previous stop command */
 	stop = false;
 
-	switch(getMusicFileType(file))
+	switch(Music_GetMusicFileType(file))
 	{
 		case FILE_TYPE_WAV:
 			setWav(&decoder);
@@ -230,7 +224,7 @@ static void playFile(void * pathIn)
 	(*decoder.exit)();
 
 out:
-	stopPlayback();
+	Music_StopPlayback();
 	linearFree(buffer1);
 	linearFree(buffer2);
 
@@ -243,7 +237,7 @@ out:
  *
  * \param path	File path.
  */
-void menu_musicPlayer(char * path)
+void Music_Player(char * path)
 {
 	s32 prio;
 	static Thread thread = NULL;
@@ -252,61 +246,65 @@ void menu_musicPlayer(char * path)
 	stop = false;
 
 	svcGetThreadPriority(&prio, CUR_THREAD_HANDLE);
-	thread = threadCreate(playFile, path, 32 * 1024, prio - 1, -2, false);
+	thread = threadCreate(Music_PlayFile, path, 32 * 1024, prio - 1, -2, false);
 	
-	File * file = getFileIndex(position);
+	File * file = Dirlist_GetFileIndex(position);
 	bool isMP3 = (strncasecmp(file->ext, "mp3", 3) == 0);
 	
-	while (isPlaying())
+	while (Music_IsPlaying())
 	{
 		hidScanInput();
 
-		if ((kPressed & KEY_A) || ((touchInRect(114, 204, 76, 164)) && (kPressed & KEY_TOUCH)))
+		u32 kDown = hidKeysDown();
+		u32 kHeld = hidKeysHeld();
+
+		if ((kDown & KEY_A) || ((touchInRect(114, 76, 204, 164)) && (kDown & KEY_TOUCH)))
 			audio_togglePlayback(SFX);
 
-		screen_begin_frame();
-		screen_select(GFX_BOTTOM);
-		screen_draw_texture(TEXTURE_MUSIC_BOTTOM_BG, 0, 0);
+		pp2d_begin_draw(GFX_BOTTOM, GFX_LEFT);
 
-		if (!(audio_isPaused(SFX)))
-			screen_draw_texture(TEXTURE_MUSIC_PAUSE, ((320 - screen_get_texture_width(TEXTURE_MUSIC_PAUSE)) / 2) - 2, ((240 - screen_get_texture_height(TEXTURE_MUSIC_PAUSE)) / 2));
-		else
-			screen_draw_texture(TEXTURE_MUSIC_PLAY, ((320 - screen_get_texture_width(TEXTURE_MUSIC_PLAY)) / 2), ((240 - screen_get_texture_height(TEXTURE_MUSIC_PLAY)) / 2));
+			pp2d_draw_texture(TEXTURE_MUSIC_BOTTOM_BG, 0, 0);
 
-		screen_select(GFX_TOP);
-		screen_draw_texture(TEXTURE_MUSIC_TOP_BG, 0, 0);
+			if (!(audio_isPaused(SFX)))
+				pp2d_draw_texture(TEXTURE_MUSIC_PAUSE, ((320.0 - pp2d_get_texture_width(TEXTURE_MUSIC_PAUSE)) / 2.0) - 2, 
+					((240.0 - pp2d_get_texture_height(TEXTURE_MUSIC_PAUSE)) / 2.0));
+			else
+				pp2d_draw_texture(TEXTURE_MUSIC_PLAY, ((320.0 - pp2d_get_texture_width(TEXTURE_MUSIC_PLAY)) / 2.0), 
+					((240.0 - pp2d_get_texture_height(TEXTURE_MUSIC_PLAY)) / 2.0));
 
-		drawStatusBar();
+		pp2d_end_draw();
 
-		if (isMP3) // Only print out ID3 tag info for MP3
-		{	
-			screen_draw_texture(TEXTURE_MUSIC_COVER, 0, 55);
-			screen_draw_stringf(5, 20, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s", fileName);
-			screen_draw_stringf(5, 36, 0.45f, 0.45f, RGBA8(255, 255, 255, 255), "%s", ID3.artist);
+		pp2d_begin_draw(GFX_TOP, GFX_LEFT);
+
+			pp2d_draw_texture(TEXTURE_MUSIC_TOP_BG, 0, 0);
+
+			StatusBar_DisplayBar();
+
+			if (isMP3) // Only print out ID3 tag info for MP3
+			{	
+				pp2d_draw_textf(5, 20, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s %lf", fileName);
+				pp2d_draw_textf(5, 36, 0.45f, 0.45f, RGBA8(255, 255, 255, 255), "%s", ID3.artist);
 		
-			screen_draw_stringf(184, 64, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.title);
-			screen_draw_stringf(184, 84, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.album);
-			screen_draw_stringf(184, 104, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.year);
-			screen_draw_stringf(184, 124, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.genre);	
-		}
+				pp2d_draw_textf(184, 64, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.title);
+				pp2d_draw_textf(184, 84, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.album);
+				pp2d_draw_textf(184, 104, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.year);
+				pp2d_draw_textf(184, 124, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.genre);	
+			}
 		
-		else
-			screen_draw_stringf(5, 25, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s", fileName);	
+			else
+				pp2d_draw_textf(5, 25, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s", fileName);	
 		
-		screen_end_frame();
+		pp2d_end_draw();
 
-		if (kPressed & KEY_B)
+		if (kDown & KEY_B)
 		{
 			wait(10);
-			stopPlayback();
+			Music_StopPlayback();
 			break;
 		}
-		
-		/*if (kPressed & KEY_SELECT) // This feature does not work properly yet (playing music in the background)
-			return;*/
 
-		if (((kHeld & KEY_L) && (kPressed & KEY_R)) || ((kHeld & KEY_R) && (kPressed & KEY_L)))
-			captureScreenshot();
+		if (((kHeld & KEY_L) && (kDown & KEY_R)) || ((kHeld & KEY_R) && (kDown & KEY_L)))
+			Screenshot_Capture();
 	}
 
 	threadJoin(thread, U64_MAX);

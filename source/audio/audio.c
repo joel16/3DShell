@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "audio/audio.h"
+#include "audio.h"
 
 bool audio_isPlaying(enum channel_e channel)
 {

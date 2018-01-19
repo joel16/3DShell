@@ -1,0 +1,54 @@
+#ifndef TEXTURES_H
+#define TEXTURES_H
+
+#define TEXTURE_BACKGROUND 0
+#define TEXTURE_SELECTOR   1
+
+#define TEXTURE_ICON_APP     2
+#define TEXTURE_ICON_ARCHIVE 3
+#define TEXTURE_ICON_AUDIO   4
+#define TEXTURE_ICON_FILE    5
+#define TEXTURE_ICON_FOLDER  6
+#define TEXTURE_ICON_IMG     7
+#define TEXTURE_ICON_SYSTEM  8
+#define TEXTURE_ICON_TEXT    9
+
+#define TEXTURE_ICON_CHECK   10
+#define TEXTURE_ICON_UNCHECK 11
+
+#define TEXTURE_DIALOG     12
+#define TEXTURE_OPTIONS    13
+#define TEXTURE_PROPERTIES 14
+
+#define TEXTURE_BATTERY_0      35
+#define TEXTURE_BATTERY_15     36
+#define TEXTURE_BATTERY_28     37
+#define TEXTURE_BATTERY_43     38
+#define TEXTURE_BATTERY_57     39
+#define TEXTURE_BATTERY_71     40
+#define TEXTURE_BATTERY_85     41
+#define TEXTURE_BATTERY_100    42
+#define TEXTURE_BATTERY_CHARGE 43
+
+#define TEXTURE_WIFI_NULL 44
+#define TEXTURE_WIFI_0    45
+#define TEXTURE_WIFI_1    46
+#define TEXTURE_WIFI_2    47
+#define TEXTURE_WIFI_3    48
+
+#define TEXTURE_GALLERY_BAR   49
+#define TEXTURE_GALLERY_IMAGE 50
+
+#define TEXTURE_MUSIC_TOP_BG    51
+#define TEXTURE_MUSIC_BOTTOM_BG 52
+#define TEXTURE_MUSIC_PLAY      53
+#define TEXTURE_MUSIC_PAUSE     54
+#define TEXTURE_MUSIC_COVER     55
+#define TEXTURE_MUSIC_STATUS    56
+
+#define TEXTURE_CIA_LARGE_ICON 57
+
+void Load_Textures(void);
+void Free_Textures(void);
+
+#endif

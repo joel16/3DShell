@@ -3,13 +3,6 @@
 
 #include <3ds.h>
 
-#define TEXTURE_MUSIC_TOP_BG    51
-#define TEXTURE_MUSIC_BOTTOM_BG 52
-#define TEXTURE_MUSIC_PLAY      53
-#define TEXTURE_MUSIC_PAUSE     54
-#define TEXTURE_MUSIC_COVER     55
-#define TEXTURE_MUSIC_STATUS    56
-
 enum file_types
 {
 	FILE_TYPE_ERROR = 0,
@@ -31,7 +24,7 @@ struct decoder_fn
 };
 
 // Returns true if playing.
-bool isPlaying(void);
+bool Music_IsPlaying(void);
 
 /**
  * Obtains file type.
@@ -39,13 +32,13 @@ bool isPlaying(void);
  * \param	file	File location.
  * \return			file_types enum or 0 on error and errno set.
  */
-enum file_types getMusicFileType(const char *file);
+enum file_types Music_GetMusicFileType(const char *file);
 
 /**
  * Play an audio file.
  *
  * \param path	File path.
  */
-void menu_musicPlayer(char * path);
+void Music_Player(char * path);
 
 #endif
