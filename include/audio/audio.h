@@ -9,8 +9,8 @@ enum channel_e
 	SFX
 };
 
-bool audio_isPlaying(enum channel_e);
-bool audio_isPaused(enum channel_e);
-bool audio_togglePlayback(enum channel_e);
+bool Audio_IsPlaying(enum channel_e);
+bool Audio_IsPaused(enum channel_e);
+bool Audio_TogglePlayback(enum channel_e);
 
 #endif

@@ -5,11 +5,6 @@
 
 FS_Archive archive;
 
-int BROWSE_STATE;
-
-#define STATE_SD   0
-#define STATE_NAND 1
-
 Result FS_OpenArchive(FS_Archive * archive, FS_ArchiveID id);
 Result FS_CloseArchive(FS_Archive archive);
 Result FS_MakeDir(FS_Archive archive, const char * path);

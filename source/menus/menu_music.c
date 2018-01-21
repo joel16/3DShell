@@ -259,13 +259,13 @@ void Music_Player(char * path)
 		u32 kHeld = hidKeysHeld();
 
 		if ((kDown & KEY_A) || ((touchInRect(114, 76, 204, 164)) && (kDown & KEY_TOUCH)))
-			audio_togglePlayback(SFX);
+			Audio_TogglePlayback(SFX);
 
 		pp2d_begin_draw(GFX_BOTTOM, GFX_LEFT);
 
 			pp2d_draw_texture(TEXTURE_MUSIC_BOTTOM_BG, 0, 0);
 
-			if (!(audio_isPaused(SFX)))
+			if (!(Audio_IsPaused(SFX)))
 				pp2d_draw_texture(TEXTURE_MUSIC_PAUSE, ((320.0 - pp2d_get_texture_width(TEXTURE_MUSIC_PAUSE)) / 2.0) - 2, 
 					((240.0 - pp2d_get_texture_height(TEXTURE_MUSIC_PAUSE)) / 2.0));
 			else

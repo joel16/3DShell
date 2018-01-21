@@ -24,6 +24,30 @@ void Load_Textures(void)
 	pp2d_load_texture_png(TEXTURE_ICON_CHECK, check_path);
 	pp2d_load_texture_png(TEXTURE_ICON_UNCHECK, uncheck_path);
 
+	pp2d_load_texture_png(TEXTURE_HOME_ICON, "romfs:/res/drawable/ic_material_light_home.png");
+	pp2d_load_texture_png(TEXTURE_OPTIONS_ICON, "romfs:/res/drawable/ic_material_light_options.png");
+	pp2d_load_texture_png(TEXTURE_SETTINGS_ICON, "romfs:/res/drawable/ic_material_light_settings.png");
+	pp2d_load_texture_png(TEXTURE_FTP_ICON, "romfs:/res/drawable/ic_material_light_ftp.png");
+
+	pp2d_load_texture_png(TEXTURE_HOME_ICON_SELECTED, "romfs:/res/drawable/ic_overlay_home.png");
+	pp2d_load_texture_png(TEXTURE_OPTIONS_ICON_SELECTED, "romfs:/res/drawable/ic_overlay_options.png");
+	pp2d_load_texture_png(TEXTURE_SETTINGS_ICON_SELECTED, "romfs:/res/drawable/ic_overlay_settings.png");
+	pp2d_load_texture_png(TEXTURE_FTP_ICON_SELECTED, "romfs:/res/drawable/ic_overlay_ftp.png");
+
+	pp2d_load_texture_png(TEXTURE_SD_ICON, "romfs:/res/drawable/ic_material_light_sd.png");
+	pp2d_load_texture_png(TEXTURE_NAND_ICON, "romfs:/res/drawable/ic_material_light_nand.png");
+	pp2d_load_texture_png(TEXTURE_SD_ICON_SELECTED, "romfs:/res/drawable/ic_overlay_sd.png");
+	pp2d_load_texture_png(TEXTURE_NAND_ICON_SELECTED, "romfs:/res/drawable/ic_overlay_nand.png");
+
+	pp2d_load_texture_png(TEXTURE_TOGGLE_ON, "romfs:/res/drawable/btn_material_toggle_on.png");
+	pp2d_load_texture_png(TEXTURE_TOGGLE_OFF, "romfs:/res/drawable/btn_material_toggle_off.png");
+	pp2d_load_texture_png(TEXTURE_RADIO_ON, "romfs:/res/drawable/btn_material_radio_on.png");
+	pp2d_load_texture_png(TEXTURE_RADIO_OFF, "romfs:/res/drawable/btn_material_radio_off.png");
+
+	pp2d_load_texture_png(TEXTURE_THEMES_LAUNCHER, "romfs:/res/drawable/ic_launcher_themes.png");
+
+	pp2d_load_texture_png(TEXTURE_SEARCH_ICON, "romfs:/res/drawable/ic_material_light_search.png");
+
 	pp2d_load_texture_png(TEXTURE_BATTERY_0, "romfs:/res/drawable/battery/0.png");
 	pp2d_load_texture_png(TEXTURE_BATTERY_15, "romfs:/res/drawable/battery/15.png");
 	pp2d_load_texture_png(TEXTURE_BATTERY_28, "romfs:/res/drawable/battery/28.png");
@@ -74,6 +98,30 @@ void Free_Textures(void)
 	pp2d_free_texture(TEXTURE_BATTERY_28);
 	pp2d_free_texture(TEXTURE_BATTERY_15);
 	pp2d_free_texture(TEXTURE_BATTERY_0);
+
+	pp2d_free_texture(TEXTURE_SEARCH_ICON);
+
+	pp2d_free_texture(TEXTURE_THEMES_LAUNCHER);
+	
+	pp2d_free_texture(TEXTURE_RADIO_OFF);
+	pp2d_free_texture(TEXTURE_RADIO_ON);
+	pp2d_free_texture(TEXTURE_TOGGLE_OFF);
+	pp2d_free_texture(TEXTURE_TOGGLE_ON);
+
+	pp2d_free_texture(TEXTURE_NAND_ICON_SELECTED);
+	pp2d_free_texture(TEXTURE_SD_ICON_SELECTED);
+	pp2d_free_texture(TEXTURE_NAND_ICON);
+	pp2d_free_texture(TEXTURE_SD_ICON);
+
+	pp2d_free_texture(TEXTURE_FTP_ICON_SELECTED);
+	pp2d_free_texture(TEXTURE_SETTINGS_ICON_SELECTED);
+	pp2d_free_texture(TEXTURE_OPTIONS_ICON_SELECTED);
+	pp2d_free_texture(TEXTURE_HOME_ICON_SELECTED);
+
+	pp2d_free_texture(TEXTURE_FTP_ICON);
+	pp2d_free_texture(TEXTURE_SETTINGS_ICON);
+	pp2d_free_texture(TEXTURE_OPTIONS_ICON);
+	pp2d_free_texture(TEXTURE_HOME_ICON);
 
 	pp2d_free_texture(TEXTURE_ICON_UNCHECK);
 	pp2d_free_texture(TEXTURE_ICON_CHECK);

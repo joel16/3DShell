@@ -1,5 +1,6 @@
 #include <3ds.h>
 
+#include "common.h"
 #include "fs.h"
 #include "language.h"
 #include "menus/menu_main.h"
@@ -36,6 +37,7 @@ static void Init_Services(void)
 	Utils_GetLastDirectory();
 
 	BROWSE_STATE = STATE_SD;
+	MENU_DEFAULT_STATE = MENU_STATE_HOME;
 }
 
 static void Term_Services(void)

@@ -7,6 +7,7 @@
 #include "ftp.h"
 #include "language.h"
 #include "menu_ftp.h"
+#include "menu_main.h"
 #include "pp2d.h"
 #include "status_bar.h"
 #include "textures.h"
@@ -29,7 +30,7 @@ void Menu_DisplayFTP(void)
 
 	int pBar = 0, xlim = 270;
 
-	while(aptMainLoop())
+	while((aptMainLoop()) && (MENU_DEFAULT_STATE == MENU_STATE_FTP))
 	{
 		ftp_loop();
 
@@ -39,24 +40,8 @@ void Menu_DisplayFTP(void)
 
 			pp2d_draw_rectangle(0, 0, 320, 240, RGBA8(BottomScreen_colour.r, BottomScreen_colour.g, BottomScreen_colour.b, 255));
 			pp2d_draw_rectangle(0, 0, 320, 20, RGBA8(BottomScreen_bar_colour.r, BottomScreen_bar_colour.g, BottomScreen_bar_colour.b, 255));
-
-			/*pp2d_draw_texture(TEXTURE_HOME_ICON, -2, -2);
-			pp2d_draw_texture(TEXTURE_OPTIONS_ICON, 25, 0);
-			pp2d_draw_texture(TEXTURE_SETTINGS_ICON, 50, 1);
-			pp2d_draw_texture(TEXTURE_UPDATE_ICON, 75, 0);
-			pp2d_draw_texture(TEXTURE_FTP_ICON_SELECTED, 100, 0);
-
-			if (BROWSE_STATE == STATE_SD)
-				pp2d_draw_texture(TEXTURE_SD_ICON_SELECTED, (320 - screen_get_texture_width(TEXTURE_SD_ICON_SELECTED)) - 55, 0);
-			else
-				pp2d_draw_texture(TEXTURE_SD_ICON, (320 - screen_get_texture_width(TEXTURE_SD_ICON)) - 55, 0);
-
-			if (BROWSE_STATE == STATE_NAND)
-				pp2d_draw_texture(TEXTURE_NAND_ICON_SELECTED, (320 - screen_get_texture_width(TEXTURE_NAND_ICON_SELECTED)) - 30, 0);
-			else
-				pp2d_draw_texture(TEXTURE_NAND_ICON, (320 - screen_get_texture_width(TEXTURE_NAND_ICON)) - 30, 0);
-
-			pp2d_draw_texture(TEXTURE_SEARCH_ICON, (320 - screen_get_texture_width(TEXTURE_SEARCH_ICON)), -2);*/
+			
+			Menu_Draw_MenuBar();
 
 			if (!(wifiStatus))
 			{
@@ -109,7 +94,7 @@ void Menu_DisplayFTP(void)
 	memset(ftp_accepted_connection, 0, 20); // Empty accepted connection address
 	memset(ftp_file_transfer, 0, 50); // Empty transfer status
 	ftp_exit();
-	//DEFAULT_STATE = STATE_HOME;
+	MENU_DEFAULT_STATE = MENU_STATE_HOME;
 	Dirlist_PopulateFiles(true);
 	Dirlist_DisplayFiles();
 }

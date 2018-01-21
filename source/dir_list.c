@@ -234,9 +234,9 @@ void Dirlist_DisplayFiles(void)
          if ((file->isDir) && (strncmp(file->name, "..", 2) != RL_SUCCESS))
          {
             if (file->isReadOnly)
-               pp2d_draw_textf(70, 76 + (38 * printed), 0.42f, 0.42f, RGBA8(95, 95, 95, 255), "%s dr-xr-x---", FS_GetFileModifiedTime(path));
+               pp2d_draw_textf(70, 76 + (38 * printed), 0.42f, 0.42f, RGBA8(95, 95, 95, 255), "%s dr-xr-xr-x", FS_GetFileModifiedTime(path));
             else
-               pp2d_draw_textf(70, 76 + (38 * printed), 0.42f, 0.42f, RGBA8(95, 95, 95, 255), "%s drwxr-x---", FS_GetFileModifiedTime(path));
+               pp2d_draw_textf(70, 76 + (38 * printed), 0.42f, 0.42f, RGBA8(95, 95, 95, 255), "%s drwxrwxrwx", FS_GetFileModifiedTime(path));
 
          }
          else if (strncmp(file->name, "..", 2) == RL_SUCCESS)
@@ -246,9 +246,9 @@ void Dirlist_DisplayFiles(void)
             Utils_GetSizeString(size, file->size);
 
             if (file->isReadOnly)
-               pp2d_draw_textf(70, 76 + (38 * printed), 0.42f, 0.42f, RGBA8(95, 95, 95, 255), "%s -r--r-----", FS_GetFileModifiedTime(path));
+               pp2d_draw_textf(70, 76 + (38 * printed), 0.42f, 0.42f, RGBA8(95, 95, 95, 255), "%s -r--r--r--", FS_GetFileModifiedTime(path));
             else
-               pp2d_draw_textf(70, 76 + (38 * printed), 0.42f, 0.42f, RGBA8(95, 95, 95, 255), "%s -rw-rw----", FS_GetFileModifiedTime(path));
+               pp2d_draw_textf(70, 76 + (38 * printed), 0.42f, 0.42f, RGBA8(95, 95, 95, 255), "%s -rw-rw-rw-", FS_GetFileModifiedTime(path));
 
             pp2d_draw_textf(395 - pp2d_get_text_width(size, 0.42f, 0.42f), 76 + (38 * printed), 0.42f, 0.42f, RGBA8(0, 0, 0, 255), "%s", size);
          }
