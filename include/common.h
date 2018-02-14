@@ -12,12 +12,14 @@
 
 int MENU_DEFAULT_STATE;
 
-#define MENU_STATE_HOME     0
-#define MENU_STATE_OPTIONS  1
-#define MENU_STATE_SETTINGS 2
-#define MENU_STATE_FTP      3
-#define MENU_STATE_SORT     4
-#define MENU_STATE_THEMES   5
+#define MENU_STATE_HOME       0
+#define MENU_STATE_OPTIONS    1
+#define MENU_STATE_SETTINGS   2
+#define MENU_STATE_FTP        3
+#define MENU_STATE_SORT       4
+#define MENU_STATE_THEMES     5
+#define MENU_STATE_DIALOG     6
+#define MENU_STATE_PROPERTIES 7
 
 int BROWSE_STATE;
 

@@ -30,7 +30,7 @@ void Menu_DisplayFTP(void)
 
 	int pBar = 0, xlim = 270;
 
-	while((aptMainLoop()) && (MENU_DEFAULT_STATE == MENU_STATE_FTP))
+	while(MENU_DEFAULT_STATE == MENU_STATE_FTP)
 	{
 		ftp_loop();
 

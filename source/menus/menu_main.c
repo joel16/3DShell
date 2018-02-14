@@ -2,8 +2,10 @@
 
 #include "common.h"
 #include "dir_list.h"
+#include "menu_file_options.h"
 #include "menu_ftp.h"
 #include "menu_main.h"
+#include "menu_properties.h"
 #include "menu_settings.h"
 #include "menu_sort.h"
 #include "pp2d.h"
@@ -23,12 +25,12 @@ void Menu_Draw_MenuBar(void)
 	else
 		pp2d_draw_texture(TEXTURE_HOME_ICON, 0, -2);
 
-	if (MENU_DEFAULT_STATE == MENU_STATE_OPTIONS)
+	if ((MENU_DEFAULT_STATE == MENU_STATE_OPTIONS) || (MENU_DEFAULT_STATE == MENU_STATE_PROPERTIES))
 		pp2d_draw_texture(TEXTURE_OPTIONS_ICON_SELECTED, options_x, 0);
 	else
 		pp2d_draw_texture(TEXTURE_OPTIONS_ICON, options_x, 0);
 
-	if ((MENU_DEFAULT_STATE == MENU_STATE_SETTINGS) || (MENU_DEFAULT_STATE == MENU_STATE_SORT))
+	if ((MENU_DEFAULT_STATE == MENU_STATE_SETTINGS) || (MENU_DEFAULT_STATE == MENU_STATE_SORT) || (MENU_DEFAULT_STATE == MENU_STATE_THEMES))
 		pp2d_draw_texture(TEXTURE_SETTINGS_ICON_SELECTED, settings_x, 1);
 	else
 		pp2d_draw_texture(TEXTURE_SETTINGS_ICON, settings_x, 1);
@@ -80,12 +82,14 @@ static void Menu_Main_Controls(void)
 			MENU_DEFAULT_STATE = MENU_STATE_HOME;
 	}
 
-	if (MENU_DEFAULT_STATE == MENU_STATE_SETTINGS)
+	if (MENU_DEFAULT_STATE == MENU_STATE_OPTIONS)
+		Menu_ControlFileOptions(kDown);
+	else if (MENU_DEFAULT_STATE == MENU_STATE_PROPERTIES)
+		Menu_ControlProperties(kDown);
+	else if (MENU_DEFAULT_STATE == MENU_STATE_SETTINGS)
 		Menu_ControlSettings(kDown);
 	else if (MENU_DEFAULT_STATE == MENU_STATE_SORT)
 		Menu_ControlSort(kDown);
-	else if (MENU_DEFAULT_STATE == MENU_STATE_FTP)
-		Menu_DisplayFTP();
 	
 	if (fileCount > 0)
 	{	
@@ -171,7 +175,11 @@ void Menu_Main(void)
 			pp2d_draw_rectangle(0, 0, 320, 240, RGBA8(30, 136, 229, 255));
 			pp2d_draw_rectangle(0, 0, 320, 20, RGBA8(25, 118, 210, 255));
 
-			if (MENU_DEFAULT_STATE == MENU_STATE_SETTINGS)
+			if (MENU_DEFAULT_STATE == MENU_STATE_OPTIONS)
+				Menu_DisplayFileOptions();
+			else if (MENU_DEFAULT_STATE == MENU_STATE_PROPERTIES)
+				Menu_DisplayProperties();
+			else if (MENU_DEFAULT_STATE == MENU_STATE_SETTINGS)
 				Menu_DisplaySettings();
 			else if (MENU_DEFAULT_STATE == MENU_STATE_SORT)
 				Menu_DisplaySort();

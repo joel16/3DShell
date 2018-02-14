@@ -27,12 +27,11 @@
  * Plug & Play 2D
  * @file pp2d.c
  * @author Bernardo Giordano
- * @date 31 December 2017
+ * @date 17 January 2018
  * @brief pp2d implementation
  */
 
 #include "pp2d.h"
-#include "loadbmp.h"
 #include "stb_image.h"
 
 static DVLB_s* vshader_dvlb;
@@ -42,6 +41,7 @@ static C3D_Mtx projectionTopLeft;
 static C3D_Mtx projectionTopRight;
 static C3D_Mtx projectionBot;
 static C3D_Tex* glyphSheets;
+static float s_textScale;
 static textVertex_s* textVtxArray;
 static int textVtxArrayPos;
 static C3D_RenderTarget* topLeft;
@@ -78,7 +78,7 @@ static struct {
 } textures[MAX_TEXTURES];
 
 static void pp2d_add_text_vertex(float vx, float vy, float vz, float tx, float ty);
-static bool pp2d_fast_draw_vbo(int x, int y, int height, int width, float left, float right, float top, float bottom, float depth);
+static bool pp2d_add_quad(int x, int y, int height, int width, float left, float right, float top, float bottom, float depth);
 static u32 pp2d_get_next_pow2(u32 n);
 static void pp2d_get_text_size_internal(float* width, float* height, float scaleX, float scaleY, int wrapX, const char* text);
 static void pp2d_set_text_color(u32 color);
@@ -116,10 +116,10 @@ void pp2d_draw_rectangle(int x, int y, int width, int height, u32 color)
 	C3D_TexEnv* env = C3D_GetTexEnv(0);
 	C3D_TexEnvSrc(env, C3D_Both, GPU_CONSTANT, GPU_CONSTANT, 0);
 	C3D_TexEnvOp(env, C3D_Both, 0, 0, 0);
-	C3D_TexEnvFunc(env, C3D_Alpha, GPU_MODULATE);
+	C3D_TexEnvFunc(env, C3D_RGB, GPU_INTERPOLATE);
 	C3D_TexEnvColor(env, color);
 	
-	if (pp2d_fast_draw_vbo(x, y, height, width, 0, 0, 0, 0, DEFAULT_DEPTH))
+	if (pp2d_add_quad(x, y, height, width, 0, 0, 0, 0, DEFAULT_DEPTH))
 	{
 		C3D_DrawArrays(GPU_TRIANGLE_STRIP, textVtxArrayPos - 4, 4);
 	}
@@ -159,6 +159,9 @@ void pp2d_draw_text_wrap(float x, float y, float scaleX, float scaleY, u32 color
 	const uint8_t* p = (const uint8_t*)text;
 	float firstX = x;
 	int lastSheet = -1;
+	
+	scaleX *= s_textScale;
+	scaleY *= s_textScale;
 	
 	do
 	{
@@ -298,7 +301,7 @@ void pp2d_exit(void)
 	gfxExit();
 }
 
-static bool pp2d_fast_draw_vbo(int x, int y, int height, int width, float left, float right, float top, float bottom, float depth)
+static bool pp2d_add_quad(int x, int y, int height, int width, float left, float right, float top, float bottom, float depth)
 {
 	if ((textVtxArrayPos+4) >= TEXT_VTX_ARRAY_COUNT)
 		return false;
@@ -390,6 +393,9 @@ Result pp2d_init(void)
 		tex->lodParam = 0;
 	}
 	
+	charWidthInfo_s* cwi = fontGetCharWidthInfo(fontGlyphIndexFromCodePoint(0x3042));
+	s_textScale = 20.0f / (cwi->glyphWidth); // 20 is glyphWidth in J machines
+	
 	textVtxArray = (textVertex_s*)linearAlloc(sizeof(textVertex_s)*TEXT_VTX_ARRAY_COUNT);
 	C3D_BufInfo* bufInfo = C3D_GetBufInfo();
 	BufInfo_Init(bufInfo);
@@ -440,6 +446,9 @@ static void pp2d_get_text_size_internal(float* width, float* height, float scale
     float x = 0;
     float firstX = x;
     const uint8_t* p = (const uint8_t*)text;
+	
+	scaleX *= s_textScale;
+	scaleY *= s_textScale;
     
     do
     {
@@ -518,19 +527,6 @@ float pp2d_get_texture_width(size_t id)
 float pp2d_get_texture_height(size_t id) 
 {
     return textures[id].height;
-}
-
-void pp2d_load_texture_bmp(size_t id, const char* path)
-{
-	if (id >= MAX_TEXTURES)
-		return;
-	
-	u8* image = NULL;
-	unsigned int width = 0, height = 0;
-	loadbmp_decode_file(path, &image, &width, &height);
-	
-	pp2d_load_texture_memory(id, image, width, height);
-	free(image);
 }
 
 void pp2d_load_texture_other(size_t id, const char* path)

@@ -74,6 +74,5 @@
 #define TEXTURE_MUSIC_STATUS    56
 
 void Load_Textures(void);
-void Free_Textures(void);
 
 #endif

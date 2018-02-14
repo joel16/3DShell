@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "fs.h"
@@ -34,28 +35,34 @@ Result FS_MakeDir(FS_Archive archive, const char * path)
 	return 0;
 }
 
-void FS_RecursiveMakeDir(FS_Archive archive, const char * dir) 
+Result FS_RecursiveMakeDir(FS_Archive archive, const char * dir) 
 {
-	char tmp[256];
+	Result ret = 0;
+	char buf[256];
 	char *p = NULL;
 	size_t len;
 
-	snprintf(tmp, sizeof(tmp), "%s",dir);
-	len = strlen(tmp);
+	snprintf(buf, sizeof(buf), "%s",dir);
+	len = strlen(buf);
 
-	if (tmp[len - 1] == '/')
-		tmp[len - 1] = 0;
+	if (buf[len - 1] == '/')
+		buf[len - 1] = 0;
 
-	for (p = tmp + 1; *p; p++)
+	for (p = buf + 1; *p; p++)
 	{
 		if (*p == '/') 
 		{
 			*p = 0;
-			FS_MakeDir(archive, tmp);
+
+			ret = FS_MakeDir(archive, buf);
+			
 			*p = '/';
 		}
-		FS_MakeDir(archive, tmp);
+		
+		ret = FS_MakeDir(archive, buf);
 	}
+	
+	return ret;
 }
 
 bool FS_FileExists(FS_Archive archive, const char * path)

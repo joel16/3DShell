@@ -28,13 +28,13 @@ static void Init_Services(void)
 
 	APT_SetAppCpuTimeLimit(30);
 
-	Load_Textures();
-
-	language = 1; //Utils_GetLanguage();
-
 	Utils_MakeDirectories();
 	Utils_LoadConfig();
 	Utils_GetLastDirectory();
+
+	Load_Textures();
+
+	language = 1; //Utils_GetLanguage();
 
 	BROWSE_STATE = STATE_SD;
 	MENU_DEFAULT_STATE = MENU_STATE_HOME;
@@ -42,8 +42,6 @@ static void Init_Services(void)
 
 static void Term_Services(void)
 {
-	Free_Textures();
-
 	if (Utils_IsN3DS())
 		osSetSpeedupEnable(false);
 

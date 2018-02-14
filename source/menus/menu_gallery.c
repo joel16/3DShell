@@ -18,10 +18,8 @@ void Gallery_DisplayImage(char * path)
 
 	if (strncasecmp(file->ext, "png", 3) == 0)
 		pp2d_load_texture_png(TEXTURE_GALLERY_IMAGE, path);
-	else if ((strncasecmp(file->ext, "gif", 3) == 0) || (strncasecmp(file->ext, "jpg", 3) == 0))
+	else if ((strncasecmp(file->ext, "gif", 3) == 0) || (strncasecmp(file->ext, "jpg", 3) == 0) || (strncasecmp(file->ext, "bmp", 3) == 0))
 		pp2d_load_texture_other(TEXTURE_GALLERY_IMAGE, path);
-	else if (strncasecmp(file->ext, "bmp", 3) == 0)
-		pp2d_load_texture_bmp(TEXTURE_GALLERY_IMAGE, path);
 
 	int galleryBarY = 0, nameY = 11;
 
