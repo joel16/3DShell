@@ -9,6 +9,7 @@
 #include "language.h"
 #include "menu_gallery.h"
 #include "menu_music.h"
+#include "menu_textviewer.h"
 #include "pp2d.h"
 #include "textures.h"
 #include "utils.h"
@@ -310,6 +311,8 @@ void Dirlist_OpenFile(void)
       Gallery_DisplayImage(path);
    else if (Music_GetMusicFileType(path) != RL_SUCCESS)
       Music_Player(path);
+   else if (strncasecmp(file->ext, "txt", 3) == RL_SUCCESS)
+      TextViewer_DisplayText(path);
    else if (strncasecmp(file->ext, "zip", 3) == RL_SUCCESS)
    {
       Archive_ExtractZip(path, cwd);

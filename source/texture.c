@@ -71,4 +71,6 @@ void Load_Textures(void)
 	pp2d_load_texture_png(TEXTURE_MUSIC_PLAY, "romfs:/res/drawable/music/ic_music_play.png");
 	pp2d_load_texture_png(TEXTURE_MUSIC_PAUSE, "romfs:/res/drawable/music/ic_music_pause.png");
 	pp2d_load_texture_png(TEXTURE_MUSIC_STATUS, "romfs:/res/drawable/music/ic_music_status.png");
+
+	pp2d_load_texture_png(TEXTURE_TEXTVIEWER_BG, "romfs:/res/drawable/textviewer/textview.png");
 }

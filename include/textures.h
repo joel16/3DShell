@@ -73,6 +73,8 @@
 #define TEXTURE_MUSIC_COVER     55
 #define TEXTURE_MUSIC_STATUS    56
 
+#define TEXTURE_TEXTVIEWER_BG 57
+
 void Load_Textures(void);
 
 #endif
