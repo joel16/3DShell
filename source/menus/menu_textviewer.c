@@ -42,7 +42,7 @@ static Result TextViewer_ReadData(struct TextViewer *textViewer, char **contents
   	if (temp == NULL)
     	return -1;
 
-    if (R_FAILED(ret = FSFILE_Read(textViewer->handle, &bytesRead, offset, temp, fizeSize)))
+   	if (R_FAILED(ret = FSFILE_Read(textViewer->handle, &bytesRead, offset, temp, fizeSize)))
 	{
 		FSFILE_Close(textViewer->handle);
 		return ret;
@@ -65,8 +65,7 @@ static u64 TextViewer_CountLines(char *path)
 	int ch = 0;
 	u64 count = 0;
 	
-	do 
-	{
+	do {
 		ch = fgetc(file);
 		if (ch == '\n') 
 			count++;
@@ -79,38 +78,36 @@ static u64 TextViewer_CountLines(char *path)
 static u64 TextViewer_ApplyContents(struct TextViewer *textViewer, char *contents) 
 {
 	if (textViewer == NULL)
-    	return -1;
-    
-    char *token;
-    int line_index = 0;
+		return -1;
 
-    token = strtok(contents, "\n");
-    printf("token %s\n", token);
+	char *token;
+	int line_index = 0;
 
-    if (token == NULL)
-    	return -1;
+	token = strtok(contents, "\n");
+	printf("token %s\n", token);
 
-    if (token != NULL) 
-   	{
-    	textViewer->lines = TextViewer_CountLines(textViewer->path);
-    	//textViewer->contents = (char**)malloc(sizeof(char**) * textViewer->lines);
-    	//textViewer->contents[line_index] = malloc(sizeof(char*) * (strlen(contents) + 1));
-    	textViewer->text = (struct Text*)malloc(sizeof(struct Text) * textViewer->lines);
-    	textViewer->text[line_index].contents = malloc(sizeof(char) * strlen(contents) + 1);
-    	textViewer->text[line_index].line = line_index;
-    	strcpy(textViewer->text[line_index].contents, token);
-    	line_index += 1;
-   	}
+	if (token == NULL)
+		return -1;
+
+	if (token != NULL) 
+	{
+		textViewer->lines = TextViewer_CountLines(textViewer->path);
+		textViewer->text = (struct Text*)malloc(sizeof(struct Text) * textViewer->lines);
+		textViewer->text[line_index].contents = malloc(sizeof(char) * strlen(contents) + 1);
+		textViewer->text[line_index].line = line_index;
+		strcpy(textViewer->text[line_index].contents, token);
+		line_index += 1;
+	}
 
    	token = strtok(NULL, "\n");
 
-   	while(token != NULL) 
+   	while(token != NULL)
    	{
-    	textViewer->text[line_index].contents = malloc(sizeof(char*) * (strlen(token) + 1));
-    	strcpy(textViewer->text[line_index].contents, token);
-    	textViewer->text[line_index].line = line_index;
-    	line_index += 1;
-    	token = strtok(NULL, "\n");
+   		textViewer->text[line_index].contents = malloc(sizeof(char*) * (strlen(token) + 1));
+   		strcpy(textViewer->text[line_index].contents, token);
+   		textViewer->text[line_index].line = line_index;
+   		line_index += 1;
+   		token = strtok(NULL, "\n");
    	}
 
    	return 0;
@@ -158,9 +155,9 @@ static int TextViewer_Update(struct TextViewer *textViewer)
 
   	if (TextViewer_ReadData(textViewer, &contents) == -1) 
   	{
-    	printf("Failed to read file\n");
-    	return -1;
-    }
+  		printf("Failed to read file\n");
+  		return -1;
+  	}
 
    	if (TextViewer_ApplyContents(textViewer, contents) == -1) 
    	{
@@ -233,10 +230,10 @@ void TextViewer_DisplayText(char * path)
 		return;
 	}
 
-	if (TextViewer_Update(&textViewer) == -1) 
+	if (TextViewer_Update(&textViewer) == -1)
 	{
-   		printf("failed to run\n");
-    	return;
+		printf("failed to run\n");
+		return;
 	}
 
 	while (aptMainLoop())
