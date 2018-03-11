@@ -2,6 +2,7 @@
 
 #include "common.h"
 #include "dir_list.h"
+#include "fs.h"
 #include "menu_delete.h"
 #include "menu_file_options.h"
 #include "menu_ftp.h"
@@ -13,7 +14,11 @@
 #include "screenshot.h"
 #include "status_bar.h"
 #include "textures.h"
+#include "theme.h"
 #include "touch.h"
+
+struct colour BottomScreen_colour;
+struct colour BottomScreen_bar_colour;
 
 void Menu_Draw_MenuBar(void)
 {
@@ -109,6 +114,60 @@ static void Menu_Main_Controls(void)
 		Menu_ControlSort(kDown);
 	else if (MENU_DEFAULT_STATE == MENU_STATE_DIALOG)
 		Menu_ControlDeleteDialog(kDown);
+	else if (MENU_DEFAULT_STATE == MENU_STATE_THEMES)
+	{
+		if (kDown & KEY_A)
+		{
+			File * file = Dirlist_GetFileIndex(position);
+
+			strcpy(fileName, file->name);
+
+			if ((strncmp(fileName, "default", 7) == 0))
+			{
+				strcpy(theme_dir, "romfs:/res/drawable");
+				strcpy(colour_dir, "/3ds/3DShell/themes/default");
+
+				Theme_SaveConfig(theme_dir, colour_dir);
+
+				wait(1);
+
+				Theme_Load();
+				Theme_Reload();
+			}
+			else if ((strncmp(fileName, "..", 2) != 0) && (file->isDir))
+			{
+				strcpy(theme_dir, cwd);
+				strcpy(colour_dir, cwd);
+				
+				strcat(theme_dir, fileName);
+				strcat(colour_dir, fileName);
+
+				Theme_SaveConfig(theme_dir, colour_dir);
+				
+				wait(1);
+
+				Theme_Load();
+				Theme_Reload();
+			}
+		}
+		if (kDown & KEY_B)
+		{
+			char buf[250];
+
+			FILE * read = fopen("/3ds/3DShell/lastdir.txt", "r");
+			fscanf(read, "%s", buf);
+			fclose(read);
+
+			if (FS_DirExists(archive, buf)) // Incase a directory previously visited had been deleted, set start path to sdmc:/ to avoid errors.
+				strcpy(cwd, buf);
+			else
+				strcpy(cwd, START_PATH);
+
+			wait(1);
+
+			MENU_DEFAULT_STATE = MENU_STATE_SETTINGS;
+		}
+	}
 	
 	if (fileCount > 0)
 	{	
@@ -164,16 +223,22 @@ static void Menu_Main_Controls(void)
 
 		else if (kDown & KEY_A)
 		{
-			wait(1);
-			Dirlist_OpenFile(); // Open file/dir
+			if (MENU_DEFAULT_STATE != MENU_STATE_THEMES)
+			{
+				wait(1);
+				Dirlist_OpenFile(); // Open file/dir
+			}
 		}
 
 		else if ((strcmp(cwd, ROOT_PATH) != 0) && (kDown & KEY_B))
 		{
-			wait(1);
-			Dirlist_Navigate(false);
-			Dirlist_PopulateFiles(true);
-			Dirlist_DisplayFiles();
+			if (MENU_DEFAULT_STATE != MENU_STATE_THEMES)
+			{
+				wait(1);
+				Dirlist_Navigate(false);
+				Dirlist_PopulateFiles(true);
+				Dirlist_DisplayFiles();
+			}	
 		}
 	}
 }
@@ -191,8 +256,8 @@ void Menu_Main(void)
 		pp2d_end_draw();
 
 		pp2d_begin_draw(GFX_BOTTOM, GFX_LEFT);
-			pp2d_draw_rectangle(0, 0, 320, 240, RGBA8(30, 136, 229, 255));
-			pp2d_draw_rectangle(0, 0, 320, 20, RGBA8(25, 118, 210, 255));
+			pp2d_draw_rectangle(0, 0, 320, 240, RGBA8(BottomScreen_colour.r, BottomScreen_colour.g, BottomScreen_colour.b, 255));
+			pp2d_draw_rectangle(0, 0, 320, 20, RGBA8(BottomScreen_bar_colour.r, BottomScreen_bar_colour.g, BottomScreen_bar_colour.b, 255));
 
 			if (MENU_DEFAULT_STATE == MENU_STATE_OPTIONS)
 				Menu_DisplayFileOptions();

@@ -12,11 +12,15 @@
 #include "menu_textviewer.h"
 #include "pp2d.h"
 #include "textures.h"
+#include "theme.h"
 #include "utils.h"
 
 int position = 0; // menu position
 int fileCount = 0; // file count
 File * files = NULL; // file list
+
+struct colour TopScreen_colour;
+struct colour TopScreen_min_colour;
 
 static void recursiveFree(File * node)
 {
@@ -230,28 +234,28 @@ void Dirlist_DisplayFiles(void)
          strncpy(buf, file->name, sizeof(buf));
          buf[sizeof(buf) - 1] = '\0';
 
-         pp2d_draw_textf(70, 58 + (38 * printed), 0.45f, 0.45f, RGBA8(0, 0, 0, 255), "%.45s", buf); // Display file name
+         pp2d_draw_textf(70, 58 + (38 * printed), 0.45f, 0.45f, RGBA8(TopScreen_colour.r ,TopScreen_colour.g, TopScreen_colour.b, 255), "%.45s", buf); // Display file name
 
          if ((file->isDir) && (strncmp(file->name, "..", 2) != RL_SUCCESS))
          {
             if (file->isReadOnly)
-               pp2d_draw_textf(70, 76 + (38 * printed), 0.42f, 0.42f, RGBA8(95, 95, 95, 255), "%s dr-xr-xr-x", FS_GetFileModifiedTime(path));
+               pp2d_draw_textf(70, 76 + (38 * printed), 0.42f, 0.42f, RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), "%s dr-xr-xr-x", FS_GetFileModifiedTime(path));
             else
-               pp2d_draw_textf(70, 76 + (38 * printed), 0.42f, 0.42f, RGBA8(95, 95, 95, 255), "%s drwxrwxrwx", FS_GetFileModifiedTime(path));
+               pp2d_draw_textf(70, 76 + (38 * printed), 0.42f, 0.42f, RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), "%s drwxrwxrwx", FS_GetFileModifiedTime(path));
 
          }
          else if (strncmp(file->name, "..", 2) == RL_SUCCESS)
-            pp2d_draw_text(70, 76 + (38 * printed), 0.45f, 0.45f, RGBA8(95, 95, 95, 255), lang_files[language][0]);
+            pp2d_draw_text(70, 76 + (38 * printed), 0.45f, 0.45f, RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), lang_files[language][0]);
          else
          {
             Utils_GetSizeString(size, file->size);
 
             if (file->isReadOnly)
-               pp2d_draw_textf(70, 76 + (38 * printed), 0.42f, 0.42f, RGBA8(95, 95, 95, 255), "%s -r--r--r--", FS_GetFileModifiedTime(path));
+               pp2d_draw_textf(70, 76 + (38 * printed), 0.42f, 0.42f, RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), "%s -r--r--r--", FS_GetFileModifiedTime(path));
             else
-               pp2d_draw_textf(70, 76 + (38 * printed), 0.42f, 0.42f, RGBA8(95, 95, 95, 255), "%s -rw-rw-rw-", FS_GetFileModifiedTime(path));
+               pp2d_draw_textf(70, 76 + (38 * printed), 0.42f, 0.42f, RGBA8(TopScreen_min_colour.r, TopScreen_min_colour.g, TopScreen_min_colour.b, 255), "%s -rw-rw-rw-", FS_GetFileModifiedTime(path));
 
-            pp2d_draw_textf(395 - pp2d_get_text_width(size, 0.42f, 0.42f), 76 + (38 * printed), 0.42f, 0.42f, RGBA8(0, 0, 0, 255), "%s", size);
+            pp2d_draw_textf(395 - pp2d_get_text_width(size, 0.42f, 0.42f), 76 + (38 * printed), 0.42f, 0.42f, RGBA8(TopScreen_colour.r, TopScreen_colour.g, TopScreen_colour.b, 255), "%s", size);
          }
 
          printed++; // Increase printed counter
