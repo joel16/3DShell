@@ -118,7 +118,7 @@ static Result TextViewer_Init(struct TextViewer *textViewer, const char path[])
 	Result ret = 0;
 
   	if (textViewer == NULL)
-    	return -1;
+  		return -1;
 
 	if (R_FAILED(ret = FS_Open(&textViewer->handle, archive, path, FS_OPEN_READ))) 
 	{
@@ -255,7 +255,7 @@ void TextViewer_DisplayText(char * path)
 		
 			else if (kDown & KEY_DDOWN)
 			{
-				if (current_line+30 <= textViewer.lines-1) 
+				if (current_line + 30 <= textViewer.lines - 1) 
 					current_line += 1;
 			}
 

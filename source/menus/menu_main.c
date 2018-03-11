@@ -2,6 +2,7 @@
 
 #include "common.h"
 #include "dir_list.h"
+#include "menu_delete.h"
 #include "menu_file_options.h"
 #include "menu_ftp.h"
 #include "menu_main.h"
@@ -61,12 +62,6 @@ static void Menu_Main_Controls(void)
 	if (((kHeld & KEY_L) && (kDown & KEY_R)) || ((kHeld & KEY_R) && (kDown & KEY_L)))
 		Screenshot_Capture();
 
-	if (kDown & KEY_SELECT)
-	{
-		MENU_DEFAULT_STATE = MENU_STATE_FTP;
-		Menu_DisplayFTP();
-	}
-
 	if (kDown & KEY_DLEFT)
 	{
 		MENU_DEFAULT_STATE--;
@@ -82,6 +77,28 @@ static void Menu_Main_Controls(void)
 			MENU_DEFAULT_STATE = MENU_STATE_HOME;
 	}
 
+	if ((kDown & KEY_TOUCH) && (touchInRect(0, 0, 22, 20)))
+	{
+		wait(1);
+		MENU_DEFAULT_STATE = MENU_STATE_HOME;
+	}
+	else if ((kDown & KEY_TOUCH) && (touchInRect(23, 0, 47, 20)))
+	{
+		wait(1);
+		MENU_DEFAULT_STATE = MENU_STATE_OPTIONS;
+	}
+	else if ((kDown & KEY_TOUCH) && (touchInRect(48, 0, 73, 20)))
+	{
+		wait(1);
+		MENU_DEFAULT_STATE = MENU_STATE_SETTINGS;
+	}
+	else if (((kDown & KEY_TOUCH) && (touchInRect(98, 123, 0, 20))) || (kDown & KEY_SELECT))
+	{
+		wait(1);
+		MENU_DEFAULT_STATE = MENU_STATE_FTP;
+		Menu_DisplayFTP();
+	}
+
 	if (MENU_DEFAULT_STATE == MENU_STATE_OPTIONS)
 		Menu_ControlFileOptions(kDown);
 	else if (MENU_DEFAULT_STATE == MENU_STATE_PROPERTIES)
@@ -90,6 +107,8 @@ static void Menu_Main_Controls(void)
 		Menu_ControlSettings(kDown);
 	else if (MENU_DEFAULT_STATE == MENU_STATE_SORT)
 		Menu_ControlSort(kDown);
+	else if (MENU_DEFAULT_STATE == MENU_STATE_DIALOG)
+		Menu_ControlDeleteDialog(kDown);
 	
 	if (fileCount > 0)
 	{	
@@ -183,6 +202,8 @@ void Menu_Main(void)
 				Menu_DisplaySettings();
 			else if (MENU_DEFAULT_STATE == MENU_STATE_SORT)
 				Menu_DisplaySort();
+			else if (MENU_DEFAULT_STATE == MENU_STATE_DIALOG)
+				Menu_DisplayDeleteDialog();
 
 			Menu_Draw_MenuBar();
 		pp2d_end_draw();
