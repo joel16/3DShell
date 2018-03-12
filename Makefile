@@ -54,6 +54,7 @@ RSF_FILE            := $(RESOURCES)/cia.rsf
 VERSION_MAJOR := 3
 VERSION_MINOR := 0
 VERSION_MICRO := 0
+GITVERSION    := $(shell git log -1 --pretty='%h')
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -63,6 +64,7 @@ ARCH     := -march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 CFLAGS   := -g -Werror -O2 -mword-relocations \
 	        -fomit-frame-pointer -ffunction-sections \
 	        -DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO) \
+	        -DGITVERSION="\"${GITVERSION}\"" \
             $(ARCH)
 
 CFLAGS   += $(INCLUDE) -DARM11 -D_3DS

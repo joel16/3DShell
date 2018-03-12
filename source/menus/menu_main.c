@@ -20,6 +20,7 @@
 
 struct colour BottomScreen_colour;
 struct colour BottomScreen_bar_colour;
+struct colour BottomScreen_text_colour;
 
 void Menu_Draw_MenuBar(void)
 {
@@ -292,7 +293,9 @@ void Menu_Main(void)
 			pp2d_draw_rectangle(0, 0, 320, 240, RGBA8(BottomScreen_colour.r, BottomScreen_colour.g, BottomScreen_colour.b, 255));
 			pp2d_draw_rectangle(0, 0, 320, 20, RGBA8(BottomScreen_bar_colour.r, BottomScreen_bar_colour.g, BottomScreen_bar_colour.b, 255));
 
-			if (MENU_DEFAULT_STATE == MENU_STATE_OPTIONS)
+			if (MENU_DEFAULT_STATE == MENU_STATE_HOME)
+				pp2d_draw_textf(2, 225, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), "3DShell %d.%d.%d - %s", VERSION_MAJOR, VERSION_MINOR, VERSION_MICRO, GITVERSION);
+			else if (MENU_DEFAULT_STATE == MENU_STATE_OPTIONS)
 				Menu_DisplayFileOptions();
 			else if (MENU_DEFAULT_STATE == MENU_STATE_PROPERTIES)
 				Menu_DisplayProperties();
