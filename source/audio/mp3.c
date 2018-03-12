@@ -8,8 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "audio/mp3.h"
-#include "graphics/screen.h"
+#include "mp3.h"
 
 #if !(defined PLAIN_C89) && (defined SIZEOF_SIZE_T) && (SIZEOF_SIZE_T > SIZEOF_LONG) && (defined PRIuMAX)
 # define SIZE_P PRIuMAX
@@ -341,7 +340,6 @@ int open_picfile(const char * prefix, mpg123_picture * pic)
 		pfn[len + digits] = 0;
 		errno = 0;		
 		fd = open(pfn, O_CREAT|O_WRONLY|O_EXCL);
-		screen_load_texture_tiled(TEXTURE_MUSIC_COVER, pic->data, pic->size, 100, 100, GPU_RGB8, false);
 	}
 	
 	if(fd < 0)
@@ -374,10 +372,6 @@ static void store_pictures(const char* prefix, mpg123_id3v2 *v2)
 				
 				if(fclose(picfile))
 					++errors;
-
-				//screen_load_texture_tiled(TEXTURE_MUSIC_COVER, pic->data, pic->size, 100, 100, GPU_RGB8, false);
-				//screen_load_texture_jpg(TEXTURE_MUSIC_COVER, pic->data, false);
-				//screen_load_texture_png(TEXTURE_MUSIC_COVER, pic->data, false);
 			}
 			else
 				++errors;

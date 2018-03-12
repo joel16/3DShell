@@ -2,19 +2,19 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "audio/audio.h"
+#include "audio.h"
 
-bool audio_isPlaying(enum channel_e channel)
+bool Audio_IsPlaying(enum channel_e channel)
 {
 	return ndspChnIsPlaying(channel);
 }
 
-bool audio_isPaused(enum channel_e channel)
+bool Audio_IsPaused(enum channel_e channel)
 {
 	return ndspChnIsPaused(channel);
 }
 
-bool audio_togglePlayback(enum channel_e channel)
+bool Audio_TogglePlayback(enum channel_e channel)
 {
 	ndspChnSetPaused(channel, !(ndspChnIsPaused(channel)));
 	return !(ndspChnIsPaused(channel));

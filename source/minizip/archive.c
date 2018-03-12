@@ -4,9 +4,9 @@
 #include <sys/stat.h>
 
 #include "archive.h"
-#include "file/file_operations.h"
-#include "file/fs.h"
-#include "minizip/unzip.h"
+#include "progress_bar.h"
+#include "fs.h"
+#include "unzip.h"
 #include "utils.h"
 
 Result unzExtractCurrentFile(unzFile * unzHandle, int * path)
@@ -26,7 +26,7 @@ Result unzExtractCurrentFile(unzFile * unzHandle, int * path)
 	if (!buf)
 		return -2;
 
-	char * filenameWithoutPath = basename(filename);
+	char * filenameWithoutPath = Utils_Basename(filename);
 
 	if ((*filenameWithoutPath) == '\0')
 	{
@@ -87,7 +87,7 @@ Result unzExtractAll(const char * src, unzFile * unzHandle)
 {
 	Result res = 0;
 	int path = 0;
-	char * filename = basename(src);
+	char * filename = Utils_Basename(src);
 	
 	unz_global_info global_info;
 	memset(&global_info, 0, sizeof(unz_global_info));
@@ -100,7 +100,7 @@ Result unzExtractAll(const char * src, unzFile * unzHandle)
 
 	for (unsigned int i = 0; i < global_info.number_entry; i++)
 	{
-		drawProgress("Extracting", filename, i, global_info.number_entry);
+		ProgressBar_DisplayProgress("Extracting", filename, i, global_info.number_entry);
 
 		if ((res = unzExtractCurrentFile(unzHandle, &path)) != UNZ_OK)
 			break;
@@ -118,12 +118,12 @@ Result unzExtractAll(const char * src, unzFile * unzHandle)
 	return res;
 }
 
-Result extractZip(const char * src, const char * dst)
+Result Archive_ExtractZip(const char * src, const char * dst)
 {
 	char tmpFile2[1024];
 	char tmpPath2[1024];
 
-	makeDir(fsArchive, dst);
+	FS_MakeDir(archive, dst);
 
 	strncpy(tmpPath2, "sdmc:", sizeof(tmpPath2));
 	strncat(tmpPath2, (char *)dst, (1024 - strlen(tmpPath2) - 1));

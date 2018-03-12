@@ -2,16 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "file/fs.h"
+#include "fs.h"
 #include "common.h"
-#include "graphics/screen.h"
+#include "pp2d.h"
+#include "textures.h"
 #include "theme.h"
 #include "utils.h"
 
-struct colour Storage_colour;
-struct colour TopScreen_colour;
-struct colour TopScreen_min_colour;
-struct colour TopScreen_bar_colour;
 struct colour BottomScreen_colour;
 struct colour BottomScreen_bar_colour;
 struct colour BottomScreen_text_colour;
@@ -19,9 +16,13 @@ struct colour Options_select_colour;
 struct colour Options_text_colour;
 struct colour Options_title_text_colour;
 struct colour Settings_colour;
-struct colour Settings_title_text_colour;
 struct colour Settings_text_colour;
 struct colour Settings_text_min_colour;
+struct colour Settings_title_text_colour;
+struct colour Storage_colour;
+struct colour TopScreen_colour;
+struct colour TopScreen_bar_colour;
+struct colour TopScreen_min_colour;
 
 const char * themeConfig =
 	"theme = %s\n"
@@ -43,14 +44,14 @@ const char * coloursConfig =
 	"settins_text = RGBA(%d, %d, %d, 255)\n"
 	"settings_text_min = RGBA(%d, %d, %d, 255)";
 
-Result saveThemeConfig(char * themePath, char * coloursPath)
+Result Theme_SaveConfig(char * themePath, char * coloursPath)
 {
 	Result ret = 0;
 	
 	char * buf = (char *)malloc(512);
 	snprintf(buf, 512, themeConfig, themePath, coloursPath);
 	
-	if (R_FAILED(ret = fsWrite(fsArchive, "/3ds/3DShell/theme.cfg", buf)))
+	if (R_FAILED(ret = FS_Write(archive, "/3ds/3DShell/theme.cfg", buf)))
 	{
 		free(buf);
 		return ret;
@@ -60,22 +61,22 @@ Result saveThemeConfig(char * themePath, char * coloursPath)
 	return 0;
 }
 	
-static Result loadThemeConfig(void)
+static Result Theme_LoadConfig(void)
 {
 	Handle handle;
 	Result ret = 0;
 	
-	if (!fileExists(fsArchive, "/3ds/3DShell/theme.cfg"))	
-		saveThemeConfig("romfs:/res", "/3ds/3DShell/themes/default");
+	if (!FS_FileExists(archive, "/3ds/3DShell/theme.cfg"))	
+		Theme_SaveConfig("romfs:/res/drawable", "/3ds/3DShell/themes/default");
 	
 	u64 size64 = 0;
 	u32 size = 0;
 	
-	size64 = getFileSize(fsArchive, "/3ds/3DShell/theme.cfg");
+	size64 = FS_GetFileSize(archive, "/3ds/3DShell/theme.cfg");
 	size = (u32)size64;
 	char * buf = (char *)malloc(size + 1);
 
-	if (R_FAILED(ret = fsRead(fsArchive, "/3ds/3DShell/theme.cfg", size, buf)))
+	if (R_FAILED(ret = FS_Read(archive, "/3ds/3DShell/theme.cfg", size, buf)))
 	{
 		free(buf);
 		return ret;
@@ -89,7 +90,7 @@ static Result loadThemeConfig(void)
 	return 0;
 }
 
-static Result createFontColours(void)
+static Result Theme_CreateFontColours(void)
 {
 	Result ret = 0;
 	
@@ -109,7 +110,7 @@ static Result createFontColours(void)
 										32, 32, 32,
 										120, 120, 120);
 	
-	if (R_FAILED(ret = fsWrite(fsArchive, "/3ds/3DShell/themes/default/colours.cfg", buf)))
+	if (R_FAILED(ret = FS_Write(archive, "/3ds/3DShell/themes/default/colours.cfg", buf)))
 	{
 		free(buf);
 		return ret;
@@ -119,13 +120,13 @@ static Result createFontColours(void)
 	return 0;
 }
 
-static Result loadFontColours(void)
+static Result Theme_LoadFontColours(void)
 {
 	Handle handle;
 	Result ret = 0;
 	
-	if (!fileExists(fsArchive, "/3ds/3DShell/themes/default/colours.cfg"))		
-		createFontColours();
+	if (!FS_FileExists(archive, "/3ds/3DShell/themes/default/colours.cfg"))		
+		Theme_CreateFontColours();
 	
 	char colours_cfg[100] = "/colours.cfg";
 	strcat(colour_dir, colours_cfg);
@@ -133,11 +134,11 @@ static Result loadFontColours(void)
 	u64 size64 = 0;
 	u32 size = 0;
 	
-	size64 = getFileSize(fsArchive, colour_dir);
+	size64 = FS_GetFileSize(archive, colour_dir);
 	size = (u32)size64;
 	char * buf = (char *)malloc(size + 1);
 
-	if (R_FAILED(ret = fsRead(fsArchive, colour_dir, size, buf)))
+	if (R_FAILED(ret = FS_Read(archive, colour_dir, size, buf)))
 	{
 		free(buf);
 		return ret;
@@ -164,89 +165,93 @@ static Result loadFontColours(void)
 	return 0;
 }
 
-void replaceAsset(char arr[], char path[], char img_path[], char redirect_path[])
+static void Theme_ReplaceAsset(char arr[], char path[], char img_path[], char redirect_path[])
 {
 	strcpy(arr, path);
 	strcat(arr, img_path);
 	strcpy(redirect_path, arr);
 }
 
-void loadTheme(void)
+void Theme_Load(void)
 {
-	loadThemeConfig();
+	Theme_LoadConfig();
 	
-	char background_res[100] = "/background.png";
-	char selector_res[100] = "/selector.png";
-	char folder_res[100] = "/folder.png";
-	char file_res[100] = "/file.png";
-	char audio_res[100] = "/audio.png";
-	char app_res[100] = "/app.png";
-	char txt_res[100] = "/txt.png";
-	char system_res[100] = "/system.png";
-	char zip_res[100] = "/zip.png";
-	char img_res[100] = "/img.png";
-	char check_res[100] = "/check.png";
-	char uncheck_res[100] = "/uncheck.png";
-	char options_res[100] = "/options.png";
-	char properties_res[100] = "/properties.png";
-	char deletion_res[100] = "/delete.png";
+	char background_res[100] = "/ic_background.png";
+	char dialog_res[100] = "/ic_dialog.png";
+	char options_res[100] = "/ic_options.png";
+	char properties_res[100] = "/ic_properties.png";
+	char selector_res[100] = "/ic_selector.png";
 
-	replaceAsset(temp_arr, theme_dir, background_res, background_path);
-	replaceAsset(temp_arr, theme_dir, selector_res, selector_path);
-	replaceAsset(temp_arr, theme_dir, folder_res, folder_path);
-	replaceAsset(temp_arr, theme_dir, file_res, file_path);
-	replaceAsset(temp_arr, theme_dir, audio_res, audio_path);
-	replaceAsset(temp_arr, theme_dir, app_res, app_path);
-	replaceAsset(temp_arr, theme_dir, txt_res, txt_path);
-	replaceAsset(temp_arr, theme_dir, system_res, system_path);
-	replaceAsset(temp_arr, theme_dir, zip_res, zip_path);
-	replaceAsset(temp_arr, theme_dir, img_res, img_path);
-	replaceAsset(temp_arr, theme_dir, check_res, check_path);
-	replaceAsset(temp_arr, theme_dir, uncheck_res, uncheck_path);
-	replaceAsset(temp_arr, theme_dir, options_res, options_path);
-	replaceAsset(temp_arr, theme_dir, properties_res, properties_path);
-	replaceAsset(temp_arr, theme_dir, deletion_res, deletion_path);
+	char app_res[100] = "/ic_fso_type_app.png";
+	char archive_res[100] = "/ic_fso_type_archive.png";
+	char audio_res[100] = "/ic_fso_type_audio.png";
+	char file_res[100] = "/ic_fso_type_file.png";
+	char folder_res[100] = "/ic_fso_type_folder.png";
+	char img_res[100] = "/ic_fso_type_img.png";
+	char system_res[100] = "/ic_fso_type_system.png";
+	char text_res[100] = "/ic_fso_type_text.png";
 
-	loadFontColours();
+	char check_res[100] = "/btn_material_check_on.png";
+	char uncheck_res[100] = "/btn_material_check_off.png";
+
+	Theme_ReplaceAsset(temp_arr, theme_dir, background_res, background_path);
+	Theme_ReplaceAsset(temp_arr, theme_dir, dialog_res, dialog_path);
+	Theme_ReplaceAsset(temp_arr, theme_dir, options_res, options_path);
+	Theme_ReplaceAsset(temp_arr, theme_dir, properties_res, properties_path);
+	Theme_ReplaceAsset(temp_arr, theme_dir, selector_res, selector_path);
+	
+	Theme_ReplaceAsset(temp_arr, theme_dir, app_res, app_path);
+	Theme_ReplaceAsset(temp_arr, theme_dir, archive_res, archive_path);
+	Theme_ReplaceAsset(temp_arr, theme_dir, audio_res, audio_path);
+	Theme_ReplaceAsset(temp_arr, theme_dir, file_res, file_path);
+	Theme_ReplaceAsset(temp_arr, theme_dir, folder_res, folder_path);
+	Theme_ReplaceAsset(temp_arr, theme_dir, img_res, img_path);
+	Theme_ReplaceAsset(temp_arr, theme_dir, system_res, system_path);
+	Theme_ReplaceAsset(temp_arr, theme_dir, text_res, text_path);
+
+	Theme_ReplaceAsset(temp_arr, theme_dir, check_res, check_path);
+	Theme_ReplaceAsset(temp_arr, theme_dir, uncheck_res, uncheck_path);
+
+	Theme_LoadFontColours();
 }
 
-void reloadTheme(void)
+void Theme_Reload(void)
 {
-	screen_unload_texture(TEXTURE_BACKGROUND);
-	screen_unload_texture(TEXTURE_SELECTOR);
-	screen_unload_texture(TEXTURE_OPTIONS);
-	screen_unload_texture(TEXTURE_PROPERTIES);
-	screen_unload_texture(TEXTURE_DELETE);
+	pp2d_free_texture(TEXTURE_BACKGROUND);
+	pp2d_free_texture(TEXTURE_DIALOG);
+	pp2d_free_texture(TEXTURE_OPTIONS);
+	pp2d_free_texture(TEXTURE_PROPERTIES);
+	pp2d_free_texture(TEXTURE_SELECTOR);
 
-	screen_unload_texture(TEXTURE_FOLDER_ICON);
-	screen_unload_texture(TEXTURE_FILE_ICON);
-	screen_unload_texture(TEXTURE_APP_ICON);
-	screen_unload_texture(TEXTURE_AUDIO_ICON);
-	screen_unload_texture(TEXTURE_IMG_ICON);
-	screen_unload_texture(TEXTURE_SYSTEM_ICON);
-	screen_unload_texture(TEXTURE_TXT_ICON);
-	screen_unload_texture(TEXTURE_ZIP_ICON);
+	pp2d_free_texture(TEXTURE_ICON_APP);
+	pp2d_free_texture(TEXTURE_ICON_ARCHIVE);
+	pp2d_free_texture(TEXTURE_ICON_AUDIO);
+	pp2d_free_texture(TEXTURE_ICON_FILE);
+	pp2d_free_texture(TEXTURE_ICON_FOLDER);
+	pp2d_free_texture(TEXTURE_ICON_IMG);
+	pp2d_free_texture(TEXTURE_ICON_SYSTEM);
+	pp2d_free_texture(TEXTURE_ICON_TEXT);
 
-	screen_unload_texture(TEXTURE_CHECK_ICON);
-	screen_unload_texture(TEXTURE_UNCHECK_ICON);
+	pp2d_free_texture(TEXTURE_ICON_CHECK);
+	pp2d_free_texture(TEXTURE_ICON_UNCHECK);
 
-	screen_load_texture_png(TEXTURE_BACKGROUND, background_path, true);
-	screen_load_texture_png(TEXTURE_SELECTOR, selector_path, true);
-	screen_load_texture_png(TEXTURE_OPTIONS, options_path, true);
-	screen_load_texture_png(TEXTURE_PROPERTIES, properties_path, true);
-	screen_load_texture_png(TEXTURE_DELETE, deletion_path, true);
+	pp2d_load_texture_png(TEXTURE_BACKGROUND, background_path);
+	pp2d_load_texture_png(TEXTURE_DIALOG, dialog_path);
+	pp2d_load_texture_png(TEXTURE_OPTIONS, options_path);
+	pp2d_load_texture_png(TEXTURE_PROPERTIES, properties_path);
+	pp2d_load_texture_png(TEXTURE_SELECTOR, selector_path);
 
-	screen_load_texture_png(TEXTURE_FOLDER_ICON, folder_path, true);
-	screen_load_texture_png(TEXTURE_FILE_ICON, file_path, true);
-	screen_load_texture_png(TEXTURE_APP_ICON, app_path, true);
-	screen_load_texture_png(TEXTURE_AUDIO_ICON, audio_path, true);
-	screen_load_texture_png(TEXTURE_IMG_ICON, img_path, true);
-	screen_load_texture_png(TEXTURE_SYSTEM_ICON, system_path, true);
-	screen_load_texture_png(TEXTURE_TXT_ICON, txt_path, true);
-	screen_load_texture_png(TEXTURE_ZIP_ICON, zip_path, true);
+	pp2d_load_texture_png(TEXTURE_ICON_APP, app_path);
+	pp2d_load_texture_png(TEXTURE_ICON_ARCHIVE, archive_path);
+	pp2d_load_texture_png(TEXTURE_ICON_AUDIO, audio_path);
+	pp2d_load_texture_png(TEXTURE_ICON_FILE, file_path);
+	pp2d_load_texture_png(TEXTURE_ICON_FOLDER, folder_path);
+	pp2d_load_texture_png(TEXTURE_ICON_IMG, img_path);
+	pp2d_load_texture_png(TEXTURE_ICON_SYSTEM, system_path);
+	pp2d_load_texture_png(TEXTURE_ICON_TEXT, text_path);
 
-	screen_load_texture_png(TEXTURE_CHECK_ICON, check_path, true);
-	screen_load_texture_png(TEXTURE_UNCHECK_ICON, uncheck_path, true);
+	pp2d_load_texture_png(TEXTURE_ICON_CHECK, check_path);
+	pp2d_load_texture_png(TEXTURE_ICON_UNCHECK, uncheck_path);
 
-	loadFontColours();
+	Theme_LoadFontColours();
 }

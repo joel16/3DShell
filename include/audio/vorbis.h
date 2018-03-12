@@ -3,7 +3,7 @@
 #include <tremor/ivorbiscodec.h>
 #include <tremor/ivorbisfile.h>
 
-#include "menus/menu_music.h"
+#include "menu_music.h"
 
 void setVorbis(struct decoder_fn * decoder);
 

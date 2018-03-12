@@ -1,18 +1,14 @@
 /* Obtained from ctrmus source with permission. */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#define DR_WAV_IMPLEMENTATION
+#include <dr_libs/dr_wav.h>
 
 #include "fs.h"
-#include "audio/wav.h"
+#include "wav.h"
 
-static const size_t	buffSize = 16 * 1024;
-static Handle pWav;
-static char header[45];
-static u8 channels;
-static u32 bytesRead = 0;
-static u64 offset = 0;
+static const drwav_uint64 buffSize = 16 * 1024;
+static drwav* pWav;
+static drwav_uint64 samplesRead;
 
 /**
  * Set decoder parameters for WAV.
@@ -25,7 +21,7 @@ void setWav(struct decoder_fn * decoder)
 	decoder->rate = &rateWav;
 	decoder->channels = &channelWav;
 	decoder->buffSize = buffSize;
-	decoder->decode = &readWav;
+	decoder->decode = &decodeWav;
 	decoder->exit = &exitWav;
 }
 
@@ -35,49 +31,11 @@ void setWav(struct decoder_fn * decoder)
  * \param	file	Location of WAV file to play.
  * \return			0 on success, else failure.
  */
-int initWav(const char * file)
+int initWav(const char* filename)
 {
-	if (R_FAILED(fsOpen(&pWav, fsArchive, file, FS_OPEN_READ))) 
-		return -1;
-	
-	/* TODO: No need to read the first number of bytes */
-	if (R_FAILED(FSFILE_Read(pWav, &bytesRead, offset, header, 44)))
-		return -1;
-	
-	offset += bytesRead;
+	pWav = drwav_open_file(filename);
 
-	/**
-	 * http://www.topherlee.com/software/pcm-tut-wavformat.html and
-	 * http://soundfile.sapp.org/doc/WaveFormat/ helped a lot.
-	 * format = (header[19]<<8) + (header[20]);
-	 * channels = (header[23]<<8) + (header[22]);
-	 * sample = (header[27]<<24) + (header[26]<<16) + (header[25]<<8) +
-	 *	(header[24]);
-	 * byterate = (header[31]<<24) + (header[30]<<16) + (header[29]<<8) +
-	 *	(header[28]);
-	 * blockalign = (header[33]<<8) + (header[32]);
-	 * bitness = (header[35]<<8) + (header[34]);
-	 */
-
-	/* TODO: This should be moved to get file type */
-	/* Only support 16 bit PCM WAV */
-	if (((header[35]<<8) + (header[34])) != 16)
-		return -1;
-
-	channels = (header[23]<<8) + (header[22]);
-
-	switch(channels)
-	{
-		/* Only Mono and Stereo allowed */
-		case 1:
-		case 2:
-			break;
-
-		default:
-			return -1;
-	}
-
-	return 0;
+	return pWav == NULL ? -1 : 0;
 }
 
 /**
@@ -85,9 +43,9 @@ int initWav(const char * file)
  *
  * \return	Sampling rate.
  */
-uint32_t rateWav(void)
+u32 rateWav(void)
 {
-	return (header[27]<<24) + (header[26]<<16) + (header[25]<<8) + (header[24]);
+	return pWav->sampleRate;
 }
 
 /**
@@ -97,7 +55,7 @@ uint32_t rateWav(void)
  */
 u8 channelWav(void)
 {
-	return channels;
+	return pWav->channels;
 }
 
 /**
@@ -106,12 +64,10 @@ u8 channelWav(void)
  * \param buffer	Output.
  * \return			Samples read for each channel.
  */
-u64 readWav(void * buffer)
-{	
-	FSFILE_Read(pWav, &bytesRead, offset, buffer, buffSize);
-	offset += bytesRead;
-	
-	return bytesRead / sizeof(u16);
+u64 decodeWav(void * buffer)
+{
+	samplesRead = drwav_read_s16(pWav, buffSize, buffer);
+	return samplesRead;
 }
 
 /**
@@ -119,7 +75,23 @@ u64 readWav(void * buffer)
  */
 void exitWav(void)
 {
-	FSFILE_Close(pWav);
-	bytesRead = 0;
-	offset = 0;
+	drwav_close(pWav);
+}
+
+/**
+ * Checks if the input file is Wav
+ *
+ * \param in	Input file.
+ * \return		0 if Wav file, else not or failure.
+ */
+int isWav(const char * in)
+{
+	int err = -1;
+	drwav * testWav = drwav_open_file(in);
+
+	if (testWav != NULL)
+		err = 0;
+
+	drwav_close(testWav);
+	return err;
 }

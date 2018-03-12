@@ -35,9 +35,9 @@ TARGET      := $(subst $e ,_,$(notdir $(APP_TITLE)))
 OUTDIR      := out
 BUILD       := build
 RESOURCES   := resources
-SOURCES     := source source/audio source/file source/graphics source/menus source/minizip source/net 
+SOURCES     := source source/audio source/ftp source/menus source/minizip source/misc source/pp2d
 DATA        := data
-INCLUDES    := include include/audio include/dr_libs include/file include/graphics include/menus include/minizip include/net
+INCLUDES    := include include/audio include/dr_libs include/ftp include/menus include/minizip include/misc include/pp2d
 ROMFS       := romfs
 
 ICON        := $(RESOURCES)/ic_launcher_filemanager.png
@@ -49,12 +49,11 @@ ICON_FLAGS  := nosavebackups,visible
 # CIA
 APP_PRODUCT_CODE    := CTR-3D-SHEL
 APP_UNIQUE_ID       := 0x16200
-RSF_FILE            := resources/cia.rsf
+RSF_FILE            := $(RESOURCES)/cia.rsf
 
 VERSION_MAJOR := 3
 VERSION_MINOR := 0
 VERSION_MICRO := 0
-GITVERSION    := $(shell git log -1 --pretty='%h')
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -62,10 +61,9 @@ GITVERSION    := $(shell git log -1 --pretty='%h')
 ARCH     := -march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
 CFLAGS   := -g -Werror -O2 -mword-relocations \
-		    -fomit-frame-pointer -ffunction-sections \
-		    -DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO) \
-		    -DGITVERSION="\"${GITVERSION}\"" \
-			$(ARCH)
+	        -fomit-frame-pointer -ffunction-sections \
+	        -DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO) \
+            $(ARCH)
 
 CFLAGS   += $(INCLUDE) -DARM11 -D_3DS
 

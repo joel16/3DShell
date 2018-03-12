@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "common.h"
-#include "file/fs.h"
+#include "fs.h"
 #include "utils.h"
 
 const char * configFile =
@@ -12,14 +12,25 @@ const char * configFile =
 	"systemProtection = %d\n"
 	"showHiddenFiles = %d";
 
-Result saveConfig(int sortBy, bool recycleBin, bool protection, bool hidden)
+void Utils_MakeDirectories(void)
+{
+	if (BROWSE_STATE != STATE_NAND)
+	{
+		if (!(FS_DirExists(archive, "/3ds/3DShell/themes/default/")))
+			FS_RecursiveMakeDir(archive, "/3ds/3DShell/themes/default");
+		if (!(FS_DirExists(archive, "/3ds/3DShell/bin/")))
+			FS_RecursiveMakeDir(archive, "/3ds/3DShell/bin");
+	}
+}
+
+Result Utils_SaveConfig(int sortBy, bool recycleBin, bool protection, bool hidden)
 {
 	Result ret = 0;
 	
 	char * buf = (char *)malloc(256);
 	snprintf(buf, 256, configFile, sortBy, recycleBin, protection, hidden);
 	
-	if (R_FAILED(ret = fsWrite(fsArchive, "/3ds/3DShell/config.cfg", buf)))
+	if (R_FAILED(ret = FS_Write(archive, "/3ds/3DShell/config.cfg", buf)))
 	{
 		free(buf);
 		return ret;
@@ -29,29 +40,29 @@ Result saveConfig(int sortBy, bool recycleBin, bool protection, bool hidden)
 	return 0;
 }	
 	
-Result loadConfig(void)
+Result Utils_LoadConfig(void)
 {
 	Handle handle;
 	Result ret = 0;
 	
-	if (!fileExists(fsArchive, "/3ds/3DShell/config.cfg"))
+	if (!FS_FileExists(archive, "/3ds/3DShell/config.cfg"))
 	{
 		// set these to the following by default:
 		sortBy = 1;
 		recycleBin = 0;
 		sysProtection = 1;
 		isHiddenEnabled = 0;		
-		return saveConfig(sortBy, recycleBin, sysProtection, isHiddenEnabled);
+		return Utils_SaveConfig(sortBy, recycleBin, sysProtection, isHiddenEnabled);
 	}
 
 	u64 size64 = 0;
 	u32 size = 0;
 
-	size64 = getFileSize(fsArchive, "/3ds/3DShell/config.cfg");
+	size64 = FS_GetFileSize(archive, "/3ds/3DShell/config.cfg");
 	size = (u32)size64;
 	char * buf = (char *)malloc(size + 1);
 
-	if (R_FAILED(ret = fsRead(fsArchive, "/3ds/3DShell/config.cfg", size, buf)))
+	if (R_FAILED(ret = FS_Read(archive, "/3ds/3DShell/config.cfg", size, buf)))
 	{
 		free(buf);
 		return ret;
@@ -65,14 +76,14 @@ Result loadConfig(void)
 	return 0;
 }
 
-Result getLastDirectory(void)
+Result Utils_GetLastDirectory(void)
 {
 	Handle handle;
 	Result ret = 0;
 	
-	if (!fileExists(fsArchive, "/3ds/3DShell/lastdir.txt"))
+	if (!FS_FileExists(archive, "/3ds/3DShell/lastdir.txt"))
 	{
-		fsWrite(fsArchive, "/3ds/3DShell/lastdir.txt", START_PATH);
+		FS_Write(archive, "/3ds/3DShell/lastdir.txt", START_PATH);
 		strcpy(cwd, START_PATH); // Set Start Path to "sdmc:/" if lastDir.txt hasn't been created.
 	}
 	else
@@ -80,11 +91,11 @@ Result getLastDirectory(void)
 		u64 size64 = 0;
 		u32 size = 0;
 
-		size64 = getFileSize(fsArchive, "/3ds/3DShell/lastdir.txt");
+		size64 = FS_GetFileSize(archive, "/3ds/3DShell/lastdir.txt");
 		size = (u32)size64;
 		char * buf = (char *)malloc(size + 1);
 
-		if (R_FAILED(ret = fsRead(fsArchive, "/3ds/3DShell/lastdir.txt", size, buf)))
+		if (R_FAILED(ret = FS_Read(archive, "/3ds/3DShell/lastdir.txt", size, buf)))
 		{
 			free(buf);
 			return ret;
@@ -95,7 +106,7 @@ Result getLastDirectory(void)
 		char tempPath[256];
 		sscanf(buf, "%[^\n]s", tempPath);
 	
-		if (dirExists(fsArchive, tempPath)) // Incase a directory previously visited had been deleted, set start path to sdmc:/ to avoid errors.
+		if (FS_DirExists(archive, tempPath)) // Incase a directory previously visited had been deleted, set start path to sdmc:/ to avoid errors.
 			strcpy(cwd, tempPath);
 		else
 			strcpy(cwd, START_PATH);
@@ -106,54 +117,13 @@ Result getLastDirectory(void)
 	return 0;
 }
 
-char * basename(const char * filename)
+char * Utils_Basename(const char * filename)
 {
 	char *p = strrchr (filename, '/');
 	return p ? p + 1 : (char *) filename;
 }
 
-void makeDirectories(void)
-{
-	if (BROWSE_STATE != STATE_NAND)
-	{
-		if (!(dirExists(fsArchive, "/3ds/3DShell/themes/default/")))
-			recursiveMakeDir(fsArchive, "/3ds/3DShell/themes/default");
-		if (!(dirExists(fsArchive, "/3ds/3DShell/bin/")))
-			recursiveMakeDir(fsArchive, "/3ds/3DShell/bin");
-	}
-}
-
-u64 getFreeStorage(FS_SystemMediaType mediaType)
-{
-	FS_ArchiveResource	resource = {0};
-
-	if (R_SUCCEEDED(FSUSER_GetArchiveResource(&resource, mediaType)))
-		return (((u64) resource.freeClusters * (u64) resource.clusterSize));
-
-	return 0;
-}
-
-u64 getTotalStorage(FS_SystemMediaType mediaType)
-{
-	FS_ArchiveResource	resource = {0};
-
-	if (R_SUCCEEDED(FSUSER_GetArchiveResource(&resource, mediaType)))
-		return (((u64) resource.totalClusters * (u64) resource.clusterSize));
-
-	return 0;
-}
-
-u64 getUsedStorage(FS_SystemMediaType mediaType)
-{
-	FS_ArchiveResource	resource = {0};
-
-	if (R_SUCCEEDED(FSUSER_GetArchiveResource(&resource, mediaType)))
-		return ((((u64) resource.totalClusters * (u64) resource.clusterSize)) - (((u64) resource.freeClusters * (u64) resource.clusterSize)));
-
-	return 0;
-}
-
-void getSizeString(char * string, uint64_t size) //Thanks TheOfficialFloW
+void Utils_GetSizeString(char * string, uint64_t size) //Thanks TheOfficialFloW
 {
 	double double_size = (double)size;
 
@@ -169,32 +139,7 @@ void getSizeString(char * string, uint64_t size) //Thanks TheOfficialFloW
 	sprintf(string, "%.*f %s", (i == 0) ? 0 : 2, double_size, units[i]);
 }
 
-u16 touchGetX(void)
-{
-	touchPosition pos;
-	hidTouchRead(&pos);
-	
-	return pos.px;
-}
-
-u16 touchGetY(void)
-{
-	touchPosition pos;
-	hidTouchRead(&pos);
-	
-	return pos.py;
-}
-
-const char * getLastNChars(char * str, int n)
-{
-	int len = strlen(str);
-	
-	const char * last_n = &str[len - n];
-	
-	return last_n;
-}
-
-CFG_Region getRegion(void)
+CFG_Region Utils_GetRegion(void)
 {
 	CFG_Region region = 0;
 
@@ -204,7 +149,7 @@ CFG_Region getRegion(void)
 	return 0;
 }
 
-CFG_Language getLanguage(void)
+CFG_Language Utils_GetLanguage(void)
 {
 	CFG_Language language = 0;
 
@@ -214,7 +159,7 @@ CFG_Language getLanguage(void)
 	return 0;
 }
 
-const char * getUsername(void)
+const char * Utils_GetUsername(void)
 {
 	u8 data[0x1C];
 	static wchar_t whcar_username[0x13];
@@ -236,7 +181,7 @@ const char * getUsername(void)
 	return username;
 }
 
-bool isN3DS(void)
+bool Utils_IsN3DS(void)
 {
 	bool isNew3DS = false;
 

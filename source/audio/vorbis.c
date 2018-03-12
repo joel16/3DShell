@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "audio/vorbis.h"
+#include "vorbis.h"
 
 static OggVorbis_File vorbisFile;
 static vorbis_info * vi;

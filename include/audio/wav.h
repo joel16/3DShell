@@ -1,4 +1,4 @@
-#include "menus/menu_music.h"
+#include "menu_music.h"
 
 /**
  * Set decoder parameters for WAV.
@@ -30,14 +30,22 @@ u32 rateWav(void);
 u8 channelWav(void);
 
 /**
- * Read part of open Wav file.
+ * Decode part of open Wav file.
  *
  * \param buffer	Output.
  * \return			Samples read for each channel.
  */
-u64 readWav(void * buffer);
+u64 decodeWav(void * buffer);
 
 /**
  * Free Wav file.
  */
 void exitWav(void);
+
+/**
+ * Checks if the input file is Wav
+ *
+ * \param in	Input file.
+ * \return		0 if Wav file, else not or failure.
+ */
+int isWav(const char * in);

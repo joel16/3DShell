@@ -1,6 +1,6 @@
 /* Obtained from ctrmus source with permission. */
 
-#include "menus/menu_music.h"
+#include "menu_music.h"
 
 /**
  * Set decoder parameters for flac.
