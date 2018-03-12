@@ -3,6 +3,7 @@
 #include "common.h"
 #include "dir_list.h"
 #include "fs.h"
+#include "keyboard.h"
 #include "menu_delete.h"
 #include "menu_file_options.h"
 #include "menu_ftp.h"
@@ -97,19 +98,21 @@ static void Menu_Main_Controls(void)
 		Dirlist_DisplayFiles();
 	}
 
-	if (kDown & KEY_DLEFT)
+	if ((kDown & KEY_TOUCH) && (touchInRect((320 - pp2d_get_texture_width(TEXTURE_SEARCH_ICON)), 0, 320, 20)))
 	{
-		MENU_DEFAULT_STATE--;
+		char *path = (char *)malloc(256);
+		strcpy(path, keyboard_3ds_get(256, "/", "Enter path"));
 
-		if (MENU_DEFAULT_STATE < 0)
-			MENU_DEFAULT_STATE = MENU_STATE_FTP;
-	}
-	else if (kDown & KEY_DRIGHT)
-	{
-		MENU_DEFAULT_STATE++;
+		if (FS_DirExists(archive, path))
+		{
+			strcpy(cwd, path);
+			Dirlist_PopulateFiles(true);
+			Dirlist_DisplayFiles();
+		}
+		else
+			Dirlist_DisplayFiles();
 
-		if (MENU_DEFAULT_STATE > 3)
-			MENU_DEFAULT_STATE = MENU_STATE_HOME;
+		free(path);
 	}
 
 	if ((kDown & KEY_TOUCH) && (touchInRect(0, 0, 22, 20)))
