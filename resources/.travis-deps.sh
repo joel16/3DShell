@@ -3,7 +3,7 @@ set -e
 set -x
 
 # Build and install devkitARM + ctrulib
-wget https://sourceforge.net/projects/devkitpro/files/Automated%20Installer/devkitARMupdate.pl
+wget https://raw.githubusercontent.com/devkitPro/installer/master/perl/devkitARMupdate.pl
 git clone https://github.com/smealum/ctrulib.git
 perl devkitARMupdate.pl
 
