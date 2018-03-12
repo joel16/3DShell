@@ -218,7 +218,8 @@ void Dirlist_DisplayFiles(void)
             (strncasecmp(file->ext, "bcs", 3) == RL_SUCCESS))
             pp2d_draw_texture(TEXTURE_ICON_AUDIO, 30, 58 + (38 * printed));
          else if ((strncasecmp(file->ext, "jpg", 3) == RL_SUCCESS) || (strncasecmp(file->ext, "png", 3) == RL_SUCCESS) || 
-            (strncasecmp(file->ext, "gif", 3) == RL_SUCCESS) || (strncasecmp(file->ext, "bmp", 3) == RL_SUCCESS))
+            (strncasecmp(file->ext, "gif", 3) == RL_SUCCESS) || (strncasecmp(file->ext, "bmp", 3) == RL_SUCCESS) ||
+            (strncasecmp(file->ext, "tga", 3) == RL_SUCCESS))
             pp2d_draw_texture(TEXTURE_ICON_IMG, 30, 58 + (38 * printed));
          else if ((strncasecmp(file->ext, "bin", 3) == RL_SUCCESS) || (strncasecmp(file->ext, "fir", 3) == RL_SUCCESS))
             pp2d_draw_texture(TEXTURE_ICON_SYSTEM, 30, 58 + (38 * printed));
@@ -311,7 +312,8 @@ void Dirlist_OpenFile(void)
       }
    }
    else if ((strncasecmp(file->ext, "png", 3) == RL_SUCCESS) || (strncasecmp(file->ext, "jpg", 3) == RL_SUCCESS) || 
-      (strncasecmp(file->ext, "gif", 3) == RL_SUCCESS) || (strncasecmp(file->ext, "bmp", 3) == RL_SUCCESS))
+      (strncasecmp(file->ext, "gif", 3) == RL_SUCCESS) || (strncasecmp(file->ext, "bmp", 3) == RL_SUCCESS) || 
+      (strncasecmp(file->ext, "tga", 3) == RL_SUCCESS))
       Gallery_DisplayImage(path);
    else if (Music_GetMusicFileType(path) != RL_SUCCESS)
       Music_Player(path);

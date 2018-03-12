@@ -376,20 +376,34 @@ float pp2d_get_texture_height(size_t id);
 void pp2d_free_texture(size_t id);
 
 /**
- * @brief Loads a texture from a jpg/gif file
- * @param id of the texture
- * @param path where the jpg file is located
- */
-void pp2d_load_texture_other(size_t id, const char* path);
-
-/**
  * @brief Loads a texture from a a buffer in memory
  * @param id of the texture 
  * @param buf buffer where the texture is stored
  * @param width of the texture
  * @param height of the texture
  */
-void pp2d_load_texture_memory(size_t id, void* buf, u32 width, u32 height);
+void pp2d_load_texture_memory(size_t id, void* buf, u32 size, u32 width, u32 height, GPU_TEXCOLOR format);
+
+/**
+ * @brief Loads a texture from a BMP file
+ * @param id of the texture
+ * @param path where the BMP file is located
+ */
+void pp2d_load_texture_bmp(size_t id, const char* path);
+
+/**
+ * @brief Loads a texture from a JPEG file
+ * @param id of the texture
+ * @param path where the JPEG file is located
+ */
+void pp2d_load_texture_jpg(size_t id, const char* path);
+
+/**
+ * @brief Loads a texture from a PSD, GIF, HDR, PIC and TGA file
+ * @param id of the texture
+ * @param path where the image file is located
+ */
+void pp2d_load_texture_other(size_t id, const char* path);
 
 /**
  * @brief Loads a texture from a png file
@@ -397,14 +411,6 @@ void pp2d_load_texture_memory(size_t id, void* buf, u32 width, u32 height);
  * @param path where the png file is located 
  */
 void pp2d_load_texture_png(size_t id, const char* path);
-
-/**
- * @brief Loads a texture from a buffer in memory
- * @param id of the texture
- * @param buf buffer where the png is stored
- * @param buf_size size of buffer
- */
-void pp2d_load_texture_png_memory(size_t id, void* buf, size_t buf_size);
 
 /**
  * @brief Enables 3D service

@@ -32,7 +32,10 @@
  */
 
 #include "pp2d.h"
+#include "libnsbmp.h"
+#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#undef STB_IMAGE_IMPLEMENTATION
 
 static DVLB_s* vshader_dvlb;
 static shaderProgram_s program;
@@ -102,7 +105,7 @@ void pp2d_begin_draw(gfxScreen_t target, gfx3dSide_t side)
 
 void pp2d_draw_on(gfxScreen_t target, gfx3dSide_t side)
 {
-	if(target == GFX_TOP) {
+	if (target == GFX_TOP) {
 		C3D_FrameDrawOn(side == GFX_LEFT ? topLeft : topRight);
 		C3D_FVUnifMtx4x4(GPU_VERTEX_SHADER, uLoc_projection, side == GFX_LEFT ? &projectionTopLeft : &projectionTopRight);
 	} else {
@@ -529,22 +532,133 @@ float pp2d_get_texture_height(size_t id)
     return textures[id].height;
 }
 
-void pp2d_load_texture_other(size_t id, const char* path)
+void pp2d_load_texture_memory(size_t id, void* buf, u32 size, u32 width, u32 height, GPU_TEXCOLOR format)
+{
+	u32 w_pow2 = pp2d_get_next_pow2(width);
+	u32 h_pow2 = pp2d_get_next_pow2(height);
+	
+	C3D_TexInit(&textures[id].tex, (u16)w_pow2, (u16)h_pow2, format);
+	C3D_TexSetFilter(&textures[id].tex, textureFilters.magFilter, textureFilters.minFilter);
+
+	u32 pixelSize = size / width / height;
+	
+	textures[id].allocated = true;
+	textures[id].width = width;
+	textures[id].height = height;
+
+	for (u32 x = 0; x < width; x++) 
+	{
+		for (u32 y = 0; y < height; y++) 
+		{
+			u32 dstPos = ((((y >> 3) * (w_pow2 >> 3) + (x >> 3)) << 6) + ((x & 1) | ((y & 1) << 1) | ((x & 2) << 1) | ((y & 2) << 2) | ((x & 4) << 2) | ((y & 4) << 3))) * pixelSize;
+			u32 srcPos = (y * width + x) * pixelSize;
+
+			memcpy(&((u8*) textures[id].tex.data)[dstPos], &((u8*) buf)[srcPos], pixelSize);
+		}
+	}
+
+	C3D_TexFlush(&textures[id].tex);	
+}
+
+static void *pp2d_create_bitmap(int width, int height, unsigned int state)
+{
+	(void) state;  /* unused */
+	return calloc(width * height, 4);
+}
+
+static unsigned char *pp2d_get_bitmap_buf(void *bitmap)
+{
+	return (unsigned char *)bitmap;
+}
+
+static size_t pp2d_get_bitmap_bpp(void *bitmap)
+{
+	(void) bitmap;  /* unused */
+	return 4;
+}
+
+void pp2d_free_bitmap(void *bitmap)
+{
+	free(bitmap);
+}
+
+static void *pp2d_bitmap_to_buf(const char *path, u32 *size)
+{
+	FILE *fd = fopen(path, "rb");
+	
+	if (fd == NULL)
+		return NULL;
+	
+	u8 *buffer;
+	long lSize;
+	fseek(fd, 0, SEEK_END);
+	lSize = ftell(fd);
+	rewind(fd);
+
+	buffer = (u8 *)malloc(lSize);
+	
+	if (size)
+		*size = lSize;
+	
+	if (!buffer)
+	{
+		fclose(fd);
+		return NULL;
+	}
+		
+	fread(buffer, 1, lSize, fd);
+	fclose(fd);
+	return buffer;
+}
+
+void pp2d_load_texture_bmp(size_t id, const char* path)
 {
 	if (id >= MAX_TEXTURES)
 		return;
 
-	int width = 0, height = 0, depth = 0;
-	u8* image = stbi_load(path, &width, &height, &depth, STBI_rgb_alpha);
+	u32 size;
+	u8 * buf = (u8 *)pp2d_bitmap_to_buf(path, &size);
 
-	if (image == NULL)
-		return;
-	
-	for (u32 x = 0; x < width; x++) 
+	bmp_bitmap_callback_vt bitmap_callbacks = 
 	{
-		for(u32 y = 0; y < height; y++) 
+		pp2d_create_bitmap,
+		pp2d_free_bitmap,
+		pp2d_get_bitmap_buf,
+		pp2d_get_bitmap_bpp
+	};
+	
+	bmp_result code;
+	bmp_image bmp;
+
+	/* create our bmp image */
+	bmp_create(&bmp, &bitmap_callbacks);
+
+	/* analyse the BMP */
+	code = bmp_analyse(&bmp, size, buf);
+	
+	if (code != BMP_OK) 
+	{
+		bmp_finalise(&bmp);
+		return;
+	}
+
+	/* decode the image */
+	code = bmp_decode(&bmp);
+	
+	if (code != BMP_OK) 
+	{
+		bmp_finalise(&bmp);
+		return;
+	}
+
+	u8 * image;
+	image = (u8 *)bmp.bitmap;
+	
+	for (u32 x = 0; x < bmp.width; x++) 
+	{
+		for (u32 y = 0; y < bmp.height; y++) 
 		{
-			u32 pos = (y * width + x) * 4;
+			u32 pos = (y * bmp.width + x) * 4;
 
 			u8 c1 = image[pos + 0];
 			u8 c2 = image[pos + 1];
@@ -558,35 +672,74 @@ void pp2d_load_texture_other(size_t id, const char* path)
 		}
 	}
 	
-	pp2d_load_texture_memory(id, image, width, height);
-	free(image);
+	pp2d_load_texture_memory(id, image, (bmp.width * bmp.height * 4), bmp.width, bmp.height, GPU_RGBA8);
+	
+	bmp_finalise(&bmp);
+	free(buf);
 }
 
-void pp2d_load_texture_memory(size_t id, void* buf, u32 width, u32 height)
+void pp2d_load_texture_other(size_t id, const char* path)
 {
-	u32 w_pow2 = pp2d_get_next_pow2(width);
-	u32 h_pow2 = pp2d_get_next_pow2(height);
-	
-	C3D_TexInit(&textures[id].tex, (u16)w_pow2, (u16)h_pow2, GPU_RGBA8);
-	C3D_TexSetFilter(&textures[id].tex, textureFilters.magFilter, textureFilters.minFilter);
-	
-	textures[id].allocated = true;
-	textures[id].width = width;
-	textures[id].height = height;
+	if (id >= MAX_TEXTURES)
+		return;
 
-	memset(textures[id].tex.data, 0, textures[id].tex.size);
-	for (u32 i = 0; i < width; i++) 
+	int width = 0, height = 0, channel = 0;
+	stbi_uc *image = stbi_load(path, &width, &height, &channel, STBI_rgb_alpha);
+
+	if ((image == NULL) || (channel != STBI_rgb_alpha))
+		return;
+	
+	for (u32 x = 0; x < width; x++) 
 	{
-		for (u32 j = 0; j < height; j++) 
+		for (u32 y = 0; y < height; y++) 
 		{
-			u32 dst = ((((j >> 3) * (w_pow2 >> 3) + (i >> 3)) << 6) + ((i & 1) | ((j & 1) << 1) | ((i & 2) << 1) | ((j & 2) << 2) | ((i & 4) << 2) | ((j & 4) << 3))) * 4;
-			u32 src = (j * width + i) * 4;
+			u32 pos = (y * width + x) * channel;
 
-			memcpy(textures[id].tex.data + dst, buf + src, 4);
+			u8 c1 = image[pos + 0];
+			u8 c2 = image[pos + 1];
+			u8 c3 = image[pos + 2];
+			u8 c4 = image[pos + 3];
+
+			image[pos + 0] = c4;
+			image[pos + 1] = c3;
+			image[pos + 2] = c2;
+			image[pos + 3] = c1;
 		}
 	}
+	
+	pp2d_load_texture_memory(id, image, (u32)(width * height * channel), (u32)width, (u32)height, GPU_RGBA8);
+	stbi_image_free(image);
+}
 
-	C3D_TexFlush(&textures[id].tex);	
+void pp2d_load_texture_jpg(size_t id, const char* path)
+{
+	if (id >= MAX_TEXTURES)
+		return;
+
+	int width = 0, height = 0, channel = 0;
+	stbi_uc *image = stbi_load(path, &width, &height, &channel, STBI_rgb);
+
+	if ((image == NULL) || (channel != STBI_rgb))
+		return;
+	
+	for (u32 x = 0; x < width; x++) 
+	{
+		for (u32 y = 0; y < height; y++) 
+		{
+			u32 pos = (y * width + x) * channel;
+
+			u8 c1 = image[pos + 0];
+			u8 c2 = image[pos + 1];
+			u8 c3 = image[pos + 2];
+
+			image[pos + 0] = c3;
+			image[pos + 1] = c2;
+			image[pos + 2] = c1;
+		}
+	}
+	
+	pp2d_load_texture_memory(id, image, (u32)(width * height * channel), (u32)width, (u32)height, GPU_RGB8);
+	stbi_image_free(image);
 }
 
 void pp2d_load_texture_png(size_t id, const char* path)
@@ -594,10 +747,11 @@ void pp2d_load_texture_png(size_t id, const char* path)
 	if (id >= MAX_TEXTURES)
 		return;
 	
-	u8* image;
-	unsigned width, height;
+	unsigned char *image;
+	unsigned width = 0, height = 0;
 
 	lodepng_decode32_file(&image, &width, &height, path);
+
 	for (u32 i = 0; i < width; i++) 
 	{
 		for (u32 j = 0; j < height; j++) 
@@ -616,40 +770,7 @@ void pp2d_load_texture_png(size_t id, const char* path)
 		}
 	}
 	
-	pp2d_load_texture_memory(id, image, width, height);
-	free(image);
-}
-
-void pp2d_load_texture_png_memory(size_t id, void* buf, size_t buf_size)
-{
-	if (id >= MAX_TEXTURES)
-		return;
-
-	u8* image;
-	unsigned width;
-	unsigned height;
-
-	lodepng_decode32(&image, &width, &height, buf, buf_size);
-
-	for (u32 i = 0; i < width; i++)
-	{
-		for (u32 j = 0; j < height; j++)
-		{
-			u32 p = (i + j*width) * 4;
-
-			u8 r = *(u8*)(image + p);
-			u8 g = *(u8*)(image + p + 1);
-			u8 b = *(u8*)(image + p + 2);
-			u8 a = *(u8*)(image + p + 3);
-
-			*(image + p) = a;
-			*(image + p + 1) = b;
-			*(image + p + 2) = g;
-			*(image + p + 3) = r;
-		}
-	}
-
-	pp2d_load_texture_memory(id, image, width, height);
+	pp2d_load_texture_memory(id, image, (u32)(width * height * 4), (u32)width, (u32)height, GPU_RGBA8);
 	free(image);
 }
 
