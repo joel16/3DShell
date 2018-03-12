@@ -23,6 +23,6 @@ Result Dirlist_PopulateFiles(bool clear);
 void Dirlist_DisplayFiles(void);
 File * Dirlist_GetFileIndex(int index);
 void Dirlist_OpenFile(void);
-int Dirlist_Navigate(bool folder);
+int Dirlist_Navigate(int dir);
 
 #endif

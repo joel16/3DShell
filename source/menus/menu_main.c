@@ -235,7 +235,7 @@ static void Menu_Main_Controls(void)
 			if (MENU_DEFAULT_STATE != MENU_STATE_THEMES)
 			{
 				wait(1);
-				Dirlist_Navigate(false);
+				Dirlist_Navigate(-1);
 				Dirlist_PopulateFiles(true);
 				Dirlist_DisplayFiles();
 			}	

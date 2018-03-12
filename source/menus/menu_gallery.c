@@ -64,8 +64,8 @@ void Gallery_DisplayImage(char * path)
 
 			if (osGetTime() - start >= (2000))
 			{
-				nameY -= 2;
-				galleryBarY -= 2;
+				nameY -= 3;
+				galleryBarY -= 3;
 			}
 
 			if (galleryBarY == -35)

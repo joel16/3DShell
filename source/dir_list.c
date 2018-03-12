@@ -302,7 +302,7 @@ void Dirlist_OpenFile(void)
    if (file->isDir)
    {
       // Attempt to navigate to target
-      if (R_SUCCEEDED(Dirlist_Navigate(true)))
+      if (R_SUCCEEDED(Dirlist_Navigate(0)))
       {
          if (BROWSE_STATE != STATE_NAND)
             Dirlist_SaveLastDirectory();
@@ -330,15 +330,37 @@ void Dirlist_OpenFile(void)
 }
 
 // Navigate to Folder
-int Dirlist_Navigate(bool folder)
+int Dirlist_Navigate(int dir)
 {
    File * file = Dirlist_GetFileIndex(position); // Get index
 
    if ((file == NULL) || (!file->isDir)) // Not a folder
       return -1;
 
+   // Special case ".."
+   if ((dir == -1) || (strncmp(file->name, "..", 2) == 0))
+   {
+      char * slash = NULL;
+
+      // Find last '/' in working directory
+      int i = strlen(cwd) - 2; for(; i >= 0; i--)
+      {
+         // Slash discovered
+         if (cwd[i] == '/')
+         {
+            slash = cwd + i + 1; // Save pointer
+            break; // Stop search
+         }
+      }
+
+      slash[0] = 0; // Terminate working directory
+
+      if (BROWSE_STATE != STATE_NAND)
+         Dirlist_SaveLastDirectory();
+   }
+
    // Normal folder
-   if (folder)
+   else
    {
       // Append folder to working directory
       strcpy(cwd + strlen(cwd), file->name);
@@ -347,30 +369,6 @@ int Dirlist_Navigate(bool folder)
 
       if (BROWSE_STATE != STATE_NAND)
          Dirlist_SaveLastDirectory();
-   }
-
-   else
-   {
-      // Special case ".."
-      if (strncmp(file->name, "..", 2) == RL_SUCCESS)
-      {
-         char * slash = NULL;
-         // Find last '/' in working directory
-         int i = strlen(cwd) - 2; for(; i >= 0; i--)
-         {
-            // Slash discovered
-            if (cwd[i] == '/')
-            {
-               slash = cwd + i + 1; // Save pointer
-               break; // Stop search
-            }
-         }
-
-         slash[0] = 0; // Terminate working directory
-
-         if (BROWSE_STATE != STATE_NAND)
-            Dirlist_SaveLastDirectory();
-      }
    }
 
    return 0; // Return success
