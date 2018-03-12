@@ -67,6 +67,36 @@ static void Menu_Main_Controls(void)
 	if (((kHeld & KEY_L) && (kDown & KEY_R)) || ((kHeld & KEY_R) && (kDown & KEY_L)))
 		Screenshot_Capture();
 
+	if ((kDown & KEY_TOUCH) && (touchInRect((320 - pp2d_get_texture_width(TEXTURE_SD_ICON)) - 55, 0, 
+		((320 - pp2d_get_texture_width(TEXTURE_SD_ICON)) - 55) + 20, 20))) // SD
+	{
+		wait(1);
+		FS_Write(archive, "/3ds/3DShell/lastdir.txt", START_PATH);
+		strcpy(cwd, START_PATH);
+			
+		BROWSE_STATE = STATE_SD;
+			
+		FS_CloseArchive(archive);
+		FS_OpenArchive(&archive, ARCHIVE_SDMC);
+
+		Dirlist_PopulateFiles(true);
+		Dirlist_DisplayFiles();
+	}
+	else if ((kDown & KEY_TOUCH) && (touchInRect((320 - pp2d_get_texture_width(TEXTURE_NAND_ICON)) - 30, 0, 
+		((320 - pp2d_get_texture_width(TEXTURE_NAND_ICON)) - 30) + 20, 20))) // CTR NAND
+	{
+		wait(1);
+		strcpy(cwd, START_PATH);
+
+		BROWSE_STATE = STATE_NAND;
+
+		FS_CloseArchive(archive);
+		FS_OpenArchive(&archive, ARCHIVE_NAND_CTR_FS);
+
+		Dirlist_PopulateFiles(true);
+		Dirlist_DisplayFiles();
+	}
+
 	if (kDown & KEY_DLEFT)
 	{
 		MENU_DEFAULT_STATE--;
