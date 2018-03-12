@@ -282,7 +282,7 @@ void Music_Player(char * path)
 
 			if (isMP3) // Only print out ID3 tag info for MP3
 			{	
-				pp2d_draw_textf(5, 20, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s %lf", fileName);
+				pp2d_draw_textf(5, 20, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s", fileName);
 				pp2d_draw_textf(5, 36, 0.45f, 0.45f, RGBA8(255, 255, 255, 255), "%s", ID3.artist);
 		
 				pp2d_draw_textf(184, 64, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.title);
