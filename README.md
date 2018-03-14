@@ -39,11 +39,11 @@ Building from source:
 Then use the unofficial (fork) of portlibs [here](https://github.com/deltabeard/3ds_portlibs) to install libmpg123.
 
 To compile mpg123, just run `make mpg123` in the 3ds_portlibs folder. This will compile all that is required of mpg123. Installing the library has to be done manually though, and can be done by running the following commands:
-* cp mpg123-1.xx.x/src/libmpg123/.libs/libmpg123.a /opt/devkitpro/portlibs/armv6k/lib/
-* cp mpg123-1.xx.x/src/libmpg123/libmpg123.la /opt/devkitpro/portlibs/armv6k/lib/
-* cp mpg123-1.xx.x/libmpg123.pc /opt/devkitpro/portlibs/armv6k/lib/pkgconfig/
-* cp mpg123-1.xx.x/src/libmpg123/mpg123.h /opt/devkitpro/portlibs/armv6k/include/
-* cp mpg123-1.xx.x/src/libmpg123/fmt123.h /opt/devkitpro/portlibs/armv6k/include/
+* cp mpg123-*/src/libmpg123/.libs/libmpg123.a /opt/devkitpro/portlibs/armv6k/lib/
+* cp mpg123-*/src/libmpg123/libmpg123.la /opt/devkitpro/portlibs/armv6k/lib/
+* cp mpg123-*/libmpg123.pc /opt/devkitpro/portlibs/armv6k/lib/pkgconfig/
+* cp mpg123-*/src/libmpg123/mpg123.h /opt/devkitpro/portlibs/armv6k/include/
+* cp mpg123-*/src/libmpg123/fmt123.h /opt/devkitpro/portlibs/armv6k/include/
 
 3. Clone the repo:
 ```bash
