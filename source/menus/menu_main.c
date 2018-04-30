@@ -264,6 +264,16 @@ static void Menu_Main_Controls(void)
 			}
 		}
 
+		else if (kDown & KEY_Y)
+		{
+			snprintf(multi_select_dir, 255, cwd);
+			
+			if (!multi_select[position])
+				multi_select[position] = true;
+			else
+				multi_select[position] = false;
+		}
+
 		else if ((strcmp(cwd, ROOT_PATH) != 0) && (kDown & KEY_B))
 		{
 			if (MENU_DEFAULT_STATE != MENU_STATE_THEMES)
@@ -280,6 +290,8 @@ static void Menu_Main_Controls(void)
 void Menu_Main(void)
 {
 	Dirlist_PopulateFiles(true);
+
+	memset(multi_select, 0, sizeof(multi_select)); // Reset all multi selected items
 
 	while (aptMainLoop())
 	{

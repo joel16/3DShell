@@ -203,11 +203,14 @@ void Dirlist_DisplayFiles(void)
          if (i == position)
             pp2d_draw_texture(TEXTURE_SELECTOR, 0, 53 + (38 * printed)); // Draw selector
 
+         if (strcmp(multi_select_dir, cwd) == 0)
+            multi_select[i] == true? pp2d_draw_texture(TEXTURE_ICON_CHECK, 8, 66 + (38 * printed)) : pp2d_draw_texture(TEXTURE_ICON_UNCHECK, 8, 66 + (38 * printed));
+         else
+            pp2d_draw_texture(TEXTURE_ICON_UNCHECK, 8, 66 + (38 * printed));
+         
          char path[500];
          strcpy(path, cwd);
          strcpy(path + strlen(path), file->name);
-
-         pp2d_draw_texture(TEXTURE_ICON_UNCHECK, 8, 66 + (38 * printed));
 
          if (file->isDir)
             pp2d_draw_texture(TEXTURE_ICON_FOLDER, 30, 58 + (38 * printed));
