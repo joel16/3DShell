@@ -132,7 +132,7 @@ const char lang_deletion[][5][100] =
 const char lang_settings[][9][100] =
 {
 	{"一般的", "システムファイル防御", "大切なファイルの削除を防止します", "カスタムテーマ", "現在のテーマ:", "Recycle Bin", "Enable 3D-Shell's recyle bin."},
-	{"General", "System file protection", "Prevents deletion of system files.", "Custom themes", "Current:", "Recycle Bin", "Enable 3D-Shell's recyle bin.", "Show hidden files", "Displays hidden files in file browser."},
+	{"General", "Display filename in Gallery", "Toggles filename display in Gallery.", "Custom themes", "Current:", "Recycle Bin", "Enable 3D-Shell's recyle bin.", "Show hidden files", "Displays hidden files in file browser."},
 	{"Général", "Protection de fichier système", "Empêche la supprimation des fichiers systèmes.", "Thèmes personnalisés", "Actuel:", "Recycle Bin", "Enable 3D-Shell's recyle bin."},
 	{"Allgemein", "Systemdateien-Schutz", "Verhindert das Löschen von Systemdateien.", "Eigene Themen", "Aktuell:", "Recycle Bin", "Enable 3D-Shell's recyle bin."},
 	{"Generale", "Protezione file di sistema", "Previene l'eliminazione di file di sistema.", "Temi custom", "Attuale:", "Recycle Bin", "Enable 3D-Shell's recyle bin."},

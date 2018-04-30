@@ -47,7 +47,7 @@ void Menu_ControlSort(u32 input)
 	{
 		wait(1);
 		sortBy = 0;
-		Utils_SaveConfig(sortBy, recycleBin, sysProtection, isHiddenEnabled);
+		Utils_SaveConfig(sortBy, recycleBin, galleryDisplay, isHiddenEnabled);
 		Dirlist_PopulateFiles(true);
 		Dirlist_DisplayFiles();
 	}
@@ -56,7 +56,7 @@ void Menu_ControlSort(u32 input)
 	{
 		wait(1);
 		sortBy = 1;
-		Utils_SaveConfig(sortBy, recycleBin, sysProtection, isHiddenEnabled);
+		Utils_SaveConfig(sortBy, recycleBin, galleryDisplay, isHiddenEnabled);
 		Dirlist_PopulateFiles(true);
 		Dirlist_DisplayFiles();
 	}
@@ -65,7 +65,7 @@ void Menu_ControlSort(u32 input)
 	{
 		wait(1);
 		sortBy = 2;
-		Utils_SaveConfig(sortBy, recycleBin, sysProtection, isHiddenEnabled);
+		Utils_SaveConfig(sortBy, recycleBin, galleryDisplay, isHiddenEnabled);
 		Dirlist_PopulateFiles(true);
 		Dirlist_DisplayFiles();
 	}
@@ -74,7 +74,7 @@ void Menu_ControlSort(u32 input)
 	{
 		wait(1);
 		sortBy = 3;
-		Utils_SaveConfig(sortBy, recycleBin, sysProtection, isHiddenEnabled);
+		Utils_SaveConfig(sortBy, recycleBin, galleryDisplay, isHiddenEnabled);
 		Dirlist_PopulateFiles(true);
 		Dirlist_DisplayFiles();
 	}
@@ -83,7 +83,7 @@ void Menu_ControlSort(u32 input)
 	{
 		wait(1);
 		sortBy = 4;
-		Utils_SaveConfig(sortBy, recycleBin, sysProtection, isHiddenEnabled);
+		Utils_SaveConfig(sortBy, recycleBin, galleryDisplay, isHiddenEnabled);
 		Dirlist_PopulateFiles(true);
 		Dirlist_DisplayFiles();
 	}

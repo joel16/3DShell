@@ -39,7 +39,7 @@ void Menu_DisplaySettings(void)
 	else
 		pp2d_draw_texture(TEXTURE_TOGGLE_OFF, 280, 90);
 
-	if (sysProtection)
+	if (galleryDisplay)
 		pp2d_draw_texture(TEXTURE_TOGGLE_ON, 280, 125);
 	else
 		pp2d_draw_texture(TEXTURE_TOGGLE_OFF, 280, 125);
@@ -66,27 +66,27 @@ void Menu_ControlSettings(u32 input)
 		if (recycleBin == false)
 		{
 			recycleBin = true;
-			Utils_SaveConfig(sortBy, recycleBin, sysProtection, isHiddenEnabled);
+			Utils_SaveConfig(sortBy, recycleBin, galleryDisplay, isHiddenEnabled);
 		}
 		else
 		{
 			recycleBin = false;
-			Utils_SaveConfig(sortBy, recycleBin, sysProtection, isHiddenEnabled);
+			Utils_SaveConfig(sortBy, recycleBin, galleryDisplay, isHiddenEnabled);
 		}
 	}
 
 	else if ((input & KEY_TOUCH) && (touchInRect(280, 125, 320, 145)))
 	{
 		wait(1);
-		if (sysProtection == false)
+		if (galleryDisplay == false)
 		{
-			sysProtection = true;
-			Utils_SaveConfig(sortBy, recycleBin, sysProtection, isHiddenEnabled);
+			galleryDisplay = true;
+			Utils_SaveConfig(sortBy, recycleBin, galleryDisplay, isHiddenEnabled);
 		}
 		else
 		{
-			sysProtection = false;
-			Utils_SaveConfig(sortBy, recycleBin, sysProtection, isHiddenEnabled);
+			galleryDisplay = false;
+			Utils_SaveConfig(sortBy, recycleBin, galleryDisplay, isHiddenEnabled);
 		}
 	}
 
@@ -105,12 +105,12 @@ void Menu_ControlSettings(u32 input)
 		if (isHiddenEnabled == false)
 		{
 			isHiddenEnabled = true;
-			Utils_SaveConfig(sortBy, recycleBin, sysProtection, isHiddenEnabled);
+			Utils_SaveConfig(sortBy, recycleBin, galleryDisplay, isHiddenEnabled);
 		}
 		else
 		{
 			isHiddenEnabled = false;
-			Utils_SaveConfig(sortBy, recycleBin, sysProtection, isHiddenEnabled);
+			Utils_SaveConfig(sortBy, recycleBin, galleryDisplay, isHiddenEnabled);
 		}
 		Dirlist_PopulateFiles(true);
 		Dirlist_DisplayFiles();

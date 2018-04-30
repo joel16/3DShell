@@ -50,9 +50,9 @@ Result Utils_LoadConfig(void)
 		// set these to the following by default:
 		sortBy = 1;
 		recycleBin = 0;
-		sysProtection = 1;
+		galleryDisplay = 1;
 		isHiddenEnabled = 0;		
-		return Utils_SaveConfig(sortBy, recycleBin, sysProtection, isHiddenEnabled);
+		return Utils_SaveConfig(sortBy, recycleBin, galleryDisplay, isHiddenEnabled);
 	}
 
 	u64 size64 = 0;
@@ -70,7 +70,7 @@ Result Utils_LoadConfig(void)
 
 	buf[size] = '\0';
 	
-	sscanf(buf, configFile, &sortBy, &recycleBin, &sysProtection, &isHiddenEnabled);
+	sscanf(buf, configFile, &sortBy, &recycleBin, &galleryDisplay, &isHiddenEnabled);
 	
 	free(buf);
 	return 0;

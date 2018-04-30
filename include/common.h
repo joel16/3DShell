@@ -29,7 +29,7 @@ int BROWSE_STATE;
 char cwd[512];
 char fileName[255];
 
-bool recycleBin, sysProtection, isHiddenEnabled;
+bool recycleBin, galleryDisplay, isHiddenEnabled;
 int sortBy;
 
 #endif

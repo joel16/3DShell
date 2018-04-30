@@ -102,25 +102,28 @@ void Gallery_DisplayImage(char * path)
 					break;
 			}
 
-			if (osGetTime() - start >= (1500))
+			if (galleryDisplay)
 			{
-				nameY -= 4;
-				galleryBarY -= 4;
-			}
+				if (osGetTime() - start >= (1500))
+				{
+					nameY -= 4;
+					galleryBarY -= 4;
+				}
 
-			if (galleryBarY == -35)
-				galleryBarY = GALLERY_BAR_Y_BOUNDARY;
-			if (nameY == -11)
-				nameY = GALLERY_NAME_Y_BOUNDARY;
+				if (galleryBarY == -35)
+					galleryBarY = GALLERY_BAR_Y_BOUNDARY;
+				if (nameY == -11)
+					nameY = GALLERY_NAME_Y_BOUNDARY;
 
-			pp2d_draw_texture(TEXTURE_GALLERY_BAR, 0, galleryBarY);
-			pp2d_draw_textf(30, nameY, 0.45f, 0.45f, RGBA8(255, 255, 255, 255), "%.60s", fileName);
+				pp2d_draw_texture(TEXTURE_GALLERY_BAR, 0, galleryBarY);
+				pp2d_draw_textf(30, nameY, 0.45f, 0.45f, RGBA8(255, 255, 255, 255), "%.60s", fileName);
 
-			if (kDown & KEY_TOUCH)
-			{
-				galleryBarY = 0;
-				nameY = 11;
-				start = osGetTime();
+				if (kDown & KEY_TOUCH)
+				{
+					galleryBarY = 0;
+					nameY = 11;
+					start = osGetTime();
+				}
 			}
 
 		pp2d_end_draw();

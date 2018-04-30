@@ -18,6 +18,8 @@ extern File * files;
 
 extern int position;
 extern int fileCount;
+bool multi_select[255];
+char multi_select_dir[255];
 
 Result Dirlist_PopulateFiles(bool clear);
 void Dirlist_DisplayFiles(void);
