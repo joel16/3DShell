@@ -11,8 +11,6 @@ before_install:
   - cd include/dr_libs/
   - git clone https://github.com/mackron/dr_libs.git
   - cd ../..
-  - export CC=arm-none-eabi-gcc
-  - export CXX=arm-none-eabi-g++
   - export DEVKITPRO=/opt/devkitpro
   - export DEVKITARM=/opt/devkitpro/devkitARM
   - export CTRULIB=${DEVKITPRO}/libctru
