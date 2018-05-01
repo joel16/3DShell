@@ -34,6 +34,9 @@ cp picasso ${DEVKITPRO}/devkitARM/bin/picasso
 cd ../
 rm -rf picasso
 
+export CC=arm-none-eabi-gcc
+export CXX=arm-none-eabi-g++
+
 # Build and install bannertool
 git clone --recursive https://github.com/Steveice10/bannertool.git
 cd bannertool
@@ -49,9 +52,6 @@ make clean && make
 cp makerom ${DEVKITPRO}/devkitARM/bin/makerom
 cd ../..
 rm -rf Project_CTR
-
-export CC=arm-none-eabi-gcc
-export CXX=arm-none-eabi-g++
 
 # Build and install portlibs
 mkdir ${DEVKITPRO}/portlibs && mkdir ${PORTLIBS}/
