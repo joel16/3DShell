@@ -25,17 +25,14 @@ cd ../
 rm -rf citro3d
 
 # Install latest version of picasso
-git clone https://github.com/fincs/picasso.git
-cd picasso
-./autogen.sh
-./configure
-make
-cp picasso ${DEVKITPRO}/devkitARM/bin/picasso
-cd ../
-rm -rf picasso
-
-export CC=arm-none-eabi-gcc
-export CXX=arm-none-eabi-g++
+#git clone https://github.com/fincs/picasso.git
+#cd picasso
+#./autogen.sh
+#./configure
+#make
+#cp picasso ${DEVKITPRO}/devkitARM/bin/picasso
+#cd ../
+#rm -rf picasso
 
 # Build and install bannertool
 git clone --recursive https://github.com/Steveice10/bannertool.git
