@@ -3,37 +3,42 @@ set -e
 set -x
 
 # Build and install devkitARM + ctrulib
-wget https://raw.githubusercontent.com/devkitPro/installer/master/perl/devkitARMupdate.pl
-git clone https://github.com/smealum/ctrulib.git
-perl devkitARMupdate.pl
+mkdir -p $DEVKITPRO
+cd $DEVKITPRO
+wget -N https://raw.githubusercontent.com/devkitPro/installer/master/perl/devkitARMupdate.pl
+chmod +x ./devkitARMupdate.pl
+./devkitARMupdate.pl
 
 # Get latest ctrulib and overwrite bundled one
-cd ctrulib/libctru && make ; cd -
+git clone https://github.com/smealum/ctrulib.git
+cd ctrulib/libctru
+make && make install
+cd ../../
 cp -rf ctrulib/libctru/ ${DEVKITPRO}
 rm -rf ctrulib
 
 # Get latest version of Citro3D
 git clone --recursive https://github.com/fincs/citro3d.git
 cd citro3d
-make install
+make && make install
 cd ../
 rm -rf citro3d
 
 # Install latest version of picasso
-#git clone https://github.com/fincs/picasso.git
-#cd picasso
-#./autogen.sh
-#./configure
-#make
-#sudo cp picasso ${DEVKITPRO}/devkitARM/bin/picasso
-#cd ../
-#rm -rf picasso
+git clone https://github.com/fincs/picasso.git
+cd picasso
+./autogen.sh
+./configure
+make
+cp picasso ${DEVKITPRO}/devkitARM/bin/picasso
+cd ../
+rm -rf picasso
 
 # Build and install bannertool
 git clone --recursive https://github.com/Steveice10/bannertool.git
 cd bannertool
-make clean && make
-sudo cp output/linux-x86_64/bannertool ${DEVKITPRO}/devkitARM/bin/bannertool
+make
+cp output/linux-x86_64/bannertool ${DEVKITPRO}/devkitARM/bin/bannertool
 cd ..
 rm -rf bannertool
 
@@ -41,9 +46,12 @@ rm -rf bannertool
 git clone https://github.com/profi200/Project_CTR.git
 cd Project_CTR/makerom
 make clean && make
-sudo cp makerom ${DEVKITPRO}/devkitARM/bin/makerom
+cp makerom ${DEVKITPRO}/devkitARM/bin/makerom
 cd ../..
 rm -rf Project_CTR
+
+export CC=arm-none-eabi-gcc
+export CXX=arm-none-eabi-g++
 
 # Build and install portlibs
 mkdir ${DEVKITPRO}/portlibs && mkdir ${PORTLIBS}/
