@@ -38,17 +38,16 @@ export CC=arm-none-eabi-gcc
 export CXX=arm-none-eabi-g++
 
 # Build and install bannertool
-mkdir bannertool && cd bannertool
-wget https://github.com/Steveice10/bannertool/releases/download/1.1.0/bannertool.zip
-unzip bannertool.zip
-cp linux-x86_64/bannertool ${DEVKITPRO}/devkitARM/bin/bannertool
-cd ..
-rm -rf bannertool
+git clone --recursive https://github.com/Steveice10/bannertool
+cd bannertool/
+make && make install
+cd ../
+rm -rf bannertool/
 
 # Build and install makerom
 git clone https://github.com/profi200/Project_CTR.git
 cd Project_CTR/makerom
-make clean && make
+make
 cp makerom ${DEVKITPRO}/devkitARM/bin/makerom
 cd ../..
 rm -rf Project_CTR
