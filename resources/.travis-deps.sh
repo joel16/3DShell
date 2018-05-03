@@ -41,9 +41,6 @@ export CXX=arm-none-eabi-g++
 mkdir bannertool && cd bannertool
 wget https://github.com/Steveice10/bannertool/releases/download/1.1.0/bannertool.zip
 unzip bannertool.zip
-git clone --recursive https://github.com/Steveice10/bannertool.git
-cd bannertool
-make
 cp linux-x86_64/bannertool ${DEVKITPRO}/devkitARM/bin/bannertool
 cd ..
 rm -rf bannertool
