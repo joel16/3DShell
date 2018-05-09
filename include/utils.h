@@ -4,7 +4,7 @@
 #include <3ds.h>
 
 void Utils_MakeDirectories(void);
-Result Utils_SaveConfig(int sortBy, bool recycleBin, bool protection, bool hidden);
+Result Utils_SaveConfig(int sortBy, bool recycleBin, bool galleryDisplay, bool hidden);
 Result Utils_LoadConfig(void);
 Result Utils_GetLastDirectory(void);
 char * Utils_Basename(const char * filename);

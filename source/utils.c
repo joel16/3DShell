@@ -23,12 +23,12 @@ void Utils_MakeDirectories(void)
 	}
 }
 
-Result Utils_SaveConfig(int sortBy, bool recycleBin, bool protection, bool hidden)
+Result Utils_SaveConfig(int sortBy, bool recycleBin, bool galleryDisplay, bool hidden)
 {
 	Result ret = 0;
 	
 	char * buf = (char *)malloc(256);
-	snprintf(buf, 256, configFile, sortBy, recycleBin, protection, hidden);
+	snprintf(buf, 256, configFile, sortBy, recycleBin, galleryDisplay, hidden);
 	
 	if (R_FAILED(ret = FS_Write(archive, "/3ds/3DShell/config.cfg", buf)))
 	{

@@ -63,31 +63,15 @@ void Menu_ControlSettings(u32 input)
 	else if ((input & KEY_TOUCH) && (touchInRect(280, 90, 320, 110)))
 	{
 		wait(1);
-		if (recycleBin == false)
-		{
-			recycleBin = true;
-			Utils_SaveConfig(sortBy, recycleBin, galleryDisplay, isHiddenEnabled);
-		}
-		else
-		{
-			recycleBin = false;
-			Utils_SaveConfig(sortBy, recycleBin, galleryDisplay, isHiddenEnabled);
-		}
+		recycleBin = !recycleBin;
+		Utils_SaveConfig(sortBy, recycleBin, galleryDisplay, isHiddenEnabled);
 	}
 
 	else if ((input & KEY_TOUCH) && (touchInRect(280, 125, 320, 145)))
 	{
 		wait(1);
-		if (galleryDisplay == false)
-		{
-			galleryDisplay = true;
-			Utils_SaveConfig(sortBy, recycleBin, galleryDisplay, isHiddenEnabled);
-		}
-		else
-		{
-			galleryDisplay = false;
-			Utils_SaveConfig(sortBy, recycleBin, galleryDisplay, isHiddenEnabled);
-		}
+		galleryDisplay = !galleryDisplay;
+		Utils_SaveConfig(sortBy, recycleBin, galleryDisplay, isHiddenEnabled);
 	}
 
 	else if ((input & KEY_TOUCH) && (touchInRect(283, 155, 303, 175)))
@@ -102,16 +86,9 @@ void Menu_ControlSettings(u32 input)
 	else if ((input & KEY_TOUCH) && (touchInRect(280, 195, 320, 215)))
 	{
 		wait(1);
-		if (isHiddenEnabled == false)
-		{
-			isHiddenEnabled = true;
-			Utils_SaveConfig(sortBy, recycleBin, galleryDisplay, isHiddenEnabled);
-		}
-		else
-		{
-			isHiddenEnabled = false;
-			Utils_SaveConfig(sortBy, recycleBin, galleryDisplay, isHiddenEnabled);
-		}
+		isHiddenEnabled = !isHiddenEnabled;
+		Utils_SaveConfig(sortBy, recycleBin, galleryDisplay, isHiddenEnabled);
+		
 		Dirlist_PopulateFiles(true);
 		Dirlist_DisplayFiles();
 	}
