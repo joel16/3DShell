@@ -14,7 +14,6 @@ git clone https://github.com/smealum/ctrulib.git
 cd ctrulib/libctru
 make && make install
 cd ../../
-cp -rf ctrulib/libctru/ ${DEVKITPRO}
 rm -rf ctrulib
 
 # Get latest version of Citro3D
