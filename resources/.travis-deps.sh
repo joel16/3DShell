@@ -40,7 +40,7 @@ export CXX=arm-none-eabi-g++
 git clone --recursive https://github.com/Steveice10/bannertool
 cd bannertool/
 make
-sudo cp output/linux-x86_64/bannertool ${DEVKITPRO}/devkitARM/bin/bannertool
+cp output/linux-x86_64/bannertool ${DEVKITPRO}/devkitARM/bin/bannertool
 cd ../
 rm -rf bannertool/
 
