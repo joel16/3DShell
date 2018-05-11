@@ -1,6 +1,6 @@
 language: c
 
-sudo: true
+sudo: false
 
 #Cache devkitARM and doxygen
 cache:
