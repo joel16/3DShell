@@ -27,33 +27,41 @@ include $(DEVKITARM)/3ds_rules
 #     - icon.png
 #     - <libctru folder>/default_icon.png
 #---------------------------------------------------------------------------------
-APP_TITLE       := 3DShell
+
+# CIA
+APP_TITLE           := 3DShell
+APP_PRODUCT_CODE    := CTR-3D-SHEL
+APP_ROMFS           := romfs
+APP_CATEGORY        := Application
+APP_UNIQUE_ID       := 0x16200
+APP_USE_ON_SD       := true
+APP_ENCRYPTED       := false
+APP_MEMORY_TYPE     := Application
+APP_SYSTEM_MODE     := 64MB
+APP_SYSTEM_MODE_EXT := Legacy
+APP_CPU_SPEED       := 268MHz
+APP_ENABLE_L2_CACHE := true
+VERSION_MAJOR       := 3
+VERSION_MINOR       := 0
+VERSION_MICRO       := 0
+APP_RSF_FILE        := resources/cia.rsf
+
 APP_DESCRIPTION := Multi purpose file manager GUI
 APP_AUTHOR      := Joel16
 
 TARGET      := $(subst $e ,_,$(notdir $(APP_TITLE)))
 OUTDIR      := out
 BUILD       := build
-RESOURCES   := resources
 SOURCES     := source source/audio source/ftp source/menus source/minizip source/misc source/pp2d
 DATA        := data
 INCLUDES    := include include/audio include/dr_libs include/ftp include/menus include/minizip include/misc include/pp2d
-ROMFS       := romfs
 
-ICON        := $(RESOURCES)/ic_launcher_filemanager.png
-BANNER      := $(RESOURCES)/banner.png
-JINGLE      := $(RESOURCES)/banner.wav
-LOGO        := $(RESOURCES)/logo.lz11
+ICON        := resources/ic_launcher_filemanager.png
+BANNER      := resources/banner.png
+BANNER_AUDIO      := resources/banner.wav
+LOGO        := resources/logo.lz11
 ICON_FLAGS  := nosavebackups,visible
 
-# CIA
-APP_PRODUCT_CODE    := CTR-3D-SHEL
-APP_UNIQUE_ID       := 0x16200
-RSF_FILE            := $(RESOURCES)/cia.rsf
-
-VERSION_MAJOR := 3
-VERSION_MINOR := 0
-VERSION_MICRO := 0
 GITVERSION    := $(shell git log -1 --pretty='%h')
 
 #---------------------------------------------------------------------------------
@@ -89,44 +97,44 @@ LIBDIRS	:= $(CTRULIB) $(PORTLIBS)
 ifneq ($(BUILD),$(notdir $(CURDIR)))
 #---------------------------------------------------------------------------------
 
-export OUTPUT	:=	$(CURDIR)/$(OUTDIR)/$(TARGET)
-export TOPDIR	:=	$(CURDIR)
+export OUTPUT := $(CURDIR)/$(OUTDIR)/$(TARGET)
+export TOPDIR := $(CURDIR)
 
-export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
-			$(foreach dir,$(DATA),$(CURDIR)/$(dir))
+export VPATH := $(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
+				$(foreach dir,$(DATA),$(CURDIR)/$(dir))
 
 export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 
-CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
-CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
-SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
-PICAFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.v.pica)))
-SHLISTFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.shlist)))
-BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
+CFILES		:= $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
+CPPFILES	:= $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
+SFILES		:= $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
+PICAFILES	:= $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.v.pica)))
+SHLISTFILES	:= $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.shlist)))
+BINFILES	:= $(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
 
 #---------------------------------------------------------------------------------
 # use CXX for linking C++ projects, CC for standard C
 #---------------------------------------------------------------------------------
 ifeq ($(strip $(CPPFILES)),)
 #---------------------------------------------------------------------------------
-	export LD	:=	$(CC)
+	export LD := $(CC)
 #---------------------------------------------------------------------------------
 else
 #---------------------------------------------------------------------------------
-	export LD	:=	$(CXX)
+	export LD := $(CXX)
 #---------------------------------------------------------------------------------
 endif
 #---------------------------------------------------------------------------------
 
-export OFILES	:=	$(addsuffix .o,$(BINFILES)) \
+export OFILES := $(addsuffix .o,$(BINFILES)) \
 			$(PICAFILES:.v.pica=.shbin.o) $(SHLISTFILES:.shlist=.shbin.o) \
 			$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
 
-export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
+export INCLUDE := $(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 			$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
 			-I$(CURDIR)/$(BUILD)
 
-export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
+export LIBPATHS := $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 
 ifeq ($(strip $(ICON)),)
 	icons := $(wildcard *.png)
@@ -145,8 +153,20 @@ ifeq ($(strip $(NO_SMDH)),)
 	export _3DSXFLAGS += --smdh=$(OUTPUT).smdh
 endif
 
-ifneq ($(ROMFS),)
-	export _3DSXFLAGS += --romfs=$(CURDIR)/$(ROMFS)
+ifneq ("$(wildcard $(APP_ROMFS))","")
+    _3DSXFLAGS += --romfs=$(APP_ROMFS)
+endif
+
+ifeq ($(strip $(VERSION_MAJOR)),)
+    VERSION_MAJOR := 0
+endif
+
+ifeq ($(strip $(VERSION_MINOR)),)
+    VERSION_MINOR := 0
+endif
+
+ifeq ($(strip $(VERSION_MICRO)),)
+    VERSION_MICRO := 0
 endif
 
 .PHONY: $(BUILD) clean all
@@ -173,30 +193,27 @@ clean:
 
 #---------------------------------------------------------------------------------
 ifeq ($(strip $(NO_SMDH)),)
-$(OUTPUT).3dsx	:	$(OUTPUT).elf $(OUTPUT).smdh
+$(OUTPUT).3dsx : $(OUTPUT).elf $(OUTPUT).smdh
 else
-$(OUTPUT).3dsx	:	$(OUTPUT).elf
+$(OUTPUT).3dsx : $(OUTPUT).elf
 endif
 
 #---------------------------------------------------------------------------------
-MAKEROM		?=	makerom
+MAKEROM      ?= makerom
+MAKEROM_ARGS := -rsf "$(APP_RSF_FILE)" -target t -exefslogo -icon "$(BUILD)/icon.icn" -banner "$(BUILD)/banner.bnr" -major $(VERSION_MAJOR) -minor $(VERSION_MINOR) -micro $(VERSION_MICRO) -DAPP_TITLE="$(APP_TITLE)" -DAPP_PRODUCT_CODE="$(APP_PRODUCT_CODE)" -DAPP_UNIQUE_ID="$(APP_UNIQUE_ID)" -DAPP_SYSTEM_MODE="$(APP_SYSTEM_MODE)" -DAPP_SYSTEM_MODE_EXT="$(APP_SYSTEM_MODE_EXT)" -DAPP_CATEGORY="$(APP_CATEGORY)" -DAPP_USE_ON_SD="$(APP_USE_ON_SD)" -DAPP_MEMORY_TYPE="$(APP_MEMORY_TYPE)" -DAPP_CPU_SPEED="$(APP_CPU_SPEED)" -DAPP_ENABLE_L2_CACHE="$(APP_ENABLE_L2_CACHE)" -DAPP_VERSION_MAJOR=$(VERSION_MAJOR)
 
-MAKEROM_ARGS	:=	-elf "$(OUTPUT).elf" -rsf "$(RSF_FILE)" -banner "$(BUILD)/banner.bnr" -icon "$(BUILD)/icon.icn" -DAPP_TITLE="$(APP_TITLE)" -DAPP_PRODUCT_CODE="$(APP_PRODUCT_CODE)" -DAPP_UNIQUE_ID="$(APP_UNIQUE_ID)"
-
-ifneq ($(strip $(LOGO)),)
-	MAKEROM_ARGS	+=	 -logo "$(LOGO)"
+ifneq ("$(wildcard $(LOGO))","")
+    MAKEROM_ARGS += -logo "$(LOGO)"
 endif
 
-ifeq ($(strip $(ROMFS)),)
-$(OUTPUT).cia: $(OUTPUT).elf $(BUILD)/banner.bnr $(BUILD)/icon.icn
-	$(MAKEROM) -f cia -o "$@" -target t -exefslogo $(MAKEROM_ARGS)
-else
-$(OUTPUT).cia: $(OUTPUT).elf $(BUILD)/banner.bnr $(BUILD)/icon.icn
-	$(MAKEROM) -f cia -o "$@" -target t -exefslogo $(MAKEROM_ARGS)
+ifneq ("$(wildcard $(APP_ROMFS))","")
+    MAKEROM_ARGS += -DAPP_ROMFS="$(APP_ROMFS)"
 endif
 
+$(OUTPUT).cia: $(OUTPUT).elf $(BUILD)/banner.bnr $(BUILD)/icon.icn 
+	$(MAKEROM) -f cia -o $@ -elf $< -DAPP_ENCRYPTED=false $(MAKEROM_ARGS)
 
-BANNERTOOL	?=	bannertool
+BANNERTOOL ?= bannertool
 
 ifeq ($(suffix $(BANNER)),.cgfx)
 	BANNER_ARG := -ci
@@ -204,28 +221,28 @@ else
 	BANNER_ARG := -i
 endif
 
-ifeq ($(suffix $(JINGLE)),.cwav)
-	JINGLE_ARG := -ca
+ifeq ($(suffix $(BANNER_AUDIO)),.cwav)
+	BANNER_AUDIO_ARG := -ca
 else
-	JINGLE_ARG := -a
+	BANNER_AUDIO_ARG := -a
 endif
 
-$(BUILD)/banner.bnr	:	$(BANNER) $(JINGLE)
-	$(BANNERTOOL) makebanner $(BANNER_ARG) "$(BANNER)" $(JINGLE_ARG) "$(JINGLE)" -o "$@"
+$(BUILD)/banner.bnr : $(BANNER) $(BANNER_AUDIO)
+	$(BANNERTOOL) makebanner $(BANNER_ARG) "$(BANNER)" $(BANNER_AUDIO_ARG) "$(BANNER_AUDIO)" -o "$@"
 
-$(BUILD)/icon.icn	:	$(APP_ICON)
+$(BUILD)/icon.icn : $(APP_ICON)
 	$(BANNERTOOL) makesmdh -s "$(APP_TITLE)" -l "$(APP_DESCRIPTION)" -p "$(APP_AUTHOR)" -i "$(APP_ICON)" -f "$(ICON_FLAGS)" -o "$@"
 
 #---------------------------------------------------------------------------------
 else
 
-DEPENDS	:=	$(OFILES:.o=.d)
+DEPENDS := $(OFILES:.o=.d)
 
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
 
-$(OUTPUT).elf	:	$(OFILES)
+$(OUTPUT).elf : $(OFILES)
 
 #---------------------------------------------------------------------------------
 # you need a rule like this for each extension you use as binary data
