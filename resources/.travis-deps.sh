@@ -52,31 +52,25 @@ cp makerom ${DEVKITPRO}/devkitARM/bin/makerom
 cd ../..
 rm -rf Project_CTR
 
-# Build and install portlibs
+# Build and install portlibs using pacman
 mkdir ${DEVKITPRO}/portlibs && mkdir ${PORTLIBS}/
-git clone https://github.com/devkitPro/3ds_portlibs.git
-cd 3ds_portlibs
-make zlib
-make install-zlib
-make libogg
-make install
-make tremor
-make install
-cd ../
-rm -rf 3ds_portlibs
+wget https://github.com/devkitPro/pacman/releases/download/v1.0.0/devkitpro-pacman.deb
+sudo dpkg -i devkitpro-pacman.deb
 
-# Build and install mpg123 (from fork)
-git clone https://github.com/deltabeard/3ds_portlibs.git
-cd 3ds_portlibs
-make mpg123
-cp mpg123-*/src/libmpg123/.libs/libmpg123.a ${DEVKITPRO}/portlibs/armv6k/lib/
-cp mpg123-*/src/libmpg123/libmpg123.la ${DEVKITPRO}/portlibs/armv6k/lib/
-cp mpg123-*/libmpg123.pc ${DEVKITPRO}/portlibs/armv6k/lib/pkgconfig/
-cp mpg123-*/src/libmpg123/mpg123.h ${DEVKITPRO}/portlibs/armv6k/include/
-cp mpg123-*/src/libmpg123/fmt123.h ${DEVKITPRO}/portlibs/armv6k/include/
-cd ../
-rm -rf 3ds_portlibs
+# Remove mbedtls if it's included - causes issues.
+sudo rm -rf ${DEVKITPRO}/portlibs/3ds/include/mbedtls/
+sudo rm ${DEVKITPRO}/portlibs/3ds/lib/libmbedcrypto.a
+sudo rm ${DEVKITPRO}/portlibs/3ds/lib/libmbedtls.a 
+sudo rm ${DEVKITPRO}/portlibs/3ds/lib/libmbedx509.a
 
-# devkitArm
+# Install required libs
+sudo dkp-pacman -S 3ds-zlib --noconfirm
+sudo dkp-pacman -S 3ds-curl --noconfirm
+sudo dkp-pacman -S 3ds-mpg123 --noconfirm
+sudo dkp-pacman -S 3ds-libogg --noconfirm
+sudo dkp-pacman -S 3ds-libvorbisidec --noconfirm
+
+# Remove unnecessary files
 rm *.bz2
 rm devkitARMupdate.pl
+rm devkitpro-pacman.deb

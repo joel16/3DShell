@@ -56,11 +56,11 @@ SOURCES     := source source/audio source/ftp source/menus source/minizip source
 DATA        := data
 INCLUDES    := include include/audio include/dr_libs include/ftp include/menus include/minizip include/misc include/pp2d
 
-ICON        := resources/ic_launcher_filemanager.png
-BANNER      := resources/banner.png
-BANNER_AUDIO      := resources/banner.wav
-LOGO        := resources/logo.lz11
-ICON_FLAGS  := nosavebackups,visible
+ICON         := resources/ic_launcher_filemanager.png
+BANNER       := resources/banner.png
+BANNER_AUDIO := resources/banner.wav
+LOGO         := resources/logo.lz11
+ICON_FLAGS   := nosavebackups,visible
 
 GITVERSION    := $(shell git log -1 --pretty='%h')
 
@@ -72,6 +72,7 @@ ARCH     := -march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 CFLAGS   := -g -Werror -O2 -mword-relocations \
 	        -fomit-frame-pointer -ffunction-sections \
 	        -DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO) \
+	        -DAPP_TITLE="\"$(APP_TITLE)\"" \
 	        -DGITVERSION="\"${GITVERSION}\"" \
             $(ARCH)
 
@@ -82,7 +83,7 @@ CXXFLAGS := $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 ASFLAGS  := -g $(ARCH)
 LDFLAGS  = -specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:= -lmpg123 -lvorbisidec -logg -lcitro3d -lctru -lm -lz
+LIBS	:= -lcurl -lmbedtls -lmbedx509 -lmbedcrypto -lmpg123 -lvorbisidec -logg -lcitro3d -lctru -lm -lz
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
@@ -172,7 +173,9 @@ endif
 .PHONY: $(BUILD) clean all
 
 #---------------------------------------------------------------------------------
-all: 3dsx cia
+all: 3dsx cia 
+	@echo "${VERSION_MAJOR}${VERSION_MINOR}${VERSION_MICRO}" > UPDATE_MAINTAINER.txt # For maintainer builds
+	@echo "${GITVERSION}" > UPDATE_NIGHTLY.txt # For maintainer builds
 
 3dsx: $(BUILD) $(OUTPUT).3dsx
 
