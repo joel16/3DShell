@@ -4,6 +4,7 @@
 #include "fs.h"
 #include "language.h"
 #include "menus/menu_main.h"
+#include "menu_update.h"
 #include "pp2d/pp2d.h"
 #include "textures.h"
 #include "utils.h"
@@ -12,8 +13,8 @@ static void Init_Services(void)
 {
 	acInit();
 	amInit();
+	AM_QueryAvailableExternalTitleDatabase(NULL);
 	cfguInit();
-	//httpcInit(0);
 	mcuHwcInit();
 	ndspInit();
 	ndspSetOutputMode(NDSP_OUTPUT_STEREO);
@@ -52,7 +53,6 @@ static void Term_Services(void)
 	ptmuExit();
 	ndspExit();
 	mcuHwcExit();
-	//httpcExit();
 	cfguExit();
 	amExit();
 	acExit();
@@ -61,6 +61,13 @@ static void Term_Services(void)
 int main(int argc, char *argv[])
 {
 	Init_Services();
+
+	if (setjmp(exitJmp)) 
+	{
+		Term_Services();
+		return 0;
+	}
+
 	Menu_Main();
 	Term_Services();
 }

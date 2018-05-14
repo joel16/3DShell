@@ -174,7 +174,7 @@ endif
 
 #---------------------------------------------------------------------------------
 all: 3dsx cia 
-	@echo "${VERSION_MAJOR}${VERSION_MINOR}${VERSION_MICRO}" > UPDATE_MAINTAINER.txt # For maintainer builds
+	@echo "${VERSION_MAJOR}${VERSION_MINOR}${VERSION_MICRO}" > UPDATE_MILESTONE.txt # For maintainer builds
 	@echo "${GITVERSION}" > UPDATE_NIGHTLY.txt # For maintainer builds
 
 3dsx: $(BUILD) $(OUTPUT).3dsx

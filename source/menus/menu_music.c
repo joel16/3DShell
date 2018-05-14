@@ -288,7 +288,7 @@ void Music_Player(char * path)
 				pp2d_draw_textf(184, 64, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.title);
 				pp2d_draw_textf(184, 84, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.album);
 				pp2d_draw_textf(184, 104, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.year);
-				pp2d_draw_textf(184, 124, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.genre);	
+				pp2d_draw_textf(184, 124, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.genre);
 			}
 		
 			else

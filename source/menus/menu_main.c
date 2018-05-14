@@ -11,6 +11,7 @@
 #include "menu_properties.h"
 #include "menu_settings.h"
 #include "menu_sort.h"
+#include "menu_update.h"
 #include "pp2d.h"
 #include "screenshot.h"
 #include "status_bar.h"
@@ -26,7 +27,10 @@ void Menu_Draw_MenuBar(void)
 {
 	float options_x = pp2d_get_texture_width(TEXTURE_HOME_ICON) + 5;
 	float settings_x = pp2d_get_texture_width(TEXTURE_HOME_ICON) + pp2d_get_texture_width(TEXTURE_OPTIONS_ICON) + 15;
-	float ftp_x = pp2d_get_texture_width(TEXTURE_HOME_ICON) + pp2d_get_texture_width(TEXTURE_OPTIONS_ICON) + pp2d_get_texture_width(TEXTURE_SETTINGS_ICON) + 25;
+	float ftp_x = pp2d_get_texture_width(TEXTURE_HOME_ICON) + pp2d_get_texture_width(TEXTURE_OPTIONS_ICON) + 
+		pp2d_get_texture_width(TEXTURE_SETTINGS_ICON) + 25;
+	float update_x = pp2d_get_texture_width(TEXTURE_HOME_ICON) + pp2d_get_texture_width(TEXTURE_OPTIONS_ICON) + 
+		pp2d_get_texture_width(TEXTURE_SETTINGS_ICON) + pp2d_get_texture_width(TEXTURE_FTP_ICON) + 35;
 
 	if (MENU_DEFAULT_STATE == MENU_STATE_HOME)
 		pp2d_draw_texture(TEXTURE_HOME_ICON_SELECTED, 0, -2);
@@ -47,6 +51,11 @@ void Menu_Draw_MenuBar(void)
 		pp2d_draw_texture(TEXTURE_FTP_ICON_SELECTED, ftp_x, 0);
 	else
 		pp2d_draw_texture(TEXTURE_FTP_ICON, ftp_x, 0);
+
+	if ((MENU_DEFAULT_STATE == MENU_STATE_UPDATE) || (MENU_DEFAULT_STATE == MENU_STATE_UPDATE_2))
+		pp2d_draw_texture(TEXTURE_UPDATE_ICON_SELECTED, update_x, 0);
+	else
+		pp2d_draw_texture(TEXTURE_UPDATE_ICON, update_x, 0);
 
 	if (BROWSE_STATE == STATE_SD)
 		pp2d_draw_texture(TEXTURE_SD_ICON_SELECTED, (320 - pp2d_get_texture_width(TEXTURE_SD_ICON_SELECTED)) - 55, 0);
@@ -121,21 +130,26 @@ static void Menu_Main_Controls(void)
 		wait(1);
 		MENU_DEFAULT_STATE = MENU_STATE_HOME;
 	}
-	else if ((kDown & KEY_TOUCH) && (touchInRect(23, 0, 47, 20)))
+	else if ((kDown & KEY_TOUCH) && (touchInRect(23, 0, 48, 20)))
 	{
 		wait(1);
 		MENU_DEFAULT_STATE = MENU_STATE_OPTIONS;
 	}
-	else if ((kDown & KEY_TOUCH) && (touchInRect(48, 0, 73, 20)))
+	else if ((kDown & KEY_TOUCH) && (touchInRect(49, 0, 74, 20)))
 	{
 		wait(1);
 		MENU_DEFAULT_STATE = MENU_STATE_SETTINGS;
 	}
-	else if (((kDown & KEY_TOUCH) && (touchInRect(98, 123, 0, 20))) || (kDown & KEY_SELECT))
+	else if (((kDown & KEY_TOUCH) && (touchInRect(75, 0, 100, 20))) || (kDown & KEY_SELECT))
 	{
 		wait(1);
 		MENU_DEFAULT_STATE = MENU_STATE_FTP;
 		Menu_DisplayFTP();
+	}
+	else if ((kDown & KEY_TOUCH) && (touchInRect(101, 0, 126, 20)))
+	{
+		wait(1);
+		MENU_DEFAULT_STATE = MENU_STATE_UPDATE;
 	}
 
 	if (MENU_DEFAULT_STATE == MENU_STATE_OPTIONS)
@@ -148,6 +162,10 @@ static void Menu_Main_Controls(void)
 		Menu_ControlSort(kDown);
 	else if (MENU_DEFAULT_STATE == MENU_STATE_DIALOG)
 		Menu_ControlDeleteDialog(kDown);
+	else if (MENU_DEFAULT_STATE == MENU_STATE_UPDATE)
+		Menu_ControlUpdate(kDown);
+	else if (MENU_DEFAULT_STATE == MENU_STATE_UPDATE_2)
+		Menu_ControlUpdate2(kDown);
 	else if (MENU_DEFAULT_STATE == MENU_STATE_THEMES)
 	{
 		if (kDown & KEY_A)
@@ -317,6 +335,10 @@ void Menu_Main(void)
 				Menu_DisplaySort();
 			else if (MENU_DEFAULT_STATE == MENU_STATE_DIALOG)
 				Menu_DisplayDeleteDialog();
+			else if (MENU_DEFAULT_STATE == MENU_STATE_UPDATE)
+				Menu_DisplayUpdate();
+			else if (MENU_DEFAULT_STATE == MENU_STATE_UPDATE_2)
+				Menu_DisplayUpdate2();
 
 			Menu_Draw_MenuBar();
 		pp2d_end_draw();

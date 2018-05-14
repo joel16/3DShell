@@ -28,12 +28,14 @@ void Load_Textures(void)
 	pp2d_load_texture_png(TEXTURE_OPTIONS_ICON, "romfs:/res/drawable/ic_material_light_options.png");
 	pp2d_load_texture_png(TEXTURE_SETTINGS_ICON, "romfs:/res/drawable/ic_material_light_settings.png");
 	pp2d_load_texture_png(TEXTURE_FTP_ICON, "romfs:/res/drawable/ic_material_light_ftp.png");
+	pp2d_load_texture_png(TEXTURE_UPDATE_ICON, "romfs:/res/drawable/ic_material_light_update.png");
 
 	pp2d_load_texture_png(TEXTURE_HOME_ICON_SELECTED, "romfs:/res/drawable/ic_overlay_home.png");
 	pp2d_load_texture_png(TEXTURE_OPTIONS_ICON_SELECTED, "romfs:/res/drawable/ic_overlay_options.png");
 	pp2d_load_texture_png(TEXTURE_SETTINGS_ICON_SELECTED, "romfs:/res/drawable/ic_overlay_settings.png");
 	pp2d_load_texture_png(TEXTURE_FTP_ICON_SELECTED, "romfs:/res/drawable/ic_overlay_ftp.png");
-
+	pp2d_load_texture_png(TEXTURE_UPDATE_ICON_SELECTED, "romfs:/res/drawable/ic_overlay_update.png");
+	
 	pp2d_load_texture_png(TEXTURE_SD_ICON, "romfs:/res/drawable/ic_material_light_sd.png");
 	pp2d_load_texture_png(TEXTURE_NAND_ICON, "romfs:/res/drawable/ic_material_light_nand.png");
 	pp2d_load_texture_png(TEXTURE_SD_ICON_SELECTED, "romfs:/res/drawable/ic_overlay_sd.png");

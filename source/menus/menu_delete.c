@@ -9,7 +9,6 @@
 #include "touch.h"
 #include "utils.h"
 
-
 struct colour BottomScreen_colour;
 struct colour Options_title_text_colour;
 struct colour Settings_title_text_colour;
