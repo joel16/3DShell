@@ -31,7 +31,7 @@ Current features:
 
 Building from source:
 --------------------------------------------------------------------------------
-1. Ensure you have the devkitPro, ctrulib and citro3D installed correctly. Make sure you have [makerom and bannertool](https://github.com/Steveice10/buildtools/tree/master/3ds) in your path as well.
+1. Ensure you have the devkitPro, ctrulib and citro3D installed correctly. Make sure you have [makerom](https://github.com/profi200/Project_CTR) and [bannertool](https://github.com/Steveice10/bannertool) in your path as well.
 
 2. Install the following dependecies from [devkitPro's pacman](https://devkitpro.org/viewtopic.php?f=13&t=8702):
 * `sudo dkp-pacman -S 3ds-zlib --noconfirm`
