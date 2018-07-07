@@ -1,5 +1,5 @@
-#ifndef FS_H
-#define FS_H
+#ifndef _3D_SHELL_FS_H
+#define _3D_SHELL_FS_H
 
 #include <3ds.h>
 

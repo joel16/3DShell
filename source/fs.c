@@ -91,7 +91,7 @@ bool FS_DirExists(FS_Archive archive, const char * path)
 	return true;
 }
 
-char * FS_GetFileModifiedTime(char * path)
+/*char * FS_GetFileModifiedTime(char * path)
 {
 	static char timeStr[20];
 	u64 mtime = 0;
@@ -125,7 +125,7 @@ char * FS_GetFileModifiedTime(char * path)
 	}
 
 	return timeStr;
-}
+}*/
 
 u64 FS_GetFileSize(FS_Archive archive, const char * path)
 {

@@ -1,30 +1,24 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "C2D_helper.h"
 #include "common.h"
-#include "dir_list.h"
+#include "config.h"
+#include "dirbrowse.h"
 #include "fs.h"
 #include "ftp.h"
-#include "language.h"
 #include "menu_ftp.h"
 #include "menu_main.h"
-#include "pp2d.h"
 #include "status_bar.h"
 #include "textures.h"
-#include "theme.h"
 #include "utils.h"
-
-struct colour Storage_colour;
-struct colour BottomScreen_colour;
-struct colour BottomScreen_bar_colour;
-struct colour BottomScreen_text_colour;
 
 void Menu_DisplayFTP(void)
 {
 	ftp_init();
 
 	touchPosition touch;
-	
+
 	char buf[25];
 	u32 wifiStatus = 0;
 
@@ -34,55 +28,59 @@ void Menu_DisplayFTP(void)
 	{
 		ftp_loop();
 
+		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
+		C2D_TargetClear(RENDER_BOTTOM, config_dark_theme? BLACK_BG : WHITE);
+		C2D_SceneBegin(RENDER_BOTTOM);
+		Draw_Rect(0, 0, 320, 20, config_dark_theme? STATUS_BAR_DARK : STATUS_BAR_LIGHT); // Status bar
+		Draw_Rect(0, 20, 320, 220, config_dark_theme? MENU_BAR_DARK : MENU_BAR_LIGHT); // Menu bar
+
 		ACU_GetWifiStatus(&wifiStatus);
 
-		pp2d_begin_draw(GFX_BOTTOM, GFX_LEFT);
-
-			pp2d_draw_rectangle(0, 0, 320, 240, RGBA8(BottomScreen_colour.r, BottomScreen_colour.g, BottomScreen_colour.b, 255));
-			pp2d_draw_rectangle(0, 0, 320, 20, RGBA8(BottomScreen_bar_colour.r, BottomScreen_bar_colour.g, BottomScreen_bar_colour.b, 255));
+		//Draw_Rect(0, 0, 320, 240, RGBA8(BottomScreen_colour.r, BottomScreen_colour.g, BottomScreen_colour.b, 255));
+		//Draw_Rect(0, 0, 320, 20, RGBA8(BottomScreen_bar_colour.r, BottomScreen_bar_colour.g, BottomScreen_bar_colour.b, 255));
 			
-			Menu_Draw_MenuBar();
+		//Menu_Draw_MenuBar();
 
-			if (!(wifiStatus))
+		if (!(wifiStatus))
+		{
+			Draw_Text(((320 - Draw_GetTextWidth(0.48f, "Failed to initialize FTP.")) / 2), 40, 0.48f, WHITE, "Failed to initialize FTP.");
+			sprintf(buf, "WiFi not enabled.");
+		}
+		else
+		{
+			Draw_Text(((320 - Draw_GetTextWidth(0.48f, "FTP initialized")) / 2), 40, 0.48f, WHITE, "FTP initialized");
+			
+			u32 ip = gethostid();
+			sprintf(buf, "IP: %lu.%lu.%lu.%lu:5000", ip & 0xFF, (ip>>8)&0xFF, (ip>>16)&0xFF, (ip>>24)&0xFF);
+
+			Draw_Text(((320 - Draw_GetTextWidth(0.48f, buf)) / 2), 60, 0.48f, WHITE, buf);
+
+			if (strlen(ftp_accepted_connection) != 0)
+				Draw_Text(((320 - Draw_GetTextWidth(0.48f, ftp_accepted_connection)) / 2), 80, 0.48f, WHITE, ftp_accepted_connection);
+
+			Draw_Text(((320 - Draw_GetTextWidth(0.48f, "File browser cannot be accesed at this time.")) / 2), 100, 0.48f, WHITE, "File browser cannot be accesed at this time.");
+
+			if (strlen(ftp_file_transfer) != 0)
+				Draw_Text(((320 - Draw_GetTextWidth(0.45f, ftp_file_transfer)) / 2), 150, 0.45f, WHITE, ftp_file_transfer);
+
+			if (isTransfering)
 			{
-				pp2d_draw_text(((320 - pp2d_get_text_width(lang_ftp[language][3], 0.45f, 0.45f)) / 2), 40, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][3]);
-				sprintf(buf, lang_ftp[language][4]);
+				Draw_Rect(50, 140, 220, 3, config_dark_theme? STATUS_BAR_DARK : STATUS_BAR_LIGHT);
+				Draw_Rect(pBar, 140, 40, 3, WHITE);
+
+				// Boundary stuff
+				Draw_Rect(0, 140, 50, 3, config_dark_theme? MENU_BAR_DARK : MENU_BAR_LIGHT);
+				Draw_Rect(270, 140, 50, 3, config_dark_theme? MENU_BAR_DARK : MENU_BAR_LIGHT); 
+				pBar += 4;
+			
+				if (pBar >= xlim)
+					pBar = 34;
 			}
-			else
-			{
-				pp2d_draw_text(((320 - pp2d_get_text_width(lang_ftp[language][0], 0.45f, 0.45f)) / 2), 40, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][0]);
+		}
 
-				u32 ip = gethostid();
-				sprintf(buf, "IP: %lu.%lu.%lu.%lu:5000", ip & 0xFF, (ip>>8)&0xFF, (ip>>16)&0xFF, (ip>>24)&0xFF);
+		Draw_Text(((320 - Draw_GetTextWidth(0.48f, "Tap the FTP icon to disable the FTP connection.")) / 2), 120, 0.48f, WHITE, "Tap the FTP icon to disable the FTP connection.");
 
-				pp2d_draw_text(((320 - pp2d_get_text_width(buf, 0.45f, 0.45f)) / 2), 60, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), buf);
-
-				if (strlen(ftp_accepted_connection) != 0)
-					pp2d_draw_text(((320 - pp2d_get_text_width(ftp_accepted_connection, 0.45f, 0.45f)) / 2), 80, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), ftp_accepted_connection);
-
-				pp2d_draw_text(((320 - pp2d_get_text_width(lang_ftp[language][1], 0.45f, 0.45f)) / 2), 100, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][1]);
-
-				if (strlen(ftp_file_transfer) != 0)
-					pp2d_draw_text(((320 - pp2d_get_text_width(ftp_file_transfer, 0.45f, 0.45f)) / 2), 150, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), ftp_file_transfer);
-
-				if (isTransfering)
-				{
-					pp2d_draw_rectangle(50, 140, 220, 3, RGBA8(BottomScreen_bar_colour.r, BottomScreen_bar_colour.g, BottomScreen_bar_colour.b, 255));
-					pp2d_draw_rectangle(pBar, 140, 40, 3, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255));
-
-					// Boundary stuff
-					pp2d_draw_rectangle(0, 140, 50, 3, RGBA8(BottomScreen_colour.r, BottomScreen_colour.g, BottomScreen_colour.b, 255));
-					pp2d_draw_rectangle(270, 140, 50, 3, RGBA8(BottomScreen_colour.r, BottomScreen_colour.g, BottomScreen_colour.b, 255)); 
-					pBar += 4;
-				
-					if (pBar >= xlim)
-						pBar = 34;
-				}
-			}
-
-			pp2d_draw_text(((320 - pp2d_get_text_width(lang_ftp[language][2], 0.45f, 0.45f)) / 2), 120, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), lang_ftp[language][2]);
-
-		pp2d_end_draw();
+		Draw_EndFrame();
 
 		hidScanInput();
 		u32 kDown = hidKeysDown();
@@ -95,6 +93,5 @@ void Menu_DisplayFTP(void)
 	memset(ftp_file_transfer, 0, 50); // Empty transfer status
 	ftp_exit();
 	MENU_DEFAULT_STATE = MENU_STATE_HOME;
-	Dirlist_PopulateFiles(true);
-	Dirlist_DisplayFiles();
+	Dirbrowse_PopulateFiles(true);
 }

@@ -1,185 +1,9 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
-#include "common.h"
-#include "fs.h"
+#include <3ds.h>
+
 #include "utils.h"
-
-const char * configFile =
-	"sortBy = %d\n"
-	"recycleBin = %d\n"
-	"systemProtection = %d\n"
-	"showHiddenFiles = %d";
-
-void Utils_MakeDirectories(void)
-{
-	if (BROWSE_STATE != STATE_NAND)
-	{
-		if (!(FS_DirExists(archive, "/3ds/3DShell/themes/default/")))
-			FS_RecursiveMakeDir(archive, "/3ds/3DShell/themes/default");
-		if (!(FS_DirExists(archive, "/3ds/3DShell/bin/")))
-			FS_RecursiveMakeDir(archive, "/3ds/3DShell/bin");
-	}
-}
-
-Result Utils_SaveConfig(int sortBy, bool recycleBin, bool galleryDisplay, bool hidden)
-{
-	Result ret = 0;
-	
-	char * buf = (char *)malloc(256);
-	snprintf(buf, 256, configFile, sortBy, recycleBin, galleryDisplay, hidden);
-	
-	if (R_FAILED(ret = FS_Write(archive, "/3ds/3DShell/config.cfg", buf)))
-	{
-		free(buf);
-		return ret;
-	}
-	
-	free(buf);
-	return 0;
-}	
-	
-Result Utils_LoadConfig(void)
-{
-	Handle handle;
-	Result ret = 0;
-	
-	if (!FS_FileExists(archive, "/3ds/3DShell/config.cfg"))
-	{
-		// set these to the following by default:
-		sortBy = 1;
-		recycleBin = 0;
-		galleryDisplay = 1;
-		isHiddenEnabled = 0;		
-		return Utils_SaveConfig(sortBy, recycleBin, galleryDisplay, isHiddenEnabled);
-	}
-
-	u64 size64 = 0;
-	u32 size = 0;
-
-	size64 = FS_GetFileSize(archive, "/3ds/3DShell/config.cfg");
-	size = (u32)size64;
-	char * buf = (char *)malloc(size + 1);
-
-	if (R_FAILED(ret = FS_Read(archive, "/3ds/3DShell/config.cfg", size, buf)))
-	{
-		free(buf);
-		return ret;
-	}
-
-	buf[size] = '\0';
-	
-	sscanf(buf, configFile, &sortBy, &recycleBin, &galleryDisplay, &isHiddenEnabled);
-	
-	free(buf);
-	return 0;
-}
-
-Result Utils_GetLastDirectory(void)
-{
-	Handle handle;
-	Result ret = 0;
-	
-	if (!FS_FileExists(archive, "/3ds/3DShell/lastdir.txt"))
-	{
-		FS_Write(archive, "/3ds/3DShell/lastdir.txt", START_PATH);
-		strcpy(cwd, START_PATH); // Set Start Path to "sdmc:/" if lastDir.txt hasn't been created.
-	}
-	else
-	{
-		u64 size64 = 0;
-		u32 size = 0;
-
-		size64 = FS_GetFileSize(archive, "/3ds/3DShell/lastdir.txt");
-		size = (u32)size64;
-		char * buf = (char *)malloc(size + 1);
-
-		if (R_FAILED(ret = FS_Read(archive, "/3ds/3DShell/lastdir.txt", size, buf)))
-		{
-			free(buf);
-			return ret;
-		}
-
-		buf[size] = '\0';
-
-		char tempPath[256];
-		sscanf(buf, "%[^\n]s", tempPath);
-	
-		if (FS_DirExists(archive, tempPath)) // Incase a directory previously visited had been deleted, set start path to sdmc:/ to avoid errors.
-			strcpy(cwd, tempPath);
-		else
-			strcpy(cwd, START_PATH);
-		
-		free(buf);
-	}
-	
-	return 0;
-}
-
-char * Utils_Basename(const char * filename)
-{
-	char *p = strrchr (filename, '/');
-	return p ? p + 1 : (char *) filename;
-}
-
-void Utils_GetSizeString(char * string, uint64_t size) //Thanks TheOfficialFloW
-{
-	double double_size = (double)size;
-
-	int i = 0;
-	static char *units[] = { "B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB" };
-
-	while (double_size >= 1024.0f)
-	{
-		double_size /= 1024.0f;
-		i++;
-	}
-
-	sprintf(string, "%.*f %s", (i == 0) ? 0 : 2, double_size, units[i]);
-}
-
-CFG_Region Utils_GetRegion(void)
-{
-	CFG_Region region = 0;
-
-	if (R_SUCCEEDED(CFGU_SecureInfoGetRegion(&region)))
-		return region;
-
-	return 0;
-}
-
-CFG_Language Utils_GetLanguage(void)
-{
-	CFG_Language language = 0;
-
-	if (R_SUCCEEDED(CFGU_GetSystemLanguage(&language)))
-		return language;
-
-	return 0;
-}
-
-const char * Utils_GetUsername(void)
-{
-	u8 data[0x1C];
-	static wchar_t whcar_username[0x13];
-	char * username = (char *)malloc(0x1C);
-
-	if (R_SUCCEEDED(CFGU_GetConfigInfoBlk2(0x1C, 0x000A0000, data)))
-	{
-		for (int i = 0; i < 0x13; i++)
-			whcar_username[i] = (wchar_t)((u16 *)data)[i];
-	}
-	else
-	{
-		free(username);
-		return NULL;
-	}
-
-	wcstombs(username, whcar_username, 0x1C);
-
-	return username;
-}
 
 bool Utils_IsN3DS(void)
 {
@@ -191,12 +15,77 @@ bool Utils_IsN3DS(void)
 	return false;
 }
 
-void u16_to_u8(char * buf, const u16 * input, size_t bufsize)
+void Utils_U16_To_U8(char *buf, const u16 *input, size_t bufsize)
 {
 	ssize_t units = utf16_to_utf8((u8 *)buf, input, bufsize);
 
 	if (units < 0)
 		units = 0;
-
+	
 	buf[units] = 0;
+}
+
+char *Utils_Basename(const char *filename)
+{
+	char *p = strrchr (filename, '/');
+	return p ? p + 1 : (char *) filename;
+}
+
+void Utils_GetSizeString(char *string, u64 size)
+{
+	double double_size = (double)size;
+
+	int i = 0;
+	static char *units[] = {"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
+
+	while (double_size >= 1024.0f)
+	{
+		double_size /= 1024.0f;
+		i++;
+	}
+
+	sprintf(string, "%.*f %s", (i == 0) ? 0 : 2, double_size, units[i]);
+}
+
+void Utils_SetMax(int *set, int value, int max)
+{
+	if (*set > max)
+		*set = value;
+}
+
+void Utils_SetMin(int *set, int value, int min)
+{
+	if (*set < min)
+		*set = value;
+}
+
+int Utils_Alphasort(const void *p1, const void *p2)
+{
+	FS_DirectoryEntry* entryA = (FS_DirectoryEntry*) p1;
+	FS_DirectoryEntry* entryB = (FS_DirectoryEntry*) p2;
+
+	if ((entryA->attributes & FS_ATTRIBUTE_DIRECTORY) && !(entryB->attributes & FS_ATTRIBUTE_DIRECTORY))
+		return -1;
+	else if (!(entryA->attributes & FS_ATTRIBUTE_DIRECTORY) && (entryB->attributes & FS_ATTRIBUTE_DIRECTORY))
+		return 1;
+	
+	char entryNameA[256] = {'\0'}, entryNameB[256] = {'\0'};
+	Utils_U16_To_U8((u8 *) entryNameA, entryA->name, sizeof(entryNameA) - 1);
+	Utils_U16_To_U8((u8 *) entryNameB, entryB->name, sizeof(entryNameB) - 1);
+	return strcasecmp(entryNameA, entryNameB);
+}
+
+void Utils_AppendArr(char subject[], const char insert[], int pos)
+{
+	char buf[100] = {}; // 100 so that it's big enough. fill with 0
+	// or you could use malloc() to allocate sufficient space
+	
+	strncpy(buf, subject, pos); // copy at most first pos characters
+	int len = strlen(buf);
+	strcpy(buf+len, insert); // copy all of insert[] at the end
+	len += strlen(insert);  // increase the length by length of insert[]
+	strcpy(buf+len, subject+pos); // copy the rest
+	
+	strcpy(subject, buf);   // copy it back to subject
+	// deallocate buf[] here, if used malloc()
 }

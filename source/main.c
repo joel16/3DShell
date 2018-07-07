@@ -1,13 +1,38 @@
+#include <stdlib.h>
 #include <3ds.h>
 
 #include "common.h"
+#include "config.h"
 #include "fs.h"
-#include "language.h"
-#include "menus/menu_main.h"
-#include "menu_update.h"
-#include "pp2d/pp2d.h"
+#include "menu_main.h"
+#include "C2D_helper.h"
 #include "textures.h"
 #include "utils.h"
+
+static void Term_Services(void)
+{
+	Textures_Free();
+
+	if (Utils_IsN3DS())
+		osSetSpeedupEnable(false);
+
+	FS_CloseArchive(archive);
+
+	C2D_TextBufDelete(sizeBuf);
+	C2D_TextBufDelete(dynamicBuf);
+	C2D_TextBufDelete(staticBuf);
+
+	C2D_Fini();
+	C3D_Fini();
+	gfxExit();
+	romfsExit();
+	ptmuExit();
+	ndspExit();
+	mcuHwcExit();
+	cfguExit();
+	amExit();
+	acExit();
+}
 
 static void Init_Services(void)
 {
@@ -19,48 +44,37 @@ static void Init_Services(void)
 	ndspInit();
 	ndspSetOutputMode(NDSP_OUTPUT_STEREO);
 	ptmuInit();
-	pp2d_init();
 	romfsInit();
-
-	FS_OpenArchive(&archive, ARCHIVE_SDMC);
+	gfxInitDefault();
+	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
+	C2D_Init(C2D_DEFAULT_MAX_OBJECTS);
+	C2D_Prepare();
 
 	if (Utils_IsN3DS())
 		osSetSpeedupEnable(true);
 
 	APT_SetAppCpuTimeLimit(30);
 
-	Utils_MakeDirectories();
-	Utils_LoadConfig();
-	Utils_GetLastDirectory();
+	staticBuf = C2D_TextBufNew(4096);
+	dynamicBuf = C2D_TextBufNew(4096);
+	sizeBuf = C2D_TextBufNew(4096);
 
-	Load_Textures();
+	RENDER_TOP = C2D_CreateScreenTarget(GFX_TOP, GFX_LEFT);
+    RENDER_BOTTOM = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
 
-	language = 1; //Utils_GetLanguage();
+	FS_OpenArchive(&archive, ARCHIVE_SDMC);
 
-	BROWSE_STATE = STATE_SD;
-	MENU_DEFAULT_STATE = MENU_STATE_HOME;
-}
-
-static void Term_Services(void)
-{
-	if (Utils_IsN3DS())
-		osSetSpeedupEnable(false);
-
-	FS_CloseArchive(archive);
+	FS_RecursiveMakeDir(archive, "/3ds/3DShell/");
 	
-	romfsExit();
-	pp2d_exit();
-	ptmuExit();
-	ndspExit();
-	mcuHwcExit();
-	cfguExit();
-	amExit();
-	acExit();
+	Textures_Load();
+	Config_Load();
+	Config_GetLastDirectory();
 }
 
 int main(int argc, char *argv[])
 {
 	Init_Services();
+	//Config_Load();
 
 	if (setjmp(exitJmp)) 
 	{
@@ -68,6 +82,9 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 
+	MENU_DEFAULT_STATE = MENU_STATE_HOME;
 	Menu_Main();
 	Term_Services();
+
+	return 0;
 }

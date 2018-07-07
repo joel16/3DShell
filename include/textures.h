@@ -1,80 +1,19 @@
-#ifndef TEXTURES_H
-#define TEXTURES_H
+#ifndef _3D_SHELL_TEXTURES_H
+#define _3D_SHELL_TEXTURES_H
 
-#define TEXTURE_BACKGROUND 0
-#define TEXTURE_SELECTOR   1
+#include <citro2d.h>
 
-#define TEXTURE_ICON_APP     2
-#define TEXTURE_ICON_ARCHIVE 3
-#define TEXTURE_ICON_AUDIO   4
-#define TEXTURE_ICON_FILE    5
-#define TEXTURE_ICON_FOLDER  6
-#define TEXTURE_ICON_IMG     7
-#define TEXTURE_ICON_SYSTEM  8
-#define TEXTURE_ICON_TEXT    9
+C2D_Image icon_app, icon_archive, icon_audio, icon_dir, icon_file, icon_image, icon_text, icon_dir_dark, \
+	icon_doc, icon_check, icon_uncheck, icon_check_dark, icon_uncheck_dark, icon_radio_off, icon_radio_on, \
+	icon_radio_dark_off, icon_radio_dark_on, icon_toggle_on, icon_toggle_dark_on, icon_toggle_off, \
+	dialog, options_dialog, properties_dialog, dialog_dark, options_dialog_dark, properties_dialog_dark, \
+	icon_home, icon_home_dark, icon_options, icon_options_dark, icon_settings, icon_settings_dark, \
+	icon_ftp, icon_ftp_dark, icon_sd, icon_sd_dark, icon_secure, icon_secure_dark, icon_search, \
+	default_artwork, default_artwork_blur, btn_play, btn_pause, btn_rewind, btn_forward, \
+	btn_repeat, btn_shuffle, btn_repeat_overlay, btn_shuffle_overlay, \
+	icon_nav_drawer, icon_actions, icon_back;
 
-#define TEXTURE_ICON_CHECK   10
-#define TEXTURE_ICON_UNCHECK 11
-
-#define TEXTURE_DIALOG     12
-#define TEXTURE_OPTIONS    13
-#define TEXTURE_PROPERTIES 14
-
-#define TEXTURE_HOME_ICON     15
-#define TEXTURE_OPTIONS_ICON  16
-#define TEXTURE_SETTINGS_ICON 17
-#define TEXTURE_FTP_ICON      18
-#define TEXTURE_UPDATE_ICON   19
-
-#define TEXTURE_HOME_ICON_SELECTED     20
-#define TEXTURE_OPTIONS_ICON_SELECTED  21
-#define TEXTURE_SETTINGS_ICON_SELECTED 22
-#define TEXTURE_FTP_ICON_SELECTED      23
-#define TEXTURE_UPDATE_ICON_SELECTED   24
-
-#define TEXTURE_SD_ICON   25
-#define TEXTURE_NAND_ICON 26
-
-#define TEXTURE_SD_ICON_SELECTED   27
-#define TEXTURE_NAND_ICON_SELECTED 28
-
-#define TEXTURE_TOGGLE_ON  29
-#define TEXTURE_TOGGLE_OFF 30
-#define TEXTURE_RADIO_ON   31
-#define TEXTURE_RADIO_OFF  32
-
-#define TEXTURE_THEMES_LAUNCHER 33
-
-#define TEXTURE_SEARCH_ICON 34
-
-#define TEXTURE_BATTERY_0      35
-#define TEXTURE_BATTERY_15     36
-#define TEXTURE_BATTERY_28     37
-#define TEXTURE_BATTERY_43     38
-#define TEXTURE_BATTERY_57     39
-#define TEXTURE_BATTERY_71     40
-#define TEXTURE_BATTERY_85     41
-#define TEXTURE_BATTERY_100    42
-#define TEXTURE_BATTERY_CHARGE 43
-
-#define TEXTURE_WIFI_NULL 44
-#define TEXTURE_WIFI_0    45
-#define TEXTURE_WIFI_1    46
-#define TEXTURE_WIFI_2    47
-#define TEXTURE_WIFI_3    48
-
-#define TEXTURE_GALLERY_BAR   49
-#define TEXTURE_GALLERY_IMAGE 50
-
-#define TEXTURE_MUSIC_TOP_BG    51
-#define TEXTURE_MUSIC_BOTTOM_BG 52
-#define TEXTURE_MUSIC_PLAY      53
-#define TEXTURE_MUSIC_PAUSE     54
-#define TEXTURE_MUSIC_COVER     55
-#define TEXTURE_MUSIC_STATUS    56
-
-#define TEXTURE_TEXTVIEWER_BG 57
-
-void Load_Textures(void);
+void Textures_Load(void);
+void Textures_Free(void);
 
 #endif

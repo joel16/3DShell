@@ -1,5 +1,5 @@
-#ifndef MENU_MUSIC_H
-#define MENU_MUSIC_H
+#ifndef _3D_SHELL_MENU_MUSIC_H
+#define _3D_SHELL_MENU_MUSIC_H
 
 #include <3ds.h>
 
@@ -15,7 +15,7 @@ enum file_types
 
 struct decoder_fn
 {
-	int (* init)(const char* file);
+	int (* init)(const char *file);
 	u32 (* rate)(void);
 	u8 (* channels)(void);
 	size_t buffSize;
@@ -39,6 +39,6 @@ enum file_types Music_GetMusicFileType(const char *file);
  *
  * \param path	File path.
  */
-void Music_Player(char * path);
+void Music_Player(char *path);
 
 #endif

@@ -8,10 +8,9 @@
 #include "wav.h"
 
 #include "common.h"
-#include "dir_list.h"
+#include "dirbrowse.h"
 #include "fs.h"
 #include "menu_music.h"
-#include "pp2d.h"
 #include "screenshot.h"
 #include "status_bar.h"
 #include "textures.h"
@@ -20,29 +19,17 @@
 
 static volatile bool stop = true;
 
-/**
- * Stops current playback. Playback thread should exit as a result.
- */
 static void Music_StopPlayback(void)
 {
 	stop = true;
 }
 
-/**
- * Returns whether music is playing or paused.
- */
 bool Music_IsPlaying(void)
 {
 	return !stop;
 }
 
-/**
- * Obtains audio file type. Lifted from ctrmus with permission.
- *
- * \param	file	File location.
- * \return			file_types enum or 0 on unsupported file or error.
- */
-enum file_types Music_GetMusicFileType(const char * file)
+enum file_types Music_GetMusicFileType(const char *file)
 {
 	Handle handle;
 	
@@ -101,19 +88,12 @@ enum file_types Music_GetMusicFileType(const char * file)
 	return file_type;
 }
 
-/**
- * Should only be called from a new thread only, and have only one playback
- * thread at time. This function has not been written for more than one
- * playback thread in mind.
- *
- * \param	pathIn	File location.
- */
-static void Music_PlayFile(void * pathIn)
+static void Music_PlayFile(void *pathIn)
 {
 	struct decoder_fn decoder;
-	const char * file = pathIn;
-	s16 * buffer1 = NULL;
-	s16 * buffer2 = NULL;
+	const char *file = pathIn;
+	s16 *buffer1 = NULL;
+	s16 *buffer2 = NULL;
 	ndspWaveBuf waveBuf[2];
 	bool lastbuf = false;
 	Result ret = -1;
@@ -149,8 +129,8 @@ static void Music_PlayFile(void * pathIn)
 	if ((*decoder.channels)() > 2 || (*decoder.channels)() < 1)
 		goto out;
 
-	buffer1 = linearAlloc(decoder.buffSize * sizeof(s16));
-	buffer2 = linearAlloc(decoder.buffSize * sizeof(s16));
+	buffer1 = linearAlloc(decoder.buffSize *sizeof(s16));
+	buffer2 = linearAlloc(decoder.buffSize *sizeof(s16));
 
 	ndspChnReset(SFX);
 	ndspChnWaveBufClear(SFX);
@@ -169,14 +149,14 @@ static void Music_PlayFile(void * pathIn)
 	ndspChnWaveBufAdd(SFX, &waveBuf[1]);
 	
 	/**
-	 * There may be a chance that the music has not started by the time we get
-	 * to the while loop. So we ensure that music has started here.
+	 *There may be a chance that the music has not started by the time we get
+	 *to the while loop. So we ensure that music has started here.
 	 */
 	while(ndspChnIsPlaying(SFX) == false);
 
 	while(stop == false)
 	{
-		svcSleepThread(100 * 1000);
+		svcSleepThread(100 *1000);
 
 		/* When the last buffer has finished playing, break. */
 		if ((lastbuf == true) && (waveBuf[0].status == NDSP_WBUF_DONE) && (waveBuf[1].status == NDSP_WBUF_DONE))
@@ -215,9 +195,9 @@ static void Music_PlayFile(void * pathIn)
 			ndspChnWaveBufAdd(SFX, &waveBuf[1]);
 		}
 
-		if (R_FAILED(DSP_FlushDataCache(buffer1, decoder.buffSize * sizeof(s16))))
+		if (R_FAILED(DSP_FlushDataCache(buffer1, decoder.buffSize *sizeof(s16))))
 			return;
-		if (R_FAILED(DSP_FlushDataCache(buffer2, decoder.buffSize * sizeof(s16))))
+		if (R_FAILED(DSP_FlushDataCache(buffer2, decoder.buffSize *sizeof(s16))))
 			return;
 	}
 
@@ -232,12 +212,7 @@ out:
 	return;
 }
 
-/**
- * Play an audio file.
- *
- * \param path	File path.
- */
-void Music_Player(char * path)
+void Music_Player(char *path)
 {
 	s32 prio;
 	static Thread thread = NULL;
@@ -246,9 +221,9 @@ void Music_Player(char * path)
 	stop = false;
 
 	svcGetThreadPriority(&prio, CUR_THREAD_HANDLE);
-	thread = threadCreate(Music_PlayFile, path, 32 * 1024, prio - 1, -2, false);
+	thread = threadCreate(Music_PlayFile, path, 32 *1024, prio - 1, -2, false);
 	
-	File * file = Dirlist_GetFileIndex(position);
+	File *file = Dirbrowse_GetFileIndex(position);
 	bool isMP3 = (strncasecmp(file->ext, "mp3", 3) == 0);
 	
 	while (Music_IsPlaying())
@@ -258,43 +233,43 @@ void Music_Player(char * path)
 		u32 kDown = hidKeysDown();
 		u32 kHeld = hidKeysHeld();
 
-		if ((kDown & KEY_A) || ((touchInRect(114, 76, 204, 164)) && (kDown & KEY_TOUCH)))
+		if ((kDown & KEY_A) || ((TouchInRect(114, 76, 204, 164)) && (kDown & KEY_TOUCH)))
 			Audio_TogglePlayback(SFX);
 
-		pp2d_begin_draw(GFX_BOTTOM, GFX_LEFT);
+		//pp2d_begin_draw(GFX_BOTTOM, GFX_LEFT);
 
-			pp2d_draw_texture(TEXTURE_MUSIC_BOTTOM_BG, 0, 0);
+			//pp2d_draw_texture(TEXTURE_MUSIC_BOTTOM_BG, 0, 0);
 
-			if (!(Audio_IsPaused(SFX)))
-				pp2d_draw_texture(TEXTURE_MUSIC_PAUSE, ((320.0 - pp2d_get_texture_width(TEXTURE_MUSIC_PAUSE)) / 2.0) - 2, 
-					((240.0 - pp2d_get_texture_height(TEXTURE_MUSIC_PAUSE)) / 2.0));
+			/*if (!(Audio_IsPaused(SFX)))
+				//pp2d_draw_texture(TEXTURE_MUSIC_PAUSE, ((320.0 - //pp2d_get_texture_width(TEXTURE_MUSIC_PAUSE)) / 2.0) - 2, 
+					((240.0 - //pp2d_get_texture_height(TEXTURE_MUSIC_PAUSE)) / 2.0));
 			else
-				pp2d_draw_texture(TEXTURE_MUSIC_PLAY, ((320.0 - pp2d_get_texture_width(TEXTURE_MUSIC_PLAY)) / 2.0), 
-					((240.0 - pp2d_get_texture_height(TEXTURE_MUSIC_PLAY)) / 2.0));
+				//pp2d_draw_texture(TEXTURE_MUSIC_PLAY, ((320.0 - //pp2d_get_texture_width(TEXTURE_MUSIC_PLAY)) / 2.0), 
+					((240.0 - //pp2d_get_texture_height(TEXTURE_MUSIC_PLAY)) / 2.0));*/
 
-		pp2d_end_draw();
+		//pp2d_end_draw();
 
-		pp2d_begin_draw(GFX_TOP, GFX_LEFT);
+		//pp2d_begin_draw(GFX_TOP, GFX_LEFT);
 
-			pp2d_draw_texture(TEXTURE_MUSIC_TOP_BG, 0, 0);
+			//pp2d_draw_texture(TEXTURE_MUSIC_TOP_BG, 0, 0);
 
-			StatusBar_DisplayBar();
+			StatusBar_DisplayTime();
 
 			if (isMP3) // Only print out ID3 tag info for MP3
 			{	
-				pp2d_draw_textf(5, 20, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s", fileName);
-				pp2d_draw_textf(5, 36, 0.45f, 0.45f, RGBA8(255, 255, 255, 255), "%s", ID3.artist);
+				//pp2d_draw_textf(5, 20, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s", fileName);
+				//pp2d_draw_textf(5, 36, 0.45f, 0.45f, RGBA8(255, 255, 255, 255), "%s", ID3.artist);
 		
-				pp2d_draw_textf(184, 64, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.title);
-				pp2d_draw_textf(184, 84, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.album);
-				pp2d_draw_textf(184, 104, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.year);
-				pp2d_draw_textf(184, 124, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.genre);
+				//pp2d_draw_textf(184, 64, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.title);
+				//pp2d_draw_textf(184, 84, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.album);
+				//pp2d_draw_textf(184, 104, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.year);
+				//pp2d_draw_textf(184, 124, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.genre);
 			}
 		
 			else
-				pp2d_draw_textf(5, 25, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s", fileName);	
+				//pp2d_draw_textf(5, 25, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s", fileName);	
 		
-		pp2d_end_draw();
+		//pp2d_end_draw();
 
 		if (kDown & KEY_B)
 		{

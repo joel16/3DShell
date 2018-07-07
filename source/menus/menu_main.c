@@ -1,353 +1,178 @@
 #include <3ds.h>
 
+#include "C2D_helper.h"
 #include "common.h"
-#include "dir_list.h"
-#include "fs.h"
-#include "keyboard.h"
-#include "menu_delete.h"
-#include "menu_file_options.h"
+#include "config.h"
+#include "dirbrowse.h"
 #include "menu_ftp.h"
 #include "menu_main.h"
-#include "menu_properties.h"
-#include "menu_settings.h"
-#include "menu_sort.h"
-#include "menu_update.h"
-#include "pp2d.h"
-#include "screenshot.h"
 #include "status_bar.h"
 #include "textures.h"
-#include "theme.h"
-#include "touch.h"
+#include "utils.h"
 
-struct colour BottomScreen_colour;
-struct colour BottomScreen_bar_colour;
-struct colour BottomScreen_text_colour;
+#define MENUBAR_X_BOUNDARY  0
+static int menubar_x = -125;
+static char multi_select_dir_old[256];
 
-void Menu_Draw_MenuBar(void)
+static void Menu_ControlMenuBar(u32 input)
 {
-	float options_x = pp2d_get_texture_width(TEXTURE_HOME_ICON) + 5;
-	float settings_x = pp2d_get_texture_width(TEXTURE_HOME_ICON) + pp2d_get_texture_width(TEXTURE_OPTIONS_ICON) + 15;
-	float ftp_x = pp2d_get_texture_width(TEXTURE_HOME_ICON) + pp2d_get_texture_width(TEXTURE_OPTIONS_ICON) + 
-		pp2d_get_texture_width(TEXTURE_SETTINGS_ICON) + 25;
-	float update_x = pp2d_get_texture_width(TEXTURE_HOME_ICON) + pp2d_get_texture_width(TEXTURE_OPTIONS_ICON) + 
-		pp2d_get_texture_width(TEXTURE_SETTINGS_ICON) + pp2d_get_texture_width(TEXTURE_FTP_ICON) + 35;
+	if (input & KEY_A)
+		MENU_DEFAULT_STATE = MENU_STATE_SETTINGS;
 
-	if (MENU_DEFAULT_STATE == MENU_STATE_HOME)
-		pp2d_draw_texture(TEXTURE_HOME_ICON_SELECTED, 0, -2);
-	else
-		pp2d_draw_texture(TEXTURE_HOME_ICON, 0, -2);
-
-	if ((MENU_DEFAULT_STATE == MENU_STATE_OPTIONS) || (MENU_DEFAULT_STATE == MENU_STATE_PROPERTIES))
-		pp2d_draw_texture(TEXTURE_OPTIONS_ICON_SELECTED, options_x, 0);
-	else
-		pp2d_draw_texture(TEXTURE_OPTIONS_ICON, options_x, 0);
-
-	if ((MENU_DEFAULT_STATE == MENU_STATE_SETTINGS) || (MENU_DEFAULT_STATE == MENU_STATE_SORT) || (MENU_DEFAULT_STATE == MENU_STATE_THEMES))
-		pp2d_draw_texture(TEXTURE_SETTINGS_ICON_SELECTED, settings_x, 1);
-	else
-		pp2d_draw_texture(TEXTURE_SETTINGS_ICON, settings_x, 1);
-
-	if (MENU_DEFAULT_STATE == MENU_STATE_FTP)
-		pp2d_draw_texture(TEXTURE_FTP_ICON_SELECTED, ftp_x, 0);
-	else
-		pp2d_draw_texture(TEXTURE_FTP_ICON, ftp_x, 0);
-
-	if ((MENU_DEFAULT_STATE == MENU_STATE_UPDATE) || (MENU_DEFAULT_STATE == MENU_STATE_UPDATE_2))
-		pp2d_draw_texture(TEXTURE_UPDATE_ICON_SELECTED, update_x, 0);
-	else
-		pp2d_draw_texture(TEXTURE_UPDATE_ICON, update_x, 0);
-
-	if (BROWSE_STATE == STATE_SD)
-		pp2d_draw_texture(TEXTURE_SD_ICON_SELECTED, (320 - pp2d_get_texture_width(TEXTURE_SD_ICON_SELECTED)) - 55, 0);
-	else
-		pp2d_draw_texture(TEXTURE_SD_ICON, (320 - pp2d_get_texture_width(TEXTURE_SD_ICON)) - 55, 0);
-
-	if (BROWSE_STATE == STATE_NAND)
-		pp2d_draw_texture(TEXTURE_NAND_ICON_SELECTED, (320 - pp2d_get_texture_width(TEXTURE_NAND_ICON_SELECTED)) - 30, 0);
-	else
-		pp2d_draw_texture(TEXTURE_NAND_ICON, (320 - pp2d_get_texture_width(TEXTURE_NAND_ICON)) - 30, 0);
-
-	pp2d_draw_texture(TEXTURE_SEARCH_ICON, (320 - pp2d_get_texture_width(TEXTURE_SEARCH_ICON)), -2);
+	if ((input & KEY_SELECT) || (input & KEY_B))
+		MENU_DEFAULT_STATE = MENU_STATE_HOME;
 }
 
-static void Menu_Main_Controls(void)
+static void Menu_HandleMultiSelect(void)
 {
-	u32 kDown = hidKeysDown();
-	u32 kHeld = hidKeysHeld();
+	// multi_select_dir can only hold one dir
+	strcpy(multi_select_dir_old, cwd);
+	//if (strcmp(multi_select_dir_old, multi_select_dir) != 0)
+	//	FileOptions_ResetClipboard();
 
-	if (((kHeld & KEY_L) && (kDown & KEY_R)) || ((kHeld & KEY_R) && (kDown & KEY_L)))
-		Screenshot_Capture();
-
-	if ((kDown & KEY_TOUCH) && (touchInRect((320 - pp2d_get_texture_width(TEXTURE_SD_ICON)) - 55, 0, 
-		((320 - pp2d_get_texture_width(TEXTURE_SD_ICON)) - 55) + 20, 20))) // SD
+	char path[256];
+	File *file = Dirbrowse_GetFileIndex(position);
+	strcpy(path, cwd);
+	strcpy(path + strlen(path), file->name);
+	strcpy(multi_select_dir, cwd);
+			
+	if (!multi_select[position])
 	{
-		wait(1);
-		FS_Write(archive, "/3ds/3DShell/lastdir.txt", START_PATH);
-		strcpy(cwd, START_PATH);
-			
-		BROWSE_STATE = STATE_SD;
-			
-		FS_CloseArchive(archive);
-		FS_OpenArchive(&archive, ARCHIVE_SDMC);
-
-		Dirlist_PopulateFiles(true);
-		Dirlist_DisplayFiles();
+		multi_select[position] = true;
+		multi_select_indices[position] = multi_select_index; // Store the index in the position
+		Utils_AppendArr(multi_select_paths[multi_select_index], path, multi_select_index);
+		multi_select_index += 1;
 	}
-	else if ((kDown & KEY_TOUCH) && (touchInRect((320 - pp2d_get_texture_width(TEXTURE_NAND_ICON)) - 30, 0, 
-		((320 - pp2d_get_texture_width(TEXTURE_NAND_ICON)) - 30) + 20, 20))) // CTR NAND
+	else
 	{
-		wait(1);
-		strcpy(cwd, START_PATH);
-
-		BROWSE_STATE = STATE_NAND;
-
-		FS_CloseArchive(archive);
-		FS_OpenArchive(&archive, ARCHIVE_NAND_CTR_FS);
-
-		Dirlist_PopulateFiles(true);
-		Dirlist_DisplayFiles();
+		multi_select[position] = false;
+		strcpy(multi_select_paths[multi_select_indices[position]], "");
+		multi_select_indices[position] = -1;
 	}
 
-	if ((kDown & KEY_TOUCH) && (touchInRect((320 - pp2d_get_texture_width(TEXTURE_SEARCH_ICON)), 0, 320, 20)))
-	{
-		char *path = (char *)malloc(256);
-		strcpy(path, keyboard_3ds_get(256, "/", "Enter path"));
+	Utils_SetMax(&multi_select_index, 0, 50);
+	Utils_SetMin(&multi_select_index, 50, 0);
+}
 
-		if (FS_DirExists(archive, path))
+static void Menu_ControlHome(u32 input)
+{
+	if (input & KEY_START)
+		longjmp(exitJmp, 1);
+
+	if (input & KEY_SELECT)
+	{
+		if (MENU_DEFAULT_STATE == MENU_STATE_MENUBAR)
+			MENU_DEFAULT_STATE = MENU_STATE_HOME;
+		else 
 		{
-			strcpy(cwd, path);
-			Dirlist_PopulateFiles(true);
-			Dirlist_DisplayFiles();
+			menubar_x = -125;
+			MENU_DEFAULT_STATE = MENU_STATE_MENUBAR;
 		}
-		else
-			Dirlist_DisplayFiles();
-
-		free(path);
 	}
 
-	if ((kDown & KEY_TOUCH) && (touchInRect(0, 0, 22, 20)))
-	{
-		wait(1);
-		MENU_DEFAULT_STATE = MENU_STATE_HOME;
-	}
-	else if ((kDown & KEY_TOUCH) && (touchInRect(23, 0, 48, 20)))
-	{
-		wait(1);
-		MENU_DEFAULT_STATE = MENU_STATE_OPTIONS;
-	}
-	else if ((kDown & KEY_TOUCH) && (touchInRect(49, 0, 74, 20)))
-	{
-		wait(1);
-		MENU_DEFAULT_STATE = MENU_STATE_SETTINGS;
-	}
-	else if (((kDown & KEY_TOUCH) && (touchInRect(75, 0, 100, 20))) || (kDown & KEY_SELECT))
+	if (input & KEY_SELECT)
 	{
 		wait(1);
 		MENU_DEFAULT_STATE = MENU_STATE_FTP;
 		Menu_DisplayFTP();
 	}
-	else if ((kDown & KEY_TOUCH) && (touchInRect(101, 0, 126, 20)))
-	{
-		wait(1);
-		MENU_DEFAULT_STATE = MENU_STATE_UPDATE;
-	}
 
-	if (MENU_DEFAULT_STATE == MENU_STATE_OPTIONS)
-		Menu_ControlFileOptions(kDown);
-	else if (MENU_DEFAULT_STATE == MENU_STATE_PROPERTIES)
-		Menu_ControlProperties(kDown);
-	else if (MENU_DEFAULT_STATE == MENU_STATE_SETTINGS)
-		Menu_ControlSettings(kDown);
-	else if (MENU_DEFAULT_STATE == MENU_STATE_SORT)
-		Menu_ControlSort(kDown);
-	else if (MENU_DEFAULT_STATE == MENU_STATE_DIALOG)
-		Menu_ControlDeleteDialog(kDown);
-	else if (MENU_DEFAULT_STATE == MENU_STATE_UPDATE)
-		Menu_ControlUpdate(kDown);
-	else if (MENU_DEFAULT_STATE == MENU_STATE_UPDATE_2)
-		Menu_ControlUpdate2(kDown);
-	else if (MENU_DEFAULT_STATE == MENU_STATE_THEMES)
-	{
-		if (kDown & KEY_A)
-		{
-			File * file = Dirlist_GetFileIndex(position);
-
-			strcpy(fileName, file->name);
-
-			if ((strncmp(fileName, "default", 7) == 0))
-			{
-				strcpy(theme_dir, "romfs:/res/drawable");
-				strcpy(colour_dir, "/3ds/3DShell/themes/default");
-
-				Theme_SaveConfig(theme_dir, colour_dir);
-
-				wait(1);
-
-				Theme_Load();
-				Theme_Reload();
-			}
-			else if ((strncmp(fileName, "..", 2) != 0) && (file->isDir))
-			{
-				strcpy(theme_dir, cwd);
-				strcpy(colour_dir, cwd);
-				
-				strcat(theme_dir, fileName);
-				strcat(colour_dir, fileName);
-
-				Theme_SaveConfig(theme_dir, colour_dir);
-				
-				wait(1);
-
-				Theme_Load();
-				Theme_Reload();
-			}
-		}
-		if (kDown & KEY_B)
-		{
-			char buf[250];
-
-			FILE * read = fopen("/3ds/3DShell/lastdir.txt", "r");
-			fscanf(read, "%s", buf);
-			fclose(read);
-
-			if (FS_DirExists(archive, buf)) // Incase a directory previously visited had been deleted, set start path to sdmc:/ to avoid errors.
-				strcpy(cwd, buf);
-			else
-				strcpy(cwd, START_PATH);
-
-			wait(1);
-
-			MENU_DEFAULT_STATE = MENU_STATE_SETTINGS;
-		}
-	}
-	
 	if (fileCount > 0)
-	{	
-		// Position Decrement
-		if (kDown & KEY_DUP)
+	{
+		if (input & KEY_DUP)
+			position--;
+		else if (input & KEY_DDOWN)
+			position++;
+
+		Utils_SetMax(&position, 0, (fileCount - 1));
+		Utils_SetMin(&position, (fileCount - 1), 0);
+
+		if (input & KEY_LEFT)
+			position = 0;
+		else if (input & KEY_RIGHT)
+			position = fileCount - 1;
+
+		// Open options
+		if (input & KEY_X)
 		{
-			// Decrease Position
-			if (position > 0)
-				position--;
-
-			// Rewind Pointer
-			else 
-				position = fileCount - 1;
-		}
-
-		// Position Increment
-		else if (kDown & KEY_DDOWN)
-		{
-			// Increase Position
-			if (position < (fileCount - 1))
-				position++;
-
-			// Rewind Pointer
-			else 
-				position = 0;
-		}
-
-		if (kHeld & KEY_CPAD_UP)
-		{
-			wait(5);
-
-			//scroll_x = 395;
-			//scroll_time = osGetTime();
-
-			if (position > 0)
-				position--;
-
-			else position = fileCount - 1;
-		}
-
-		else if (kHeld & KEY_CPAD_DOWN)
-		{
-			wait(5);
-
-			//scroll_x = 395;
-			//scroll_time = osGetTime();
-
-			if (position < (fileCount - 1))
-				position++;
-
-			else position = 0;
-		}
-
-		else if (kDown & KEY_A)
-		{
-			if (MENU_DEFAULT_STATE != MENU_STATE_THEMES)
-			{
-				wait(1);
-				Dirlist_OpenFile(); // Open file/dir
-			}
-		}
-
-		else if (kDown & KEY_Y)
-		{
-			snprintf(multi_select_dir, 255, cwd);
-			
-			if (!multi_select[position])
-				multi_select[position] = true;
+			if (MENU_DEFAULT_STATE == MENU_STATE_OPTIONS)
+				MENU_DEFAULT_STATE = MENU_STATE_HOME;
 			else
-				multi_select[position] = false;
+				MENU_DEFAULT_STATE = MENU_STATE_OPTIONS;
 		}
 
-		else if ((strcmp(cwd, ROOT_PATH) != 0) && (kDown & KEY_B))
+		if (input & KEY_Y)
+			Menu_HandleMultiSelect();
+
+		if (input & KEY_A)
 		{
-			if (MENU_DEFAULT_STATE != MENU_STATE_THEMES)
-			{
-				wait(1);
-				Dirlist_Navigate(-1);
-				Dirlist_PopulateFiles(true);
-				Dirlist_DisplayFiles();
-			}	
+			wait(5);
+			Dirbrowse_OpenFile();
+		}
+		else if ((strcmp(cwd, ROOT_PATH) != 0) && (input & KEY_B))
+		{
+			wait(5);
+			Dirbrowse_Navigate(-1);
+			Dirbrowse_PopulateFiles(true);
 		}
 	}
 }
 
 void Menu_Main(void)
 {
-	Dirlist_PopulateFiles(true);
+	//TouchInfo touchInfo;
+	//Touch_Init(&touchInfo);
 
+	Dirbrowse_PopulateFiles(false);
 	memset(multi_select, 0, sizeof(multi_select)); // Reset all multi selected items
 
-	while (aptMainLoop())
+	while(aptMainLoop())
 	{
-		pp2d_begin_draw(GFX_TOP, GFX_LEFT);
-			pp2d_draw_texture(TEXTURE_BACKGROUND, 0, 0);
-			StatusBar_DisplayBar();
-			Dirlist_DisplayFiles();
-		pp2d_end_draw();
+		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
+		C2D_TargetClear(RENDER_TOP, config_dark_theme? BLACK_BG : WHITE);
+		C2D_TargetClear(RENDER_BOTTOM, config_dark_theme? BLACK_BG : WHITE);
+		C2D_SceneBegin(RENDER_TOP);
 
-		pp2d_begin_draw(GFX_BOTTOM, GFX_LEFT);
-			pp2d_draw_rectangle(0, 0, 320, 240, RGBA8(BottomScreen_colour.r, BottomScreen_colour.g, BottomScreen_colour.b, 255));
-			pp2d_draw_rectangle(0, 0, 320, 20, RGBA8(BottomScreen_bar_colour.r, BottomScreen_bar_colour.g, BottomScreen_bar_colour.b, 255));
+		Draw_Rect(0, 0, 400, 18, config_dark_theme? STATUS_BAR_DARK : STATUS_BAR_LIGHT); // Status bar
+		Draw_Rect(0, 18, 400, 34, config_dark_theme? MENU_BAR_DARK : MENU_BAR_LIGHT); // Menu bar
 
-			if (MENU_DEFAULT_STATE == MENU_STATE_HOME)
-				pp2d_draw_textf(2, 225, 0.45f, 0.45f, RGBA8(BottomScreen_text_colour.r, BottomScreen_text_colour.g , BottomScreen_text_colour.b, 255), "3DShell %d.%d.%d - %s", VERSION_MAJOR, VERSION_MINOR, VERSION_MICRO, GITVERSION);
-			else if (MENU_DEFAULT_STATE == MENU_STATE_OPTIONS)
-				Menu_DisplayFileOptions();
-			else if (MENU_DEFAULT_STATE == MENU_STATE_PROPERTIES)
-				Menu_DisplayProperties();
-			else if (MENU_DEFAULT_STATE == MENU_STATE_SETTINGS)
-				Menu_DisplaySettings();
-			else if (MENU_DEFAULT_STATE == MENU_STATE_SORT)
-				Menu_DisplaySort();
-			else if (MENU_DEFAULT_STATE == MENU_STATE_DIALOG)
-				Menu_DisplayDeleteDialog();
-			else if (MENU_DEFAULT_STATE == MENU_STATE_UPDATE)
-				Menu_DisplayUpdate();
-			else if (MENU_DEFAULT_STATE == MENU_STATE_UPDATE_2)
-				Menu_DisplayUpdate2();
+		StatusBar_DisplayTime();
+		Dirbrowse_DisplayFiles();
 
-			Menu_Draw_MenuBar();
-		pp2d_end_draw();
+		C2D_SceneBegin(RENDER_BOTTOM);
+		Draw_Rect(0, 0, 320, 20, config_dark_theme? STATUS_BAR_DARK : STATUS_BAR_LIGHT); // Status bar
+		Draw_Rect(0, 20, 320, 220, config_dark_theme? MENU_BAR_DARK : MENU_BAR_LIGHT); // Menu bar
+
+		Draw_Image(config_dark_theme? icon_home_dark : icon_home, 0, 0);
+		Draw_Image(config_dark_theme? icon_options_dark : icon_options, 25, 0);
+		Draw_Image(config_dark_theme? icon_settings_dark : icon_settings, 50, 0);
+		Draw_Image(config_dark_theme? icon_ftp_dark : icon_ftp, 75, 0);
+
+		Draw_Image(config_dark_theme? icon_sd_dark : icon_sd, 250, 0);
+		Draw_Image(config_dark_theme? icon_secure_dark : icon_secure, 275, 0);
+		Draw_Image(icon_search, 300, 0);
+
+		/*else if (MENU_DEFAULT_STATE == MENU_STATE_OPTIONS)
+			Menu_DisplayFileOptions();
+		else if (MENU_DEFAULT_STATE == MENU_STATE_PROPERTIES)
+			Menu_DisplayProperties();
+		else if (MENU_DEFAULT_STATE == MENU_STATE_SETTINGS)
+			Menu_DisplaySettings();
+		else if (MENU_DEFAULT_STATE == MENU_STATE_SORT)
+			Menu_DisplaySort();
+		else if (MENU_DEFAULT_STATE == MENU_STATE_DIALOG)
+			Menu_DisplayDeleteDialog();*/
+
+		Draw_EndFrame();
 
 		hidScanInput();
-		Menu_Main_Controls();
-
+		//Touch_Process(&touchInfo);
 		u32 kDown = hidKeysDown();
-		if (kDown & KEY_START)
-			break;
+
+		if (MENU_DEFAULT_STATE == MENU_STATE_HOME) 
+		{
+			Menu_ControlHome(kDown);
+			//Menu_TouchHome(touchInfo);
+		}
 	}
 }
