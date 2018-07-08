@@ -118,7 +118,7 @@ static void generateScreenshotFileName(int number, char *fileName, const char *e
 	int month = timeStruct->tm_mon + 1;
 	int year = timeStruct->tm_year + 1900;
 
-	if (!(BROWSE_STATE == STATE_NAND))
+	if (!(BROWSE_STATE == BROWSE_STATE_NAND))
 	{
 		if (!(FS_DirExists(archive, "/screenshots/")))
 			FS_MakeDir(archive, "/screenshots");

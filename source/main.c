@@ -82,7 +82,8 @@ int main(int argc, char *argv[])
 		return 0;
 	}
 
-	MENU_DEFAULT_STATE = MENU_STATE_HOME;
+	MENU_STATE = MENU_STATE_HOME;
+	BROWSE_STATE = BROWSE_STATE_SD;
 	Menu_Main();
 	Term_Services();
 

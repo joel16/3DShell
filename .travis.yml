@@ -1,26 +1,21 @@
 language: c
 
-sudo: true
+sudo: required
 
-#Cache devkitARM and doxygen
-cache:
-  directories:
-    - /home/travis/devkitPro
+services: docker
 
 before_install:
-  - cd include/dr_libs/
-  - git clone https://github.com/mackron/dr_libs.git
-  - cd ../..
-  - export DEVKITPRO=/opt/devkitpro
-  - export DEVKITARM=/opt/devkitpro/devkitARM
-  - export CTRULIB=${DEVKITPRO}/libctru
-  - export PORTLIBS=${DEVKITPRO}/portlibs/armv6k
-  - sh resources/.travis-deps.sh
+- cd include/dr_libs/
+- git clone https://github.com/mackron/dr_libs.git
+- cd ../..
+
+install:
+- docker pull devkitpro/devkitarm
 
 script:
-  - cd $TRAVIS_BUILD_DIR
-  - sh resources/.build.sh
-  
+- docker run -e ENABLE_COMPATIBILITY_REPORTING -v $TRAVIS_BUILD_DIR:/3DShell
+  devkitpro/devkitarm /bin/bash -ex /3DShell/.travis/build.sh
+
 deploy:
   provider: pages
   skip_cleanup: true

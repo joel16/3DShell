@@ -387,5 +387,5 @@ void Gallery_DisplayImage(char *path)
 	Gallery_FreeImage(image);
 	memset(album, 0, sizeof(album[0][0]) * 512 * 512);
 	count = 0;
-	MENU_DEFAULT_STATE = MENU_STATE_HOME;
+	MENU_STATE = MENU_STATE_HOME;
 }

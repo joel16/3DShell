@@ -233,8 +233,8 @@ void Music_Player(char *path)
 		u32 kDown = hidKeysDown();
 		u32 kHeld = hidKeysHeld();
 
-		if ((kDown & KEY_A) || ((TouchInRect(114, 76, 204, 164)) && (kDown & KEY_TOUCH)))
-			Audio_TogglePlayback(SFX);
+		//if ((kDown & KEY_A) || ((TouchInRect(114, 76, 204, 164)) && (kDown & KEY_TOUCH)))
+		//	Audio_TogglePlayback(SFX);
 
 		//pp2d_begin_draw(GFX_BOTTOM, GFX_LEFT);
 

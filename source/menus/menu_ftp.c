@@ -24,7 +24,7 @@ void Menu_DisplayFTP(void)
 
 	int pBar = 0, xlim = 270;
 
-	while(MENU_DEFAULT_STATE == MENU_STATE_FTP)
+	while(MENU_STATE == MENU_STATE_FTP)
 	{
 		ftp_loop();
 
@@ -35,11 +35,8 @@ void Menu_DisplayFTP(void)
 		Draw_Rect(0, 20, 320, 220, config_dark_theme? MENU_BAR_DARK : MENU_BAR_LIGHT); // Menu bar
 
 		ACU_GetWifiStatus(&wifiStatus);
-
-		//Draw_Rect(0, 0, 320, 240, RGBA8(BottomScreen_colour.r, BottomScreen_colour.g, BottomScreen_colour.b, 255));
-		//Draw_Rect(0, 0, 320, 20, RGBA8(BottomScreen_bar_colour.r, BottomScreen_bar_colour.g, BottomScreen_bar_colour.b, 255));
 			
-		//Menu_Draw_MenuBar();
+		Menu_DrawMenuBar();
 
 		if (!(wifiStatus))
 		{
@@ -92,6 +89,6 @@ void Menu_DisplayFTP(void)
 	memset(ftp_accepted_connection, 0, 20); // Empty accepted connection address
 	memset(ftp_file_transfer, 0, 50); // Empty transfer status
 	ftp_exit();
-	MENU_DEFAULT_STATE = MENU_STATE_HOME;
+	MENU_STATE = MENU_STATE_HOME;
 	Dirbrowse_PopulateFiles(true);
 }

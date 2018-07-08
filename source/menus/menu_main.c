@@ -1,27 +1,22 @@
+#include <stdlib.h>
 #include <3ds.h>
 
 #include "C2D_helper.h"
 #include "common.h"
 #include "config.h"
 #include "dirbrowse.h"
+#include "fs.h"
+#include "keyboard.h"
 #include "menu_ftp.h"
+#include "menu_fileoptions.h"
 #include "menu_main.h"
+#include "menu_settings.h"
 #include "status_bar.h"
 #include "textures.h"
+#include "touch.h"
 #include "utils.h"
 
-#define MENUBAR_X_BOUNDARY  0
-static int menubar_x = -125;
 static char multi_select_dir_old[256];
-
-static void Menu_ControlMenuBar(u32 input)
-{
-	if (input & KEY_A)
-		MENU_DEFAULT_STATE = MENU_STATE_SETTINGS;
-
-	if ((input & KEY_SELECT) || (input & KEY_B))
-		MENU_DEFAULT_STATE = MENU_STATE_HOME;
-}
 
 static void Menu_HandleMultiSelect(void)
 {
@@ -59,23 +54,7 @@ static void Menu_ControlHome(u32 input)
 	if (input & KEY_START)
 		longjmp(exitJmp, 1);
 
-	if (input & KEY_SELECT)
-	{
-		if (MENU_DEFAULT_STATE == MENU_STATE_MENUBAR)
-			MENU_DEFAULT_STATE = MENU_STATE_HOME;
-		else 
-		{
-			menubar_x = -125;
-			MENU_DEFAULT_STATE = MENU_STATE_MENUBAR;
-		}
-	}
-
-	if (input & KEY_SELECT)
-	{
-		wait(1);
-		MENU_DEFAULT_STATE = MENU_STATE_FTP;
-		Menu_DisplayFTP();
-	}
+	Menu_ControlMenuBar(input);
 
 	if (fileCount > 0)
 	{
@@ -95,10 +74,10 @@ static void Menu_ControlHome(u32 input)
 		// Open options
 		if (input & KEY_X)
 		{
-			if (MENU_DEFAULT_STATE == MENU_STATE_OPTIONS)
-				MENU_DEFAULT_STATE = MENU_STATE_HOME;
+			if (MENU_STATE == MENU_STATE_FILEOPTIONS)
+				MENU_STATE = MENU_STATE_HOME;
 			else
-				MENU_DEFAULT_STATE = MENU_STATE_OPTIONS;
+				MENU_STATE = MENU_STATE_FILEOPTIONS;
 		}
 
 		if (input & KEY_Y)
@@ -118,11 +97,88 @@ static void Menu_ControlHome(u32 input)
 	}
 }
 
+void Menu_DrawMenuBar(void)
+{
+	Draw_Image(MENU_STATE == MENU_STATE_HOME? icon_home_dark : icon_home, 0, -2.5);
+	Draw_Image((MENU_STATE == MENU_STATE_FILEOPTIONS) || (MENU_STATE == MENU_STATE_PROPERTIES)? icon_options_dark : icon_options, 25, 0);
+	Draw_Image((MENU_STATE == MENU_STATE_SETTINGS) || (MENU_STATE == MENU_STATE_SORT)? icon_settings_dark : icon_settings, 50, 0);
+	Draw_Image(MENU_STATE == MENU_STATE_FTP? icon_ftp_dark : icon_ftp, 75, 0);
+
+	Draw_Image(BROWSE_STATE == BROWSE_STATE_SD? icon_sd_dark : icon_sd, 250, 0);
+	Draw_Image(BROWSE_STATE == BROWSE_STATE_NAND? icon_secure_dark : icon_secure, 275, 0);
+	Draw_Image(icon_search, 300, 0);
+}
+
+void Menu_ControlMenuBar(u32 input)
+{
+	if ((input & KEY_TOUCH) && (TouchInRect(0, 0, 22, 20)))
+	{
+		wait(1);
+		MENU_STATE = MENU_STATE_HOME;
+	}
+	else if ((input & KEY_TOUCH) && (TouchInRect(23, 0, 47, 20)))
+	{
+		wait(1);
+		MENU_STATE = MENU_STATE_FILEOPTIONS;
+	}
+	else if ((input & KEY_TOUCH) && (TouchInRect(48, 0, 72, 20)))
+	{
+		wait(1);
+		MENU_STATE = MENU_STATE_SETTINGS;
+	}
+	else if (((input & KEY_TOUCH) && (TouchInRect(73, 0, 97, 20))) || (input & KEY_SELECT))
+	{
+		wait(1);
+		MENU_STATE = MENU_STATE_FTP;
+		Menu_DisplayFTP();
+	}
+}
+
+static void Menu_ControlBrowseOptions(u32 input)
+{
+	if ((input & KEY_TOUCH) && (TouchInRect(247, 0, 272, 20))) // SD
+	{
+		wait(1);
+		FS_Write(archive, "/3ds/3DShell/lastdir.txt", START_PATH);
+		strcpy(cwd, START_PATH);
+			
+		BROWSE_STATE = BROWSE_STATE_SD;
+			
+		FS_CloseArchive(archive);
+		FS_OpenArchive(&archive, ARCHIVE_SDMC);
+
+		Dirbrowse_PopulateFiles(true);
+	}
+	else if ((input & KEY_TOUCH) && (TouchInRect(273, 0, 292, 20))) // CTR NAND
+	{
+		wait(1);
+		strcpy(cwd, START_PATH);
+
+		BROWSE_STATE = BROWSE_STATE_NAND;
+
+		FS_CloseArchive(archive);
+		FS_OpenArchive(&archive, ARCHIVE_NAND_CTR_FS);
+
+		Dirbrowse_PopulateFiles(true);
+	}
+
+	if ((input & KEY_TOUCH) && (TouchInRect(293, 0, 320, 20)))
+	{
+		char *path = (char *)malloc(256);
+		strcpy(path, OSK_Get(256, "/", "Enter path"));
+
+		if (FS_DirExists(archive, path))
+		{
+			strcpy(cwd, path);
+			Dirbrowse_PopulateFiles(true);
+		}
+
+		free(path);
+	}
+}
+
 void Menu_Main(void)
 {
-	//TouchInfo touchInfo;
-	//Touch_Init(&touchInfo);
-
 	Dirbrowse_PopulateFiles(false);
 	memset(multi_select, 0, sizeof(multi_select)); // Reset all multi selected items
 
@@ -140,39 +196,46 @@ void Menu_Main(void)
 		Dirbrowse_DisplayFiles();
 
 		C2D_SceneBegin(RENDER_BOTTOM);
-		Draw_Rect(0, 0, 320, 20, config_dark_theme? STATUS_BAR_DARK : STATUS_BAR_LIGHT); // Status bar
-		Draw_Rect(0, 20, 320, 220, config_dark_theme? MENU_BAR_DARK : MENU_BAR_LIGHT); // Menu bar
+		Draw_Rect(0, 0, 320, 20, config_dark_theme? STATUS_BAR_DARK : MENU_BAR_LIGHT); // Status bar
+		Draw_Rect(0, 20, 320, 220, config_dark_theme? MENU_BAR_DARK : STATUS_BAR_LIGHT); // Menu bar
 
-		Draw_Image(config_dark_theme? icon_home_dark : icon_home, 0, 0);
-		Draw_Image(config_dark_theme? icon_options_dark : icon_options, 25, 0);
-		Draw_Image(config_dark_theme? icon_settings_dark : icon_settings, 50, 0);
-		Draw_Image(config_dark_theme? icon_ftp_dark : icon_ftp, 75, 0);
-
-		Draw_Image(config_dark_theme? icon_sd_dark : icon_sd, 250, 0);
-		Draw_Image(config_dark_theme? icon_secure_dark : icon_secure, 275, 0);
-		Draw_Image(icon_search, 300, 0);
-
-		/*else if (MENU_DEFAULT_STATE == MENU_STATE_OPTIONS)
-			Menu_DisplayFileOptions();
-		else if (MENU_DEFAULT_STATE == MENU_STATE_PROPERTIES)
-			Menu_DisplayProperties();
-		else if (MENU_DEFAULT_STATE == MENU_STATE_SETTINGS)
-			Menu_DisplaySettings();
-		else if (MENU_DEFAULT_STATE == MENU_STATE_SORT)
-			Menu_DisplaySort();
-		else if (MENU_DEFAULT_STATE == MENU_STATE_DIALOG)
-			Menu_DisplayDeleteDialog();*/
-
-		Draw_EndFrame();
+		Menu_DrawMenuBar();
 
 		hidScanInput();
-		//Touch_Process(&touchInfo);
 		u32 kDown = hidKeysDown();
+		Menu_ControlMenuBar(kDown);
 
-		if (MENU_DEFAULT_STATE == MENU_STATE_HOME) 
+		if (MENU_STATE == MENU_STATE_HOME) 
 		{
 			Menu_ControlHome(kDown);
-			//Menu_TouchHome(touchInfo);
+			Menu_ControlBrowseOptions(kDown);
 		}
+		else if (MENU_STATE == MENU_STATE_FILEOPTIONS)
+		{
+			Menu_DisplayFileOptions();
+			Menu_ControlFileOptions(kDown);
+		}
+		else if (MENU_STATE == MENU_STATE_PROPERTIES)
+		{
+			Menu_DisplayProperties();
+			Menu_ControlProperties(kDown);
+		}
+		else if (MENU_STATE == MENU_STATE_DIALOG)
+		{
+			Menu_DisplayDeleteDialog();
+			Menu_ControlDeleteDialog(kDown);
+		}
+		else if (MENU_STATE == MENU_STATE_SETTINGS)
+		{
+			Menu_DisplaySettings();
+			Menu_ControlSettings(kDown);
+		}
+		else if (MENU_STATE == MENU_STATE_SORT)
+		{
+			Menu_DisplaySortSettings();
+			Menu_ControlSortSettings(kDown);
+		}
+
+		Draw_EndFrame();
 	}
 }
