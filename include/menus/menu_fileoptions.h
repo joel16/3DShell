@@ -3,6 +3,7 @@
 
 #include <3ds.h>
 
+void FileOptions_ResetClipboard(void);
 void Menu_DisplayDeleteDialog(void);
 void Menu_ControlDeleteDialog(u32 input);
 void Menu_DisplayProperties(void);
