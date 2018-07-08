@@ -22,8 +22,8 @@ static void Menu_HandleMultiSelect(void)
 {
 	// multi_select_dir can only hold one dir
 	strcpy(multi_select_dir_old, cwd);
-	//if (strcmp(multi_select_dir_old, multi_select_dir) != 0)
-	//	FileOptions_ResetClipboard();
+	if (strcmp(multi_select_dir_old, multi_select_dir) != 0)
+		FileOptions_ResetClipboard();
 
 	char path[256];
 	File *file = Dirbrowse_GetFileIndex(position);
