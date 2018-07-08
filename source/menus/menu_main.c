@@ -103,7 +103,7 @@ void Menu_DrawMenuBar(void)
 	Draw_Image((MENU_STATE == MENU_STATE_FILEOPTIONS) || (MENU_STATE == MENU_STATE_PROPERTIES)? icon_options_dark : icon_options, 25, 0);
 	Draw_Image((MENU_STATE == MENU_STATE_SETTINGS) || (MENU_STATE == MENU_STATE_SORT)? icon_settings_dark : icon_settings, 50, 0);
 	Draw_Image(MENU_STATE == MENU_STATE_FTP? icon_ftp_dark : icon_ftp, 75, 0);
-
+	Draw_Image(MENU_STATE == MENU_STATE_UPDATER? icon_updates_dark : icon_updates, 100, 0.5);
 	Draw_Image(BROWSE_STATE == BROWSE_STATE_SD? icon_sd_dark : icon_sd, 250, 0);
 	Draw_Image(BROWSE_STATE == BROWSE_STATE_NAND? icon_secure_dark : icon_secure, 275, 0);
 	Draw_Image(icon_search, 300, 0);

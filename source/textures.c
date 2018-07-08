@@ -49,6 +49,8 @@ void Textures_Load(void)
 	icon_secure = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_material_light_secure_idx);
 	icon_secure_dark = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_material_light_secure_dark_idx);
 	icon_search = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_material_light_search_idx);
+	icon_updates = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_material_light_tab_idx);
+	icon_updates_dark = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_material_light_tab_dark_idx);
 	btn_play = C2D_SpriteSheetGetImage(spritesheet, sprites_btn_playback_play_idx);
 	btn_pause = C2D_SpriteSheetGetImage(spritesheet, sprites_btn_playback_pause_idx);
 	btn_rewind = C2D_SpriteSheetGetImage(spritesheet, sprites_btn_playback_rewind_idx);

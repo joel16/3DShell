@@ -40,6 +40,13 @@ GRAPHICS	:= res/drawable
 ROMFS		:= romfs
 GFXBUILD	:= $(ROMFS)/res/drawable
 
+APP_TITLE           := 3DShell
+VERSION_MAJOR       := 3
+VERSION_MINOR       := 0
+VERSION_MICRO       := 0
+
+GITVERSION    := $(shell git log -1 --pretty='%h')
+
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
@@ -47,7 +54,10 @@ ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
 CFLAGS	:=	-g -Werror -O2 -mword-relocations \
 			-fomit-frame-pointer -ffunction-sections \
-			$(ARCH)
+			-DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO) \
+	        -DAPP_TITLE="\"$(APP_TITLE)\"" \
+	        -DGITVERSION="\"${GITVERSION}\"" \
+            $(ARCH)
 
 CFLAGS	+=	$(INCLUDE) -DARM11 -D_3DS
 
@@ -56,7 +66,8 @@ CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:=  -lturbojpeg -lpng -lcitro2d -lcitro3d -lctru -lm -lz
+LIBS	:=  -lcurl -lmbedtls -lmbedx509 -lmbedcrypto -lmpg123 -lvorbisidec -logg \
+            -lturbojpeg -lpng -lcitro2d -lcitro3d -lctru -lm -lz
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
