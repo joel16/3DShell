@@ -121,6 +121,7 @@ void Menu_ControlSettings(u32 input)
 			case 2:
 				config_hidden_files = !config_hidden_files;
 				Config_Save(config_dark_theme, config_hidden_files, config_sort_by);
+				Dirbrowse_PopulateFiles(true);
 				break;
 		}
 	}
