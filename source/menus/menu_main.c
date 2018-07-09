@@ -214,6 +214,7 @@ void Menu_Main(void)
 
 		if (MENU_STATE == MENU_STATE_HOME) 
 		{
+			Draw_Textf(2, 225, 0.45f, WHITE, "3DShell %d.%d.%d - %s", VERSION_MAJOR, VERSION_MINOR, VERSION_MICRO, GITVERSION);
 			Menu_ControlHome(kDown);
 			Menu_ControlBrowseOptions(kDown);
 		}
