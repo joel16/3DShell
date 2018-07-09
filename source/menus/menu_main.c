@@ -10,8 +10,10 @@
 #include "menu_ftp.h"
 #include "menu_fileoptions.h"
 #include "menu_main.h"
+#include "menu_update.h"
 #include "menu_settings.h"
 #include "status_bar.h"
+#include "screenshot.h"
 #include "textures.h"
 #include "touch.h"
 #include "utils.h"
@@ -51,11 +53,6 @@ static void Menu_HandleMultiSelect(void)
 
 static void Menu_ControlHome(u32 input)
 {
-	if (input & KEY_START)
-		longjmp(exitJmp, 1);
-
-	Menu_ControlMenuBar(input);
-
 	if (fileCount > 0)
 	{
 		if (input & KEY_DUP)
@@ -103,7 +100,7 @@ void Menu_DrawMenuBar(void)
 	Draw_Image((MENU_STATE == MENU_STATE_FILEOPTIONS) || (MENU_STATE == MENU_STATE_PROPERTIES)? icon_options_dark : icon_options, 25, 0);
 	Draw_Image((MENU_STATE == MENU_STATE_SETTINGS) || (MENU_STATE == MENU_STATE_SORT)? icon_settings_dark : icon_settings, 50, 0);
 	Draw_Image(MENU_STATE == MENU_STATE_FTP? icon_ftp_dark : icon_ftp, 75, 0);
-	Draw_Image(MENU_STATE == MENU_STATE_UPDATER? icon_updates_dark : icon_updates, 100, 0.5);
+	Draw_Image((MENU_STATE == MENU_STATE_UPDATE) || (MENU_STATE == MENU_STATE_UPDATE_2)? icon_updates_dark : icon_updates, 100, 0.5);
 	Draw_Image(BROWSE_STATE == BROWSE_STATE_SD? icon_sd_dark : icon_sd, 250, 0);
 	Draw_Image(BROWSE_STATE == BROWSE_STATE_NAND? icon_secure_dark : icon_secure, 275, 0);
 	Draw_Image(icon_search, 300, 0);
@@ -131,6 +128,11 @@ void Menu_ControlMenuBar(u32 input)
 		wait(1);
 		MENU_STATE = MENU_STATE_FTP;
 		Menu_DisplayFTP();
+	}
+	else if ((input & KEY_TOUCH) && (TouchInRect(98, 0, 122, 20)))
+	{
+		wait(1);
+		MENU_STATE = MENU_STATE_UPDATE;
 	}
 }
 
@@ -203,7 +205,12 @@ void Menu_Main(void)
 
 		hidScanInput();
 		u32 kDown = hidKeysDown();
+		u32 kHeld = hidKeysHeld();
+
 		Menu_ControlMenuBar(kDown);
+		
+		if (((kHeld & KEY_L) && (kDown & KEY_R)) || ((kHeld & KEY_R) && (kDown & KEY_L)))
+			Screenshot_Capture();
 
 		if (MENU_STATE == MENU_STATE_HOME) 
 		{
@@ -235,7 +242,20 @@ void Menu_Main(void)
 			Menu_DisplaySortSettings();
 			Menu_ControlSortSettings(kDown);
 		}
+		else if (MENU_STATE == MENU_STATE_UPDATE)
+		{
+			Menu_DisplayUpdate();
+			Menu_ControlUpdate(kDown);
+		}
+		else if (MENU_STATE == MENU_STATE_UPDATE_2)
+		{
+			Menu_DisplayUpdate2();
+			Menu_ControlUpdate2(kDown);
+		}
 
 		Draw_EndFrame();
+
+		if (kDown & KEY_START)
+			longjmp(exitJmp, 1);
 	}
 }

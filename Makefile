@@ -172,6 +172,8 @@ endif
 #---------------------------------------------------------------------------------
 all: $(BUILD) $(GFXBUILD) $(DEPSDIR) $(ROMFS_T3XFILES) $(T3XHFILES)
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
+	@echo "${VERSION_MAJOR}${VERSION_MINOR}${VERSION_MICRO}" > UPDATE_MILESTONE.txt # For maintainer builds
+	@echo "${GITVERSION}" > UPDATE_NIGHTLY.txt # For maintainer builds
 
 $(BUILD):
 	@mkdir -p $@

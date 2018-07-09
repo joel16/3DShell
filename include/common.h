@@ -19,7 +19,8 @@
 #define MENU_STATE_THEMES      6
 #define MENU_STATE_DIALOG      7
 #define MENU_STATE_PROPERTIES  8
-#define MENU_STATE_UPDATER     9
+#define MENU_STATE_UPDATE      9
+#define MENU_STATE_UPDATE_2    10
 
 #define BROWSE_STATE_SD   0
 #define BROWSE_STATE_NAND 1
