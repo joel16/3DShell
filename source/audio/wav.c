@@ -11,11 +11,11 @@ static drwav* pWav;
 static drwav_uint64 samplesRead;
 
 /**
- * Set decoder parameters for WAV.
+ *Set decoder parameters for WAV.
  *
- * \param	decoder Structure to store parameters.
+ *\param	decoder Structure to store parameters.
  */
-void setWav(struct decoder_fn * decoder)
+void setWav(struct decoder_fn *decoder)
 {
 	decoder->init = &initWav;
 	decoder->rate = &rateWav;
@@ -26,10 +26,10 @@ void setWav(struct decoder_fn * decoder)
 }
 
 /**
- * Initialise WAV playback.
+ *Initialise WAV playback.
  *
- * \param	file	Location of WAV file to play.
- * \return			0 on success, else failure.
+ *\param	file	Location of WAV file to play.
+ *\return			0 on success, else failure.
  */
 int initWav(const char* filename)
 {
@@ -39,9 +39,9 @@ int initWav(const char* filename)
 }
 
 /**
- * Get sampling rate of Wav file.
+ *Get sampling rate of Wav file.
  *
- * \return	Sampling rate.
+ *\return	Sampling rate.
  */
 u32 rateWav(void)
 {
@@ -49,9 +49,9 @@ u32 rateWav(void)
 }
 
 /**
- * Get number of channels of Wav file.
+ *Get number of channels of Wav file.
  *
- * \return	Number of channels for opened file.
+ *\return	Number of channels for opened file.
  */
 u8 channelWav(void)
 {
@@ -59,19 +59,19 @@ u8 channelWav(void)
 }
 
 /**
- * Read part of open Wav file.
+ *Read part of open Wav file.
  *
- * \param buffer	Output.
- * \return			Samples read for each channel.
+ *\param buffer	Output.
+ *\return			Samples read for each channel.
  */
-u64 decodeWav(void * buffer)
+u64 decodeWav(void *buffer)
 {
 	samplesRead = drwav_read_s16(pWav, buffSize, buffer);
 	return samplesRead;
 }
 
 /**
- * Free Wav file.
+ *Free Wav file.
  */
 void exitWav(void)
 {
@@ -79,15 +79,15 @@ void exitWav(void)
 }
 
 /**
- * Checks if the input file is Wav
+ *Checks if the input file is Wav
  *
- * \param in	Input file.
- * \return		0 if Wav file, else not or failure.
+ *\param in	Input file.
+ *\return		0 if Wav file, else not or failure.
  */
-int isWav(const char * in)
+int isWav(const char *in)
 {
 	int err = -1;
-	drwav * testWav = drwav_open_file(in);
+	drwav *testWav = drwav_open_file(in);
 
 	if (testWav != NULL)
 		err = 0;

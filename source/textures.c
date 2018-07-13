@@ -35,7 +35,6 @@ void Textures_Load(void)
 	icon_toggle_on = C2D_SpriteSheetGetImage(spritesheet, sprites_btn_material_light_toggle_on_normal_idx);
 	icon_toggle_dark_on = C2D_SpriteSheetGetImage(spritesheet, sprites_btn_material_light_toggle_on_normal_dark_idx);
 	icon_toggle_off = C2D_SpriteSheetGetImage(spritesheet, sprites_btn_material_light_toggle_off_normal_idx);
-
 	icon_home = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_material_light_home_idx);
 	icon_home_dark = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_material_light_home_dark_idx);
 	icon_options = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_material_light_filesystem_idx);
@@ -51,6 +50,9 @@ void Textures_Load(void)
 	icon_search = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_material_light_search_idx);
 	icon_updates = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_material_light_tab_idx);
 	icon_updates_dark = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_material_light_tab_dark_idx);
+	default_artwork_blur = C2D_SpriteSheetGetImage(spritesheet, sprites_default_artwork_blur_idx);
+	default_artwork = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_album_lg_idx);
+	ic_music_bg_bottom = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_music_bg_bottom_idx);
 	btn_play = C2D_SpriteSheetGetImage(spritesheet, sprites_btn_playback_play_idx);
 	btn_pause = C2D_SpriteSheetGetImage(spritesheet, sprites_btn_playback_pause_idx);
 	btn_rewind = C2D_SpriteSheetGetImage(spritesheet, sprites_btn_playback_rewind_idx);

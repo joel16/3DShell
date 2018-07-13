@@ -5,16 +5,16 @@
 
 #include "flac.h"
 
-static drflac * pFlac;
+static drflac *pFlac;
 static const drflac_uint64 buffSize = 16 * 1024;
 static drflac_uint64 samplesRead;
 
 /**
- * Set decoder parameters for flac.
+ *Set decoder parameters for flac.
  *
- * \param	decoder Structure to store parameters.
+ *\param	decoder Structure to store parameters.
  */
-void setFlac(struct decoder_fn * decoder)
+void setFlac(struct decoder_fn *decoder)
 {
 	decoder->init = &initFlac;
 	decoder->rate = &rateFlac;
@@ -25,12 +25,12 @@ void setFlac(struct decoder_fn * decoder)
 }
 
 /**
- * Initialise Flac decoder.
+ *Initialise Flac decoder.
  *
- * \param	file	Location of flac file to play.
- * \return			0 on success, else failure.
+ *\param	file	Location of flac file to play.
+ *\return			0 on success, else failure.
  */
-int initFlac(const char * file)
+int initFlac(const char *file)
 {
 	pFlac = drflac_open_file(file);
 
@@ -38,9 +38,9 @@ int initFlac(const char * file)
 }
 
 /**
- * Get sampling rate of Flac file.
+ *Get sampling rate of Flac file.
  *
- * \return	Sampling rate.
+ *\return	Sampling rate.
  */
 u32 rateFlac(void)
 {
@@ -48,9 +48,9 @@ u32 rateFlac(void)
 }
 
 /**
- * Get number of channels of Flac file.
+ *Get number of channels of Flac file.
  *
- * \return	Number of channels for opened file.
+ *\return	Number of channels for opened file.
  */
 u8 channelFlac(void)
 {
@@ -58,19 +58,19 @@ u8 channelFlac(void)
 }
 
 /**
- * Decode part of open Flac file.
+ *Decode part of open Flac file.
  *
- * \param buffer	Decoded output.
- * \return			Samples read for each channel.
+ *\param buffer	Decoded output.
+ *\return			Samples read for each channel.
  */
-u64 decodeFlac(void * buffer)
+u64 decodeFlac(void *buffer)
 {
 	samplesRead = drflac_read_s16(pFlac, buffSize, buffer);
 	return samplesRead;
 }
 
 /**
- * Free Flac decoder.
+ *Free Flac decoder.
  */
 void exitFlac(void)
 {
@@ -78,15 +78,15 @@ void exitFlac(void)
 }
 
 /**
- * Checks if the input file is Flac
+ *Checks if the input file is Flac
  *
- * \param in	Input file.
- * \return		0 if Flac file, else not or failure.
+ *\param in	Input file.
+ *\return		0 if Flac file, else not or failure.
  */
-int isFlac(const char * in)
+int isFlac(const char *in)
 {
 	int err = -1;
-	drflac * pFlac = drflac_open_file(in);
+	drflac *pFlac = drflac_open_file(in);
 
 	if (pFlac != NULL)
 		err = 0;

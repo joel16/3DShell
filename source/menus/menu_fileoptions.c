@@ -454,7 +454,7 @@ void Menu_DisplayProperties(void)
 	strcpy(path, cwd);
 	strcpy(path + strlen(path), file->name);
 
-	Draw_Image(config_dark_theme? properties_dialog_dark : properties_dialog, 54.5, 30);
+	Draw_Image(config_dark_theme? properties_dialog_dark : properties_dialog, 54, 30);
 	Draw_Text(61, 37, 0.45f, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "Properties");
 
 	char utils_size[16];
@@ -477,13 +477,13 @@ void Menu_DisplayProperties(void)
 
 static void HandleCopy()
 {
-	if (copy_status == false && cut_status == false)
+	if ((!copy_status) && (!cut_status))
 	{
 		copy_status = true;
 		FileOptions_Copy(COPY_KEEP_ON_FINISH);
 		MENU_STATE = MENU_STATE_HOME;
 	}
-	else if (copy_status == true)
+	else if (copy_status)
 	{
 		if ((multi_select_index > 0) && (strlen(multi_select_dir) != 0))
 		{
@@ -520,13 +520,13 @@ static void HandleCopy()
 
 static void HandleCut()
 {
-	if (cut_status == false && copy_status == false)
+	if ((!cut_status) && (!copy_status))
 	{
 		cut_status = true;
 		FileOptions_Copy(COPY_DELETE_ON_FINISH);
 		MENU_STATE = MENU_STATE_HOME;
 	}
-	else if (cut_status == true)
+	else if (cut_status)
 	{
 		char dest[512];
 
@@ -613,7 +613,7 @@ void Menu_ControlFileOptions(u32 input)
 
 void Menu_DisplayFileOptions(void)
 {
-	Draw_Image(config_dark_theme? options_dialog_dark : options_dialog, 54.5, 30);
+	Draw_Image(config_dark_theme? options_dialog_dark : options_dialog, 54, 30);
 	Draw_Text(61, 37, 0.45f, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "Actions");
 
 	Draw_GetTextSize(0.45f, &options_cancel_width, &options_cancel_height, "CANCEL");

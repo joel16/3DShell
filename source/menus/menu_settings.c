@@ -95,11 +95,11 @@ void Menu_DisplaySettings(void)
 	Draw_Text(10, 195, 0.45f, config_dark_theme? WHITE : BLACK, "Details about application.");
 
 	if (config_dark_theme)
-		Draw_Image(config_dark_theme? icon_toggle_dark_on : icon_toggle_on, 270, 97.5);
+		Draw_Image(config_dark_theme? icon_toggle_dark_on : icon_toggle_on, 270, 97);
 	else
-		Draw_Image(icon_toggle_off, 270, 97.5);
+		Draw_Image(icon_toggle_off, 270, 97);
 
-	Draw_Image(config_hidden_files? (config_dark_theme? icon_toggle_dark_on : icon_toggle_on) : icon_toggle_off, 270, 137.5);
+	Draw_Image(config_hidden_files? (config_dark_theme? icon_toggle_dark_on : icon_toggle_on) : icon_toggle_off, 270, 137);
 }
 
 void Menu_ControlSettings(u32 input)

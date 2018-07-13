@@ -209,7 +209,7 @@ void Dirbrowse_DisplayFiles(void)
 					|| (strncasecmp(file->ext, "lz4", 3) == 0))
 				Draw_Image(icon_archive, 30, 56 + (38 * printed));
 			else if ((strncasecmp(file->ext, "mp3", 3) == 0) || (strncasecmp(file->ext, "ogg", 3) == 0)
-					|| (strncasecmp(file->ext, "wav", 3) == 0) || (strncasecmp(file->ext, "mod", 3) == 0))
+					|| (strncasecmp(file->ext, "wav", 3) == 0) || (strncasecmp(file->ext, "fla", 3) == 0))
 				Draw_Image(icon_audio, 30, 56 + (38 * printed));
 			else if ((strncasecmp(file->ext, "png", 3) == 0) || (strncasecmp(file->ext, "jpg", 3) == 0) 
 					|| (strncasecmp(file->ext, "bmp", 3) == 0) || (strncasecmp(file->ext, "gif", 3) == 0))
@@ -304,11 +304,10 @@ void Dirbrowse_OpenFile(void)
 		Archive_ExtractZip(path, cwd);
 		Dirbrowse_PopulateFiles(true);
 	}
-	/*
 	else if ((strncasecmp(file->ext, "mp3", 3) == 0) || (strncasecmp(file->ext, "ogg", 3) == 0)
-			|| (strncasecmp(file->ext, "wav", 3) == 0) || (strncasecmp(file->ext, "mod", 3) == 0))
+			|| (strncasecmp(file->ext, "wav", 3) == 0) || (strncasecmp(file->ext, "fla", 3) == 0))
 		Menu_PlayMusic(path);
-	else if ((strncasecmp(file->ext, "pdf", 3) == 0) || (strncasecmp(file->ext, "cbz", 3) == 0)
+	/*else if ((strncasecmp(file->ext, "pdf", 3) == 0) || (strncasecmp(file->ext, "cbz", 3) == 0)
 			|| (strncasecmp(file->ext, "fb2", 3) == 0) || (strncasecmp(file->ext, "epub", 4) == 0))
 		Menu_OpenBook(path);*/
 }

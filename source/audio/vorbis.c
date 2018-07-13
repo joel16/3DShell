@@ -7,16 +7,16 @@
 #include "vorbis.h"
 
 static OggVorbis_File vorbisFile;
-static vorbis_info * vi;
-static FILE * f;
+static vorbis_info *vi;
+static FILE *f;
 static const size_t buffSize = (8 * 4096);
 
 /**
- * Set decoder parameters for Vorbis.
+ *Set decoder parameters for Vorbis.
  *
- * \param	decoder	Structure to store parameters.
+ *\param	decoder	Structure to store parameters.
  */
-void setVorbis(struct decoder_fn * decoder)
+void setVorbis(struct decoder_fn *decoder)
 {
 	decoder->init = &initVorbis;
 	decoder->rate = &rateVorbis;
@@ -27,12 +27,12 @@ void setVorbis(struct decoder_fn * decoder)
 }
 
 /**
- * Initialise Vorbis decoder.
+ *Initialise Vorbis decoder.
  *
- * \param	file	Location of vorbis file to play.
- * \return			0 on success, else failure.
+ *\param	file	Location of vorbis file to play.
+ *\return			0 on success, else failure.
  */
-int initVorbis(const char * file)
+int initVorbis(const char *file)
 {
 	int err = -1;
 
@@ -52,9 +52,9 @@ out:
 }
 
 /**
- * Get sampling rate of Vorbis file.
+ *Get sampling rate of Vorbis file.
  *
- * \return	Sampling rate.
+ *\return	Sampling rate.
  */
 u32 rateVorbis(void)
 {
@@ -62,9 +62,9 @@ u32 rateVorbis(void)
 }
 
 /**
- * Get number of channels of Vorbis file.
+ *Get number of channels of Vorbis file.
  *
- * \return	Number of channels for opened file.
+ *\return	Number of channels for opened file.
  */
 u8 channelVorbis(void)
 {
@@ -72,19 +72,19 @@ u8 channelVorbis(void)
 }
 
 /**
- * Decode part of open Vorbis file.
+ *Decode part of open Vorbis file.
  *
- * \param buffer	Decoded output.
- * \return			Samples read for each channel. 0 for end of file, negative
+ *\param buffer	Decoded output.
+ *\return			Samples read for each channel. 0 for end of file, negative
  *					for error.
  */
-u64 decodeVorbis(void * buffer)
+u64 decodeVorbis(void *buffer)
 {
 	return fillVorbisBuffer(buffer);
 }
 
 /**
- * Free Vorbis decoder.
+ *Free Vorbis decoder.
  */
 void exitVorbis(void)
 {
@@ -93,13 +93,13 @@ void exitVorbis(void)
 }
 
 /**
- * Decode Vorbis file to fill buffer.
+ *Decode Vorbis file to fill buffer.
  *
- * \param opusFile		File to decode.
- * \param bufferOut		Pointer to buffer.
- * \return				Samples read per channel.
+ *\param opusFile		File to decode.
+ *\param bufferOut		Pointer to buffer.
+ *\return				Samples read per channel.
  */
-u64 fillVorbisBuffer(char * bufferOut)
+u64 fillVorbisBuffer(char *bufferOut)
 {
 	u64 samplesRead = 0;
 	int samplesToRead = buffSize;
@@ -124,14 +124,14 @@ u64 fillVorbisBuffer(char * bufferOut)
 }
 
 /**
- * Checks if the input file is Vorbis.
+ *Checks if the input file is Vorbis.
  *
- * \param in	Input file.
- * \return		0 if Vorbis file, else not or failure.
+ *\param in	Input file.
+ *\return		0 if Vorbis file, else not or failure.
  */
-int isVorbis(const char * in)
+int isVorbis(const char *in)
 {
-	FILE * ft = fopen(in, "r");
+	FILE *ft = fopen(in, "r");
 	OggVorbis_File testvf;
 	
 	if (ft == NULL)
