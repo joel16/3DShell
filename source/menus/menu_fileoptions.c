@@ -414,6 +414,27 @@ void Menu_ControlDeleteDialog(u32 input)
 
 		delete_dialog_selection = 0;
 	}
+
+	if (TouchInRect((288 - delete_cancel_width) - 5, (159 - delete_cancel_height) - 5, ((288 - delete_cancel_width) - 5) + delete_cancel_width + 10, ((159 - delete_cancel_height) - 5) + delete_cancel_height + 10))
+	{
+		delete_dialog_selection = 0;
+
+		if (input & KEY_TOUCH)
+		{
+			MENU_STATE = MENU_STATE_FILEOPTIONS;
+			delete_dialog_selection = 0;
+		}
+	}
+	else if (TouchInRect((248 - (delete_confirm_width)) - 5, (159 - delete_confirm_height) - 5, ((248 - (delete_confirm_width)) - 5) + delete_confirm_width + 10, ((159 - delete_confirm_height) - 5) + delete_confirm_height + 10))
+	{
+		delete_dialog_selection = 1;
+
+		if (input & KEY_TOUCH)
+		{
+			HandleDelete();
+			delete_dialog_selection = 0;
+		}
+	}
 }
 
 void Menu_DisplayDeleteDialog(void)
@@ -443,6 +464,10 @@ void Menu_ControlProperties(u32 input)
 {
 	if ((input & KEY_A) || (input & KEY_B))
 		MENU_STATE = MENU_STATE_FILEOPTIONS;
+
+	if (TouchInRect((253 - properties_ok_width) - 5, (218 - properties_ok_height) - 5, ((253 - properties_ok_width) - 5) + properties_ok_width + 10, ((218 - properties_ok_height) - 5) + properties_ok_height + 10))
+		if (input & KEY_TOUCH)
+			MENU_STATE = MENU_STATE_FILEOPTIONS;
 }
 
 void Menu_DisplayProperties(void)
@@ -609,6 +634,66 @@ void Menu_ControlFileOptions(u32 input)
 
 	if (input & KEY_X)
 		MENU_STATE = MENU_STATE_HOME;
+
+	if (TouchInRect(56, 69, 159, 104))
+	{
+		row = 0;
+		column = 0;
+		
+		if (input & KEY_TOUCH)
+			MENU_STATE = MENU_STATE_PROPERTIES;
+	}
+	else if (TouchInRect(160, 69, 263, 104))
+	{
+		row = 1;
+		column = 0;
+		
+		if (input & KEY_TOUCH)
+			FileOptions_CreateFolder();
+	}
+	else if (TouchInRect(56, 105, 159, 141))
+	{
+		row = 0;
+		column = 1;
+		
+		if (input & KEY_TOUCH)
+			FileOptions_Rename();
+	}
+	else if (TouchInRect(160, 105, 263, 141))
+	{
+		row = 1;
+		column = 1;
+		
+		if (input & KEY_TOUCH)
+			HandleCopy();
+	}
+	else if (TouchInRect(56, 142, 159, 178))
+	{
+		row = 0;
+		column = 2;
+		
+		if (input & KEY_TOUCH)
+			HandleCut();
+	}
+	else if (TouchInRect(160, 142, 263, 178))
+	{
+		row = 1;
+		column = 2;
+		
+		if (input & KEY_TOUCH)
+			MENU_STATE = MENU_STATE_DIALOG;
+	}
+	else if (TouchInRect(258 - options_cancel_width, 223 - options_cancel_height, (258 - options_cancel_width) + options_cancel_width, (223 - options_cancel_height) + options_cancel_height))
+	{	
+		if (input & KEY_TOUCH)
+		{
+			copy_status = false;
+			cut_status = false;
+			row = 0;
+			column = 0;
+			MENU_STATE = MENU_STATE_HOME;
+		}
+	}
 }
 
 void Menu_DisplayFileOptions(void)

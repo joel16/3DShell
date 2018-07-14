@@ -40,7 +40,8 @@ void Menu_ControlAbout(u32 input)
 		MENU_STATE = MENU_STATE_SETTINGS;
 
 	if (TouchInRect((288 - confirm_width) - 5, (159 - confirm_height) - 5, ((288 - confirm_width) - 5) + confirm_width + 10, ((159 - confirm_height) - 5) + confirm_height + 10))
-		MENU_STATE = MENU_STATE_SETTINGS;
+		if (input & KEY_TOUCH)
+			MENU_STATE = MENU_STATE_SETTINGS;
 }
 
 void Menu_DisplaySortSettings(void)
