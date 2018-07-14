@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include <time.h>
 
 #include <3ds.h>
@@ -28,7 +29,9 @@ typedef enum
 	MUSIC_STATE_SHUFFLE // 2
 } Music_State;
 
-static char playlist[512][512];
+static Thread thread = NULL;
+static bool isMP3 = false;
+static char playlist[512][512], title[128];
 static int count = 0, selection = 0, state = 0;
 
 static Result Menu_GetMusicList(void)
@@ -84,6 +87,24 @@ static int Music_GetCurrentIndex(char *path)
 	}
 }
 
+static void Music_Play(char *path)
+{
+	Menu_GetMusicList();
+
+	/* Reset previous stop command */
+	stop = false;
+
+	s32 prio = 0;
+	svcGetThreadPriority(&prio, CUR_THREAD_HANDLE);
+	thread = threadCreate(Audio_PlayFile, path, 32 *1024, prio - 1, -2, false);
+
+	selection = Music_GetCurrentIndex(path);
+	strncpy(title, strlen(ID3.title) == 0? strupr(Utils_Basename(path)) : strupr(ID3.title), strlen(ID3.title) == 0? strlen(Utils_Basename(path)) + 1 : strlen(ID3.title) + 1);
+
+	isMP3 = (strncasecmp(&path[strlen(path)-3], "mp3", 3) == 0);
+}
+
+
 static void Music_HandleNext(bool forward, int state)
 {
 	if (state == MUSIC_STATE_NONE)
@@ -107,32 +128,25 @@ static void Music_HandleNext(bool forward, int state)
 	Utils_SetMax(&selection, 0, (count - 1));
 	Utils_SetMin(&selection, (count - 1), 0);
 
-	wait(10);
+	wait(1);
 	Audio_StopPlayback();
+	memset(title, 0, sizeof(title));
 
-	// Clear ID3
 	memset(ID3.artist, 0, 30);
 	memset(ID3.title, 0, 30);
 	memset(ID3.album, 0, 30);
 	memset(ID3.year, 0, 4);
 	memset(ID3.genre, 0, 30);
 
-	Menu_PlayMusic(playlist[selection]);
+	threadJoin(thread, U64_MAX);
+	threadFree(thread);
+
+	Music_Play(playlist[selection]);
 }
 
 void Menu_PlayMusic(char *path)
 {
-	s32 prio;
-	static Thread thread = NULL;
-
-	/* Reset previous stop command */
-	stop = false;
-	
-	svcGetThreadPriority(&prio, CUR_THREAD_HANDLE);
-	thread = threadCreate(Audio_PlayFile, path, 32 *1024, prio - 1, -2, false);
-	
-	File *file = Dirbrowse_GetFileIndex(position);
-	bool isMP3 = (strncasecmp(file->ext, "mp3", 3) == 0);
+	Music_Play(path);
 	
 	while (aptMainLoop())
 	{
@@ -152,16 +166,15 @@ void Menu_PlayMusic(char *path)
 
 		if (isMP3) // Only print out ID3 tag info for MP3
 		{	
-			Draw_Text(5, 22, 0.5f, WHITE, strupr(fileName));
+			Draw_Text(5, 22, 0.5f, WHITE, strupr(title));
 			Draw_Text(5, 38, 0.45f, WHITE, strupr(ID3.artist));
-		
-			Draw_Textf(184, 64, 0.5f, WHITE, "%.30s", ID3.title);
-			Draw_Textf(184, 84, 0.5f, WHITE, "%.30s", ID3.album);
-			Draw_Textf(184, 104, 0.5f, WHITE, "%.30s", ID3.year);
-			Draw_Textf(184, 124, 0.5f, WHITE, "%.30s", ID3.genre);
+
+			Draw_Textf(184, 64, 0.5f, WHITE, "%.30s", ID3.album);
+			Draw_Textf(184, 84, 0.5f, WHITE, "%.30s", ID3.year);
+			Draw_Textf(184, 104, 0.5f, WHITE, "%.30s", ID3.genre);
 		}
 		else
-			Draw_Text(5, 25, 0.5f, WHITE, fileName);
+			Draw_Text(5, ((37 - Draw_GetTextHeight(0.5f, title)) / 2) + 18, 0.5f, WHITE, title);
 
 		Draw_Rect(0, 57, 175, 175, MUSIC_GENRE_COLOUR);
 		Draw_Image(default_artwork, 0, 57);
@@ -169,40 +182,6 @@ void Menu_PlayMusic(char *path)
 		C2D_SceneBegin(RENDER_BOTTOM);
 
 		Draw_Image(ic_music_bg_bottom, 0, 0);
-
-		hidScanInput();
-
-		u32 kDown = hidKeysDown();
-		u32 kHeld = hidKeysHeld();
-
-		if ((kDown & KEY_A) || ((TouchInRect(114, 76, 204, 164)) && (kDown & KEY_TOUCH)))
-			Audio_TogglePlayback(SFX);
-
-		if (kDown & KEY_Y)
-		{
-			if (state == MUSIC_STATE_REPEAT)
-				state = MUSIC_STATE_NONE;
-			else
-				state = MUSIC_STATE_REPEAT;
-		}
-		else if (kDown & KEY_X)
-		{
-			if (state == MUSIC_STATE_SHUFFLE)
-				state = MUSIC_STATE_NONE;
-			else
-				state = MUSIC_STATE_SHUFFLE;
-		}
-
-		if ((kDown & KEY_LEFT) || (kDown & KEY_L))
-		{
-			wait(1);
-			Music_HandleNext(false, MUSIC_STATE_NONE);
-		}
-		else if ((kDown & KEY_RIGHT) || (kDown & KEY_R))
-		{
-			wait(1);
-			Music_HandleNext(true, MUSIC_STATE_NONE);
-		}
 
 		if (!(Audio_IsPaused(SFX)))
 			Draw_Image(btn_pause, ((320 - btn_pause.subtex->width) / 2) - 2, ((240 - btn_pause.subtex->height) / 2));
@@ -217,11 +196,64 @@ void Menu_PlayMusic(char *path)
 		
 		Draw_EndFrame();
 
+		hidScanInput();
+
+		u32 kDown = hidKeysDown();
+		u32 kHeld = hidKeysHeld();
+
+		if ((kDown & KEY_A) || ((TouchInRect(114, 76, 204, 164)) && (kDown & KEY_TOUCH)))
+			Audio_TogglePlayback(SFX);
+
+		if ((kDown & KEY_Y) || ((TouchInRect(((320 - btn_repeat.subtex->width) / 2) + 65, ((240 - btn_shuffle.subtex->height) / 2) + 35, 
+			(((320 - btn_repeat.subtex->width) / 2) + 65) + 30, (((240 - btn_shuffle.subtex->height) / 2) + 35) + 30)) && (kDown & KEY_TOUCH)))
+		{
+			if (state == MUSIC_STATE_REPEAT)
+				state = MUSIC_STATE_NONE;
+			else
+				state = MUSIC_STATE_REPEAT;
+		}
+		else if ((kDown & KEY_X) || ((TouchInRect(((320 - btn_shuffle.subtex->width) / 2) - 65, ((240 - btn_shuffle.subtex->height) / 2) + 35, 
+			(((320 - btn_shuffle.subtex->width) / 2) - 65) + 30, (((240 - btn_shuffle.subtex->height) / 2) + 35) + 30)) && (kDown & KEY_TOUCH)))
+		{
+			if (state == MUSIC_STATE_SHUFFLE)
+				state = MUSIC_STATE_NONE;
+			else
+				state = MUSIC_STATE_SHUFFLE;
+		}
+
+		if ((kDown & KEY_LEFT) || (kDown & KEY_L) || ((TouchInRect(((320 - btn_rewind.subtex->width) / 2) - 80, ((240 - btn_rewind.subtex->height) / 2), 
+			(((320 - btn_rewind.subtex->width) / 2) - 80) + 45, ((240 - btn_rewind.subtex->height) / 2) + 45)) && (kDown & KEY_TOUCH)))
+		{
+			wait(1);
+			Music_HandleNext(false, MUSIC_STATE_NONE);
+		}
+		else if ((kDown & KEY_RIGHT) || (kDown & KEY_R) || ((TouchInRect(((320 - btn_forward.subtex->width) / 2) + 80, ((240 - btn_forward.subtex->height) / 2), 
+			(((320 - btn_forward.subtex->width) / 2) + 80) + 45, ((240 - btn_forward.subtex->height) / 2) + 45)) && (kDown & KEY_TOUCH)))
+		{
+			wait(1);
+			Music_HandleNext(true, MUSIC_STATE_NONE);
+		}
+
 		if (kDown & KEY_B)
 		{
-			wait(10);
+			wait(1);
 			Audio_StopPlayback();
 			break;
+		}
+
+		if (!Audio_IsPlaying())
+		{
+			wait(1);
+
+			if (state == MUSIC_STATE_NONE)
+			{
+				Audio_StopPlayback();
+				break;
+			}
+			else if (state == MUSIC_STATE_REPEAT)
+				Music_HandleNext(false, MUSIC_STATE_REPEAT);
+			else if (state == MUSIC_STATE_SHUFFLE)
+				Music_HandleNext(false, MUSIC_STATE_SHUFFLE);
 		}
 
 		if (((kHeld & KEY_L) && (kDown & KEY_R)) || ((kHeld & KEY_R) && (kDown & KEY_L)))
@@ -232,14 +264,17 @@ void Menu_PlayMusic(char *path)
 	threadFree(thread);
 	
 	// Clear ID3
-	memset(ID3.artist, 0, 30);
-	memset(ID3.title, 0, 30);
-	memset(ID3.album, 0, 30);
-	memset(ID3.year, 0, 4);
-	memset(ID3.genre, 0, 30);
+	if (isMP3)
+	{
+		memset(ID3.artist, 0, 30);
+		memset(ID3.title, 0, 30);
+		memset(ID3.album, 0, 30);
+		memset(ID3.year, 0, 4);
+		memset(ID3.genre, 0, 30);
+	}
 
+	memset(title, 0, sizeof(title));
 	memset(playlist, 0, sizeof(playlist[0][0]) * 512 * 512);
 	count = 0;
-
 	return;
 }

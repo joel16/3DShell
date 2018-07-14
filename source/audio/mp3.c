@@ -101,12 +101,12 @@ void safe_print(char *tag, char *name, char *data, size_t size)
 /* Print out ID3v1 info. */
 void print_v1(ID3_Tag *ID3tag, mpg123_id3v1 *v1)
 {
-	safe_print(ID3tag->title, "Title",   v1->title,   sizeof(v1->title));
-	safe_print(ID3tag->artist, "Artist",  v1->artist,  sizeof(v1->artist));
-	safe_print(ID3tag->album, "Album",   v1->album,   sizeof(v1->album));
-	safe_print(ID3tag->year, "Year",    v1->year,    sizeof(v1->year));
-	safe_print(ID3tag->comment, "Comment", v1->comment, sizeof(v1->comment));
-	safe_print(ID3tag->genre, "Genre", genreList[v1->genre].text, sizeof(genreList[v1->genre].text));
+	safe_print(ID3tag->title, "", v1->title, sizeof(v1->title));
+	safe_print(ID3tag->artist, "", v1->artist, sizeof(v1->artist));
+	safe_print(ID3tag->album, "", v1->album, sizeof(v1->album));
+	safe_print(ID3tag->year, "", v1->year, sizeof(v1->year));
+	safe_print(ID3tag->comment, "", v1->comment, sizeof(v1->comment));
+	safe_print(ID3tag->genre, "", genreList[v1->genre].text, sizeof(genreList[v1->genre].text));
 }
 
 /* Split up a number of lines separated by \n, \r, both or just zero byte
@@ -163,12 +163,12 @@ void print_lines(char *data, const char *prefix, mpg123_string *inlines)
 /* Print out the named ID3v2  fields. */
 void print_v2(ID3_Tag *ID3tag, mpg123_id3v2 *v2)
 {
-	print_lines(ID3tag->title, "Title: ", v2->title);
+	print_lines(ID3tag->title, "", v2->title);
 	print_lines(ID3tag->artist, "", v2->artist);
-	print_lines(ID3tag->album, "Album: ", v2->album);
-	print_lines(ID3tag->year, "Year: ",    v2->year);
-	print_lines(ID3tag->comment, "Comment: ", v2->comment);
-	print_lines(ID3tag->genre, "Genre: ",   v2->genre);
+	print_lines(ID3tag->album, "", v2->album);
+	print_lines(ID3tag->year, "",    v2->year);
+	print_lines(ID3tag->comment, "", v2->comment);
+	print_lines(ID3tag->genre, "",   v2->genre);
 }
 
 /* Easy conversion to string via lookup. */
