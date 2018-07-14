@@ -201,6 +201,9 @@ void Menu_ControlSettings(u32 input)
 				Config_Save(config_dark_theme, config_hidden_files, config_sort_by);
 				Dirbrowse_PopulateFiles(true);
 				break;
+			case 3:
+				MENU_STATE = MENU_STATE_ABOUT;
+				break;
 		}
 	}
 

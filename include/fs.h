@@ -12,7 +12,7 @@ Result FS_RecursiveMakeDir(FS_Archive archive, const char *dir);
 bool FS_FileExists(FS_Archive archive, const char *path);
 bool FS_DirExists(FS_Archive archive, const char *path);
 char* FS_GetFileModifiedTime(char *path);
-u64 FS_GetFileSize(FS_Archive archive, const char *path);
+Result FS_GetFileSize(FS_Archive archive, const char *path, u64 *size);
 u64 FS_GetFreeStorage(FS_SystemMediaType mediaType);
 u64 FS_GetTotalStorage(FS_SystemMediaType mediaType);
 u64 FS_GetUsedStorage(FS_SystemMediaType mediaType);

@@ -45,7 +45,7 @@ Result Config_Load(void)
 	u64 size64 = 0;
 	u32 size = 0;
 
-	size64 = FS_GetFileSize(archive, "/3ds/3DShell/config.cfg");
+	FS_GetFileSize(archive, "/3ds/3DShell/config.cfg", &size64);
 	size = (u32)size64;
 	char *buf = (char *)malloc(size + 1);
 
@@ -78,7 +78,7 @@ Result Config_GetLastDirectory(void)
 		u64 size64 = 0;
 		u32 size = 0;
 
-		size64 = FS_GetFileSize(archive, "/3ds/3DShell/lastdir.txt");
+		FS_GetFileSize(archive, "/3ds/3DShell/lastdir.txt", &size64);
 		size = (u32)size64;
 		char *buf = (char *)malloc(size + 1);
 

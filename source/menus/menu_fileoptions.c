@@ -152,7 +152,8 @@ static int FileOptions_CopyFile(char *src, char *dst, bool displayAnim)
 	int result = 0; // Result
 
 	int in = open(src, O_RDONLY, 0777); // Open file for reading
-	u64 size = FS_GetFileSize(archive, src);
+	u64 size = 0;
+	FS_GetFileSize(archive, src, &size);
 
 	// Opened file for reading
 	if (in >= 0)
@@ -485,9 +486,9 @@ void Menu_DisplayProperties(void)
 	char utils_size[16];
 	u64 size = 0;
 
-	if (file->isDir)
+	if (!file->isDir)
 	{
-		size = FS_GetFileSize(archive, path);
+		FS_GetFileSize(archive, path, &size);
 		Utils_GetSizeString(utils_size, size);
 	}
 
@@ -620,7 +621,7 @@ void Menu_ControlFileOptions(u32 input)
 		else if (row == 0 && column == 2)
 			HandleCut();
 		else if (row == 1 && column == 2)
-			MENU_STATE = MENU_STATE_DIALOG;
+			MENU_STATE = MENU_STATE_DELETE;
 	}
 
 	if (input & KEY_B)
@@ -681,7 +682,7 @@ void Menu_ControlFileOptions(u32 input)
 		column = 2;
 		
 		if (input & KEY_TOUCH)
-			MENU_STATE = MENU_STATE_DIALOG;
+			MENU_STATE = MENU_STATE_DELETE;
 	}
 	else if (TouchInRect(258 - options_cancel_width, 223 - options_cancel_height, (258 - options_cancel_width) + options_cancel_width, (223 - options_cancel_height) + options_cancel_height))
 	{	

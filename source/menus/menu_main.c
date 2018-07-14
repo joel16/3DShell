@@ -97,8 +97,10 @@ static void Menu_ControlHome(u32 input)
 void Menu_DrawMenuBar(void)
 {
 	Draw_Image(MENU_STATE == MENU_STATE_HOME? icon_home_dark : icon_home, 0, -2);
-	Draw_Image((MENU_STATE == MENU_STATE_FILEOPTIONS) || (MENU_STATE == MENU_STATE_PROPERTIES)? icon_options_dark : icon_options, 25, 0);
-	Draw_Image((MENU_STATE == MENU_STATE_SETTINGS) || (MENU_STATE == MENU_STATE_SORT)? icon_settings_dark : icon_settings, 50, 0);
+	Draw_Image((MENU_STATE == MENU_STATE_FILEOPTIONS) || (MENU_STATE == MENU_STATE_PROPERTIES) || (MENU_STATE == MENU_STATE_DELETE)? 
+		icon_options_dark : icon_options, 25, 0);
+	Draw_Image((MENU_STATE == MENU_STATE_SETTINGS) || (MENU_STATE == MENU_STATE_SORT) || (MENU_STATE == MENU_STATE_ABOUT)? 
+		icon_settings_dark : icon_settings, 50, 0);
 	Draw_Image(MENU_STATE == MENU_STATE_FTP? icon_ftp_dark : icon_ftp, 75, 0);
 	Draw_Image((MENU_STATE == MENU_STATE_UPDATE) || (MENU_STATE == MENU_STATE_UPDATE_2)? icon_updates_dark : icon_updates, 100, 1);
 	Draw_Image(BROWSE_STATE == BROWSE_STATE_SD? icon_sd_dark : icon_sd, 250, 0);
@@ -227,7 +229,7 @@ void Menu_Main(void)
 			Menu_DisplayProperties();
 			Menu_ControlProperties(kDown);
 		}
-		else if (MENU_STATE == MENU_STATE_DIALOG)
+		else if (MENU_STATE == MENU_STATE_DELETE)
 		{
 			Menu_DisplayDeleteDialog();
 			Menu_ControlDeleteDialog(kDown);

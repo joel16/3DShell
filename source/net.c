@@ -140,7 +140,7 @@ Result Net_DownloadFile(const char *url, const char *path)
 
 	FSFILE_Write(fileHandle, &bytesWritten, offset, result_buf, result_written, 0);
 
-	ProgressBar_DisplayProgress("Downloading", Utils_Basename(path), 0, 0);
+	//ProgressBar_DisplayProgress("Downloading", Utils_Basename(path), 0, 0);
 
 	u64 endTime = osGetTime();
 	u64 totalTime = endTime - startTime;

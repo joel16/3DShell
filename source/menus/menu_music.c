@@ -1,4 +1,3 @@
-#include <stdarg.h>
 #include <time.h>
 
 #include <3ds.h>

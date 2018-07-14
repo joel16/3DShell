@@ -17,7 +17,7 @@
 #define MENU_STATE_FTP         4
 #define MENU_STATE_SORT        5
 #define MENU_STATE_THEMES      6
-#define MENU_STATE_DIALOG      7
+#define MENU_STATE_DELETE      7
 #define MENU_STATE_PROPERTIES  8
 #define MENU_STATE_UPDATE      9
 #define MENU_STATE_UPDATE_2    10

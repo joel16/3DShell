@@ -5,7 +5,7 @@
 #include "fs.h"
 #include "utils.h"
 
-Result FS_OpenArchive(FS_Archive * archive, FS_ArchiveID archiveID)
+Result FS_OpenArchive(FS_Archive *archive, FS_ArchiveID archiveID)
 {
 	Result ret = 0;
 
@@ -25,7 +25,7 @@ Result FS_CloseArchive(FS_Archive archive)
 	return 0;
 }
 
-Result FS_MakeDir(FS_Archive archive, const char * path)
+Result FS_MakeDir(FS_Archive archive, const char *path)
 {	
 	Result ret = 0;
 
@@ -35,7 +35,7 @@ Result FS_MakeDir(FS_Archive archive, const char * path)
 	return 0;
 }
 
-Result FS_RecursiveMakeDir(FS_Archive archive, const char * dir) 
+Result FS_RecursiveMakeDir(FS_Archive archive, const char *dir) 
 {
 	Result ret = 0;
 	char buf[256];
@@ -65,7 +65,7 @@ Result FS_RecursiveMakeDir(FS_Archive archive, const char * dir)
 	return ret;
 }
 
-bool FS_FileExists(FS_Archive archive, const char * path)
+bool FS_FileExists(FS_Archive archive, const char *path)
 {
 	Handle handle;
 
@@ -78,7 +78,7 @@ bool FS_FileExists(FS_Archive archive, const char * path)
 	return true;
 }
 
-bool FS_DirExists(FS_Archive archive, const char * path)
+bool FS_DirExists(FS_Archive archive, const char *path)
 {
 	Handle handle;
 
@@ -91,7 +91,7 @@ bool FS_DirExists(FS_Archive archive, const char * path)
 	return true;
 }
 
-/*char * FS_GetFileModifiedTime(char * path)
+/*char *FS_GetFileModifiedTime(char *path)
 {
 	static char timeStr[20];
 	u64 mtime = 0;
@@ -127,22 +127,19 @@ bool FS_DirExists(FS_Archive archive, const char * path)
 	return timeStr;
 }*/
 
-u64 FS_GetFileSize(FS_Archive archive, const char * path)
+Result FS_GetFileSize(FS_Archive archive, const char *path, u64 *size)
 {
 	Handle handle;
 	Result ret = 0;
-	u64 st_size = 0;
 
 	if (R_FAILED(ret = FSUSER_OpenFile(&handle, archive, fsMakePath(PATH_ASCII, path), FS_OPEN_READ, 0)))
 		return ret;
 
-	if (R_FAILED(ret = FSFILE_GetSize(handle, &st_size)))
+	if (R_FAILED(ret = FSFILE_GetSize(handle, size)))
 		return ret;
 
 	if (R_FAILED(ret = FSFILE_Close(handle)))
 		return ret;
-
-	return st_size;
 }
 
 u64 FS_GetFreeStorage(FS_SystemMediaType mediaType)
@@ -150,7 +147,7 @@ u64 FS_GetFreeStorage(FS_SystemMediaType mediaType)
 	FS_ArchiveResource	resource = {0};
 
 	if (R_SUCCEEDED(FSUSER_GetArchiveResource(&resource, mediaType)))
-		return (((u64) resource.freeClusters * (u64) resource.clusterSize));
+		return (((u64) resource.freeClusters *(u64) resource.clusterSize));
 
 	return 0;
 }
@@ -160,7 +157,7 @@ u64 FS_GetTotalStorage(FS_SystemMediaType mediaType)
 	FS_ArchiveResource	resource = {0};
 
 	if (R_SUCCEEDED(FSUSER_GetArchiveResource(&resource, mediaType)))
-		return (((u64) resource.totalClusters * (u64) resource.clusterSize));
+		return (((u64) resource.totalClusters *(u64) resource.clusterSize));
 
 	return 0;
 }
@@ -170,12 +167,12 @@ u64 FS_GetUsedStorage(FS_SystemMediaType mediaType)
 	FS_ArchiveResource	resource = {0};
 
 	if (R_SUCCEEDED(FSUSER_GetArchiveResource(&resource, mediaType)))
-		return ((((u64) resource.totalClusters * (u64) resource.clusterSize)) - (((u64) resource.freeClusters * (u64) resource.clusterSize)));
+		return ((((u64) resource.totalClusters *(u64) resource.clusterSize)) - (((u64) resource.freeClusters *(u64) resource.clusterSize)));
 
 	return 0;
 }
 
-Result FS_Remove(FS_Archive archive, const char * filename)
+Result FS_Remove(FS_Archive archive, const char *filename)
 {
 	Result ret = 0;
 
@@ -185,7 +182,7 @@ Result FS_Remove(FS_Archive archive, const char * filename)
 	return 0;
 }
 
-Result FS_Rmdir(FS_Archive archive, const char * path)
+Result FS_Rmdir(FS_Archive archive, const char *path)
 {
 	Result ret = 0;
 
@@ -195,7 +192,7 @@ Result FS_Rmdir(FS_Archive archive, const char * path)
 	return 0;
 }
 
-Result FS_RmdirRecursive(FS_Archive archive, const char * path)
+Result FS_RmdirRecursive(FS_Archive archive, const char *path)
 {
 	Result ret = 0;
 
@@ -205,7 +202,7 @@ Result FS_RmdirRecursive(FS_Archive archive, const char * path)
 	return 0;
 }
 
-Result FS_RenameFile(FS_Archive archive, const char * old_filename, const char * new_filename)
+Result FS_RenameFile(FS_Archive archive, const char *old_filename, const char *new_filename)
 {
 	Result ret = 0;
 
@@ -215,7 +212,7 @@ Result FS_RenameFile(FS_Archive archive, const char * old_filename, const char *
 	return 0;
 }
 
-Result FS_RenameDir(FS_Archive archive, const char * old_filename, const char * new_filename)
+Result FS_RenameDir(FS_Archive archive, const char *old_filename, const char *new_filename)
 {
 	Result ret = 0;
 
@@ -225,7 +222,7 @@ Result FS_RenameDir(FS_Archive archive, const char * old_filename, const char * 
 	return 0;
 }
 
-Result FS_Open(Handle * handle, FS_Archive archive, const char * path, u32 flags)
+Result FS_Open(Handle *handle, FS_Archive archive, const char *path, u32 flags)
 {
 	Result ret = 0;
 
@@ -235,7 +232,7 @@ Result FS_Open(Handle * handle, FS_Archive archive, const char * path, u32 flags
 	return 0;
 }
 
-Result FS_Read(FS_Archive archive, const char * path, u64 size, char * buf)
+Result FS_Read(FS_Archive archive, const char *path, u64 size, char *buf)
 {
 	Handle handle;
 	Result ret = 0;
@@ -254,7 +251,7 @@ Result FS_Read(FS_Archive archive, const char * path, u64 size, char * buf)
 	return 0;
 }
 
-Result FS_Write(FS_Archive archive, const char * path, const char * buf)
+Result FS_Write(FS_Archive archive, const char *path, const char *buf)
 {
 	Handle handle;
 	Result ret = 0;

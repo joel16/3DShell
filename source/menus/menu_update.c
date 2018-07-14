@@ -25,9 +25,9 @@ static bool Menu_ValidateUpdate(bool nighlty)
 			u64 size64 = 0;
 			u32 size = 0;
 
-			size64 = FS_GetFileSize(archive, "/3ds/3DShell/UPDATE_NIGHTLY.txt");
+			FS_GetFileSize(archive, "/3ds/3DShell/UPDATE_NIGHTLY.txt", &size64);
 			size = (u32)size64;
-			char * buf = (char *)malloc(size + 1);
+			char *buf = (char *)malloc(size + 1);
 
 			if (R_FAILED(FS_Read(archive, "/3ds/3DShell/UPDATE_NIGHTLY.txt", size, buf)))
 			{
@@ -39,7 +39,7 @@ static bool Menu_ValidateUpdate(bool nighlty)
 			sscanf(buf, "%s", ver);
 			free(buf);
 
-			if (strcmp(ver, GITVERSION) != 0)	
+			if (strcmp(ver, GITVERSION) != 0)
 				return true;
 
 			return false;
@@ -112,6 +112,7 @@ void Menu_ControlUpdate(u32 input)
 	{
 		wait(1);
 		Net_DownloadFile("https://github.com/joel16/3DShell/raw/gh-pages/UPDATE_NIGHTLY.txt", "/3ds/3DShell/UPDATE_NIGHTLY.txt");
+		
 		if (Menu_ValidateUpdate(true))
 			MENU_STATE = MENU_STATE_UPDATE_2;
 		else
@@ -131,6 +132,14 @@ void Menu_ControlUpdate(u32 input)
 
 void Menu_ControlUpdate2(u32 input)
 {
+	if (input & KEY_RIGHT)
+		update_dialog_selection++;
+	else if (input & KEY_LEFT)
+		update_dialog_selection--;
+
+	Utils_SetMax(&update_dialog_selection, 0, 1);
+	Utils_SetMin(&update_dialog_selection, 1, 0);
+
 	if (input & KEY_B)
 	{
 		wait(1);
