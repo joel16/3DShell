@@ -6,9 +6,42 @@
 #include "menu_settings.h"
 #include "status_bar.h"
 #include "textures.h"
+#include "touch.h"
 #include "utils.h"
 
 static int selection = 0, max_items = 3;
+static float confirm_width = 0, confirm_height = 0;
+
+void Menu_DisplayAbout(void)
+{
+	float text_width1 = 0, text_width2 = 0, text_width3 = 0, text_width4 = 0;
+	Draw_GetTextSize(0.45f, &text_width1, NULL, "3D Shell vx.x.x - xxxxxxx");
+	Draw_GetTextSize(0.45f, &text_width2, NULL, "Author: Joel16");
+	Draw_GetTextSize(0.45f, &text_width3, NULL, "Assets: Preetisketch/CyanogenMod/LineageOS");
+	Draw_GetTextSize(0.45f, &text_width4, NULL, "Music player: deltabeard");
+	Draw_GetTextSize(0.45f, &confirm_width, &confirm_height, "OK");
+
+	Draw_Image(config_dark_theme? dialog_dark : dialog, ((320 - (dialog.subtex->width)) / 2), ((240 - (dialog.subtex->height)) / 2));
+
+	Draw_Text(((320 - (dialog.subtex->width)) / 2) + 6, ((240 - (dialog.subtex->height)) / 2) + 6, 0.45f, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "About");
+
+	Draw_Textf(((320 - (text_width1)) / 2), ((240 - (dialog.subtex->height)) / 2) + 20, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "3D Shell v%d.%d.%d - %s", VERSION_MAJOR, VERSION_MINOR, VERSION_MICRO, GITVERSION);
+	Draw_Text(((320 - (text_width2)) / 2), ((240 - (dialog.subtex->height)) / 2) + 34, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Author: Joel16");
+	Draw_Text(((320 - (text_width3)) / 2), ((240 - (dialog.subtex->height)) / 2) + 48, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Assets: Preetisketch/CyanogenMod/LineageOS");
+	Draw_Text(((320 - (text_width4)) / 2), ((240 - (dialog.subtex->height)) / 2) + 62, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Music player: deltabeard");
+
+	Draw_Rect((288 - confirm_width) - 5, (159 - confirm_height) - 5, confirm_width + 10, confirm_height + 10, config_dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
+	Draw_Text(288 - confirm_width, (159 - confirm_height), 0.45f, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "OK");
+}
+
+void Menu_ControlAbout(u32 input)
+{
+	if ((input & KEY_B) || (input & KEY_A))
+		MENU_STATE = MENU_STATE_SETTINGS;
+
+	if (TouchInRect((288 - confirm_width) - 5, (159 - confirm_height) - 5, ((288 - confirm_width) - 5) + confirm_width + 10, ((159 - confirm_height) - 5) + confirm_height + 10))
+		MENU_STATE = MENU_STATE_SETTINGS;
+}
 
 void Menu_DisplaySortSettings(void)
 {
@@ -68,6 +101,50 @@ void Menu_ControlSortSettings(u32 input)
 		selection++;
 	else if (input & KEY_DUP)
 		selection--;
+
+	if (TouchInRect(0, 55, 320, 94))
+	{
+		selection = 0;
+		
+		if (input & KEY_TOUCH)
+		{
+			config_sort_by = 0;
+			Dirbrowse_PopulateFiles(true);
+			Config_Save(config_dark_theme, config_hidden_files, config_sort_by);
+		}
+	}
+	else if (TouchInRect(0, 95, 320, 134))
+	{
+		selection = 1;
+		if (input & KEY_TOUCH)
+		{
+			config_sort_by = 1;
+			Dirbrowse_PopulateFiles(true);
+			Config_Save(config_dark_theme, config_hidden_files, config_sort_by);
+		}
+	}
+	else if (TouchInRect(0, 135, 320, 174))
+	{
+		selection = 2;
+		
+		if (input & KEY_TOUCH)
+		{
+			config_sort_by = 2;
+			Dirbrowse_PopulateFiles(true);
+			Config_Save(config_dark_theme, config_hidden_files, config_sort_by);
+		}
+	}
+	else if (TouchInRect(0, 175, 320, 215))
+	{
+		selection = 3;
+		
+		if (input & KEY_TOUCH)
+		{
+			config_sort_by = 3;
+			Dirbrowse_PopulateFiles(true);
+			Config_Save(config_dark_theme, config_hidden_files, config_sort_by);
+		}
+	}
 
 	Utils_SetMax(&selection, 0, max_items);
 	Utils_SetMin(&selection, max_items, 0);
@@ -130,6 +207,42 @@ void Menu_ControlSettings(u32 input)
 		selection++;
 	else if (input & KEY_DUP)
 		selection--;
+
+	if (TouchInRect(0, 55, 320, 94))
+	{
+		selection = 0;
+
+		if (input & KEY_TOUCH)
+			MENU_STATE = MENU_STATE_SORT;
+	}
+	else if (TouchInRect(0, 95, 320, 134))
+	{
+		selection = 1;
+		
+		if (input & KEY_TOUCH)
+		{
+			config_dark_theme = !config_dark_theme;
+			Config_Save(config_dark_theme, config_hidden_files, config_sort_by);
+		}
+	}
+	else if (TouchInRect(0, 135, 320, 174))
+	{
+		selection = 2;
+		
+		if (input & KEY_TOUCH)
+		{
+			config_hidden_files = !config_hidden_files;
+			Config_Save(config_dark_theme, config_hidden_files, config_sort_by);
+			Dirbrowse_PopulateFiles(true);
+		}
+	}
+	else if (TouchInRect(0, 175, 320, 215))
+	{
+		selection = 3;
+		
+		if (input & KEY_TOUCH)
+			MENU_STATE = MENU_STATE_ABOUT;
+	}
 
 	Utils_SetMax(&selection, 0, max_items);
 	Utils_SetMin(&selection, max_items, 0);

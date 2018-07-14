@@ -3,6 +3,8 @@
 
 #include <3ds.h>
 
+void Menu_DisplayAbout(void);
+void Menu_ControlAbout(u32 input);
 void Menu_DisplaySortSettings(void);
 void Menu_ControlSortSettings(u32 input);
 void Menu_DisplaySettings(void);
