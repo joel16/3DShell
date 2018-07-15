@@ -1,20 +1,28 @@
 #include <stdlib.h>
 #include <3ds.h>
 
-#include <png.h>
-#include <turbojpeg.h>
-
 #include "C2D_helper.h"
 #include "common.h"
 #include "config.h"
 #include "fs.h"
 #include "menu_gallery.h"
+
+#include "libnsbmp.h"
+#include "lodepng.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+#undef STB_IMAGE_IMPLEMENTATION
+
 #include "touch.h"
 #include "utils.h"
 
 #define EXTENSION_SIZE 4
 
-#define PNG_SIG_SIZE 8
+#define DIMENSION_DEFAULT             0
+#define DIMENSION_NINTENDO_SCREENSHOT 1
+#define DIMENSION_NINTENDO_PICTURE    2
+#define DIMENSION_3DSHELL_SCREENSHOT  3
+#define DIMENSION_OTHER               4
 
 static char album[512][512];
 static int count = 0, selection = 0;
@@ -33,186 +41,210 @@ static u32 Gallery_GetNextPowerOf2(u32 v)  // from pp2d
     return v >= 64 ? v : 64;
 }
 
+static void *Gallery_CreateBitmap(int width, int height, unsigned int state)
+{
+    (void) state;  /* unused */
+    return calloc(width * height, 4);
+}
+
+static unsigned char *Gallery_GetBitmapBuf(void *bitmap)
+{
+    return (unsigned char *)bitmap;
+}
+
+static size_t Gallery_GetBitmapBPP(void *bitmap)
+{
+    (void) bitmap;  /* unused */
+    return 4;
+}
+
+void  Gallery_FreeBitmap(void *bitmap)
+{
+    free(bitmap);
+}
+
+static void *Gallery_BitmapToBuf(const char *path, u32 *size)
+{
+    FILE *fd = fopen(path, "rb");
+    
+    if (fd == NULL)
+        return NULL;
+    
+    u8 *buffer;
+    long long_size;
+    fseek(fd, 0, SEEK_END);
+    long_size = ftell(fd);
+    rewind(fd);
+
+    buffer = (u8 *)malloc(long_size);
+    
+    if (size)
+        *size = long_size;
+    
+    if (!buffer)
+    {
+        fclose(fd);
+        return NULL;
+    }
+        
+    fread(buffer, 1, long_size, fd);
+    fclose(fd);
+    return buffer;
+}
+
 // Thanks to LiquidFenrir
 static C2D_Image *Gallery_LoadImage(const char *path)
 {
     u32* outBuf = NULL;
+    u32 size = 0;
     int width = 0, height = 0;
+    GPU_TEXCOLOR format;
 
     char extension[EXTENSION_SIZE+1] = {0};
     strncpy(extension, &path[strlen(path)-EXTENSION_SIZE], EXTENSION_SIZE);
 
-    if (!strncmp(extension, ".png", EXTENSION_SIZE))
+    if (!strncasecmp(extension, ".png", EXTENSION_SIZE))
     {
-        FILE* fh = fopen(path, "rb");
-        if (!fh)
-            return NULL;
+        unsigned char *texture;
+        lodepng_decode32_file(&texture, &width, &height, path);
 
-        u8 sig[PNG_SIG_SIZE] = {0};
-        size_t size = fread(sig, sizeof(u8), PNG_SIG_SIZE, fh);
-        fseek(fh, 0, SEEK_SET);
-
-        if (size < PNG_SIG_SIZE || png_sig_cmp(sig, 0, PNG_SIG_SIZE))
+        for (u32 i = 0; i < width; i++)
         {
-            fclose(fh);
-            return NULL;
-        }
-
-        png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-
-        png_infop info = png_create_info_struct(png);
-
-        if (setjmp(png_jmpbuf(png)))
-        {
-            png_destroy_read_struct(&png, &info, NULL);
-            fclose(fh);
-            return NULL;
-        }
-
-        png_init_io(png, fh);
-        png_read_info(png, info);
-
-        width = png_get_image_width(png, info);
-        height = png_get_image_height(png, info);
-
-        png_byte color_type = png_get_color_type(png, info);
-        png_byte bit_depth  = png_get_bit_depth(png, info);
-
-        // Read any color_type into 8bit depth, ABGR format.
-        // See http://www.libpng.org/pub/png/libpng-manual.txt
-
-        if (bit_depth == 16)
-            png_set_strip_16(png);
-
-        if (color_type == PNG_COLOR_TYPE_PALETTE)
-            png_set_palette_to_rgb(png);
-
-        // PNG_COLOR_TYPE_GRAY_ALPHA is always 8 or 16bit depth.
-        if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
-            png_set_expand_gray_1_2_4_to_8(png);
-
-        if (png_get_valid(png, info, PNG_INFO_tRNS))
-            png_set_tRNS_to_alpha(png);
-
-        // These color_type don't have an alpha channel then fill it with 0xff.
-        if (color_type == PNG_COLOR_TYPE_RGB ||
-           color_type == PNG_COLOR_TYPE_GRAY ||
-           color_type == PNG_COLOR_TYPE_PALETTE)
-            png_set_filler(png, 0xFF, PNG_FILLER_AFTER);
-
-        if (color_type == PNG_COLOR_TYPE_GRAY ||
-           color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
-            png_set_gray_to_rgb(png);
-
-        //output ABGR
-        png_set_bgr(png);
-        png_set_swap_alpha(png);
-
-        png_read_update_info(png, info);
-
-        png_bytep* row_pointers = malloc(height*sizeof(png_bytep));
-        if (row_pointers == NULL)
-        {
-            png_destroy_read_struct(&png, &info, NULL);
-            return NULL;
-        }
-
-        for(int y = 0; y < height; y++)
-            row_pointers[y] = (png_byte*)malloc(png_get_rowbytes(png,info));
-
-        png_read_image(png, row_pointers);
-
-        fclose(fh);
-        png_destroy_read_struct(&png, &info, NULL);
-
-        outBuf = malloc(width*height*sizeof(u32));
-        for(int j = 0; j < height; j++)
-        {
-            png_bytep row = row_pointers[j];
-            for(int i = 0; i < width; i++)
+            for (u32 j = 0; j < height; j++)
             {
-                png_bytep px = &(row[i * 4]);
-                memcpy(&outBuf[j*width +i], px, sizeof(u32));
+                u32 p = (i + j* width) * 4;
+
+                u8 r = *(u8*)(texture + p);
+                u8 g = *(u8*)(texture + p + 1);
+                u8 b = *(u8*)(texture + p + 2);
+                u8 a = *(u8*)(texture + p + 3);
+
+                *(texture + p) = a;
+                *(texture + p + 1) = b;
+                *(texture + p + 2) = g;
+                *(texture + p + 3) = r;
             }
-            free(row_pointers[j]); // free the completed row, to avoid having to loop over the whole thing again
         }
-        free(row_pointers);
+
+        size = (u32)(width * height * 4);
+        outBuf = (u32 *)malloc(size);
+        memcpy(outBuf, texture, size);
+        format = GPU_RGBA8;
     }
-    else if (!strncmp(extension, ".jpg", EXTENSION_SIZE) || !strncmp(extension, ".joeg", EXTENSION_SIZE))
+    else if (!strncasecmp(extension, ".jpg", EXTENSION_SIZE) || !strncasecmp(extension, ".jpeg", EXTENSION_SIZE))
     {
-        FILE* fh = fopen(path, "rb");
-        if (fh == NULL)
+        int channel = 0;
+        stbi_uc *texture = stbi_load(path, &width, &height, &channel, STBI_rgb);
+
+        if ((texture == NULL) || (channel != STBI_rgb))
             return NULL;
 
-        fseek(fh, 0, SEEK_END);
-        long int jpegSize = ftell(fh);
-        fseek(fh, 0, SEEK_SET);
-
-        unsigned char* jpegBuf = (unsigned char*)malloc(jpegSize);
-        if (jpegBuf == NULL)
+        for (u32 x = 0; x < width; x++)
         {
-            fclose(fh);
+            for (u32 y = 0; y < height; y++)
+            {
+
+                u32 pos = (y * width + x) * channel;
+
+                u8 c1 = texture[pos + 0];
+                u8 c2 = texture[pos + 1];
+                u8 c3 = texture[pos + 2];
+
+                texture[pos + 0] = c3;
+                texture[pos + 1] = c2;
+                texture[pos + 2] = c1;
+            }
+        }
+
+        size = (u32)(width * height * channel);
+        outBuf = (u32 *)malloc(size);
+        memcpy(outBuf, texture, size);
+        stbi_image_free(texture);
+        format = GPU_RGB8;
+    }
+    else if (!strncasecmp(extension, ".bmp", EXTENSION_SIZE))
+    {
+        u32 size;
+        u8 *buf = (u8 *)Gallery_BitmapToBuf(path, &size);
+
+        bmp_bitmap_callback_vt bitmap_callbacks = 
+        {
+             Gallery_CreateBitmap,
+             Gallery_FreeBitmap,
+             Gallery_GetBitmapBuf,
+             Gallery_GetBitmapBPP
+        };
+
+        bmp_result code;
+        bmp_image bmp;
+        
+        /* create our bmp image */
+        bmp_create(&bmp, &bitmap_callbacks);
+
+        /* analyse the BMP */
+        code = bmp_analyse(&bmp, size, buf);
+
+        if (code != BMP_OK)
+        {
+            bmp_finalise(&bmp);
             return NULL;
         }
 
-        fread(jpegBuf, jpegSize, sizeof(unsigned char), fh);
-        fclose(fh);
+        /* decode the image */
+        code = bmp_decode(&bmp);
 
-        tjhandle handle = tjInitDecompress();
-        if (handle == NULL)
+        if (code != BMP_OK)
         {
-            free(jpegBuf);
+            bmp_finalise(&bmp);
             return NULL;
         }
 
-        if (tjDecompressHeader(handle, jpegBuf, jpegSize, &width, &height) == -1)
+        u8 *texture;
+        texture = (u8 *)bmp.bitmap;
+
+        for (u32 x = 0; x < bmp.width; x++)
         {
-            free(jpegBuf);
-            tjDestroy(handle);
-            return NULL;
+            for (u32 y = 0; y < bmp.height; y++)
+            {
+                u32 pos = (y * bmp.width + x) * 4;
+                u8 c1 = texture[pos + 0];
+                u8 c2 = texture[pos + 1];
+                u8 c3 = texture[pos + 2];
+                u8 c4 = texture[pos + 3];
+
+                texture[pos + 0] = c4;
+                texture[pos + 1] = c3;
+                texture[pos + 2] = c2;
+                texture[pos + 3] = c1;
+            }
         }
 
-        outBuf = malloc(width*height*sizeof(u32));
-
-        if (tjDecompress2(handle, jpegBuf, jpegSize, (unsigned char*)outBuf, width, 0, height, TJPF_ABGR, TJFLAG_ACCURATEDCT) == -1)
-        {
-            free(outBuf);
-            free(jpegBuf);
-            tjDestroy(handle);
-            return NULL;
-        }
-
-        free(jpegBuf);
-        tjDestroy(handle);
+        size = (bmp.width * bmp.height * 4);
+        outBuf = (u32 *)malloc(size);
+        memcpy(outBuf, texture, size);
+        bmp_finalise(&bmp);
+        format = GPU_RGBA8;
     }
     else
         return NULL;
 
     if (outBuf)
     {
-        C2D_Image* image = malloc(sizeof(C2D_Image));
+        C2D_Image *image = malloc(sizeof(C2D_Image));
         if (image == NULL)
         {
             free(outBuf);
             return NULL;
         }
 
-        C3D_Tex* tex = malloc(sizeof(C3D_Tex));
-        if (tex == NULL)
-        {
-            free(image);
-            free(outBuf);
-            return NULL;
-        }
-        image->tex = tex;
+        image->tex = malloc(sizeof(C3D_Tex));
 
         u32 w_pow2 = Gallery_GetNextPowerOf2((u32)width);
         u32 h_pow2 = Gallery_GetNextPowerOf2((u32)height);
 
-        Tex3DS_SubTexture* subt3x = malloc(sizeof(Tex3DS_SubTexture));
+        Tex3DS_SubTexture *subt3x = malloc(sizeof(Tex3DS_SubTexture));
         if (subt3x == NULL)
         {
-            free(tex);
             free(image);
             free(outBuf);
             return NULL;
@@ -222,25 +254,30 @@ static C2D_Image *Gallery_LoadImage(const char *path)
         subt3x->left = 0.0f;
         subt3x->top = 1.0f;
         subt3x->right = width/(float)w_pow2;
-        subt3x->bottom = 1.0-(height/(float)h_pow2);
+        subt3x->bottom = 1.0 - (height/(float)h_pow2);
         image->subtex = subt3x;
 
-        C3D_TexInit(image->tex, w_pow2, h_pow2, GPU_RGBA8);
+        C3D_TexInit(image->tex, (u16)w_pow2, (u16)h_pow2, format);
+        C3D_TexSetFilter(image->tex, GPU_LINEAR, GPU_LINEAR);
 
         memset(image->tex->data, 0, image->tex->size);
 
-        for(int j = 0; j < height; j++)
+        u32 pixelSize = size / width / height;
+
+        for (u32 x = 0; x < width; x++)
         {
-            for(int i = 0; i < width; i++)
+            for (u32 y = 0; y < height; y++)
             {
-                u32 dst = ((((j >> 3) * (w_pow2 >> 3) + (i >> 3)) << 6) + ((i & 1) | ((j & 1) << 1) | ((i & 2) << 1) | ((j & 2) << 2) | ((i & 4) << 2) | ((j & 4) << 3))) * 4;
-                memcpy(((u8*)(image->tex->data)) + dst, &outBuf[j*width +i], sizeof(u32));
+                u32 dstPos = ((((y >> 3) * (w_pow2 >> 3) + (x >> 3)) << 6) + ((x & 1) | ((y & 1) << 1) | ((x & 2) << 1) | ((y & 2) << 2) | ((x & 4) << 2) | ((y & 4) << 3))) * pixelSize;
+                u32 srcPos = (y * width + x) * pixelSize;
+
+                memcpy(&((u8 *)image->tex->data)[dstPos], &((u8 *) outBuf)[srcPos], pixelSize);
             }
         }
+
+        C3D_TexFlush(image->tex);
         
         free(outBuf);
-
-        C3D_TexSetFilter(image->tex, GPU_LINEAR, GPU_LINEAR);
         image->tex->border = 0xFFFFFFFF;
         C3D_TexSetWrap(image->tex, GPU_CLAMP_TO_BORDER, GPU_CLAMP_TO_BORDER);
 
@@ -260,6 +297,18 @@ static void Gallery_FreeImage(C2D_Image *image)
         free((Tex3DS_SubTexture *)image->subtex);
         free(image);
     }
+}
+
+static bool Gallery_DrawImage(C2D_Image image, float x, float y, float start, float end)
+{
+    C2D_DrawParams params =
+    {
+        { x, y, 1.0f*image.subtex->width, 1.0f*image.subtex->height },
+        { start, end },
+        0.5f, 0.0f
+    };
+
+    return C2D_DrawImage(image, &params, NULL);
 }
 
 static Result Gallery_GetImageList(void)
@@ -340,6 +389,8 @@ void Gallery_DisplayImage(char *path)
 	Gallery_GetImageList();
 	selection = Gallery_GetCurrentIndex(path);
 
+    int dimensions = 0;
+
 	while(aptMainLoop())
 	{
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
@@ -347,7 +398,39 @@ void Gallery_DisplayImage(char *path)
 		C2D_TargetClear(RENDER_BOTTOM, C2D_Color32(33, 39, 43, 255));
 		C2D_SceneBegin(RENDER_TOP);
 
-		Draw_Image(*image, ((400 - (image->subtex->width)) / 2), (240 - (image->subtex->height)) / 2);
+        if ((image->subtex->width <= 400) && (image->subtex->height <= 240))
+            DIMENSION_DEFAULT;
+        else if ((image->subtex->width == 432) && (image->subtex->height == 528)) // Nintnedo's screenshot (both screens) dimensions.
+            dimensions = DIMENSION_NINTENDO_SCREENSHOT;
+        else if ((image->subtex->width == 640) && (image->subtex->height == 480)) // Nintnedo's CAM dimensions.
+            dimensions = DIMENSION_NINTENDO_PICTURE;
+        else if ((image->subtex->width == 400) && ((image->subtex->height == 480) || (image->subtex->height == 482)))
+            dimensions = DIMENSION_3DSHELL_SCREENSHOT;
+        else if ((image->subtex->width > 400) && (image->subtex->height > 240))
+            dimensions = DIMENSION_OTHER;
+
+        switch (dimensions)
+        {
+            case DIMENSION_DEFAULT:
+                Draw_Image(*image, ((400.0f - image->subtex->width) / 2.0f), ((240.0f - image->subtex->height) / 2.0f));
+                break;
+
+            case DIMENSION_NINTENDO_SCREENSHOT:
+                Gallery_DrawImage(*image, 0, 0, 16, 16);
+                break;
+
+            case DIMENSION_NINTENDO_PICTURE:
+                Draw_ImageScale(*image, 40, 0, 0.5, 0.5);
+                break;
+
+            case DIMENSION_3DSHELL_SCREENSHOT:
+                Gallery_DrawImage(*image, 0, 0, 0, 0);
+                break;
+
+            case DIMENSION_OTHER:
+                Draw_ImageScale(*image, 0, 0, 400.0f / image->subtex->width, 240.0f / image->subtex->height);
+                break;
+        }
 
 		hidScanInput();
 		u32 kDown = hidKeysDown();
@@ -362,22 +445,20 @@ void Gallery_DisplayImage(char *path)
 			wait(1);
 			Gallery_HandleNext(true);
 		}
-		
-		/*if (touchInfo.state == TouchEnded && touchInfo.tapType != TapNone)
-		{
-			if (tapped_inside(touchInfo, 0, 0, 120, 240))
-			{
-				wait(1);
-				Gallery_HandleNext(false);
-			}
-			else if (tapped_inside(touchInfo, 1160, 0, 400, 240))
-			{
-				wait(1);
-				Gallery_HandleNext(true);
-			}
-		}*/
 
 		C2D_SceneBegin(RENDER_BOTTOM);
+
+        switch (dimensions)
+        {
+            case DIMENSION_NINTENDO_SCREENSHOT:
+                Gallery_DrawImage(*image, 0, 0, 56, 272);
+                break;
+            
+            case DIMENSION_3DSHELL_SCREENSHOT:
+                Gallery_DrawImage(*image, 0, 0, 40, 240);
+                break;
+        }
+
 		Draw_EndFrame();
 		
 		if (kDown & KEY_B)

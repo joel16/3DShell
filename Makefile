@@ -33,9 +33,9 @@ include $(DEVKITARM)/3ds_rules
 #---------------------------------------------------------------------------------
 TARGET		:= $(notdir $(CURDIR))
 BUILD		:= build
-SOURCES     := source source/audio source/ftp source/menus source/minizip source/menus/menu_book_reader
+SOURCES     := source source/audio source/ftp source/graphics source/menus source/minizip
 DATA        := data
-INCLUDES    := include include/audio include/dr_libs include/ftp include/menus include/minizip mupdf/include mupdf/source/fitz
+INCLUDES    := include include/audio include/dr_libs include/ftp include/graphics include/menus include/minizip
 GRAPHICS	:= res/drawable
 ROMFS		:= romfs
 GFXBUILD	:= $(ROMFS)/res/drawable
@@ -67,7 +67,7 @@ ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
 LIBS	:=  -lcurl -lmbedtls -lmbedx509 -lmbedcrypto -lmpg123 -lvorbisidec -logg \
-            -lturbojpeg -lpng -lcitro2d -lcitro3d -lctru -lm -lz
+            -lcitro2d -lcitro3d -lctru -lm -lz
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
