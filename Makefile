@@ -40,12 +40,23 @@ GRAPHICS	:= res/drawable
 ROMFS		:= romfs
 GFXBUILD	:= $(ROMFS)/res/drawable
 
-APP_TITLE           := 3DShell
-VERSION_MAJOR       := 3
-VERSION_MINOR       := 0
-VERSION_MICRO       := 0
+APP_TITLE           :=	3DShell
+APP_DESCRIPTION     :=	Multi-purpose file manager
+APP_AUTHOR          :=	Joel16
+VERSION_MAJOR       :=  4
+VERSION_MINOR       :=  0
+VERSION_MICRO       :=  0
+GITVERSION          :=  $(shell git log -1 --pretty='%h')
+ICON                :=	res/ic_launcher_filemanager.png
 
-GITVERSION    := $(shell git log -1 --pretty='%h')
+# CIA
+BANNER_AUDIO        :=	res/banner.wav
+BANNER_IMAGE        :=	res/banner.png
+RSF_PATH            :=	res/app.rsf
+LOGO                :=	res/logo.lz11
+UNIQUE_ID           :=	0x16200
+PRODUCT_CODE        :=	CTR-3D-SHEL
+ICON_FLAGS          :=	nosavebackups,visible
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -170,8 +181,37 @@ endif
 .PHONY: all clean
 
 #---------------------------------------------------------------------------------
+MAKEROM      ?= makerom
+MAKEROM_ARGS := -elf "$(OUTPUT).elf" -rsf "$(RSF_PATH)" -banner "$(BUILD)/banner.bnr" -icon "$(BUILD)/icon.icn" -DAPP_TITLE="$(APP_TITLE)" -DAPP_PRODUCT_CODE="$(PRODUCT_CODE)" -DAPP_UNIQUE_ID="$(UNIQUE_ID)"
+MAKEROM_ARGS += -major $(VERSION_MAJOR) -minor $(VERSION_MINOR) -micro $(VERSION_MICRO)
+
+ifneq ($(strip $(LOGO)),)
+	MAKEROM_ARGS	+=	 -logo "$(LOGO)"
+endif
+ifneq ($(strip $(ROMFS)),)
+	MAKEROM_ARGS	+=	 -DAPP_ROMFS="$(ROMFS)"
+endif
+
+BANNERTOOL   ?= bannertool
+
+ifeq ($(suffix $(BANNER_IMAGE)),.cgfx)
+	BANNER_IMAGE_ARG := -ci
+else
+	BANNER_IMAGE_ARG := -i
+endif
+
+ifeq ($(suffix $(BANNER_AUDIO)),.cwav)
+	BANNER_AUDIO_ARG := -ca
+else
+	BANNER_AUDIO_ARG := -a
+endif
+
+#---------------------------------------------------------------------------------
 all: $(BUILD) $(GFXBUILD) $(DEPSDIR) $(ROMFS_T3XFILES) $(T3XHFILES)
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
+	@$(BANNERTOOL) makebanner $(BANNER_IMAGE_ARG) "$(BANNER_IMAGE)" $(BANNER_AUDIO_ARG) "$(BANNER_AUDIO)" -o "$(BUILD)/banner.bnr"
+	@$(BANNERTOOL) makesmdh -s "$(APP_TITLE)" -l "$(APP_DESCRIPTION)" -p "$(APP_AUTHOR)" -i "$(APP_ICON)" -f "$(ICON_FLAGS)" -o "$(BUILD)/icon.icn"
+	$(MAKEROM) -f cia -o "$(OUTPUT).cia" -target t -exefslogo $(MAKEROM_ARGS)
 	@echo "${VERSION_MAJOR}${VERSION_MINOR}${VERSION_MICRO}" > UPDATE_MILESTONE.txt # For maintainer builds
 	@echo "${GITVERSION}" > UPDATE_NIGHTLY.txt # For maintainer builds
 

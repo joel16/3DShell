@@ -212,7 +212,7 @@ void Dirbrowse_DisplayFiles(void)
 					|| (strncasecmp(file->ext, "wav", 3) == 0) || (strncasecmp(file->ext, "fla", 3) == 0))
 				Draw_Image(icon_audio, 30, 56 + (38 * printed));
 			else if ((strncasecmp(file->ext, "png", 3) == 0) || (strncasecmp(file->ext, "jpg", 3) == 0) 
-					|| (strncasecmp(file->ext, "bmp", 3) == 0) || (strncasecmp(file->ext, "gif", 3) == 0))
+					|| (strncasecmp(file->ext, "bmp", 3) == 0))
 				Draw_Image(icon_image, 30, 56 + (38 * printed));
 			else if ((strncasecmp(file->ext, "txt", 3) == 0) || (strncasecmp(file->ext, "lua", 3) == 0) 
             		|| (strncasecmp(file->ext, "cfg", 3) == 0))
@@ -297,7 +297,7 @@ void Dirbrowse_OpenFile(void)
 		}
 	}
 	else if ((strncasecmp(file->ext, "png", 3) == 0) || (strncasecmp(file->ext, "jpg", 3) == 0) || 
-			(strncasecmp(file->ext, "bmp", 3) == 0) || (strncasecmp(file->ext, "gif", 3) == 0))
+			(strncasecmp(file->ext, "bmp", 3) == 0))
 		Gallery_DisplayImage(path);
 	else if (strncasecmp(file->ext, "zip", 3) == 0)
 	{
