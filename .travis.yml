@@ -2,12 +2,8 @@ language: c
 
 sudo: true
 
-#Cache devkitARM and doxygen
-cache:
-  directories:
-    - /home/travis/devkitPro
-
 before_install:
+  - sudo apt-get dist-upgrade
   - cd include/dr_libs/
   - git clone https://github.com/mackron/dr_libs.git
   - cd ../..
