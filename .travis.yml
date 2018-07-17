@@ -20,6 +20,8 @@ install:
   - sudo dkp-pacman -S 3ds-libvorbisidec --noconfirm
   - sudo dkp-pacman -S 3ds-mpg123 --noconfirm
   - source /etc/profile.d/devkit-env.sh
+  - export CC=arm-none-eabi-gcc
+  - export CXX=arm-none-eabi-g++
   - git clone --recursive https://github.com/Steveice10/bannertool && cd bannertool/
   - make && sudo cp output/linux-x86_64/bannertool /opt/devkitpro/devkitARM/bin/bannertool
   - cd ../ && rm -rf bannertool/
