@@ -3,6 +3,9 @@ language: c
 sudo: true
 
 before_install:
+  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+  - sudo apt-get update
+  - sudo apt-get upgrade
   - sudo apt-get dist-upgrade
   - cd include/dr_libs/
   - git clone https://github.com/mackron/dr_libs.git
