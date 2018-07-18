@@ -4,31 +4,32 @@
 
 #include "keyboard.h"
 
-char *OSK_Get(int maxTextLength, const char *initialText, const char *hintText)
+const char *OSK_GetString(const char *initial_text, const char *hint_text)
 {
-	static SwkbdState swkbd;
-	static SwkbdStatusData swkbdStatus;
-	static SwkbdLearningData swkbdLearning;
+	SwkbdState swkbd;
+	SwkbdStatusData swkbdStatus;
+	SwkbdLearningData swkbdLearning;
+	bool reload = false;
+	static char input_string[256];
+
+	swkbdInit(&swkbd, SWKBD_TYPE_NORMAL, 2, 256);
+
+	if (strlen(hint_text) != 0)
+		swkbdSetHintText(&swkbd, hint_text);
 	
-	char *str = malloc(maxTextLength);
-	memset(str, 0, maxTextLength);
-	
-	swkbdInit(&swkbd, SWKBD_TYPE_NORMAL, 2, maxTextLength);
-	
-    swkbdSetHintText(&swkbd, hintText);
-	
-	swkbdSetInitialText(&swkbd, initialText);
-	
+	if (strlen(initial_text) != 0)
+		swkbdSetInitialText(&swkbd, initial_text);
+
 	swkbdSetButton(&swkbd, SWKBD_BUTTON_LEFT, "Cancel", false);
 	swkbdSetButton(&swkbd, SWKBD_BUTTON_RIGHT, "Confirm", true);
-	
+
 	swkbdSetFeatures(&swkbd, SWKBD_ALLOW_HOME);
 	swkbdSetFeatures(&swkbd, SWKBD_ALLOW_RESET);
 	swkbdSetFeatures(&swkbd, SWKBD_ALLOW_POWER);
 	swkbdSetFeatures(&swkbd, SWKBD_PREDICTIVE_INPUT);
-	
+
 	swkbdSetValidation(&swkbd, SWKBD_NOTEMPTY_NOTBLANK, 0, 0);
-	
+
 	SwkbdDictWord words[7];
 	swkbdSetDictWord(&words[0], ".3dsx", ".3dsx");
 	swkbdSetDictWord(&words[1], ".cia", ".cia");
@@ -37,13 +38,13 @@ char *OSK_Get(int maxTextLength, const char *initialText, const char *hintText)
 	swkbdSetDictWord(&words[4], "https://", "https://");
 	swkbdSetDictWord(&words[5], "releases", "releases");
 	swkbdSetDictWord(&words[6], "/3ds/", "/3ds/");
-	swkbdSetDictionary(&swkbd, words, sizeof(words)/sizeof(SwkbdDictWord));
-	static bool reload = false;
+	swkbdSetDictionary(&swkbd, words, 7);
+
 	swkbdSetStatusData(&swkbd, &swkbdStatus, reload, true);
 	swkbdSetLearningData(&swkbd, &swkbdLearning, reload, true);
 	reload = true;
-	
-	swkbdInputText(&swkbd, str, maxTextLength);
-	
-	return str;
+
+	swkbdInputText(&swkbd, input_string, 256);
+
+	return input_string;
 }

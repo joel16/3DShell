@@ -45,7 +45,7 @@ APP_DESCRIPTION     :=	Multi-purpose file manager
 APP_AUTHOR          :=	Joel16
 VERSION_MAJOR       :=  4
 VERSION_MINOR       :=  0
-VERSION_MICRO       :=  0
+VERSION_MICRO       :=  1
 GITVERSION          :=  $(shell git log -1 --pretty='%h')
 ICON                :=	res/ic_launcher_filemanager.png
 

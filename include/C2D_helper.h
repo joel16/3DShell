@@ -17,7 +17,6 @@
 #define TEXT_MIN_COLOUR_LIGHT C2D_Color32(32, 32, 32, 255)
 #define TEXT_MIN_COLOUR_DARK  C2D_Color32(185, 185, 185, 255)
 #define BAR_COLOUR            C2D_Color32(200, 200, 200, 255)
-#define PROGRESS_COLOUR       C2D_Color32(48, 174, 222, 255)
 
 C3D_RenderTarget *RENDER_TOP, *RENDER_BOTTOM;
 C2D_TextBuf staticBuf, dynamicBuf, sizeBuf;

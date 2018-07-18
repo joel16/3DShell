@@ -56,7 +56,7 @@ void FileOptions_ResetClipboard(void)
 static Result FileOptions_CreateFolder(void)
 {
 	char *buf = (char *)malloc(256);
-	strcpy(buf, OSK_Get(256, "", "Enter name"));
+	strcpy(buf, OSK_GetString("", "Enter name"));
 
 	if (strncmp(buf, "", 1) == 0)
 		return -1;
@@ -67,7 +67,6 @@ static Result FileOptions_CreateFolder(void)
 	free(buf);
 
 	FS_RecursiveMakeDir(archive, path);
-
 	Dirbrowse_PopulateFiles(true);
 	return 0;
 }
@@ -91,7 +90,7 @@ static Result FileOptions_Rename(void)
 	strcpy(newPath, cwd);
 	strcat(oldPath, file->name);
 
-	strcpy(buf, OSK_Get(256, file->name, "Enter name"));
+	strcpy(buf, OSK_GetString(file->name, "Enter name"));
 	strcat(newPath, buf);
 	free(buf);
 
