@@ -1,27 +1,23 @@
+#include <stdlib.h>
+
+#include "C2D_helper.h"
 #include "cia.h"
 #include "common.h"
+#include "config.h"
 #include "fs.h"
-#include "language.h"
+#include "menu_main.h"
 #include "menu_update.h"
 #include "net.h"
-#include "pp2d.h"
 #include "textures.h"
-#include "theme.h"
 #include "touch.h"
 #include "utils.h"
 
-struct colour Settings_colour;
-struct colour Settings_title_text_colour;
-struct colour Settings_text_colour;
-struct colour Settings_text_min_colour;
-
-struct colour BottomScreen_colour;
-struct colour Options_title_text_colour;
-
+static int update_dialog_selection = 0;
 static bool err = false;
-char ver[10];
+static u32 wifiStatus = 0;
+static char ver[10];
 
-bool Menu_ValidateUpdate(bool nighlty)
+static bool Menu_ValidateUpdate(bool nighlty)
 {
 	if (nighlty)
 	{
@@ -30,9 +26,9 @@ bool Menu_ValidateUpdate(bool nighlty)
 			u64 size64 = 0;
 			u32 size = 0;
 
-			size64 = FS_GetFileSize(archive, "/3ds/3DShell/UPDATE_NIGHTLY.txt");
+			FS_GetFileSize(archive, "/3ds/3DShell/UPDATE_NIGHTLY.txt", &size64);
 			size = (u32)size64;
-			char * buf = (char *)malloc(size + 1);
+			char *buf = (char *)malloc(size + 1);
 
 			if (R_FAILED(FS_Read(archive, "/3ds/3DShell/UPDATE_NIGHTLY.txt", size, buf)))
 			{
@@ -44,7 +40,7 @@ bool Menu_ValidateUpdate(bool nighlty)
 			sscanf(buf, "%s", ver);
 			free(buf);
 
-			if (strcmp(ver, GITVERSION) != 0)	
+			if (strcasecmp(ver, GITVERSION) != 0)
 				return true;
 
 			return false;
@@ -54,100 +50,142 @@ bool Menu_ValidateUpdate(bool nighlty)
 
 void Menu_DisplayUpdate(void)
 {
-	float err_width = ((320 - pp2d_get_text_height("No updates available.", 0.45f, 0.45f)) / 2);
+	float err_width = ((320 - Draw_GetTextWidth(0.45f, "No updates available.")) / 2);
 
-	pp2d_draw_rectangle(0, 20, 320, 220, RGBA8(Settings_colour.r, Settings_colour.g, Settings_colour.b, 255));
+	Draw_Rect(0, 0, 320, 20, config_dark_theme? STATUS_BAR_DARK : MENU_BAR_LIGHT);
+	Draw_Rect(0, 20, 320, 220, config_dark_theme? BLACK_BG : WHITE);
 
-	pp2d_draw_text(10, 30, 0.45f, 0.45f, RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255), "Update Center");
+	Menu_DrawMenuBar();
 
-	if (err)
-		pp2d_draw_text(err_width, 60, 0.45f, 0.45f,  RGBA8(Settings_text_min_colour.r, Settings_text_min_colour.g, Settings_text_min_colour.b, 255), "No updates available.");
+	Draw_Rect(0, 20, 400, 35, config_dark_theme? MENU_BAR_DARK : STATUS_BAR_LIGHT); // Menu bar
+	Draw_Text(10, 30, 0.48f, WHITE, "Update Center");
 
-	pp2d_draw_textf(122, 85, 0.45f, 0.45f,  RGBA8(Settings_text_colour.r, Settings_text_colour.g, Settings_text_colour.b, 255), "Nightly builds");
-	pp2d_draw_textf(52, 97, 0.45f, 0.45f, RGBA8(Settings_text_min_colour.r, Settings_text_min_colour.g, Settings_text_min_colour.b, 255), "Untested builds that may contain bugs.");
+	ACU_GetWifiStatus(&wifiStatus);
 
-	pp2d_draw_rectangle(106, 117, (pp2d_get_text_width("Check for updates", 0.45f, 0.45f) + 10), 20, 
-		RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255));
-	pp2d_draw_rectangle(110 - 3, 118, (pp2d_get_text_width("Check for updates", 0.45f, 0.45f) + 8), 18, 
-		RGBA8(Settings_colour.r, Settings_colour.g, Settings_colour.b, 255));
-	pp2d_draw_rectangle(110 - 2, 119, (pp2d_get_text_width("Check for updates", 0.45f, 0.45f) + 6), 16, 
-		RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255));
-	pp2d_draw_text(110, 120, 0.45f, 0.45f, RGBA8(Settings_colour.r, Settings_colour.g, Settings_colour.b, 255), "Check for updates");
+	if (wifiStatus == 0)
+		Draw_Text(((320 - Draw_GetTextWidth(0.48f, "WiFi not enabled.")) / 2), 60, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "WiFi not enabled.");
+	else if (err)
+		Draw_Text(err_width, 60, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "No updates available.");
 
-	pp2d_draw_textf(115, 155, 0.45f, 0.45f,  RGBA8(Settings_text_colour.r, Settings_text_colour.g, Settings_text_colour.b, 255), "Milestone builds");
-	pp2d_draw_textf(102, 167, 0.45f, 0.45f, RGBA8(Settings_text_min_colour.r, Settings_text_min_colour.g, Settings_text_min_colour.b, 255), "Official release builds.");
+	Draw_Text(122, 85, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Nightly builds");
+	Draw_Text(52, 97, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Untested builds that may contain bugs.");
+
+	Draw_Rect(106, 117, (Draw_GetTextWidth(0.45, "Check for updates") + 10), 20, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR);
+	Draw_Rect(110 - 3, 118, (Draw_GetTextWidth(0.45, "Check for updates") + 8), 18, config_dark_theme? BLACK_BG : WHITE);
+	Draw_Rect(110 - 2, 119, (Draw_GetTextWidth(0.45, "Check for updates") + 6), 16, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR);
+	Draw_Text(110, 120, 0.45f, config_dark_theme? BLACK_BG : WHITE, "Check for updates");
+
+	Draw_Text(115, 155, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Milestone builds");
+	Draw_Text(102, 167, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Official release builds.");
 	
-	pp2d_draw_rectangle(106, 187, (pp2d_get_text_width("Check for updates", 0.45f, 0.45f) + 10), 20, 
-		RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255));
-	pp2d_draw_rectangle(110 - 3, 188, (pp2d_get_text_width("Check for updates", 0.45f, 0.45f) + 8), 18, 
-		RGBA8(Settings_colour.r, Settings_colour.g, Settings_colour.b, 255));
-	pp2d_draw_rectangle(110 - 2, 189, (pp2d_get_text_width("Check for updates", 0.45f, 0.45f) + 6), 16, 
-		RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255));
-	pp2d_draw_text(110, 190, 0.45f, 0.45f, RGBA8(Settings_colour.r, Settings_colour.g, Settings_colour.b, 255), "Check for updates");
+	Draw_Rect(106, 187, (Draw_GetTextWidth(0.45, "Check for updates") + 10), 20, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR);
+	Draw_Rect(110 - 3, 188, (Draw_GetTextWidth(0.45, "Check for updates") + 8), 18, config_dark_theme? BLACK_BG : WHITE);
+	Draw_Rect(110 - 2, 189, (Draw_GetTextWidth(0.45, "Check for updates") + 6), 16, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR);
+	Draw_Text(110, 190, 0.45f, config_dark_theme? BLACK_BG : WHITE, "Check for updates");
 }
 
 void Menu_DisplayUpdate2(void)
 {
-	pp2d_draw_rectangle(0, 0, 320, 240, RGBA8(BottomScreen_colour.r, BottomScreen_colour.g, BottomScreen_colour.b, 255));
+	float text_width = 0, text2_width = 0;;
+	float update_confirm_width = 0, update_confirm_height = 0;
+	float update_cancel_width = 0, update_cancel_height = 0;
 
-	pp2d_draw_texture(TEXTURE_DIALOG, 20, 55);
+	Draw_GetTextSize(0.45f, &text_width, NULL, "This action cannot be undone.");
+	Draw_GetTextSize(0.45f, &text2_width, NULL, "Do you wish to update?");
+	Draw_GetTextSize(0.45f, &update_confirm_width, &update_confirm_height, "YES");
+	Draw_GetTextSize(0.45f, &update_cancel_width, &update_cancel_height, "NO");
 
-	pp2d_draw_text(27, 72, 0.45f, 0.45f, RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255), "Confirm update");
+	Draw_Image(config_dark_theme? dialog_dark : dialog, ((320 - (dialog.subtex->width)) / 2), ((240 - (dialog.subtex->height)) / 2));
 
-	pp2d_draw_text(206, 159, 0.45f, 0.45f, RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255), "NO");
-	pp2d_draw_text(255, 159, 0.45f, 0.45f, RGBA8(Settings_title_text_colour.r, Settings_title_text_colour.g, Settings_title_text_colour.b, 255), "YES");
+	Draw_Textf(((320 - (dialog.subtex->width)) / 2) + 6, ((240 - (dialog.subtex->height)) / 2) + 6, 0.45f, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "New update: %s", ver);
 
-	pp2d_draw_text(((320 - pp2d_get_text_width(lang_deletion[language][1], 0.45f, 0.45f)) / 2), 100, 0.45f, 0.45f, RGBA8(Options_title_text_colour.r, Options_title_text_colour.g, Options_title_text_colour.b, 255), "This action cannot be undone.");
-	pp2d_draw_text(((320 - pp2d_get_text_width(lang_deletion[language][2], 0.45f, 0.45f)) / 2), 115, 0.45f, 0.45f, RGBA8(Options_title_text_colour.r, Options_title_text_colour.g, Options_title_text_colour.b, 255), "Do you wish to update?");
+	Draw_Text(((320 - (text_width)) / 2), ((240 - (dialog.subtex->height)) / 2) + 40, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "This action cannot be undone.");
+	Draw_Text(((320 - (text2_width)) / 2), ((240 - (dialog.subtex->height)) / 2) + 55, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Do you wish to update?");
+
+	if (update_dialog_selection == 0)
+		Draw_Rect((288 - update_cancel_width) - 5, (159 - update_cancel_height) - 5, update_cancel_width + 10, update_cancel_height + 10, config_dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
+	else if (update_dialog_selection == 1)
+		Draw_Rect((248 - (update_confirm_width)) - 5, (159 - update_confirm_height) - 5, update_confirm_width + 10, update_confirm_height + 10, config_dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
+
+	Draw_Text(248 - (update_confirm_width), (159 - update_confirm_height), 0.45f, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "YES");
+	Draw_Text(288 - update_cancel_width, (159 - update_cancel_height), 0.45f, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "NO");
 }
 
 void Menu_ControlUpdate(u32 input)
 {
-	if ((input & KEY_TOUCH) && (touchInRect(106, 117, (106) + (pp2d_get_text_width("Check for updates", 0.45f, 0.45f) + 10), 137)))
+	if ((input & KEY_TOUCH) && (TouchInRect(106, 117, (106) + (Draw_GetTextWidth(0.45, "Check for updates") + 10), 137)))
 	{
-		wait(1);
-		Net_DownloadFile("https://github.com/joel16/3DShell/raw/gh-pages/UPDATE_NIGHTLY.txt", "/3ds/3DShell/UPDATE_NIGHTLY.txt");
-		if (Menu_ValidateUpdate(true))
-			MENU_DEFAULT_STATE = MENU_STATE_UPDATE_2;
-		else
-			err = true;
+		if (wifiStatus != 0)
+		{
+			wait(1);
+			Net_DownloadFile("https://github.com/joel16/3DShell/raw/gh-pages/UPDATE_NIGHTLY.txt", "/3ds/3DShell/UPDATE_NIGHTLY.txt");
+		
+			if (Menu_ValidateUpdate(true))
+				MENU_STATE = MENU_STATE_UPDATE_2;
+			else
+				err = true;
+		}
 	}
 
-	else if ((input & KEY_TOUCH) && (touchInRect(106, 187, (106) + (pp2d_get_text_width("Check for updates", 0.45f, 0.45f) + 10), 207)))
+	else if ((input & KEY_TOUCH) && (TouchInRect(106, 187, (106) + (Draw_GetTextWidth(0.45, "Check for updates") + 10), 207)))
 	{
-		wait(1);
-		Net_DownloadFile("https://github.com/joel16/3DShell/raw/gh-pages/UPDATE_MILESTONE.txt", "/3ds/3DShell/UPDATE_MILESTONE.txt");
-		if (Menu_ValidateUpdate(false))
-			MENU_DEFAULT_STATE = MENU_STATE_UPDATE_2;
-		else
-			err = true;
+		if (wifiStatus != 0)
+		{
+			wait(1);
+			Net_DownloadFile("https://github.com/joel16/3DShell/raw/gh-pages/UPDATE_MILESTONE.txt", "/3ds/3DShell/UPDATE_MILESTONE.txt");
+			if (Menu_ValidateUpdate(false))
+				MENU_STATE = MENU_STATE_UPDATE_2;
+			else
+				err = true;
+		}
 	}
 }
 
 void Menu_ControlUpdate2(u32 input)
 {
-	if ((input & KEY_A) || (touchInRect(240, 142, 320, 185)))
-	{	
-		if(envIsHomebrew())
+	if (input & KEY_RIGHT)
+		update_dialog_selection++;
+	else if (input & KEY_LEFT)
+		update_dialog_selection--;
+
+	Utils_SetMax(&update_dialog_selection, 0, 1);
+	Utils_SetMin(&update_dialog_selection, 1, 0);
+
+	if (input & KEY_B)
+	{
+		wait(1);
+		update_dialog_selection = 0;
+		MENU_STATE = MENU_STATE_UPDATE;
+	}
+
+	if (input & KEY_A)
+	{
+		if (update_dialog_selection == 1)
 		{
-			if (FS_FileExists(archive, "/3ds/3DShell/3DShell.3dsx"))
-				FS_Remove(archive, "/3ds/3DShell/3DShell.3dsx");
-			Net_DownloadFile("https://github.com/joel16/3DShell/raw/gh-pages/3DShell.3dsx", "/3ds/3DShell/3DShell.3dsx");
-			longjmp(exitJmp, 1);
+			if (wifiStatus != 0)
+			{
+				if (envIsHomebrew())
+				{
+					if (FS_FileExists(archive, "/3ds/3DShell/3DShell.3dsx"))
+						FS_Remove(archive, "/3ds/3DShell/3DShell.3dsx");
+					
+					Net_DownloadFile("https://github.com/joel16/3DShell/raw/gh-pages/3DShell.3dsx", "/3ds/3DShell/3DShell.3dsx");
+					longjmp(exitJmp, 1);
+				}
+				else
+				{
+					Net_DownloadFile("https://github.com/joel16/3DShell/raw/gh-pages/3DShell.cia", "/3ds/3DShell/3DShell.cia");
+					CIA_InstallTitle("/3ds/3DShell/3DShell.cia", MEDIATYPE_SD, true);
+				}
+			}	
 		}
 		else
 		{
-			Net_DownloadFile("https://github.com/joel16/3DShell/raw/gh-pages/3DShell.cia", "/3ds/3DShell/3DShell.cia");
-			CIA_InstallTitle("/3ds/3DShell/3DShell.cia", MEDIATYPE_SD, true);
+			wait(1);
+			update_dialog_selection = 0;
+			MENU_STATE = MENU_STATE_UPDATE;
 		}
 
-		wait(1);
-		MENU_DEFAULT_STATE = MENU_STATE_HOME;
-	}
-
-	else if ((input & KEY_B) || (touchInRect(136, 142, 239, 185)))
-	{
-		wait(1);
-		MENU_DEFAULT_STATE = MENU_STATE_UPDATE;
+		update_dialog_selection = 0;
 	}
 }

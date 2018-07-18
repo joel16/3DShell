@@ -26,8 +26,8 @@ typedef intmax_t ssize_p;
 typedef long ssize_p;
 #endif
 
-static size_t * buffSize;
-static mpg123_handle * mh = NULL;
+static size_t *buffSize;
+static mpg123_handle *mh = NULL;
 static u32 rate;
 static u8 channels;
 
@@ -69,18 +69,18 @@ struct genre genreList[] =
 };
 
 /**
- * Set decoder parameters for MP3.
+ *Set decoder parameters for MP3.
  *
- * \param	decoder Structure to store parameters.
+ *\param	decoder Structure to store parameters.
  */
-void setMp3(struct decoder_fn * decoder)
+void setMp3(struct decoder_fn *decoder)
 {
 	decoder->init = &initMp3;
 	decoder->rate = &rateMp3;
 	decoder->channels = &channelMp3;
 	/*
-	 * buffSize changes depending on input file. So we set buffSize later when
-	 * decoder is initialised.
+	 *buffSize changes depending on input file. So we set buffSize later when
+	 *decoder is initialised.
 	 */
 	buffSize = &(decoder->buffSize);
 	decoder->decode = &decodeMp3;
@@ -88,7 +88,7 @@ void setMp3(struct decoder_fn * decoder)
 }
 
 /* Helper for v1 printing, get these strings their zero byte. */
-void safe_print(char * tag, char * name, char * data, size_t size)
+void safe_print(char *tag, char *name, char *data, size_t size)
 {
 	char safe[31];
 	if (size > 30) 
@@ -99,24 +99,24 @@ void safe_print(char * tag, char * name, char * data, size_t size)
 }
 
 /* Print out ID3v1 info. */
-void print_v1(ID3_Tag * ID3tag, mpg123_id3v1 *v1)
+void print_v1(ID3_Tag *ID3tag, mpg123_id3v1 *v1)
 {
-	safe_print(ID3tag->title, "Title",   v1->title,   sizeof(v1->title));
-	safe_print(ID3tag->artist, "Artist",  v1->artist,  sizeof(v1->artist));
-	safe_print(ID3tag->album, "Album",   v1->album,   sizeof(v1->album));
-	safe_print(ID3tag->year, "Year",    v1->year,    sizeof(v1->year));
-	safe_print(ID3tag->comment, "Comment", v1->comment, sizeof(v1->comment));
-	safe_print(ID3tag->genre, "Genre", genreList[v1->genre].text, sizeof(genreList[v1->genre].text));
+	safe_print(ID3tag->title, "", v1->title, sizeof(v1->title));
+	safe_print(ID3tag->artist, "", v1->artist, sizeof(v1->artist));
+	safe_print(ID3tag->album, "", v1->album, sizeof(v1->album));
+	safe_print(ID3tag->year, "", v1->year, sizeof(v1->year));
+	safe_print(ID3tag->comment, "", v1->comment, sizeof(v1->comment));
+	safe_print(ID3tag->genre, "", genreList[v1->genre].text, sizeof(genreList[v1->genre].text));
 }
 
 /* Split up a number of lines separated by \n, \r, both or just zero byte
    and print out each line with specified prefix. */
-void print_lines(char * data, const char * prefix, mpg123_string * inlines)
+void print_lines(char *data, const char *prefix, mpg123_string *inlines)
 {
 	size_t i;
 	int hadcr = 0, hadlf = 0;
-	char * lines = NULL;
-	char * line  = NULL;
+	char *lines = NULL;
+	char *line  = NULL;
 	size_t len = 0;
 
 	if (inlines != NULL && inlines->fill)
@@ -161,18 +161,18 @@ void print_lines(char * data, const char * prefix, mpg123_string * inlines)
 }
 
 /* Print out the named ID3v2  fields. */
-void print_v2(ID3_Tag * ID3tag, mpg123_id3v2 * v2)
+void print_v2(ID3_Tag *ID3tag, mpg123_id3v2 *v2)
 {
-	print_lines(ID3tag->title, "Title: ", v2->title);
+	print_lines(ID3tag->title, "", v2->title);
 	print_lines(ID3tag->artist, "", v2->artist);
-	print_lines(ID3tag->album, "Album: ", v2->album);
-	print_lines(ID3tag->year, "Year: ",    v2->year);
-	print_lines(ID3tag->comment, "Comment: ", v2->comment);
-	print_lines(ID3tag->genre, "Genre: ",   v2->genre);
+	print_lines(ID3tag->album, "", v2->album);
+	print_lines(ID3tag->year, "",    v2->year);
+	print_lines(ID3tag->comment, "", v2->comment);
+	print_lines(ID3tag->genre, "",   v2->genre);
 }
 
 /* Easy conversion to string via lookup. */
-const char * pic_types[] = 
+const char *pic_types[] = 
 {
 	 "other"
 	,"icon"
@@ -197,7 +197,7 @@ const char * pic_types[] =
 	,"publisher logo"
 };
 
-static const char * pic_type(int id)
+static const char *pic_type(int id)
 {
 	return (id >= 0 && id < (sizeof(pic_types)/sizeof(char*))) ? pic_types[id] : "invalid type";
 }
@@ -254,12 +254,12 @@ void print_raw_v2(mpg123_id3v2 *v2)
 	}
 }
 
-const char * unknown_end = "picture";
+const char *unknown_end = "picture";
 
-static char * mime2end(mpg123_string * mime)
+static char *mime2end(mpg123_string *mime)
 {
 	size_t len;
-	char * end;
+	char *end;
 	if(strncasecmp("image/",mime->p,6))
 	{
 		len = strlen(unknown_end)+1;
@@ -292,10 +292,10 @@ static char * mime2end(mpg123_string * mime)
 /* Construct a sane file name without introducing spaces, then open.
    Example: /some/where/some.mp3.front_cover.jpeg
    If multiple ones are there: some.mp3.front_cover2.jpeg */
-int open_picfile(const char * prefix, mpg123_picture * pic)
+int open_picfile(const char *prefix, mpg123_picture *pic)
 {
-	char * end, * typestr, * pfn;
-	const char * pictype;
+	char *end, *typestr, *pfn;
+	const char *pictype;
 	size_t i, len;
 	int fd;
 	unsigned long count = 1;
@@ -364,7 +364,7 @@ static void store_pictures(const char* prefix, mpg123_id3v2 *v2)
 		fd = open_picfile(prefix, pic);
 		if(fd >= 0)
 		{ /* stream I/O for not having to care about interruptions */
-			FILE * picfile = fdopen(fd, "w");
+			FILE *picfile = fdopen(fd, "w");
 			if(picfile)
 			{
 				if(fwrite(pic->data, pic->size, 1, picfile) != 1)
@@ -381,12 +381,12 @@ static void store_pictures(const char* prefix, mpg123_id3v2 *v2)
 }
 
 /**
- * Initialise MP3 decoder.
+ *Initialise MP3 decoder.
  *
- * \param	file	Location of MP3 file to play.
- * \return			0 on success, else failure.
+ *\param	file	Location of MP3 file to play.
+ *\return			0 on success, else failure.
  */
-int initMp3(const char * file)
+int initMp3(const char *file)
 {
 	int err = 0;
 	int encoding = 0;
@@ -402,8 +402,8 @@ int initMp3(const char * file)
 	
 	mpg123_param(mh, MPG123_ADD_FLAGS, MPG123_PICTURE, 0.);
 	
-	mpg123_id3v1 * v1;
-	mpg123_id3v2 * v2;
+	mpg123_id3v1 *v1;
+	mpg123_id3v2 *v2;
 	int meta;
 
 	if (mpg123_open(mh, file) != MPG123_OK || mpg123_getformat(mh, (long *) &rate, (int *) &channels, &encoding) != MPG123_OK)
@@ -430,15 +430,15 @@ int initMp3(const char * file)
 	}
 	
 	/*
-	 * Ensure that this output format will not change (it might, when we allow
-	 * it).
+	 *Ensure that this output format will not change (it might, when we allow
+	 *it).
 	 */
 	mpg123_format_none(mh);
 	mpg123_format(mh, rate, channels, encoding);
 
 	/*
-	 * Buffer could be almost any size here, mpg123_outblock() is just some
-	 * recommendation. The size should be a multiple of the PCM frame size.
+	 *Buffer could be almost any size here, mpg123_outblock() is just some
+	 *recommendation. The size should be a multiple of the PCM frame size.
 	 */
 	*buffSize = (mpg123_outblock(mh) * 16);
 
@@ -446,9 +446,9 @@ int initMp3(const char * file)
 }
 
 /**
- * Get sampling rate of MP3 file.
+ *Get sampling rate of MP3 file.
  *
- * \return	Sampling rate.
+ *\return	Sampling rate.
  */
 u32 rateMp3(void)
 {
@@ -456,9 +456,9 @@ u32 rateMp3(void)
 }
 
 /**
- * Get number of channels of MP3 file.
+ *Get number of channels of MP3 file.
  *
- * \return	Number of channels for opened file.
+ *\return	Number of channels for opened file.
  */
 u8 channelMp3(void)
 {
@@ -466,12 +466,12 @@ u8 channelMp3(void)
 }
 
 /**
- * Decode part of open MP3 file.
+ *Decode part of open MP3 file.
  *
- * \param buffer	Decoded output.
- * \return			Samples read for each channel.
+ *\param buffer	Decoded output.
+ *\return			Samples read for each channel.
  */
-u64 decodeMp3(void * buffer)
+u64 decodeMp3(void *buffer)
 {
 	size_t done = 0;
 	mpg123_read(mh, buffer, *buffSize, &done);
@@ -479,7 +479,7 @@ u64 decodeMp3(void * buffer)
 }
 
 /**
- * Free MP3 decoder.
+ *Free MP3 decoder.
  */
 void exitMp3(void)
 {

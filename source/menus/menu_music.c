@@ -1,306 +1,259 @@
-#include <stdio.h>
-#include <string.h>
+#include <time.h>
+
+#include <3ds.h>
 
 #include "audio.h"
-#include "flac.h"
 #include "mp3.h"
-#include "vorbis.h"
-#include "wav.h"
 
+#include "C2D_helper.h"
 #include "common.h"
-#include "dir_list.h"
+#include "config.h"
+#include "dirbrowse.h"
 #include "fs.h"
 #include "menu_music.h"
-#include "pp2d.h"
 #include "screenshot.h"
 #include "status_bar.h"
 #include "textures.h"
 #include "touch.h"
 #include "utils.h"
 
-static volatile bool stop = true;
+#define MUSIC_GENRE_COLOUR      C2D_Color32(97, 97, 97, 255)
+#define MUSIC_STATUS_BG_COLOUR  C2D_Color32(43, 53, 61, 255)
+#define MUSIC_SEPARATOR_COLOUR  C2D_Color32(34, 41, 48, 255)
 
-/**
- * Stops current playback. Playback thread should exit as a result.
- */
-static void Music_StopPlayback(void)
+typedef enum
 {
-	stop = true;
-}
+	MUSIC_STATE_NONE,   // 0
+	MUSIC_STATE_REPEAT, // 1
+	MUSIC_STATE_SHUFFLE // 2
+} Music_State;
 
-/**
- * Returns whether music is playing or paused.
- */
-bool Music_IsPlaying(void)
+static Thread thread = NULL;
+static bool isMP3 = false;
+static char playlist[512][512], title[128];
+static int count = 0, selection = 0, state = 0;
+
+static Result Menu_GetMusicList(void)
 {
-	return !stop;
-}
-
-/**
- * Obtains audio file type. Lifted from ctrmus with permission.
- *
- * \param	file	File location.
- * \return			file_types enum or 0 on unsupported file or error.
- */
-enum file_types Music_GetMusicFileType(const char * file)
-{
-	Handle handle;
+	Handle dir;
+	Result ret = 0;
 	
-	u32 fileSig = 0, bytesRead = 0;
-	u64 offset = 0;
-	
-	enum file_types file_type = FILE_TYPE_ERROR;
-	
-	/* Failure opening file */
-	if (R_FAILED(FS_Open(&handle, archive, file, FS_OPEN_READ))) 
+	if (R_SUCCEEDED(ret = FSUSER_OpenDirectory(&dir, archive, fsMakePath(PATH_ASCII, cwd))))
 	{
-		FSFILE_Close(handle);
-		return -1;
-	}
-	
-	if (R_FAILED(FSFILE_Read(handle, &bytesRead, offset, &fileSig, 4)))
-	{
-		FSFILE_Close(handle);
-		return -2;
-	}
-	
-	offset += bytesRead;
-	
-	switch(fileSig)
-	{
-		// "RIFF"
-		case 0x46464952:
-			if (isWav(file) == 0)
-				file_type = FILE_TYPE_WAV;
-			break;
+		u32 entryCount = 0;
+		FS_DirectoryEntry* entries = (FS_DirectoryEntry*) calloc(MAX_FILES, sizeof(FS_DirectoryEntry));
+		
+		if (R_SUCCEEDED(ret = FSDIR_Read(dir, &entryCount, MAX_FILES, entries)))
+		{
+			qsort(entries, entryCount, sizeof(FS_DirectoryEntry), Utils_Alphasort);
+			u8 name[256] = {'\0'};
 
-		// "fLaC"
-		case 0x43614c66:
-			file_type = FILE_TYPE_FLAC;
-			break;
-
-		// "OggS"
-		case 0x5367674F:
-			if (isFlac(file) == 0)
-				file_type = FILE_TYPE_FLAC;
-			else if (isVorbis(file) == 0)
-				file_type = FILE_TYPE_VORBIS;
-
-			break;
-			
-		// MP3 file with an ID3v2 container
-		default:
-			if ((fileSig << 16) == 0xFBFF0000 || (fileSig << 16) == 0xFAFF0000 || (fileSig << 8) == 0x33444900)
+			for (u32 i = 0; i < entryCount; i++) 
 			{
-				file_type = FILE_TYPE_MP3;
-				break;
-			}
-	}
+				Utils_U16_To_U8(&name[0], entries[i].name, 255);
+				int length = strlen(name);
 
-	FSFILE_Close(handle);
-	return file_type;
+				if ((strncasecmp(entries[i].shortExt, "mp3", 3) == 0) || (strncasecmp(entries[i].shortExt, "ogg", 3) == 0) 
+					|| (strncasecmp(entries[i].shortExt, "fla", 3) == 0) || (strncasecmp(entries[i].shortExt, "wav", 3) == 0))
+				{
+					strcpy(playlist[count], cwd);
+					strcpy(playlist[count] + strlen(playlist[count]), name);
+					count++;
+				}
+			}
+		}
+		else
+		{
+			free(entries);
+			return ret;
+		}
+		
+		free(entries);
+
+		if (R_FAILED(ret = FSDIR_Close(dir))) // Close directory
+			return ret;
+	}
+	else
+		return ret;
 }
 
-/**
- * Should only be called from a new thread only, and have only one playback
- * thread at time. This function has not been written for more than one
- * playback thread in mind.
- *
- * \param	pathIn	File location.
- */
-static void Music_PlayFile(void * pathIn)
+static int Music_GetCurrentIndex(char *path)
 {
-	struct decoder_fn decoder;
-	const char * file = pathIn;
-	s16 * buffer1 = NULL;
-	s16 * buffer2 = NULL;
-	ndspWaveBuf waveBuf[2];
-	bool lastbuf = false;
-	Result ret = -1;
+	for(int i = 0; i < count; ++i)
+	{
+		if (!strcmp(playlist[i], path))
+			return i;
+	}
+}
+
+static void Music_Play(char *path)
+{
+	Menu_GetMusicList();
 
 	/* Reset previous stop command */
 	stop = false;
 
-	switch(Music_GetMusicFileType(file))
-	{
-		case FILE_TYPE_WAV:
-			setWav(&decoder);
-			break;
-
-		case FILE_TYPE_FLAC:
-			setFlac(&decoder);
-			break;
-
-		case FILE_TYPE_MP3:
-			setMp3(&decoder);
-			break;
-
-		case FILE_TYPE_VORBIS:
-			setVorbis(&decoder);
-			break;
-
-		default:
-			goto out;
-	}
-
-	if ((ret = (*decoder.init)(file)) != 0)
-		goto out;
-
-	if ((*decoder.channels)() > 2 || (*decoder.channels)() < 1)
-		goto out;
-
-	buffer1 = linearAlloc(decoder.buffSize * sizeof(s16));
-	buffer2 = linearAlloc(decoder.buffSize * sizeof(s16));
-
-	ndspChnReset(SFX);
-	ndspChnWaveBufClear(SFX);
-	ndspSetOutputMode(NDSP_OUTPUT_STEREO);
-	ndspChnSetInterp(SFX, NDSP_INTERP_POLYPHASE);
-	ndspChnSetRate(SFX, (*decoder.rate)());
-	ndspChnSetFormat(SFX, (*decoder.channels)() == 2 ? NDSP_FORMAT_STEREO_PCM16 : NDSP_FORMAT_MONO_PCM16);
-
-	memset(waveBuf, 0, sizeof(waveBuf));
-	waveBuf[0].nsamples = (*decoder.decode)(&buffer1[0]) / (*decoder.channels)();
-	waveBuf[0].data_vaddr = &buffer1[0];
-	ndspChnWaveBufAdd(SFX, &waveBuf[0]);
-
-	waveBuf[1].nsamples = (*decoder.decode)(&buffer2[0]) / (*decoder.channels)();
-	waveBuf[1].data_vaddr = &buffer2[0];
-	ndspChnWaveBufAdd(SFX, &waveBuf[1]);
-	
-	/**
-	 * There may be a chance that the music has not started by the time we get
-	 * to the while loop. So we ensure that music has started here.
-	 */
-	while(ndspChnIsPlaying(SFX) == false);
-
-	while(stop == false)
-	{
-		svcSleepThread(100 * 1000);
-
-		/* When the last buffer has finished playing, break. */
-		if ((lastbuf == true) && (waveBuf[0].status == NDSP_WBUF_DONE) && (waveBuf[1].status == NDSP_WBUF_DONE))
-			break;
-
-		if ((ndspChnIsPaused(SFX) == true) || (lastbuf == true))
-			continue;
-
-		if (waveBuf[0].status == NDSP_WBUF_DONE)
-		{
-			size_t read = (*decoder.decode)(&buffer1[0]);
-
-			if (read <= 0)
-			{
-				lastbuf = true;
-				continue;
-			}
-			else if (read < decoder.buffSize)
-				waveBuf[0].nsamples = read / (*decoder.channels)();
-
-			ndspChnWaveBufAdd(SFX, &waveBuf[0]);
-		}
-
-		if (waveBuf[1].status == NDSP_WBUF_DONE)
-		{
-			size_t read = (*decoder.decode)(&buffer2[0]);
-
-			if (read <= 0)
-			{
-				lastbuf = true;
-				continue;
-			}
-			else if (read < decoder.buffSize)
-				waveBuf[1].nsamples = read / (*decoder.channels)();
-
-			ndspChnWaveBufAdd(SFX, &waveBuf[1]);
-		}
-
-		if (R_FAILED(DSP_FlushDataCache(buffer1, decoder.buffSize * sizeof(s16))))
-			return;
-		if (R_FAILED(DSP_FlushDataCache(buffer2, decoder.buffSize * sizeof(s16))))
-			return;
-	}
-
-	(*decoder.exit)();
-
-out:
-	Music_StopPlayback();
-	linearFree(buffer1);
-	linearFree(buffer2);
-
-	threadExit(0);
-	return;
-}
-
-/**
- * Play an audio file.
- *
- * \param path	File path.
- */
-void Music_Player(char * path)
-{
-	s32 prio;
-	static Thread thread = NULL;
-
-	/* Reset previous stop command */
-	stop = false;
-
+	s32 prio = 0;
 	svcGetThreadPriority(&prio, CUR_THREAD_HANDLE);
-	thread = threadCreate(Music_PlayFile, path, 32 * 1024, prio - 1, -2, false);
-	
-	File * file = Dirlist_GetFileIndex(position);
-	bool isMP3 = (strncasecmp(file->ext, "mp3", 3) == 0);
-	
-	while (Music_IsPlaying())
+	thread = threadCreate(Audio_PlayFile, path, 32 *1024, prio - 1, -2, false);
+
+	selection = Music_GetCurrentIndex(path);
+	strncpy(title, strlen(ID3.title) == 0? strupr(Utils_Basename(path)) : strupr(ID3.title), strlen(ID3.title) == 0? strlen(Utils_Basename(path)) + 1 : strlen(ID3.title) + 1);
+
+	isMP3 = (strncasecmp(&path[strlen(path)-3], "mp3", 3) == 0);
+}
+
+
+static void Music_HandleNext(bool forward, int state)
+{
+	if (state == MUSIC_STATE_NONE)
 	{
+		if (forward)
+			selection++;
+		else
+			selection--;
+	}
+	else if (state == MUSIC_STATE_SHUFFLE)
+	{
+		int old_selection = selection;
+		time_t t;
+		srand((unsigned) time(&t));
+		selection = rand() % (count - 1);
+
+		if (selection == old_selection)
+			selection++;
+	}
+
+	Utils_SetMax(&selection, 0, (count - 1));
+	Utils_SetMin(&selection, (count - 1), 0);
+
+	wait(1);
+	Audio_StopPlayback();
+	memset(title, 0, sizeof(title));
+
+	memset(ID3.artist, 0, 30);
+	memset(ID3.title, 0, 30);
+	memset(ID3.album, 0, 30);
+	memset(ID3.year, 0, 4);
+	memset(ID3.genre, 0, 30);
+
+	threadJoin(thread, U64_MAX);
+	threadFree(thread);
+
+	Music_Play(playlist[selection]);
+}
+
+void Menu_PlayMusic(char *path)
+{
+	aptSetSleepAllowed(false);
+	Music_Play(path);
+	
+	while (aptMainLoop())
+	{
+		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
+		C2D_TargetClear(RENDER_TOP, config_dark_theme? BLACK_BG : WHITE);
+		C2D_TargetClear(RENDER_BOTTOM, config_dark_theme? BLACK_BG : WHITE);
+		C2D_SceneBegin(RENDER_TOP);
+
+		Draw_Image(default_artwork_blur, 0, 0);
+		Draw_Rect(0, 0, 400, 18, MUSIC_GENRE_COLOUR); // Status bar
+		Draw_Rect(0, 55, 400, 2, MUSIC_SEPARATOR_COLOUR); // Separating line
+
+		StatusBar_DisplayTime();
+
+		Draw_Rect(178, 57, 222, 175, C2D_Color32(45, 48, 50, 255));
+		Draw_Rect(183, 62, 212, 165, C2D_Color32(46, 49, 51, 255));
+
+		if (isMP3) // Only print out ID3 tag info for MP3
+		{	
+			Draw_Text(5, 22, 0.5f, WHITE, strupr(title));
+			Draw_Text(5, 38, 0.45f, WHITE, strupr(ID3.artist));
+
+			Draw_Textf(184, 64, 0.5f, WHITE, "%.30s", ID3.album);
+			Draw_Textf(184, 84, 0.5f, WHITE, "%.30s", ID3.year);
+			Draw_Textf(184, 104, 0.5f, WHITE, "%.30s", ID3.genre);
+		}
+		else
+			Draw_Text(5, ((37 - Draw_GetTextHeight(0.5f, title)) / 2) + 18, 0.5f, WHITE, title);
+
+		Draw_Rect(0, 57, 175, 175, MUSIC_GENRE_COLOUR);
+		Draw_Image(default_artwork, 0, 57);
+
+		C2D_SceneBegin(RENDER_BOTTOM);
+
+		Draw_Image(ic_music_bg_bottom, 0, 0);
+
+		if (!(Audio_IsPaused(SFX)))
+			Draw_Image(btn_pause, ((320 - btn_pause.subtex->width) / 2) - 2, ((240 - btn_pause.subtex->height) / 2));
+		else
+			Draw_Image(btn_play, ((320 - btn_play.subtex->width) / 2), ((240 - btn_play.subtex->height) / 2));
+
+		Draw_Image(btn_rewind, ((320 - btn_rewind.subtex->width) / 2) - 80, ((240 - btn_rewind.subtex->height) / 2));
+		Draw_Image(btn_forward, ((320 - btn_forward.subtex->width) / 2) + 80, ((240 - btn_forward.subtex->height) / 2));
+
+		Draw_Image(state == MUSIC_STATE_SHUFFLE? btn_shuffle_overlay : btn_shuffle, ((320 - btn_shuffle.subtex->width) / 2) - 65, ((240 - btn_shuffle.subtex->height) / 2) + 35);
+		Draw_Image(state == MUSIC_STATE_REPEAT? btn_repeat_overlay : btn_repeat, ((320 - btn_repeat.subtex->width) / 2) + 65, ((240 - btn_repeat.subtex->height) / 2) + 35);
+		
+		Draw_EndFrame();
+
 		hidScanInput();
 
 		u32 kDown = hidKeysDown();
 		u32 kHeld = hidKeysHeld();
 
-		if ((kDown & KEY_A) || ((touchInRect(114, 76, 204, 164)) && (kDown & KEY_TOUCH)))
+		if ((kDown & KEY_A) || ((TouchInRect(114, 76, 204, 164)) && (kDown & KEY_TOUCH)))
 			Audio_TogglePlayback(SFX);
 
-		pp2d_begin_draw(GFX_BOTTOM, GFX_LEFT);
-
-			pp2d_draw_texture(TEXTURE_MUSIC_BOTTOM_BG, 0, 0);
-
-			if (!(Audio_IsPaused(SFX)))
-				pp2d_draw_texture(TEXTURE_MUSIC_PAUSE, ((320.0 - pp2d_get_texture_width(TEXTURE_MUSIC_PAUSE)) / 2.0) - 2, 
-					((240.0 - pp2d_get_texture_height(TEXTURE_MUSIC_PAUSE)) / 2.0));
+		if ((kDown & KEY_Y) || ((TouchInRect(((320 - btn_repeat.subtex->width) / 2) + 65, ((240 - btn_shuffle.subtex->height) / 2) + 35, 
+			(((320 - btn_repeat.subtex->width) / 2) + 65) + 30, (((240 - btn_shuffle.subtex->height) / 2) + 35) + 30)) && (kDown & KEY_TOUCH)))
+		{
+			if (state == MUSIC_STATE_REPEAT)
+				state = MUSIC_STATE_NONE;
 			else
-				pp2d_draw_texture(TEXTURE_MUSIC_PLAY, ((320.0 - pp2d_get_texture_width(TEXTURE_MUSIC_PLAY)) / 2.0), 
-					((240.0 - pp2d_get_texture_height(TEXTURE_MUSIC_PLAY)) / 2.0));
-
-		pp2d_end_draw();
-
-		pp2d_begin_draw(GFX_TOP, GFX_LEFT);
-
-			pp2d_draw_texture(TEXTURE_MUSIC_TOP_BG, 0, 0);
-
-			StatusBar_DisplayBar();
-
-			if (isMP3) // Only print out ID3 tag info for MP3
-			{	
-				pp2d_draw_textf(5, 20, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s", fileName);
-				pp2d_draw_textf(5, 36, 0.45f, 0.45f, RGBA8(255, 255, 255, 255), "%s", ID3.artist);
-		
-				pp2d_draw_textf(184, 64, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.title);
-				pp2d_draw_textf(184, 84, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.album);
-				pp2d_draw_textf(184, 104, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.year);
-				pp2d_draw_textf(184, 124, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%.30s", ID3.genre);
-			}
-		
+				state = MUSIC_STATE_REPEAT;
+		}
+		else if ((kDown & KEY_X) || ((TouchInRect(((320 - btn_shuffle.subtex->width) / 2) - 65, ((240 - btn_shuffle.subtex->height) / 2) + 35, 
+			(((320 - btn_shuffle.subtex->width) / 2) - 65) + 30, (((240 - btn_shuffle.subtex->height) / 2) + 35) + 30)) && (kDown & KEY_TOUCH)))
+		{
+			if (state == MUSIC_STATE_SHUFFLE)
+				state = MUSIC_STATE_NONE;
 			else
-				pp2d_draw_textf(5, 25, 0.5f, 0.5f, RGBA8(255, 255, 255, 255), "%s", fileName);	
-		
-		pp2d_end_draw();
+				state = MUSIC_STATE_SHUFFLE;
+		}
+
+		if ((kDown & KEY_LEFT) || (kDown & KEY_L) || ((TouchInRect(((320 - btn_rewind.subtex->width) / 2) - 80, ((240 - btn_rewind.subtex->height) / 2), 
+			(((320 - btn_rewind.subtex->width) / 2) - 80) + 45, ((240 - btn_rewind.subtex->height) / 2) + 45)) && (kDown & KEY_TOUCH)))
+		{
+			wait(1);
+			Music_HandleNext(false, MUSIC_STATE_NONE);
+		}
+		else if ((kDown & KEY_RIGHT) || (kDown & KEY_R) || ((TouchInRect(((320 - btn_forward.subtex->width) / 2) + 80, ((240 - btn_forward.subtex->height) / 2), 
+			(((320 - btn_forward.subtex->width) / 2) + 80) + 45, ((240 - btn_forward.subtex->height) / 2) + 45)) && (kDown & KEY_TOUCH)))
+		{
+			wait(1);
+			Music_HandleNext(true, MUSIC_STATE_NONE);
+		}
 
 		if (kDown & KEY_B)
 		{
-			wait(10);
-			Music_StopPlayback();
+			wait(1);
+			Audio_StopPlayback();
 			break;
+		}
+
+		if (!Audio_IsPlaying())
+		{
+			wait(1);
+
+			if (state == MUSIC_STATE_NONE)
+			{
+				Audio_StopPlayback();
+				break;
+			}
+			else if (state == MUSIC_STATE_REPEAT)
+				Music_HandleNext(false, MUSIC_STATE_REPEAT);
+			else if (state == MUSIC_STATE_SHUFFLE)
+				Music_HandleNext(false, MUSIC_STATE_SHUFFLE);
 		}
 
 		if (((kHeld & KEY_L) && (kDown & KEY_R)) || ((kHeld & KEY_R) && (kDown & KEY_L)))
@@ -311,11 +264,18 @@ void Music_Player(char * path)
 	threadFree(thread);
 	
 	// Clear ID3
-	memset(ID3.artist, 0, 30);
-	memset(ID3.title, 0, 30);
-	memset(ID3.album, 0, 30);
-	memset(ID3.year, 0, 4);
-	memset(ID3.genre, 0, 30);
+	if (isMP3)
+	{
+		memset(ID3.artist, 0, 30);
+		memset(ID3.title, 0, 30);
+		memset(ID3.album, 0, 30);
+		memset(ID3.year, 0, 4);
+		memset(ID3.genre, 0, 30);
+	}
 
+	memset(title, 0, sizeof(title));
+	memset(playlist, 0, sizeof(playlist[0][0]) * 512 * 512);
+	count = 0;
+	aptSetSleepAllowed(true);
 	return;
 }

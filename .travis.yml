@@ -2,24 +2,39 @@ language: c
 
 sudo: true
 
-#Cache devkitARM and doxygen
-cache:
-  directories:
-    - /home/travis/devkitPro
-
 before_install:
   - cd include/dr_libs/
   - git clone https://github.com/mackron/dr_libs.git
   - cd ../..
-  - export DEVKITPRO=/opt/devkitpro
-  - export DEVKITARM=/opt/devkitpro/devkitARM
-  - export CTRULIB=${DEVKITPRO}/libctru
-  - export PORTLIBS=${DEVKITPRO}/portlibs/armv6k
-  - sh resources/.travis-deps.sh
+  - wget https://github.com/devkitPro/pacman/releases/download/v1.0.0/devkitpro-pacman.deb
+  - sudo dpkg -i devkitpro-pacman.deb
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - libstdc++-4.9-dev
+
+install:
+  - sudo dkp-pacman -Syu 3ds-dev --noconfirm --needed
+  - sudo dkp-pacman -Syu 3ds-curl --noconfirm --force
+  - sudo dkp-pacman -S 3ds-libogg --noconfirm
+  - sudo dkp-pacman -S 3ds-libvorbisidec --noconfirm
+  - sudo dkp-pacman -S 3ds-mpg123 --noconfirm
+  - source /etc/profile.d/devkit-env.sh
+  - export CC=arm-none-eabi-gcc
+  - export CXX=arm-none-eabi-g++
+  - git clone --recursive https://github.com/Steveice10/bannertool && cd bannertool/
+  - make && sudo cp output/linux-x86_64/bannertool /opt/devkitpro/devkitARM/bin/bannertool
+  - cd ../ && rm -rf bannertool/
+  - git clone https://github.com/profi200/Project_CTR.git && cd Project_CTR/makerom
+  - make && sudo cp makerom /opt/devkitpro/devkitARM/bin/makerom
+  - cd ../.. && rm -rf Project_CTR
 
 script:
   - cd $TRAVIS_BUILD_DIR
-  - sh resources/.build.sh
+  - sh .travis/build.sh
   
 deploy:
   provider: pages

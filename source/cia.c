@@ -13,7 +13,7 @@ static Result CIA_RemoveTitle(u64 titleID, FS_MediaType media)
 		return ret;
 	
 	u32 read = 0;
-	u64 * titleIDs = malloc(count * sizeof(u64));
+	u64 *titleIDs = malloc(count *sizeof(u64));
 	
 	ret = AM_GetTitleList(&read, media, count, titleIDs);
 	if (R_FAILED(ret))
@@ -53,7 +53,7 @@ static void CIA_LaunchTitle(u64 titleId, FS_MediaType mediaType)
 	APT_DoApplicationJump(param, sizeof(param), hmac);
 }
 
-Result CIA_InstallTitle(const char * path, FS_MediaType media, bool update)
+Result CIA_InstallTitle(const char *path, FS_MediaType media, bool update)
 {
 	u32 bytesRead = 0, bytesWritten = 0;
 	u64 fileSize = 0, offset = 0;
@@ -62,7 +62,7 @@ Result CIA_InstallTitle(const char * path, FS_MediaType media, bool update)
 	
 	Result ret = 0;
 
-	char * filename = Utils_Basename(path);
+	char *filename = Utils_Basename(path);
 
 	if (R_FAILED(ret = FSUSER_OpenFileDirectly(&fileHandle, ARCHIVE_SDMC, fsMakePath(PATH_ASCII, ""), fsMakePath(PATH_ASCII, path), FS_OPEN_READ, 0)))
 		return ret;
@@ -82,14 +82,14 @@ Result CIA_InstallTitle(const char * path, FS_MediaType media, bool update)
 	if (R_FAILED(ret = AM_StartCiaInstall(media, &ciaHandle)))
 		return ret;
 	
-	u8 * cia_buffer = malloc((512 * 1024));
+	u8 *cia_buffer = malloc((512 *1024));
 
 	while (offset < fileSize)
 	{
 		u64 bytesRemaining = fileSize - offset;
 		ProgressBar_DisplayProgress("Installing", filename, bytesRead, fileSize);
 
-		ret = FSFILE_Read(fileHandle, &bytesRead, offset, cia_buffer, (512 * 1024)); // (512 * 1024) - chunk size
+		ret = FSFILE_Read(fileHandle, &bytesRead, offset, cia_buffer, (512 *1024)); // (512 *1024) - chunk size
 		ret = FSFILE_Write(ciaHandle, &bytesWritten, offset, cia_buffer, bytesRead, 0);
 
 		if (bytesRead != bytesWritten)

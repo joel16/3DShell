@@ -1,5 +1,5 @@
-#ifndef NET_H
-#define NET_H
+#ifndef _3D_SHELL_NET_H
+#define _3D_SHELL_NET_H
 
 #include <3ds.h>
 

@@ -9,13 +9,13 @@
 
 #define  USER_AGENT APP_TITLE
 
-static char* result_buf = NULL;
+static char *result_buf = NULL;
 static size_t result_sz = 0;
 static size_t result_written = 0;
 
 // following function is from 
 // https://github.com/angelsl/libctrfgh/blob/master/curl_test/src/main.c
-static size_t Net_HandleData(char* ptr, size_t size, size_t nmemb, void* userdata)
+static size_t Net_HandleData(char *ptr, size_t size, size_t nmemb, void *userdata)
 {
     (void) userdata;
     const size_t bsz = size*nmemb;
@@ -54,7 +54,7 @@ static size_t Net_HandleData(char* ptr, size_t size, size_t nmemb, void* userdat
 }
 
 // From MultiUpdater
-static Result Net_SetupContext(CURL *hnd, const char * url)
+static Result Net_SetupContext(CURL *hnd, const char  *url)
 {
     curl_easy_setopt(hnd, CURLOPT_BUFFERSIZE, 102400L);
     curl_easy_setopt(hnd, CURLOPT_URL, url);
@@ -140,7 +140,7 @@ Result Net_DownloadFile(const char *url, const char *path)
 
 	FSFILE_Write(fileHandle, &bytesWritten, offset, result_buf, result_written, 0);
 
-	ProgressBar_DisplayProgress("Downloading", Utils_Basename(path), 0, 0);
+	//ProgressBar_DisplayProgress("Downloading", Utils_Basename(path), 0, 0);
 
 	u64 endTime = osGetTime();
 	u64 totalTime = endTime - startTime;
@@ -155,7 +155,3 @@ Result Net_DownloadFile(const char *url, const char *path)
 	FSFILE_Close(fileHandle);
 	return 0;
 }
-
-
-
-
