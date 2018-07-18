@@ -16,6 +16,7 @@ Current features:
 - Renaming files/folders
 - File/folder deletion
 - Copy/Cut files and folders
+- Multi-select items for delete/cut/copy (using Y button)
 - FTP server (Press select or tap the ftp icon to toggle)
 - Image preview (If the image is around 400 * 480 which is the size of both screens, the image will be split in half and displayed. Have a look at the screenshots below). Support for the following image formats. PNG, JPG, GIF[un-animated], TGA (untested ->) HDR, PIC, PNM, PSD)
 - Zip file extraction.
