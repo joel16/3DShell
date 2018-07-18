@@ -18,7 +18,7 @@ addons:
 
 install:
   - sudo dkp-pacman -Syu 3ds-dev --noconfirm --needed
-  - sudo dkp-pacman -S 3ds-curl --noconfirm
+  - sudo dkp-pacman -Syu 3ds-curl --noconfirm --force
   - sudo dkp-pacman -S 3ds-libogg --noconfirm
   - sudo dkp-pacman -S 3ds-libvorbisidec --noconfirm
   - sudo dkp-pacman -S 3ds-mpg123 --noconfirm
