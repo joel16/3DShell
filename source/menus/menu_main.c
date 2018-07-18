@@ -60,6 +60,17 @@ static void Menu_ControlHome(u32 input)
 		else if (input & KEY_DDOWN)
 			position++;
 
+		if (hidKeysHeld() & KEY_CPAD_UP)
+		{
+			wait(5);
+			position--;
+		}
+		else if (hidKeysHeld() & KEY_CPAD_DOWN)
+		{
+			wait(5);
+			position++;
+		}
+
 		Utils_SetMax(&position, 0, (fileCount - 1));
 		Utils_SetMin(&position, (fileCount - 1), 0);
 
@@ -96,15 +107,16 @@ static void Menu_ControlHome(u32 input)
 
 void Menu_DrawMenuBar(void)
 {
-	Draw_Image(MENU_STATE == MENU_STATE_HOME? icon_home_dark : icon_home, 0, -2);
+	Draw_Image(MENU_STATE == MENU_STATE_HOME? icon_home_overlay : (config_dark_theme? icon_home_dark : icon_home), 0, -2);
 	Draw_Image((MENU_STATE == MENU_STATE_FILEOPTIONS) || (MENU_STATE == MENU_STATE_PROPERTIES) || (MENU_STATE == MENU_STATE_DELETE)? 
-		icon_options_dark : icon_options, 25, 0);
+		icon_options_overlay : (config_dark_theme? icon_options_dark : icon_options), 25, 0);
 	Draw_Image((MENU_STATE == MENU_STATE_SETTINGS) || (MENU_STATE == MENU_STATE_SORT) || (MENU_STATE == MENU_STATE_ABOUT)? 
-		icon_settings_dark : icon_settings, 50, 0);
-	Draw_Image(MENU_STATE == MENU_STATE_FTP? icon_ftp_dark : icon_ftp, 75, 0);
-	Draw_Image((MENU_STATE == MENU_STATE_UPDATE) || (MENU_STATE == MENU_STATE_UPDATE_2)? icon_updates_dark : icon_updates, 100, 1);
-	Draw_Image(BROWSE_STATE == BROWSE_STATE_SD? icon_sd_dark : icon_sd, 250, 0);
-	Draw_Image(BROWSE_STATE == BROWSE_STATE_NAND? icon_secure_dark : icon_secure, 275, 0);
+		icon_settings_overlay : (config_dark_theme? icon_settings_dark : icon_settings), 50, 0);
+	Draw_Image(MENU_STATE == MENU_STATE_FTP? icon_ftp_overlay : (config_dark_theme? icon_ftp_dark : icon_ftp), 75, 0);
+	Draw_Image((MENU_STATE == MENU_STATE_UPDATE) || (MENU_STATE == MENU_STATE_UPDATE_2)? icon_updates_overlay : 
+		(config_dark_theme? icon_updates_dark : icon_updates), 100, 1);
+	Draw_Image(BROWSE_STATE == BROWSE_STATE_SD? icon_sd_overlay : (config_dark_theme? icon_sd_dark : icon_sd), 250, 0);
+	Draw_Image(BROWSE_STATE == BROWSE_STATE_NAND? icon_secure_overlay : (config_dark_theme? icon_secure_dark : icon_secure), 275, 0);
 	Draw_Image(icon_search, 300, 0);
 }
 

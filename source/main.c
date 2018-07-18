@@ -9,6 +9,8 @@
 #include "textures.h"
 #include "utils.h"
 
+static u32 cpu_time_limit = 0;
+
 static void Term_Services(void)
 {
 	Textures_Free();
@@ -22,14 +24,14 @@ static void Term_Services(void)
 	C2D_TextBufDelete(dynamicBuf);
 	C2D_TextBufDelete(staticBuf);
 
+	if (cpu_time_limit != UINT32_MAX)
+		APT_SetAppCpuTimeLimit(cpu_time_limit);
+
 	C2D_Fini();
 	C3D_Fini();
 	gfxExit();
 	romfsExit();
-	ptmuExit();
 	ndspExit();
-	mcuHwcExit();
-	cfguExit();
 	amExit();
 	acExit();
 }
@@ -39,11 +41,8 @@ static void Init_Services(void)
 	acInit();
 	amInit();
 	AM_QueryAvailableExternalTitleDatabase(NULL);
-	cfguInit();
-	mcuHwcInit();
 	ndspInit();
 	ndspSetOutputMode(NDSP_OUTPUT_STEREO);
-	ptmuInit();
 	romfsInit();
 	gfxInitDefault();
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
@@ -53,6 +52,7 @@ static void Init_Services(void)
 	if (Utils_IsN3DS())
 		osSetSpeedupEnable(true);
 
+	APT_GetAppCpuTimeLimit(&cpu_time_limit);
 	APT_SetAppCpuTimeLimit(30);
 
 	staticBuf = C2D_TextBufNew(4096);
@@ -74,7 +74,6 @@ static void Init_Services(void)
 int main(int argc, char *argv[])
 {
 	Init_Services();
-	//Config_Load();
 
 	if (setjmp(exitJmp)) 
 	{

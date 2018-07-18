@@ -145,6 +145,7 @@ static void Music_HandleNext(bool forward, int state)
 
 void Menu_PlayMusic(char *path)
 {
+	aptSetSleepAllowed(false);
 	Music_Play(path);
 	
 	while (aptMainLoop())
@@ -275,5 +276,6 @@ void Menu_PlayMusic(char *path)
 	memset(title, 0, sizeof(title));
 	memset(playlist, 0, sizeof(playlist[0][0]) * 512 * 512);
 	count = 0;
+	aptSetSleepAllowed(true);
 	return;
 }

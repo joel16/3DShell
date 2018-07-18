@@ -11,6 +11,7 @@
 #include "menu_main.h"
 #include "status_bar.h"
 #include "textures.h"
+#include "touch.h"
 #include "utils.h"
 
 void Menu_DisplayFTP(void)
@@ -27,7 +28,7 @@ void Menu_DisplayFTP(void)
 	while(MENU_STATE == MENU_STATE_FTP)
 	{
 		ftp_loop();
-
+		
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
 		C2D_TargetClear(RENDER_BOTTOM, config_dark_theme? BLACK_BG : WHITE);
 		C2D_SceneBegin(RENDER_BOTTOM);
@@ -38,7 +39,7 @@ void Menu_DisplayFTP(void)
 			
 		Menu_DrawMenuBar();
 
-		if (!(wifiStatus))
+		if (wifiStatus == 0)
 		{
 			Draw_Text(((320 - Draw_GetTextWidth(0.48f, "Failed to initialize FTP.")) / 2), 40, 0.48f, WHITE, "Failed to initialize FTP.");
 			sprintf(buf, "WiFi not enabled.");
@@ -82,7 +83,7 @@ void Menu_DisplayFTP(void)
 		hidScanInput();
 		u32 kDown = hidKeysDown();
 
-		if (kDown & KEY_SELECT)
+		if (((kDown & KEY_TOUCH) && (TouchInRect(73, 0, 97, 20))) || (kDown & KEY_SELECT))
 			break;
 	}
 

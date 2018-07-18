@@ -14,7 +14,8 @@
 
 static int update_dialog_selection = 0;
 static bool err = false;
-char ver[10];
+static u32 wifiStatus = 0;
+static char ver[10];
 
 static bool Menu_ValidateUpdate(bool nighlty)
 {
@@ -39,7 +40,7 @@ static bool Menu_ValidateUpdate(bool nighlty)
 			sscanf(buf, "%s", ver);
 			free(buf);
 
-			if (strcmp(ver, GITVERSION) != 0)
+			if (strcasecmp(ver, GITVERSION) != 0)
 				return true;
 
 			return false;
@@ -59,7 +60,11 @@ void Menu_DisplayUpdate(void)
 	Draw_Rect(0, 20, 400, 35, config_dark_theme? MENU_BAR_DARK : STATUS_BAR_LIGHT); // Menu bar
 	Draw_Text(10, 30, 0.48f, WHITE, "Update Center");
 
-	if (err)
+	ACU_GetWifiStatus(&wifiStatus);
+
+	if (wifiStatus == 0)
+		Draw_Text(((320 - Draw_GetTextWidth(0.48f, "WiFi not enabled.")) / 2), 60, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "WiFi not enabled.");
+	else if (err)
 		Draw_Text(err_width, 60, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "No updates available.");
 
 	Draw_Text(122, 85, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Nightly builds");
@@ -92,7 +97,7 @@ void Menu_DisplayUpdate2(void)
 
 	Draw_Image(config_dark_theme? dialog_dark : dialog, ((320 - (dialog.subtex->width)) / 2), ((240 - (dialog.subtex->height)) / 2));
 
-	Draw_Text(((320 - (dialog.subtex->width)) / 2) + 6, ((240 - (dialog.subtex->height)) / 2) + 6, 0.45f, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "Confirm update");
+	Draw_Textf(((320 - (dialog.subtex->width)) / 2) + 6, ((240 - (dialog.subtex->height)) / 2) + 6, 0.45f, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "New update: %s", ver);
 
 	Draw_Text(((320 - (text_width)) / 2), ((240 - (dialog.subtex->height)) / 2) + 40, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "This action cannot be undone.");
 	Draw_Text(((320 - (text2_width)) / 2), ((240 - (dialog.subtex->height)) / 2) + 55, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Do you wish to update?");
@@ -110,23 +115,29 @@ void Menu_ControlUpdate(u32 input)
 {
 	if ((input & KEY_TOUCH) && (TouchInRect(106, 117, (106) + (Draw_GetTextWidth(0.45, "Check for updates") + 10), 137)))
 	{
-		wait(1);
-		Net_DownloadFile("https://github.com/joel16/3DShell/raw/gh-pages/UPDATE_NIGHTLY.txt", "/3ds/3DShell/UPDATE_NIGHTLY.txt");
+		if (wifiStatus != 0)
+		{
+			wait(1);
+			Net_DownloadFile("https://github.com/joel16/3DShell/raw/gh-pages/UPDATE_NIGHTLY.txt", "/3ds/3DShell/UPDATE_NIGHTLY.txt");
 		
-		if (Menu_ValidateUpdate(true))
-			MENU_STATE = MENU_STATE_UPDATE_2;
-		else
-			err = true;
+			if (Menu_ValidateUpdate(true))
+				MENU_STATE = MENU_STATE_UPDATE_2;
+			else
+				err = true;
+		}
 	}
 
 	else if ((input & KEY_TOUCH) && (TouchInRect(106, 187, (106) + (Draw_GetTextWidth(0.45, "Check for updates") + 10), 207)))
 	{
-		wait(1);
-		Net_DownloadFile("https://github.com/joel16/3DShell/raw/gh-pages/UPDATE_MILESTONE.txt", "/3ds/3DShell/UPDATE_MILESTONE.txt");
-		if (Menu_ValidateUpdate(false))
-			MENU_STATE = MENU_STATE_UPDATE_2;
-		else
-			err = true;
+		if (wifiStatus != 0)
+		{
+			wait(1);
+			Net_DownloadFile("https://github.com/joel16/3DShell/raw/gh-pages/UPDATE_MILESTONE.txt", "/3ds/3DShell/UPDATE_MILESTONE.txt");
+			if (Menu_ValidateUpdate(false))
+				MENU_STATE = MENU_STATE_UPDATE_2;
+			else
+				err = true;
+		}
 	}
 }
 
@@ -151,18 +162,22 @@ void Menu_ControlUpdate2(u32 input)
 	{
 		if (update_dialog_selection == 1)
 		{
-			if (envIsHomebrew())
+			if (wifiStatus != 0)
 			{
-				if (FS_FileExists(archive, "/3ds/3DShell/3DShell.3dsx"))
-					FS_Remove(archive, "/3ds/3DShell/3DShell.3dsx");
-				Net_DownloadFile("https://github.com/joel16/3DShell/raw/gh-pages/3DShell.3dsx", "/3ds/3DShell/3DShell.3dsx");
-				longjmp(exitJmp, 1);
-			}
-			else
-			{
-				Net_DownloadFile("https://github.com/joel16/3DShell/raw/gh-pages/3DShell.cia", "/3ds/3DShell/3DShell.cia");
-				CIA_InstallTitle("/3ds/3DShell/3DShell.cia", MEDIATYPE_SD, true);
-			}
+				if (envIsHomebrew())
+				{
+					if (FS_FileExists(archive, "/3ds/3DShell/3DShell.3dsx"))
+						FS_Remove(archive, "/3ds/3DShell/3DShell.3dsx");
+					
+					Net_DownloadFile("https://github.com/joel16/3DShell/raw/gh-pages/3DShell.3dsx", "/3ds/3DShell/3DShell.3dsx");
+					longjmp(exitJmp, 1);
+				}
+				else
+				{
+					Net_DownloadFile("https://github.com/joel16/3DShell/raw/gh-pages/3DShell.cia", "/3ds/3DShell/3DShell.cia");
+					CIA_InstallTitle("/3ds/3DShell/3DShell.cia", MEDIATYPE_SD, true);
+				}
+			}	
 		}
 		else
 		{
