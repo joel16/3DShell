@@ -280,3 +280,42 @@ Result FS_Write(FS_Archive archive, const char *path, const char *buf)
 
 	return 0;
 }
+
+/*static Result FS_GetFileTimestampRaw(FS_Archive archive, const char *path, u64 *mtime)
+{
+	Result ret = 0;
+	u16 path_utf16[256] = {0};
+	
+	utf8_to_utf16(path_utf16, path, 256);
+
+	if (R_FAILED(ret = FSUSER_ControlArchive(archive, ARCHIVE_ACTION_GET_TIMESTAMP, path_utf16, sizeof(path_utf16), mtime, sizeof(*mtime))))
+		return ret;
+
+	*mtime /= 1000;
+	*mtime += 946684800;
+
+	return 0;
+}*/
+
+char *FS_GetFileTimestamp(FS_Archive archive, char *path)
+{
+	static char timeStr[20];
+	u64 mtime = 0;
+
+	if (R_SUCCEEDED(sdmc_getmtime(path, &mtime)))
+	{
+		time_t mt = mtime;
+		struct tm *timeStruct = gmtime(&mt);
+
+		int hours = timeStruct->tm_hour;
+		int minutes = timeStruct->tm_min;
+
+		int day = timeStruct->tm_mday;
+		int month = timeStruct->tm_mon + 1; // January being 0
+		int year = timeStruct->tm_year + 1900;
+
+		snprintf(timeStr, sizeof(timeStr), "%d/%d/%d %2i:%02i", year, month, day, hours, minutes);
+	}
+
+	return timeStr;
+}

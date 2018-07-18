@@ -492,9 +492,10 @@ void Menu_DisplayProperties(void)
 		Utils_GetSizeString(utils_size, size);
 	}
 
-	Draw_Textf(66, 65, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Name: %s", file->name);
-	Draw_Textf(66, 80, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Parent: %s", cwd);
-	Draw_Textf(66, 95, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Size: %s", utils_size);
+	Draw_Textf(66, 60, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Name: %.22s", file->name);
+	Draw_Textf(66, 76, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Parent: %.20s", cwd);
+	Draw_Textf(66, 92, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Size: %s", utils_size);
+	Draw_Textf(66, 108, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Modified time: %s", FS_GetFileTimestamp(archive, path));
 
 	Draw_GetTextSize(0.45f, &properties_ok_width, &properties_ok_height, "OK");
 	Draw_Rect((253 - properties_ok_width) - 5, (218 - properties_ok_height) - 5, properties_ok_width + 10, properties_ok_height + 10, config_dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
