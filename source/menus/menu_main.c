@@ -228,8 +228,16 @@ void Menu_Main(void)
 		if (((kHeld & KEY_L) && (kDown & KEY_R)) || ((kHeld & KEY_R) && (kDown & KEY_L)))
 			Screenshot_Capture();
 
-		if (MENU_STATE == MENU_STATE_FILEOPTIONS)
+		if (MENU_STATE == MENU_STATE_HOME) 
+		{
+			Menu_ControlHome(kDown);
+			Menu_ControlBrowseOptions(kDown);
+		}
+		else if (MENU_STATE == MENU_STATE_FILEOPTIONS)
+		{
 			Menu_DisplayFileOptions();
+			Menu_ControlFileOptions(kDown);
+		}
 		else if (MENU_STATE == MENU_STATE_PROPERTIES)
 		{
 			Menu_DisplayProperties();
@@ -267,14 +275,6 @@ void Menu_Main(void)
 		}
 
 		Draw_EndFrame();
-
-		if (MENU_STATE == MENU_STATE_HOME) 
-		{
-			Menu_ControlHome(kDown);
-			Menu_ControlBrowseOptions(kDown);
-		}
-		else if (MENU_STATE == MENU_STATE_FILEOPTIONS)
-			Menu_ControlFileOptions(kDown);
 
 		if (kDown & KEY_START)
 			longjmp(exitJmp, 1);

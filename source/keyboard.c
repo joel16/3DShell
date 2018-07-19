@@ -2,10 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "C2D_helper.h"
 #include "keyboard.h"
 
 const char *OSK_GetString(const char *initial_text, const char *hint_text)
 {
+	Draw_EndFrame();
+
 	static SwkbdState swkbd;
 	static SwkbdStatusData swkbdStatus;
 	static SwkbdLearningData swkbdLearning;
