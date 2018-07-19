@@ -6,10 +6,10 @@
 
 const char *OSK_GetString(const char *initial_text, const char *hint_text)
 {
-	SwkbdState swkbd;
-	SwkbdStatusData swkbdStatus;
-	SwkbdLearningData swkbdLearning;
-	bool reload = false;
+	static SwkbdState swkbd;
+	static SwkbdStatusData swkbdStatus;
+	static SwkbdLearningData swkbdLearning;
+	static bool reload = false;
 	static char input_string[256];
 
 	swkbdInit(&swkbd, SWKBD_TYPE_NORMAL, 2, 256);
