@@ -16,6 +16,8 @@ static int update_dialog_selection = 0;
 static bool err = false;
 static u32 wifiStatus = 0;
 static char ver[10];
+static float update_confirm_width = 0, update_confirm_height = 0;
+static float update_cancel_width = 0, update_cancel_height = 0;
 
 static bool Menu_ValidateUpdate(bool nighlty)
 {
@@ -44,6 +46,29 @@ static bool Menu_ValidateUpdate(bool nighlty)
 				return true;
 
 			return false;
+		}
+	}
+}
+
+static void Menu_InstallUpdate(void)
+{
+	if (wifiStatus != 0)
+	{
+		if (envIsHomebrew())
+		{
+			if (FS_FileExists(archive, "/3ds/3DShell/3DShell.3dsx"))
+				FS_Remove(archive, "/3ds/3DShell/3DShell.3dsx");
+					
+			wait(1);
+			Net_DownloadFile("https://github.com/joel16/3DShell/raw/gh-pages/3DShell.3dsx", "/3ds/3DShell/3DShell.3dsx");
+			wait(1);
+			longjmp(exitJmp, 1);
+		}
+		else
+		{
+			Net_DownloadFile("https://github.com/joel16/3DShell/raw/gh-pages/3DShell.cia", "/3ds/3DShell/3DShell.cia");
+			wait(1);
+			CIA_InstallTitle("/3ds/3DShell/3DShell.cia", MEDIATYPE_SD, true);
 		}
 	}
 }
@@ -86,9 +111,7 @@ void Menu_DisplayUpdate(void)
 
 void Menu_DisplayUpdate2(void)
 {
-	float text_width = 0, text2_width = 0;;
-	float update_confirm_width = 0, update_confirm_height = 0;
-	float update_cancel_width = 0, update_cancel_height = 0;
+	float text_width = 0, text2_width = 0;
 
 	Draw_GetTextSize(0.45f, &text_width, NULL, "This action cannot be undone.");
 	Draw_GetTextSize(0.45f, &text2_width, NULL, "Do you wish to update?");
@@ -161,24 +184,7 @@ void Menu_ControlUpdate2(u32 input)
 	if (input & KEY_A)
 	{
 		if (update_dialog_selection == 1)
-		{
-			if (wifiStatus != 0)
-			{
-				if (envIsHomebrew())
-				{
-					if (FS_FileExists(archive, "/3ds/3DShell/3DShell.3dsx"))
-						FS_Remove(archive, "/3ds/3DShell/3DShell.3dsx");
-					
-					Net_DownloadFile("https://github.com/joel16/3DShell/raw/gh-pages/3DShell.3dsx", "/3ds/3DShell/3DShell.3dsx");
-					longjmp(exitJmp, 1);
-				}
-				else
-				{
-					Net_DownloadFile("https://github.com/joel16/3DShell/raw/gh-pages/3DShell.cia", "/3ds/3DShell/3DShell.cia");
-					CIA_InstallTitle("/3ds/3DShell/3DShell.cia", MEDIATYPE_SD, true);
-				}
-			}	
-		}
+			Menu_InstallUpdate();
 		else
 		{
 			wait(1);
@@ -187,5 +193,24 @@ void Menu_ControlUpdate2(u32 input)
 		}
 
 		update_dialog_selection = 0;
+	}
+
+	if (TouchInRect((288 - update_cancel_width) - 5, (159 - update_cancel_height) - 5, ((288 - update_cancel_width) - 5) + update_cancel_width + 10, ((159 - update_cancel_height) - 5) + update_cancel_height + 10))
+	{
+		update_dialog_selection = 0;
+
+		if (input & KEY_TOUCH)
+		{
+			wait(1);
+			update_dialog_selection = 0;
+			MENU_STATE = MENU_STATE_UPDATE;
+		}
+	}
+	else if (TouchInRect((248 - (update_confirm_height)) - 5, (159 - update_confirm_height) - 5, ((248 - (update_confirm_height)) - 5) + update_confirm_height + 10, ((159 - update_confirm_height) - 5) + update_confirm_height + 10))
+	{
+		update_dialog_selection = 1;
+
+		if (input & KEY_TOUCH)
+			Menu_InstallUpdate();
 	}
 }
