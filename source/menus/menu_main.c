@@ -180,16 +180,18 @@ static void Menu_ControlBrowseOptions(u32 input)
 
 	if ((input & KEY_TOUCH) && (TouchInRect(293, 0, 320, 20)))
 	{
-		char *path = (char *)malloc(256);
+		char path[256] = {0};
 		strcpy(path, OSK_GetString("/", "Enter path"));
+
+		const int len = strlen(path);
+		if (len > 0 && path[len -1] != '/')
+			strcat(path, "/");
 
 		if (FS_DirExists(archive, path))
 		{
 			strcpy(cwd, path);
 			Dirbrowse_PopulateFiles(true);
 		}
-
-		free(path);
 	}
 }
 
