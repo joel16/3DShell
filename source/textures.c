@@ -68,6 +68,7 @@ void Textures_Load(void)
 	btn_shuffle = C2D_SpriteSheetGetImage(spritesheet, sprites_btn_playback_shuffle_idx);
 	btn_repeat_overlay = C2D_SpriteSheetGetImage(spritesheet, sprites_btn_playback_repeat_overlay_idx);
 	btn_shuffle_overlay = C2D_SpriteSheetGetImage(spritesheet, sprites_btn_playback_shuffle_overlay_idx);
+	icon_lock = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_material_dialog_fs_locked_idx);
 	icon_nav_drawer = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_material_light_navigation_drawer_idx);
 	icon_actions = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_material_light_contextual_action_idx);
 	icon_back = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_arrow_back_normal_idx);

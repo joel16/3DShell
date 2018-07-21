@@ -147,6 +147,8 @@ void Menu_PlayMusic(char *path)
 {
 	aptSetSleepAllowed(false);
 	Music_Play(path);
+
+	bool locked = false;
 	
 	while (aptMainLoop())
 	{
@@ -158,6 +160,9 @@ void Menu_PlayMusic(char *path)
 		Draw_Image(default_artwork_blur, 0, 0);
 		Draw_Rect(0, 0, 400, 18, MUSIC_GENRE_COLOUR); // Status bar
 		Draw_Rect(0, 55, 400, 2, MUSIC_SEPARATOR_COLOUR); // Separating line
+
+		if (locked)
+			Draw_Image(icon_lock, 0, -1);
 
 		StatusBar_DisplayTime();
 
@@ -201,6 +206,9 @@ void Menu_PlayMusic(char *path)
 		u32 kDown = hidKeysDown();
 		u32 kHeld = hidKeysHeld();
 
+		if (kDown & KEY_START)
+			locked = !locked;
+
 		if ((kDown & KEY_A) || ((TouchInRect(114, 76, 204, 164)) && (kDown & KEY_TOUCH)))
 			Audio_TogglePlayback(SFX);
 
@@ -221,17 +229,20 @@ void Menu_PlayMusic(char *path)
 				state = MUSIC_STATE_SHUFFLE;
 		}
 
-		if ((kDown & KEY_LEFT) || (kDown & KEY_L) || ((TouchInRect(((320 - btn_rewind.subtex->width) / 2) - 80, ((240 - btn_rewind.subtex->height) / 2), 
-			(((320 - btn_rewind.subtex->width) / 2) - 80) + 45, ((240 - btn_rewind.subtex->height) / 2) + 45)) && (kDown & KEY_TOUCH)))
+		if (!locked)
 		{
-			wait(1);
-			Music_HandleNext(false, MUSIC_STATE_NONE);
-		}
-		else if ((kDown & KEY_RIGHT) || (kDown & KEY_R) || ((TouchInRect(((320 - btn_forward.subtex->width) / 2) + 80, ((240 - btn_forward.subtex->height) / 2), 
-			(((320 - btn_forward.subtex->width) / 2) + 80) + 45, ((240 - btn_forward.subtex->height) / 2) + 45)) && (kDown & KEY_TOUCH)))
-		{
-			wait(1);
-			Music_HandleNext(true, MUSIC_STATE_NONE);
+			if ((kDown & KEY_LEFT) || (kDown & KEY_L) || ((TouchInRect(((320 - btn_rewind.subtex->width) / 2) - 80, ((240 - btn_rewind.subtex->height) / 2), 
+				(((320 - btn_rewind.subtex->width) / 2) - 80) + 45, ((240 - btn_rewind.subtex->height) / 2) + 45)) && (kDown & KEY_TOUCH)))
+			{
+				wait(1);
+				Music_HandleNext(false, MUSIC_STATE_NONE);
+			}
+			else if ((kDown & KEY_RIGHT) || (kDown & KEY_R) || ((TouchInRect(((320 - btn_forward.subtex->width) / 2) + 80, ((240 - btn_forward.subtex->height) / 2), 
+				(((320 - btn_forward.subtex->width) / 2) + 80) + 45, ((240 - btn_forward.subtex->height) / 2) + 45)) && (kDown & KEY_TOUCH)))
+			{
+				wait(1);
+				Music_HandleNext(true, MUSIC_STATE_NONE);
+			}
 		}
 
 		if (kDown & KEY_B)

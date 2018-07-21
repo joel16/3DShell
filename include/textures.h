@@ -12,7 +12,7 @@ C2D_Image icon_app, icon_archive, icon_audio, icon_dir, icon_file, icon_image, i
 	icon_sd, icon_sd_dark, icon_sd_overlay, icon_secure, icon_secure_dark, icon_secure_overlay, icon_search, \
 	icon_updates, icon_updates_dark, icon_updates_overlay, \
 	default_artwork, default_artwork_blur, ic_music_bg_bottom, btn_play, btn_pause, btn_rewind, btn_forward, \
-	btn_repeat, btn_shuffle, btn_repeat_overlay, btn_shuffle_overlay, \
+	btn_repeat, btn_shuffle, btn_repeat_overlay, btn_shuffle_overlay, icon_lock, \
 	icon_nav_drawer, icon_actions, icon_back;
 
 void Textures_Load(void);
