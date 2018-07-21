@@ -202,8 +202,11 @@ static Result FileOptions_CopyDir(char *src, char *dst)
 	Handle dirHandle;
 	Result ret = 0; // Open working Directory
 
+	u16 u16_src[strlen(src) + 1];
+	Utils_U8_To_U16(u16_src, src, strlen(src) + 1);
+
 	// Opened directory
-	if (R_SUCCEEDED(ret = FSUSER_OpenDirectory(&dirHandle, archive, fsMakePath(PATH_ASCII, src))))
+	if (R_SUCCEEDED(ret = FSUSER_OpenDirectory(&dirHandle, archive, fsMakePath(PATH_UTF16, u16_src))))
 	{
 		FS_MakeDir(archive, dst); // Create output directory (is allowed to fail, we can merge folders after all)
 

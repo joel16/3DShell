@@ -29,7 +29,10 @@ Result FS_MakeDir(FS_Archive archive, const char *path)
 {	
 	Result ret = 0;
 
-	if (R_FAILED(ret = FSUSER_CreateDirectory(archive, fsMakePath(PATH_ASCII, path), 0)))
+	u16 path_u16[strlen(path) + 1];
+	Utils_U8_To_U16(path_u16, path, strlen(path) + 1);
+
+	if (R_FAILED(ret = FSUSER_CreateDirectory(archive, fsMakePath(PATH_UTF16, path_u16), 0)))
 		return ret;
 	
 	return 0;
@@ -69,7 +72,10 @@ bool FS_FileExists(FS_Archive archive, const char *path)
 {
 	Handle handle;
 
-	if (R_FAILED(FSUSER_OpenFile(&handle, archive, fsMakePath(PATH_ASCII, path), FS_OPEN_READ, 0)))
+	u16 path_u16[strlen(path) + 1];
+	Utils_U8_To_U16(path_u16, path, strlen(path) + 1);
+
+	if (R_FAILED(FSUSER_OpenFile(&handle, archive, fsMakePath(PATH_UTF16, path_u16), FS_OPEN_READ, 0)))
 		return false;
 
 	if (R_FAILED(FSFILE_Close(handle)))
@@ -82,7 +88,10 @@ bool FS_DirExists(FS_Archive archive, const char *path)
 {
 	Handle handle;
 
-	if (R_FAILED(FSUSER_OpenDirectory(&handle, archive, fsMakePath(PATH_ASCII, path))))
+	u16 path_u16[strlen(path) + 1];
+	Utils_U8_To_U16(path_u16, path, strlen(path) + 1);
+
+	if (R_FAILED(FSUSER_OpenDirectory(&handle, archive, fsMakePath(PATH_UTF16, path_u16))))
 		return false;
 
 	if (R_FAILED(FSDIR_Close(handle)))
@@ -132,7 +141,10 @@ Result FS_GetFileSize(FS_Archive archive, const char *path, u64 *size)
 	Handle handle;
 	Result ret = 0;
 
-	if (R_FAILED(ret = FSUSER_OpenFile(&handle, archive, fsMakePath(PATH_ASCII, path), FS_OPEN_READ, 0)))
+	u16 path_u16[strlen(path) + 1];
+	Utils_U8_To_U16(path_u16, path, strlen(path) + 1);
+
+	if (R_FAILED(ret = FSUSER_OpenFile(&handle, archive, fsMakePath(PATH_UTF16, path_u16), FS_OPEN_READ, 0)))
 		return ret;
 
 	if (R_FAILED(ret = FSFILE_GetSize(handle, size)))
@@ -172,11 +184,14 @@ u64 FS_GetUsedStorage(FS_SystemMediaType mediaType)
 	return 0;
 }
 
-Result FS_Remove(FS_Archive archive, const char *filename)
+Result FS_Remove(FS_Archive archive, const char *path)
 {
 	Result ret = 0;
 
-	if (R_FAILED(ret = FSUSER_DeleteFile(archive, fsMakePath(PATH_ASCII, filename))))
+	u16 path_u16[strlen(path) + 1];
+	Utils_U8_To_U16(path_u16, path, strlen(path) + 1);
+
+	if (R_FAILED(ret = FSUSER_DeleteFile(archive, fsMakePath(PATH_UTF16, path_u16))))
 		return ret;
 	
 	return 0;
@@ -186,7 +201,10 @@ Result FS_Rmdir(FS_Archive archive, const char *path)
 {
 	Result ret = 0;
 
-	if (R_FAILED(ret = FSUSER_DeleteDirectory(archive, fsMakePath(PATH_ASCII, path))))
+	u16 path_u16[strlen(path) + 1];
+	Utils_U8_To_U16(path_u16, path, strlen(path) + 1);
+
+	if (R_FAILED(ret = FSUSER_DeleteDirectory(archive, fsMakePath(PATH_UTF16, path_u16))))
 		return ret;
 	
 	return 0;
@@ -196,7 +214,10 @@ Result FS_RmdirRecursive(FS_Archive archive, const char *path)
 {
 	Result ret = 0;
 
-	if (R_FAILED(ret = FSUSER_DeleteDirectoryRecursively(archive, fsMakePath(PATH_ASCII, path))))
+	u16 path_u16[strlen(path) + 1];
+	Utils_U8_To_U16(path_u16, path, strlen(path) + 1);
+
+	if (R_FAILED(ret = FSUSER_DeleteDirectoryRecursively(archive, fsMakePath(PATH_UTF16, path_u16))))
 		return ret;
 	
 	return 0;
@@ -206,17 +227,29 @@ Result FS_RenameFile(FS_Archive archive, const char *old_filename, const char *n
 {
 	Result ret = 0;
 
-	if (R_FAILED(ret = FSUSER_RenameFile(archive, fsMakePath(PATH_ASCII, old_filename), archive, fsMakePath(PATH_ASCII, new_filename))))
+	u16 old_filename_u16[strlen(old_filename) + 1];
+	Utils_U8_To_U16(old_filename_u16, old_filename, strlen(old_filename) + 1);
+
+	u16 new_filename_u16[strlen(new_filename) + 1];
+	Utils_U8_To_U16(new_filename_u16, new_filename, strlen(new_filename) + 1);
+
+	if (R_FAILED(ret = FSUSER_RenameFile(archive, fsMakePath(PATH_UTF16, old_filename_u16), archive, fsMakePath(PATH_UTF16, new_filename_u16))))
 		return ret;
 	
 	return 0;
 }
 
-Result FS_RenameDir(FS_Archive archive, const char *old_filename, const char *new_filename)
+Result FS_RenameDir(FS_Archive archive, const char *old_dirname, const char *new_dirname)
 {
 	Result ret = 0;
 
-	if (R_FAILED(ret = FSUSER_RenameDirectory(archive, fsMakePath(PATH_ASCII, old_filename), archive, fsMakePath(PATH_ASCII, new_filename))))
+	u16 old_dirname_u16[strlen(old_dirname) + 1];
+	Utils_U8_To_U16(old_dirname_u16, old_dirname, strlen(old_dirname) + 1);
+
+	u16 new_dirname_u16[strlen(new_dirname) + 1];
+	Utils_U8_To_U16(new_dirname_u16, new_dirname, strlen(new_dirname) + 1);
+
+	if (R_FAILED(ret = FSUSER_RenameDirectory(archive, fsMakePath(PATH_UTF16, old_dirname_u16), archive, fsMakePath(PATH_UTF16, new_dirname_u16))))
 		return ret;
 	
 	return 0;
@@ -226,7 +259,10 @@ Result FS_Open(Handle *handle, FS_Archive archive, const char *path, u32 flags)
 {
 	Result ret = 0;
 
-	if (R_FAILED(ret = FSUSER_OpenFile(handle, archive, fsMakePath(PATH_ASCII, path), flags, 0)))
+	u16 path_u16[strlen(path) + 1];
+	Utils_U8_To_U16(path_u16, path, strlen(path) + 1);
+
+	if (R_FAILED(ret = FSUSER_OpenFile(handle, archive, fsMakePath(PATH_UTF16, path_u16), flags, 0)))
 		return ret;
 	
 	return 0;

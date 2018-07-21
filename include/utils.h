@@ -3,6 +3,7 @@
 
 bool Utils_IsN3DS(void);
 void Utils_U16_To_U8(char *buf, const u16 *input, size_t bufsize);
+void Utils_U8_To_U16(u16 *buf, const char *input, size_t bufsize);
 char *Utils_Basename(const char *filename);
 void Utils_GetSizeString(char *string, u64 size);
 void Utils_SetMax(int *set, int value, int max);

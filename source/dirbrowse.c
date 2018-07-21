@@ -77,8 +77,11 @@ Result Dirbrowse_PopulateFiles(bool clear)
 	
 	Handle dir;
 	Result ret = 0;
-	
-	if (R_SUCCEEDED(ret = FSUSER_OpenDirectory(&dir, archive, fsMakePath(PATH_ASCII, cwd))))
+
+	u16 u16_cwd[strlen(cwd) + 1];
+	Utils_U8_To_U16(u16_cwd, cwd, strlen(cwd) + 1);
+
+	if (R_SUCCEEDED(ret = FSUSER_OpenDirectory(&dir, archive, fsMakePath(PATH_UTF16, u16_cwd))))
 	{
 		/* Add fake ".." entry except on root */
 		if (strcmp(cwd, ROOT_PATH))
