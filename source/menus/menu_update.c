@@ -15,12 +15,25 @@
 static int update_dialog_selection = 0;
 static bool err = false;
 static u32 wifiStatus = 0;
-static char ver[10];
+static char version[10];
 static float update_confirm_width = 0, update_confirm_height = 0;
 static float update_cancel_width = 0, update_cancel_height = 0;
 
+static unsigned int Menu_GetUpdateVerDigit(unsigned int ver)
+{
+	unsigned int ret = 1;
+
+	while (ver/=10)
+		ret++;
+
+	return ret;
+}
+
 static bool Menu_ValidateUpdate(bool nighlty)
 {
+	char nightly_ver[10];
+	int milestone_ver = 0;
+
 	if (nighlty)
 	{
 		if (FS_FileExists(archive, "/3ds/3DShell/UPDATE_NIGHTLY.txt"))
@@ -39,14 +52,58 @@ static bool Menu_ValidateUpdate(bool nighlty)
 			}
 
 			buf[size] = '\0';
-			sscanf(buf, "%s", ver);
+			sscanf(buf, "%s", nightly_ver);
 			free(buf);
 
-			if (strcasecmp(ver, GITVERSION) != 0)
+			if (strcasecmp(nightly_ver, GITVERSION) != 0)
+			{
+				snprintf(version, strlen(nightly_ver), nightly_ver);
 				return true;
+			}
 
 			return false;
 		}
+	}
+	else
+	{
+		if (FS_FileExists(archive, "/3ds/3DShell/UPDATE_MILESTONE.txt"))
+		{
+			u64 size64 = 0;
+			u32 size = 0;
+
+			FS_GetFileSize(archive, "/3ds/3DShell/UPDATE_MILESTONE.txt", &size64);
+			size = (u32)size64;
+			char *buf = (char *)malloc(size + 1);
+
+			if (R_FAILED(FS_Read(archive, "/3ds/3DShell/UPDATE_MILESTONE.txt", size, buf)))
+			{
+				free(buf);
+				return false;
+			}
+
+			buf[size] = '\0';
+			sscanf(buf, "%d", &milestone_ver);
+			free(buf);
+
+			int current_milestone_ver = (VERSION_MAJOR * 100) + (VERSION_MINOR * 10) + VERSION_MICRO;
+			
+			if (milestone_ver > current_milestone_ver)
+			{
+				unsigned int ver_digit = Menu_GetUpdateVerDigit(milestone_ver);
+				char arr[ver_digit];
+			
+				while (ver_digit--)
+				{
+					arr[ver_digit] = milestone_ver % 10;
+					milestone_ver /= 10;
+				}
+
+				snprintf(version, 7, "v%d.%d.%d", arr[0], arr[1], arr[2]);
+				return true;
+			}
+
+			return false;
+		}	
 	}
 }
 
@@ -120,7 +177,7 @@ void Menu_DisplayUpdate2(void)
 
 	Draw_Image(config_dark_theme? dialog_dark : dialog, ((320 - (dialog.subtex->width)) / 2), ((240 - (dialog.subtex->height)) / 2));
 
-	Draw_Textf(((320 - (dialog.subtex->width)) / 2) + 6, ((240 - (dialog.subtex->height)) / 2) + 6, 0.45f, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "New update: %s", ver);
+	Draw_Textf(((320 - (dialog.subtex->width)) / 2) + 6, ((240 - (dialog.subtex->height)) / 2) + 6, 0.45f, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "New update: %s", version);
 
 	Draw_Text(((320 - (text_width)) / 2), ((240 - (dialog.subtex->height)) / 2) + 40, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "This action cannot be undone.");
 	Draw_Text(((320 - (text2_width)) / 2), ((240 - (dialog.subtex->height)) / 2) + 55, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Do you wish to update?");
@@ -178,6 +235,7 @@ void Menu_ControlUpdate2(u32 input)
 	{
 		wait(1);
 		update_dialog_selection = 0;
+		memset(version, 0, 10);
 		MENU_STATE = MENU_STATE_UPDATE;
 	}
 
@@ -192,6 +250,7 @@ void Menu_ControlUpdate2(u32 input)
 			MENU_STATE = MENU_STATE_UPDATE;
 		}
 
+		memset(version, 0, 10);
 		update_dialog_selection = 0;
 	}
 
@@ -203,6 +262,7 @@ void Menu_ControlUpdate2(u32 input)
 		{
 			wait(1);
 			update_dialog_selection = 0;
+			memset(version, 0, 10);
 			MENU_STATE = MENU_STATE_UPDATE;
 		}
 	}
@@ -211,6 +271,9 @@ void Menu_ControlUpdate2(u32 input)
 		update_dialog_selection = 1;
 
 		if (input & KEY_TOUCH)
+		{
+			memset(version, 0, 10);
 			Menu_InstallUpdate();
+		}
 	}
 }
