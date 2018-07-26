@@ -243,6 +243,9 @@ void Menu_PlayMusic(char *path)
 				wait(1);
 				Music_HandleNext(true, MUSIC_STATE_NONE);
 			}
+
+			if (((kHeld & KEY_L) && (kDown & KEY_R)) || ((kHeld & KEY_R) && (kDown & KEY_L)))
+				Screenshot_Capture();
 		}
 
 		if (kDown & KEY_B)
@@ -266,9 +269,6 @@ void Menu_PlayMusic(char *path)
 			else if (state == MUSIC_STATE_SHUFFLE)
 				Music_HandleNext(false, MUSIC_STATE_SHUFFLE);
 		}
-
-		if (((kHeld & KEY_L) && (kDown & KEY_R)) || ((kHeld & KEY_R) && (kDown & KEY_L)))
-			Screenshot_Capture();
 	}
 
 	threadJoin(thread, U64_MAX);
