@@ -99,7 +99,7 @@ static void Menu_ControlHome(u32 input)
 		else if ((strcmp(cwd, ROOT_PATH) != 0) && (input & KEY_B))
 		{
 			wait(5);
-			Dirbrowse_Navigate(-1);
+			Dirbrowse_Navigate(true);
 			Dirbrowse_PopulateFiles(true);
 		}
 	}
