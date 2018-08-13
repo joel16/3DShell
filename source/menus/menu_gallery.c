@@ -275,9 +275,7 @@ static int Gallery_GetCurrentIndex(char *path)
 
 static void Gallery_LoadTexture(char *path)
 {
-    Gallery_GetImageList();
     selection = Gallery_GetCurrentIndex(path);
-
     image = Gallery_LoadImage(path);
 }
 
@@ -299,6 +297,7 @@ static void Gallery_HandleNext(bool forward)
 
 void Gallery_DisplayImage(char *path)
 {
+    Gallery_GetImageList();
 	Gallery_LoadTexture(path);
 
 	while(aptMainLoop())

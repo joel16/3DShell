@@ -286,7 +286,6 @@ void Dirbrowse_OpenFile(void)
 	if (file == NULL)
 		return;
 
-	strcpy(fileName, file->name);
 	strcpy(path, cwd);
 	strcpy(path + strlen(path), file->name);
 
