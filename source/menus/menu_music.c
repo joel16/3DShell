@@ -88,6 +88,8 @@ static int Music_GetCurrentIndex(char *path)
 
 static void Music_Play(char *path)
 {
+	Menu_GetMusicList();
+
 	/* Reset previous stop command */
 	stop = false;
 
@@ -144,7 +146,6 @@ static void Music_HandleNext(bool forward, int state)
 void Menu_PlayMusic(char *path)
 {
 	aptSetSleepAllowed(false);
-	Menu_GetMusicList();
 	Music_Play(path);
 
 	bool locked = false;
