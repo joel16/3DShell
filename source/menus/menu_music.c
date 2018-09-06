@@ -235,15 +235,18 @@ void Menu_PlayMusic(char *path)
 				(((320 - btn_rewind.subtex->width) / 2) - 80) + 45, ((240 - btn_rewind.subtex->height) / 2) + 45)) && (kDown & KEY_TOUCH)))
 			{
 				wait(1);
-				Music_HandleNext(false, MUSIC_STATE_NONE);
+				
+				if (count != 0)
+					Music_HandleNext(false, MUSIC_STATE_NONE);
 			}
 			else if ((kDown & KEY_RIGHT) || (kDown & KEY_R) || ((TouchInRect(((320 - btn_forward.subtex->width) / 2) + 80, ((240 - btn_forward.subtex->height) / 2), 
 				(((320 - btn_forward.subtex->width) / 2) + 80) + 45, ((240 - btn_forward.subtex->height) / 2) + 45)) && (kDown & KEY_TOUCH)))
 			{
 				wait(1);
-				Music_HandleNext(true, MUSIC_STATE_NONE);
+				
+				if (count != 0)
+					Music_HandleNext(true, MUSIC_STATE_NONE);
 			}
-
 			if (((kHeld & KEY_L) && (kDown & KEY_R)) || ((kHeld & KEY_R) && (kDown & KEY_L)))
 				Screenshot_Capture();
 		}
@@ -261,13 +264,16 @@ void Menu_PlayMusic(char *path)
 
 			if (state == MUSIC_STATE_NONE)
 			{
-				Audio_StopPlayback();
-				break;
+				if (count != 0)
+					Music_HandleNext(true, MUSIC_STATE_NONE);
 			}
 			else if (state == MUSIC_STATE_REPEAT)
 				Music_HandleNext(false, MUSIC_STATE_REPEAT);
 			else if (state == MUSIC_STATE_SHUFFLE)
-				Music_HandleNext(false, MUSIC_STATE_SHUFFLE);
+			{
+				if (count != 0)
+					Music_HandleNext(false, MUSIC_STATE_SHUFFLE);
+			}
 		}
 	}
 
