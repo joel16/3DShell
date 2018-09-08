@@ -18,12 +18,16 @@ void Menu_DisplayFTP(void)
 {
 	ftp_init();
 
+	Result ret = 0;
+
 	touchPosition touch;
 
-	char buf[25];
+	char buf[30], hostname[128];
 	u32 wifiStatus = 0;
 
 	int pBar = 0, xlim = 270;
+
+	ret = gethostname(hostname, sizeof(hostname));
 
 	while(MENU_STATE == MENU_STATE_FTP)
 	{
@@ -35,23 +39,14 @@ void Menu_DisplayFTP(void)
 		Draw_Rect(0, 0, 320, 20, config_dark_theme? STATUS_BAR_DARK : STATUS_BAR_LIGHT); // Status bar
 		Draw_Rect(0, 20, 320, 220, config_dark_theme? MENU_BAR_DARK : MENU_BAR_LIGHT); // Menu bar
 
-		ACU_GetWifiStatus(&wifiStatus);
+		ret = ACU_GetWifiStatus(&wifiStatus);
 			
 		Menu_DrawMenuBar();
 
-		if (wifiStatus == 0)
-		{
-			Draw_Text(((320 - Draw_GetTextWidth(0.48f, "Failed to initialize FTP.")) / 2), 40, 0.48f, WHITE, "Failed to initialize FTP.");
-			sprintf(buf, "WiFi not enabled.");
-		}
-		else
+		if ((wifiStatus != 0) && R_SUCCEEDED(ret))
 		{
 			Draw_Text(((320 - Draw_GetTextWidth(0.48f, "FTP initialized")) / 2), 40, 0.48f, WHITE, "FTP initialized");
-			
-			u32 ip = gethostid();
-			sprintf(buf, "IP: %lu.%lu.%lu.%lu:5000", ip & 0xFF, (ip>>8)&0xFF, (ip>>16)&0xFF, (ip>>24)&0xFF);
-
-			Draw_Text(((320 - Draw_GetTextWidth(0.48f, buf)) / 2), 60, 0.48f, WHITE, buf);
+			sprintf(buf, "IP: %s:5000", R_FAILED(ret)? "Failed to get IP" : hostname);
 
 			if (strlen(ftp_accepted_connection) != 0)
 				Draw_Text(((320 - Draw_GetTextWidth(0.48f, ftp_accepted_connection)) / 2), 80, 0.48f, WHITE, ftp_accepted_connection);
@@ -75,7 +70,13 @@ void Menu_DisplayFTP(void)
 					pBar = 34;
 			}
 		}
+		else
+		{
+			Draw_Text(((320 - Draw_GetTextWidth(0.48f, "Failed to initialize FTP.")) / 2), 40, 0.48f, WHITE, "Failed to initialize FTP.");
+			sprintf(buf, "WiFi not enabled.");
+		}
 
+		Draw_Text(((320 - Draw_GetTextWidth(0.48f, buf)) / 2), 60, 0.48f, WHITE, buf);
 		Draw_Text(((320 - Draw_GetTextWidth(0.48f, "Tap the FTP icon to disable the FTP connection.")) / 2), 120, 0.48f, WHITE, "Tap the FTP icon to disable the FTP connection.");
 
 		Draw_EndFrame();

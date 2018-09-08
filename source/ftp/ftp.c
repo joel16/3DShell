@@ -1856,7 +1856,7 @@ ftp_init(void)
 #ifdef _3DS
   Result ret  = 0;
   u32    wifi = 0;
-  bool   loop;
+  bool   loop = true;
 
   /* register apt hook */
   aptHook(&cookie, apt_hook, NULL);
@@ -1864,23 +1864,30 @@ ftp_init(void)
   console_print(GREEN "Waiting for wifi...\n" RESET);
 
   /* wait for wifi to be available */
-  while((loop = aptMainLoop()) && !wifi && (ret == 0 || ret == 0xE0A09D2E))
+  /*while((loop = aptMainLoop()) && !wifi && (ret == 0 || ret == 0xE0A09D2E))
   {
     ret = 0;
 
     hidScanInput();
     if(hidKeysDown() & KEY_B)
     {
-      /* user canceled */
+      // user canceled
       loop = false;
       break;
     }
 
-    /* update the wifi status */
+    // update the wifi status
     ret = ACU_GetWifiStatus(&wifi);
     if(ret != 0)
       wifi = 0;
-  }
+  }*/
+
+  ret = 0;
+
+  // update the wifi status
+  ret = ACU_GetWifiStatus(&wifi);
+  if(ret != 0)
+    wifi = 0;
 
   /* check if there was a wifi error */
   if(ret != 0)
