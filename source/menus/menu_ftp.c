@@ -29,6 +29,12 @@ void Menu_DisplayFTP(void)
 
 	ret = gethostname(hostname, sizeof(hostname));
 
+	if (R_SUCCEEDED(gspLcdInit()))
+	{
+		GSPLCD_PowerOffBacklight(GSPLCD_SCREEN_TOP);
+		gspLcdExit();
+	}
+
 	while(MENU_STATE == MENU_STATE_FTP)
 	{
 		ftp_loop();
@@ -91,6 +97,13 @@ void Menu_DisplayFTP(void)
 	memset(ftp_accepted_connection, 0, 20); // Empty accepted connection address
 	memset(ftp_file_transfer, 0, 50); // Empty transfer status
 	ftp_exit();
+
+	if (R_SUCCEEDED(gspLcdInit()))
+	{
+		GSPLCD_PowerOnBacklight(GSPLCD_SCREEN_TOP);
+		gspLcdExit();
+	}
+
 	MENU_STATE = MENU_STATE_HOME;
 	Dirbrowse_PopulateFiles(true);
 }
