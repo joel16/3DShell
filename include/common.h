@@ -1,5 +1,5 @@
-#ifndef NX_SHELL_COMMON_H
-#define NX_SHELL_COMMON_H
+#ifndef _3DSHELL_COMMON_H
+#define _3DSHELL_COMMON_H
 
 #include <setjmp.h>
 

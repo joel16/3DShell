@@ -11,6 +11,7 @@
 #include "fs.h"
 
 volatile bool stop = true;
+struct decoder_fn decoder;
 
 /*bool Audio_IsPlaying(enum channel_e channel)
 {
@@ -66,7 +67,7 @@ enum file_types Audio_GetMusicFileType(const char *file)
 	{
 		// "RIFF"
 		case 0x46464952:
-			if (isWav(file) == 0)
+			if (WAV_Validate(file) == 0)
 				file_type = FILE_TYPE_WAV;
 			break;
 
@@ -77,9 +78,9 @@ enum file_types Audio_GetMusicFileType(const char *file)
 
 		// "OggS"
 		case 0x5367674F:
-			if (isFlac(file) == 0)
+			if (FLAC_Validate(file) == 0)
 				file_type = FILE_TYPE_FLAC;
-			else if (isVorbis(file) == 0)
+			else if (VORBIS_Validate(file) == 0)
 				file_type = FILE_TYPE_VORBIS;
 
 			break;
@@ -97,9 +98,18 @@ enum file_types Audio_GetMusicFileType(const char *file)
 	return file_type;
 }
 
+int Audio_GetPosition(void)
+{
+	return (*decoder.position)();
+}
+
+int Audio_GetLength(void)
+{
+	return (*decoder.length)();
+}
+
 void Audio_PlayFile(void *path)
 {
-	struct decoder_fn decoder;
 	const char *file = path;
 	s16 *buffer1 = NULL;
 	s16 *buffer2 = NULL;
@@ -113,19 +123,19 @@ void Audio_PlayFile(void *path)
 	switch(Audio_GetMusicFileType(file))
 	{
 		case FILE_TYPE_WAV:
-			setWav(&decoder);
+			WAV_SetDecoder(&decoder);
 			break;
 
 		case FILE_TYPE_FLAC:
-			setFlac(&decoder);
+			FLAC_SetDecoder(&decoder);
 			break;
 
 		case FILE_TYPE_MP3:
-			setMp3(&decoder);
+			MP3_SetDecoder(&decoder);
 			break;
 
 		case FILE_TYPE_VORBIS:
-			setVorbis(&decoder);
+			VORBIS_SetDecoder(&decoder);
 			break;
 
 		default:

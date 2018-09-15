@@ -11,28 +11,7 @@ static vorbis_info *vi;
 static FILE *f;
 static const size_t buffSize = (8 * 4096);
 
-/**
- *Set decoder parameters for Vorbis.
- *
- *\param	decoder	Structure to store parameters.
- */
-void setVorbis(struct decoder_fn *decoder)
-{
-	decoder->init = &initVorbis;
-	decoder->rate = &rateVorbis;
-	decoder->channels = &channelVorbis;
-	decoder->buffSize = buffSize;
-	decoder->decode = &decodeVorbis;
-	decoder->exit = &exitVorbis;
-}
-
-/**
- *Initialise Vorbis decoder.
- *
- *\param	file	Location of vorbis file to play.
- *\return			0 on success, else failure.
- */
-int initVorbis(const char *file)
+static int VORBIS_Init(const char *file)
 {
 	int err = -1;
 
@@ -51,55 +30,17 @@ out:
 	return err;
 }
 
-/**
- *Get sampling rate of Vorbis file.
- *
- *\return	Sampling rate.
- */
-u32 rateVorbis(void)
+static u32 VORBIS_GetSampleRate(void)
 {
 	return vi->rate;
 }
 
-/**
- *Get number of channels of Vorbis file.
- *
- *\return	Number of channels for opened file.
- */
-u8 channelVorbis(void)
+static u8 VORBIS_GetChannels(void)
 {
 	return vi->channels;
 }
 
-/**
- *Decode part of open Vorbis file.
- *
- *\param buffer	Decoded output.
- *\return			Samples read for each channel. 0 for end of file, negative
- *					for error.
- */
-u64 decodeVorbis(void *buffer)
-{
-	return fillVorbisBuffer(buffer);
-}
-
-/**
- *Free Vorbis decoder.
- */
-void exitVorbis(void)
-{
-	ov_clear(&vorbisFile);
-	fclose(f);
-}
-
-/**
- *Decode Vorbis file to fill buffer.
- *
- *\param opusFile		File to decode.
- *\param bufferOut		Pointer to buffer.
- *\return				Samples read per channel.
- */
-u64 fillVorbisBuffer(char *bufferOut)
+static u64 VORBIS_FillBuffer(char *bufferOut)
 {
 	u64 samplesRead = 0;
 	int samplesToRead = buffSize;
@@ -123,23 +64,38 @@ u64 fillVorbisBuffer(char *bufferOut)
 	return samplesRead / sizeof(s16);
 }
 
-/**
- *Checks if the input file is Vorbis.
- *
- *\param in	Input file.
- *\return		0 if Vorbis file, else not or failure.
- */
-int isVorbis(const char *in)
+static u64 VORBIS_Decode(void *buffer)
 {
-	FILE *ft = fopen(in, "r");
+	return VORBIS_FillBuffer(buffer);
+}
+
+static void VORBIS_Term(void)
+{
+	ov_clear(&vorbisFile);
+	fclose(f);
+}
+
+void VORBIS_SetDecoder(struct decoder_fn *decoder)
+{
+	decoder->init = &VORBIS_Init;
+	decoder->rate = &VORBIS_GetSampleRate;
+	decoder->channels = &VORBIS_GetChannels;
+	decoder->buffSize = buffSize;
+	decoder->decode = &VORBIS_Decode;
+	decoder->exit = &VORBIS_Term;
+}
+
+int VORBIS_Validate(const char *file)
+{
+	FILE *fd = fopen(file, "r");
 	OggVorbis_File testvf;
 	
-	if (ft == NULL)
+	if (fd == NULL)
 		return -1;
 
-	int err = ov_test(ft, &testvf, NULL, 0);
+	int err = ov_test(fd, &testvf, NULL, 0);
 
 	ov_clear(&testvf);
-	fclose(ft);
+	fclose(fd);
 	return err;
 }

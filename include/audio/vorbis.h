@@ -5,20 +5,17 @@
 
 #include "audio.h"
 
-void setVorbis(struct decoder_fn *decoder);
+/**
+ *Set decoder parameters for Vorbis.
+ *
+ *\param decoder Structure to store parameters.
+ */
+void VORBIS_SetDecoder(struct decoder_fn *decoder);
 
-int initVorbis(const char *file);
-
-u32 rateVorbis(void);
-
-u8 channelVorbis(void);
-
-u64 decodeVorbis(void *buffer);
-
-void exitVorbis(void);
-
-int playVorbis(const char *in);
-
-u64 fillVorbisBuffer(char *bufferOut);
-
-int isVorbis(const char *in);
+/**
+ *Checks if the input file is Vorbis
+ *
+ *\param file Input file.
+ *\return 0 if Vorbis file, else not or failure.
+ */
+int VORBIS_Validate(const char *file);
