@@ -76,6 +76,22 @@ void Textures_Load(void)
 	icon_wifi_1 = C2D_SpriteSheetGetImage(spritesheet, sprites_stat_sys_wifi_signal_1_idx);
 	icon_wifi_2 = C2D_SpriteSheetGetImage(spritesheet, sprites_stat_sys_wifi_signal_2_idx);
 	icon_wifi_3 = C2D_SpriteSheetGetImage(spritesheet, sprites_stat_sys_wifi_signal_3_idx);
+	battery_20 = C2D_SpriteSheetGetImage(spritesheet, sprites_battery_20_idx);
+	battery_20_charging = C2D_SpriteSheetGetImage(spritesheet, sprites_battery_20_charging_idx);
+	battery_30 = C2D_SpriteSheetGetImage(spritesheet, sprites_battery_30_idx);
+	battery_30_charging = C2D_SpriteSheetGetImage(spritesheet, sprites_battery_30_charging_idx);
+	battery_50 = C2D_SpriteSheetGetImage(spritesheet, sprites_battery_50_idx);
+	battery_50_charging = C2D_SpriteSheetGetImage(spritesheet, sprites_battery_50_charging_idx);
+	battery_60 = C2D_SpriteSheetGetImage(spritesheet, sprites_battery_60_idx);
+	battery_60_charging = C2D_SpriteSheetGetImage(spritesheet, sprites_battery_60_charging_idx);
+	battery_80 = C2D_SpriteSheetGetImage(spritesheet, sprites_battery_80_idx);
+	battery_80_charging = C2D_SpriteSheetGetImage(spritesheet, sprites_battery_80_charging_idx);
+	battery_90 = C2D_SpriteSheetGetImage(spritesheet, sprites_battery_90_idx);
+	battery_90_charging = C2D_SpriteSheetGetImage(spritesheet, sprites_battery_90_charging_idx);
+	battery_full = C2D_SpriteSheetGetImage(spritesheet, sprites_battery_full_idx);
+	battery_full_charging = C2D_SpriteSheetGetImage(spritesheet, sprites_battery_full_charging_idx);
+	battery_low = C2D_SpriteSheetGetImage(spritesheet, sprites_battery_low_idx);
+	battery_unknown = C2D_SpriteSheetGetImage(spritesheet, sprites_battery_unknown_idx);
 }
 
 void Textures_Free(void)

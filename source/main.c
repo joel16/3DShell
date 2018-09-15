@@ -32,6 +32,8 @@ static void Term_Services(void)
 	gfxExit();
 	romfsExit();
 	ndspExit();
+	ptmuExit();
+	mcuHwcExit();
 	amExit();
 	acExit();
 }
@@ -41,6 +43,8 @@ static void Init_Services(void)
 	acInit();
 	amInit();
 	AM_QueryAvailableExternalTitleDatabase(NULL);
+	mcuHwcInit();
+	ptmuInit();
 	ndspInit();
 	ndspSetOutputMode(NDSP_OUTPUT_STEREO);
 	romfsInit();
