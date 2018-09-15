@@ -162,7 +162,7 @@ void Menu_PlayMusic(char *path)
 		Draw_Rect(0, 55, 400, 2, MUSIC_SEPARATOR_COLOUR); // Separating line
 
 		if (locked)
-			Draw_Image(icon_lock, 0, -1);
+			Draw_Image(icon_lock, 2, 2);
 
 		StatusBar_DisplayTime();
 
