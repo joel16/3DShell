@@ -26,6 +26,16 @@ static drwav_uint8 WAV_GetChannels(void)
 	return pWav->channels;
 }
 
+static int WAV_GetPosition(void)
+{
+	return (samplesRead / (pWav->totalSampleCount / 100));
+}
+
+static int WAV_GetLength(void)
+{
+	return (pWav->totalSampleCount / 100);
+}
+
 static drwav_uint64 WAV_Decode(void *buffer)
 {
 	samplesRead = drwav_read_s16(pWav, buffSize, buffer);
@@ -43,6 +53,8 @@ void WAV_SetDecoder(struct decoder_fn *decoder)
 	decoder->rate = &WAV_GetSampleRate;
 	decoder->channels = &WAV_GetChannels;
 	decoder->buffSize = buffSize;
+	decoder->position = &WAV_GetPosition;
+	decoder->length = &WAV_GetLength;
 	decoder->decode = &WAV_Decode;
 	decoder->exit = &WAV_Term;
 }
