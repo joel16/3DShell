@@ -209,7 +209,7 @@ void Dirbrowse_DisplayFiles(void)
 			else if ((strncasecmp(file->ext, "3ds", 3) == 0) || (strncasecmp(file->ext, "cia", 3) == 0) || (strncasecmp(file->ext, "bin", 3) == 0))
 				Draw_Image(icon_app, 30, 56 + (38 * printed));
 			else if ((strncasecmp(file->ext, "zip", 3) == 0) || (strncasecmp(file->ext, "tar", 3) == 0)
-					|| (strncasecmp(file->ext, "lz4", 3) == 0))
+					|| (strncasecmp(file->ext, "lz4", 3) == 0) || (strncasecmp(file->ext, "rar", 3) == 0))
 				Draw_Image(icon_archive, 30, 56 + (38 * printed));
 			else if ((strncasecmp(file->ext, "mp3", 3) == 0) || (strncasecmp(file->ext, "ogg", 3) == 0)
 					|| (strncasecmp(file->ext, "wav", 3) == 0) || (strncasecmp(file->ext, "fla", 3) == 0))
@@ -303,7 +303,12 @@ void Dirbrowse_OpenFile(void)
 		Gallery_DisplayImage(path);
 	else if (strncasecmp(file->ext, "zip", 3) == 0)
 	{
-		Archive_ExtractZip(path, cwd);
+		Archive_ExtractZIP(path, cwd);
+		Dirbrowse_PopulateFiles(true);
+	}
+	else if (strncasecmp(file->ext, "rar", 3) == 0)
+	{
+		Archive_ExtractRAR(path, cwd);
 		Dirbrowse_PopulateFiles(true);
 	}
 	else if ((strncasecmp(file->ext, "mp3", 3) == 0) || (strncasecmp(file->ext, "ogg", 3) == 0)
