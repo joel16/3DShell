@@ -4,6 +4,7 @@
 
 #include "audio.h"
 #include "mp3.h"
+#include "log.h"
 
 #include "C2D_helper.h"
 #include "common.h"
@@ -40,13 +41,17 @@ static Result Menu_GetMusicList(void)
 	
 	if (R_SUCCEEDED(ret = FSUSER_OpenDirectory(&dir, archive, fsMakePath(PATH_ASCII, cwd))))
 	{
+		DEBUG("FSUSER_OpenDirectory SUCCEEDED: 0x%lx\n", ret);
 		u32 entryCount = 0;
 		FS_DirectoryEntry* entries = (FS_DirectoryEntry*) calloc(MAX_FILES, sizeof(FS_DirectoryEntry));
 		
 		if (R_SUCCEEDED(ret = FSDIR_Read(dir, &entryCount, MAX_FILES, entries)))
 		{
+			DEBUG("FSDIR_Read SUCCEEDED: 0x%lx\n", ret);
 			qsort(entries, entryCount, sizeof(FS_DirectoryEntry), Utils_Alphasort);
 			u8 name[256] = {'\0'};
+
+			DEBUG("%lu entries in %s\n", entryCount, cwd);
 
 			for (u32 i = 0; i < entryCount; i++) 
 			{
@@ -65,16 +70,23 @@ static Result Menu_GetMusicList(void)
 		else
 		{
 			free(entries);
+			DEBUG("FSDIR_Read failed: 0x%lx\n", ret);
 			return ret;
 		}
 		
 		free(entries);
 
 		if (R_FAILED(ret = FSDIR_Close(dir))) // Close directory
+		{
+			DEBUG("FSDIR_Close failed: 0x%lx\n", ret);
 			return ret;
+		}
 	}
 	else
+	{
+		DEBUG("FSUSER_OpenDirectory failed: 0x%lx\n", ret);
 		return ret;
+	}
 }
 
 static int Music_GetCurrentIndex(char *path)
@@ -98,7 +110,9 @@ static void Music_Play(char *path)
 	thread = threadCreate(Audio_PlayFile, path, 32 *1024, prio - 1, -2, false);
 
 	selection = Music_GetCurrentIndex(path);
+	DEBUG("Music_GetCurrentIndex returned: %d\n", selection);
 	strncpy(title, strlen(ID3.title) == 0? strupr(Utils_Basename(path)) : strupr(ID3.title), strlen(ID3.title) == 0? strlen(Utils_Basename(path)) + 1 : strlen(ID3.title) + 1);
+	DEBUG("title returned: %d\n", strlen(ID3.title) == 0? strupr(Utils_Basename(path)) : strupr(ID3.title));
 
 	isMP3 = (strncasecmp(&path[strlen(path)-3], "mp3", 3) == 0);
 }
@@ -106,6 +120,7 @@ static void Music_Play(char *path)
 
 static void Music_HandleNext(bool forward, int state)
 {
+	DEBUG("Music_HandleNext: %s (STATE: %d)\n", forward? "Forward" : "Not forward", state);
 	if (state == MUSIC_STATE_NONE)
 	{
 		if (forward)
@@ -141,11 +156,14 @@ static void Music_HandleNext(bool forward, int state)
 	threadFree(thread);
 
 	Music_Play(playlist[selection]);
+	DEBUG("Music_Play: %s \n", playlist[selection]);
 }
 
 void Menu_PlayMusic(char *path)
 {
 	aptSetSleepAllowed(false);
+
+	DEBUG("Menu_PlayMusic: %s\n", path);
 	Music_Play(path);
 
 	bool locked = false;
