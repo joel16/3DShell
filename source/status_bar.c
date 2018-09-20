@@ -41,58 +41,55 @@ static void StatusBar_GetBatteryStatus(int x, int y)
 	u8 percent = 0, state = 0;
 	char buf[5];
 
-	if (R_FAILED(PTMU_GetBatteryChargeState(&state)))
-		state = 0;
-
 	if (R_SUCCEEDED(MCUHWC_GetBatteryLevel(&percent)))
 	{
 		if (percent < 20)
 			Draw_Image(battery_low, x, 1);
 		else if ((percent >= 20) && (percent < 30))
 		{
-			if (state == 1)
+			if ((R_SUCCEEDED(PTMU_GetBatteryChargeState(&state))) && (state == 1))
 				Draw_Image(battery_20_charging, x, 1);
 			else
 				Draw_Image(battery_20, x, 1);
 		}
 		else if ((percent >= 30) && (percent < 50))
 		{
-			if (state == 1)
+			if ((R_SUCCEEDED(PTMU_GetBatteryChargeState(&state))) && (state == 1))
 				Draw_Image(battery_50_charging, x, 1);
 			else
 				Draw_Image(battery_50, x, 1);
 		}
 		else if ((percent >= 50) && (percent < 60))
 		{
-			if (state == 1)
+			if ((R_SUCCEEDED(PTMU_GetBatteryChargeState(&state))) && (state == 1))
 				Draw_Image(battery_50_charging, x, 1);
 			else
 				Draw_Image(battery_50, x, 1);
 		}
 		else if ((percent >= 60) && (percent < 80))
 		{
-			if (state == 1)
+			if ((R_SUCCEEDED(PTMU_GetBatteryChargeState(&state))) && (state == 1))
 				Draw_Image(battery_60_charging, x, 1);
 			else
 				Draw_Image(battery_60, x, 1);
 		}
 		else if ((percent >= 80) && (percent < 90))
 		{
-			if (state == 1)
+			if ((R_SUCCEEDED(PTMU_GetBatteryChargeState(&state))) && (state == 1))
 				Draw_Image(battery_80_charging, x, 1);
 			else
 				Draw_Image(battery_80, x, 1);
 		}
 		else if ((percent >= 90) && (percent < 100))
 		{
-			if (state == 1)
+			if ((R_SUCCEEDED(PTMU_GetBatteryChargeState(&state))) && (state == 1))
 				Draw_Image(battery_90_charging, x, 1);
 			else
 				Draw_Image(battery_90, x, 1);
 		}
 		else if (percent == 100)
 		{
-			if (state == 1)
+			if ((R_SUCCEEDED(PTMU_GetBatteryChargeState(&state))) && (state == 1))
 				Draw_Image(battery_full_charging, x, 1);
 			else
 				Draw_Image(battery_full, x, 1);
