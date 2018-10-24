@@ -41,16 +41,22 @@ Building from source:
 * `sudo dkp-pacman -S 3ds-libogg --noconfirm`
 * `sudo dkp-pacman -S 3ds-libvorbisidec --noconfirm`
 
-3. Clone the repo:
+3. Recursively clone the repo:
 ```bash
-$ git clone --recursive https://github.com/joel16/3DShell.git
+git clone --recursive https://github.com/joel16/3DShell.git
 ```
-4. Build the program using make:
+4. Open the project diretory:
 ```bash
-$ cd 3DShell/ && make
+cd 3DShell/
 ```
-The binaries will be distributed in the "out" directory.
-
+5. Update the submodules:
+```bash
+git submodule foreach git pull origin master
+```
+6. Build the binary using make:
+```bash
+make
+```
 
 Credits:
 --------------------------------------------------------------------------------
