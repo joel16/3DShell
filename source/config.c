@@ -6,16 +6,18 @@
 #include "config.h"
 #include "fs.h"
 
+config_t config;
+
 const char *config_file =
 	"config_dark_theme = %d\n"
 	"config_hidden_files = %d\n"
 	"config_sort_by = %d";
 
-Result Config_Save(bool config_dark_theme, bool config_hidden_files, int config_sort_by) {
+Result Config_Save(config_t config) {
 	Result ret = 0;
 	
-	char *buf = (char *)malloc(256);
-	snprintf(buf, 256, config_file, config_dark_theme, config_hidden_files, config_sort_by);
+	char *buf = (char *)malloc(128);
+	snprintf(buf, 128, config_file, config.dark_theme, config.hidden_files, config.sort);
 	
 	if (R_FAILED(ret = FS_Write(archive, "/3ds/3DShell/config.cfg", buf))) {
 		free(buf);
@@ -31,10 +33,10 @@ Result Config_Load(void) {
 	
 	if (!FS_FileExists(archive, "/3ds/3DShell/config.cfg")) {
 		// set these to the following by default:
-		config_dark_theme = false;
-		config_hidden_files = true;
-		config_sort_by = 0;
-		return Config_Save(config_dark_theme, config_hidden_files, config_sort_by);
+		config.dark_theme = false;
+		config.hidden_files = false;
+		config.sort = 0;
+		return Config_Save(config);
 	}
 
 	u64 size64 = 0;
@@ -51,7 +53,7 @@ Result Config_Load(void) {
 
 	buf[size] = '\0';
 	
-	sscanf(buf, config_file, &config_dark_theme, &config_hidden_files, &config_sort_by);
+	sscanf(buf, config_file, &config.dark_theme, &config.hidden_files, &config.sort);
 	
 	free(buf);
 	return 0;
@@ -79,7 +81,7 @@ Result Config_GetLastDirectory(void) {
 
 		buf[size] = '\0';
 
-		char tempPath[256];
+		char tempPath[513];
 		sscanf(buf, "%[^\n]s", tempPath);
 	
 		if (FS_DirExists(archive, tempPath)) // Incase a directory previously visited had been deleted, set start path to sdmc:/ to avoid errors.

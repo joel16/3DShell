@@ -38,7 +38,7 @@ static Result Menu_GetMusicList(void) {
 	
 	if (R_SUCCEEDED(ret = FSUSER_OpenDirectory(&dir, archive, fsMakePath(PATH_ASCII, cwd)))) {
 		u32 entryCount = 0;
-		FS_DirectoryEntry* entries = (FS_DirectoryEntry*) calloc(MAX_FILES, sizeof(FS_DirectoryEntry));
+		FS_DirectoryEntry *entries = (FS_DirectoryEntry *)calloc(MAX_FILES, sizeof(FS_DirectoryEntry));
 		
 		if (R_SUCCEEDED(ret = FSDIR_Read(dir, &entryCount, MAX_FILES, entries))) {
 			qsort(entries, entryCount, sizeof(FS_DirectoryEntry), Utils_Alphasort);
@@ -140,8 +140,8 @@ void Menu_PlayMusic(char *path) {
 	
 	while (aptMainLoop()) {
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
-		C2D_TargetClear(RENDER_TOP, config_dark_theme? BLACK_BG : WHITE);
-		C2D_TargetClear(RENDER_BOTTOM, config_dark_theme? BLACK_BG : WHITE);
+		C2D_TargetClear(RENDER_TOP, config.dark_theme? BLACK_BG : WHITE);
+		C2D_TargetClear(RENDER_BOTTOM, config.dark_theme? BLACK_BG : WHITE);
 		C2D_SceneBegin(RENDER_TOP);
 
 		Draw_Image(default_artwork_blur, 0, 0);

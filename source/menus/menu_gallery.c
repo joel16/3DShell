@@ -207,7 +207,7 @@ static Result Gallery_GetImageList(void) {
 	
 	if (R_SUCCEEDED(ret = FSUSER_OpenDirectory(&dir, archive, fsMakePath(PATH_ASCII, cwd)))) {
 		u32 entryCount = 0;
-		FS_DirectoryEntry* entries = (FS_DirectoryEntry*) calloc(MAX_FILES, sizeof(FS_DirectoryEntry));
+		FS_DirectoryEntry *entries = (FS_DirectoryEntry *)calloc(MAX_FILES, sizeof(FS_DirectoryEntry));
 		
 		if (R_SUCCEEDED(ret = FSDIR_Read(dir, &entryCount, MAX_FILES, entries))) {
 			qsort(entries, entryCount, sizeof(FS_DirectoryEntry), Utils_Alphasort);

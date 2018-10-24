@@ -34,24 +34,24 @@ static int cmpstringp(const void *p1, const void *p2) {
 	else if (!(entryA->attributes & FS_ATTRIBUTE_DIRECTORY) && (entryB->attributes & FS_ATTRIBUTE_DIRECTORY))
 		return 1;
 	else  {
-		if (config_sort_by == 0) { // Sort alphabetically (ascending - A to Z)
+		if (config.sort == 0) { // Sort alphabetically (ascending - A to Z)
 			char entryNameA[256] = {'\0'}, entryNameB[256] = {'\0'};
 			Utils_U16_To_U8(entryNameA, entryA->name, sizeof(entryNameA) - 1);
 			Utils_U16_To_U8(entryNameB, entryB->name, sizeof(entryNameB) - 1);
 			return strcasecmp(entryNameA, entryNameB);
 		}
-		else if (config_sort_by == 1) { // Sort alphabetically (descending - Z to A)
+		else if (config.sort == 1) { // Sort alphabetically (descending - Z to A)
 			char entryNameA[256] = {'\0'}, entryNameB[256] = {'\0'};
 			Utils_U16_To_U8(entryNameA, entryA->name, sizeof(entryNameA) - 1);
 			Utils_U16_To_U8(entryNameB, entryB->name, sizeof(entryNameB) - 1);
 			return strcasecmp(entryNameB, entryNameA);
 		}
-		else if (config_sort_by == 2) { // Sort by file size (largest first)
+		else if (config.sort == 2) { // Sort by file size (largest first)
 			u64 sizeA = entryA->fileSize;
 			u64 sizeB = entryB->fileSize;
 			return sizeA > sizeB ? -1 : sizeA < sizeB ? 1 : 0;
 		}
-		else if (config_sort_by == 3) { // Sort by file size (smallest first)
+		else if (config.sort == 3) { // Sort by file size (smallest first)
 			u64 sizeA = entryA->fileSize;
 			u64 sizeB = entryB->fileSize;
 			return sizeB > sizeA ? -1 : sizeB < sizeA ? 1 : 0;
@@ -83,7 +83,7 @@ Result Dirbrowse_PopulateFiles(bool clear) {
 		}
 		
 		u32 entryCount = 0;
-		FS_DirectoryEntry* entries = (FS_DirectoryEntry*) calloc(MAX_FILES, sizeof(FS_DirectoryEntry));
+		FS_DirectoryEntry *entries = (FS_DirectoryEntry *)calloc(MAX_FILES, sizeof(FS_DirectoryEntry));
 
 		if (R_SUCCEEDED(ret = FSDIR_Read(dir, &entryCount, MAX_FILES, entries))) {
 			qsort(entries, entryCount, sizeof(FS_DirectoryEntry), cmpstringp);
@@ -95,7 +95,7 @@ Result Dirbrowse_PopulateFiles(bool clear) {
 				if (name[0] == '\0') // Ignore "." in all Directories
 					continue;
 
-				if ((!config_hidden_files) && (!strncmp(name, ".", 1))) // Ignore "." in all Directories
+				if ((!config.hidden_files) && (!strncmp(name, ".", 1))) // Ignore "." in all Directories
 					continue;
 				
 				if ((!strcmp(cwd, ROOT_PATH)) && (!strncmp(name, "..", 2))) // Ignore ".." in Root Directory
@@ -112,7 +112,7 @@ Result Dirbrowse_PopulateFiles(bool clear) {
 				item->isReadOnly = entries[i].attributes & FS_ATTRIBUTE_READ_ONLY; // Set read-Only flag
 				item->isHidden = entries[i].attributes & FS_ATTRIBUTE_HIDDEN; // Set hidden file flag
 
-				if ((!config_hidden_files) && (item->isHidden))
+				if ((!config.hidden_files) && (item->isHidden))
 					continue;
 				
 				if (files == NULL) // New list
@@ -171,21 +171,21 @@ void Dirbrowse_DisplayFiles(void) {
 
 		if (position < FILES_PER_PAGE || i > (position - FILES_PER_PAGE)) {
 			if (i == position)
-				Draw_Rect(0, 52 + (38 * printed), 400, 38, config_dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
+				Draw_Rect(0, 52 + (38 * printed), 400, 38, config.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
 
 			if (!strcmp(multi_select_dir, cwd)) {
-				multi_select[i] == true? Draw_Image(config_dark_theme? icon_check_dark : icon_check, 5, 61 + (38 * printed)) : 
-					Draw_Image(config_dark_theme? icon_uncheck_dark : icon_uncheck, 5, 61 + (38 * printed));
+				multi_select[i] == true? Draw_Image(config.dark_theme? icon_check_dark : icon_check, 5, 61 + (38 * printed)) : 
+					Draw_Image(config.dark_theme? icon_uncheck_dark : icon_uncheck, 5, 61 + (38 * printed));
 			}
 			else
-				Draw_Image(config_dark_theme? icon_uncheck_dark : icon_uncheck, 5, 61 + (38 * printed));
+				Draw_Image(config.dark_theme? icon_uncheck_dark : icon_uncheck, 5, 61 + (38 * printed));
 
 			char path[512];
 			strcpy(path, cwd);
 			strcpy(path + strlen(path), file->name);
 
 			if (file->isDir)
-				Draw_Image(config_dark_theme? icon_dir_dark : icon_dir, 30, 56 + (38 * printed));
+				Draw_Image(config.dark_theme? icon_dir_dark : icon_dir, 30, 56 + (38 * printed));
 			else if ((!strncasecmp(file->ext, "3ds", 3)) || (!strncasecmp(file->ext, "cia", 3)) || (!strncasecmp(file->ext, "bin", 3)))
 				Draw_Image(icon_app, 30, 56 + (38 * printed));
 			else if ((!strncasecmp(file->ext, "zip", 3)) || (!strncasecmp(file->ext, "tar", 3)) || (!strncasecmp(file->ext, "lz4", 3)) || (!strncasecmp(file->ext, "rar", 3)))
@@ -209,16 +209,16 @@ void Dirbrowse_DisplayFiles(void) {
 				Utils_GetSizeString(size, file->size);
 				float width = 0;
 				Draw_GetTextSize(0.48f, &width, NULL, size);
-				Draw_Text(390 - width, 180 + (73 * printed), 0.48f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, size);
+				Draw_Text(390 - width, 180 + (73 * printed), 0.48f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, size);
 			}*/
 
 			float height = 0;
 			Draw_GetTextSize(0.48f, NULL, &height, buf);
 			
 			if (!strncmp(file->name, "..", 2))
-				Draw_Text(70, 52 + ((38 - height) / 2) + (38 * printed), 0.48f, config_dark_theme? WHITE : BLACK, "Parent folder");
+				Draw_Text(70, 52 + ((38 - height) / 2) + (38 * printed), 0.48f, config.dark_theme? WHITE : BLACK, "Parent folder");
 			else 
-				Draw_Text(70, 52 + ((38 - height) / 2) + (38 * printed), 0.48f, config_dark_theme? WHITE : BLACK, buf);
+				Draw_Text(70, 52 + ((38 - height) / 2) + (38 * printed), 0.48f, config.dark_theme? WHITE : BLACK, buf);
 
 			printed++; // Increase printed counter
 		}

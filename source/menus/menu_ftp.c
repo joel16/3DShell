@@ -34,10 +34,10 @@ void Menu_DisplayFTP(void) {
 		ftp_loop();
 		
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
-		C2D_TargetClear(RENDER_BOTTOM, config_dark_theme? BLACK_BG : WHITE);
+		C2D_TargetClear(RENDER_BOTTOM, config.dark_theme? BLACK_BG : WHITE);
 		C2D_SceneBegin(RENDER_BOTTOM);
-		Draw_Rect(0, 0, 320, 20, config_dark_theme? STATUS_BAR_DARK : STATUS_BAR_LIGHT); // Status bar
-		Draw_Rect(0, 20, 320, 220, config_dark_theme? MENU_BAR_DARK : MENU_BAR_LIGHT); // Menu bar
+		Draw_Rect(0, 0, 320, 20, config.dark_theme? STATUS_BAR_DARK : STATUS_BAR_LIGHT); // Status bar
+		Draw_Rect(0, 20, 320, 220, config.dark_theme? MENU_BAR_DARK : MENU_BAR_LIGHT); // Menu bar
 
 		ret = ACU_GetWifiStatus(&wifiStatus);
 			
@@ -56,12 +56,12 @@ void Menu_DisplayFTP(void) {
 				Draw_Text(((320 - Draw_GetTextWidth(0.45f, ftp_file_transfer)) / 2), 150, 0.45f, WHITE, ftp_file_transfer);
 
 			if (isTransfering) {
-				Draw_Rect(50, 140, 220, 3, config_dark_theme? STATUS_BAR_DARK : STATUS_BAR_LIGHT);
+				Draw_Rect(50, 140, 220, 3, config.dark_theme? STATUS_BAR_DARK : STATUS_BAR_LIGHT);
 				Draw_Rect(pBar, 140, 40, 3, WHITE);
 
 				// Boundary stuff
-				Draw_Rect(0, 140, 50, 3, config_dark_theme? MENU_BAR_DARK : MENU_BAR_LIGHT);
-				Draw_Rect(270, 140, 50, 3, config_dark_theme? MENU_BAR_DARK : MENU_BAR_LIGHT); 
+				Draw_Rect(0, 140, 50, 3, config.dark_theme? MENU_BAR_DARK : MENU_BAR_LIGHT);
+				Draw_Rect(270, 140, 50, 3, config.dark_theme? MENU_BAR_DARK : MENU_BAR_LIGHT); 
 				pBar += 4;
 			
 				if (pBar >= xlim)

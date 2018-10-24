@@ -113,36 +113,36 @@ static void Menu_InstallUpdate(void) {
 void Menu_DisplayUpdate(void) {
 	float err_width = ((320 - Draw_GetTextWidth(0.45f, "No updates available.")) / 2);
 
-	Draw_Rect(0, 0, 320, 20, config_dark_theme? STATUS_BAR_DARK : MENU_BAR_LIGHT);
-	Draw_Rect(0, 20, 320, 220, config_dark_theme? BLACK_BG : WHITE);
+	Draw_Rect(0, 0, 320, 20, config.dark_theme? STATUS_BAR_DARK : MENU_BAR_LIGHT);
+	Draw_Rect(0, 20, 320, 220, config.dark_theme? BLACK_BG : WHITE);
 
 	Menu_DrawMenuBar();
 
-	Draw_Rect(0, 20, 400, 35, config_dark_theme? MENU_BAR_DARK : STATUS_BAR_LIGHT); // Menu bar
+	Draw_Rect(0, 20, 400, 35, config.dark_theme? MENU_BAR_DARK : STATUS_BAR_LIGHT); // Menu bar
 	Draw_Text(10, 30, 0.48f, WHITE, "Update Center");
 
 	ACU_GetWifiStatus(&wifiStatus);
 
 	if (wifiStatus == 0)
-		Draw_Text(((320 - Draw_GetTextWidth(0.48f, "WiFi not enabled.")) / 2), 60, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "WiFi not enabled.");
+		Draw_Text(((320 - Draw_GetTextWidth(0.48f, "WiFi not enabled.")) / 2), 60, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "WiFi not enabled.");
 	else if (err)
-		Draw_Text(err_width, 60, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "No updates available.");
+		Draw_Text(err_width, 60, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "No updates available.");
 
-	Draw_Text(122, 85, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Nightly builds");
-	Draw_Text(52, 97, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Untested builds that may contain bugs.");
+	Draw_Text(122, 85, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Nightly builds");
+	Draw_Text(52, 97, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Untested builds that may contain bugs.");
 
-	Draw_Rect(106, 117, (Draw_GetTextWidth(0.45, "Check for updates") + 10), 20, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR);
-	Draw_Rect(110 - 3, 118, (Draw_GetTextWidth(0.45, "Check for updates") + 8), 18, config_dark_theme? BLACK_BG : WHITE);
-	Draw_Rect(110 - 2, 119, (Draw_GetTextWidth(0.45, "Check for updates") + 6), 16, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR);
-	Draw_Text(110, 120, 0.45f, config_dark_theme? BLACK_BG : WHITE, "Check for updates");
+	Draw_Rect(106, 117, (Draw_GetTextWidth(0.45, "Check for updates") + 10), 20, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR);
+	Draw_Rect(110 - 3, 118, (Draw_GetTextWidth(0.45, "Check for updates") + 8), 18, config.dark_theme? BLACK_BG : WHITE);
+	Draw_Rect(110 - 2, 119, (Draw_GetTextWidth(0.45, "Check for updates") + 6), 16, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR);
+	Draw_Text(110, 120, 0.45f, config.dark_theme? BLACK_BG : WHITE, "Check for updates");
 
-	Draw_Text(115, 155, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Milestone builds");
-	Draw_Text(102, 167, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Official release builds.");
+	Draw_Text(115, 155, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Milestone builds");
+	Draw_Text(102, 167, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Official release builds.");
 	
-	Draw_Rect(106, 187, (Draw_GetTextWidth(0.45, "Check for updates") + 10), 20, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR);
-	Draw_Rect(110 - 3, 188, (Draw_GetTextWidth(0.45, "Check for updates") + 8), 18, config_dark_theme? BLACK_BG : WHITE);
-	Draw_Rect(110 - 2, 189, (Draw_GetTextWidth(0.45, "Check for updates") + 6), 16, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR);
-	Draw_Text(110, 190, 0.45f, config_dark_theme? BLACK_BG : WHITE, "Check for updates");
+	Draw_Rect(106, 187, (Draw_GetTextWidth(0.45, "Check for updates") + 10), 20, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR);
+	Draw_Rect(110 - 3, 188, (Draw_GetTextWidth(0.45, "Check for updates") + 8), 18, config.dark_theme? BLACK_BG : WHITE);
+	Draw_Rect(110 - 2, 189, (Draw_GetTextWidth(0.45, "Check for updates") + 6), 16, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR);
+	Draw_Text(110, 190, 0.45f, config.dark_theme? BLACK_BG : WHITE, "Check for updates");
 }
 
 void Menu_DisplayUpdate2(void) {
@@ -153,20 +153,20 @@ void Menu_DisplayUpdate2(void) {
 	Draw_GetTextSize(0.45f, &update_confirm_width, &update_confirm_height, "YES");
 	Draw_GetTextSize(0.45f, &update_cancel_width, &update_cancel_height, "NO");
 
-	Draw_Image(config_dark_theme? dialog_dark : dialog, ((320 - (dialog.subtex->width)) / 2), ((240 - (dialog.subtex->height)) / 2));
+	Draw_Image(config.dark_theme? dialog_dark : dialog, ((320 - (dialog.subtex->width)) / 2), ((240 - (dialog.subtex->height)) / 2));
 
-	Draw_Textf(((320 - (dialog.subtex->width)) / 2) + 6, ((240 - (dialog.subtex->height)) / 2) + 6, 0.45f, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "New update: %s", version);
+	Draw_Textf(((320 - (dialog.subtex->width)) / 2) + 6, ((240 - (dialog.subtex->height)) / 2) + 6, 0.45f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "New update: %s", version);
 
-	Draw_Text(((320 - (text_width)) / 2), ((240 - (dialog.subtex->height)) / 2) + 40, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "This action cannot be undone.");
-	Draw_Text(((320 - (text2_width)) / 2), ((240 - (dialog.subtex->height)) / 2) + 55, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Do you wish to update?");
+	Draw_Text(((320 - (text_width)) / 2), ((240 - (dialog.subtex->height)) / 2) + 40, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "This action cannot be undone.");
+	Draw_Text(((320 - (text2_width)) / 2), ((240 - (dialog.subtex->height)) / 2) + 55, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Do you wish to update?");
 
 	if (update_dialog_selection == 0)
-		Draw_Rect((288 - update_cancel_width) - 5, (159 - update_cancel_height) - 5, update_cancel_width + 10, update_cancel_height + 10, config_dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
+		Draw_Rect((288 - update_cancel_width) - 5, (159 - update_cancel_height) - 5, update_cancel_width + 10, update_cancel_height + 10, config.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
 	else if (update_dialog_selection == 1)
-		Draw_Rect((248 - (update_confirm_width)) - 5, (159 - update_confirm_height) - 5, update_confirm_width + 10, update_confirm_height + 10, config_dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
+		Draw_Rect((248 - (update_confirm_width)) - 5, (159 - update_confirm_height) - 5, update_confirm_width + 10, update_confirm_height + 10, config.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
 
-	Draw_Text(248 - (update_confirm_width), (159 - update_confirm_height), 0.45f, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "YES");
-	Draw_Text(288 - update_cancel_width, (159 - update_cancel_height), 0.45f, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "NO");
+	Draw_Text(248 - (update_confirm_width), (159 - update_confirm_height), 0.45f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "YES");
+	Draw_Text(288 - update_cancel_width, (159 - update_cancel_height), 0.45f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "NO");
 }
 
 void Menu_ControlUpdate(u32 input) {
