@@ -8,7 +8,6 @@
 #include "fs.h"
 #include "menu_gallery.h"
 #include "menu_music.h"
-//#include "menu_book_reader.h"
 #include "textures.h"
 #include "utils.h"
 
@@ -17,8 +16,7 @@ int position = 0; // menu position
 int fileCount = 0; // file count
 File *files = NULL; // file list
 
-void Dirbrowse_RecursiveFree(File *node)
-{
+void Dirbrowse_RecursiveFree(File *node) {
 	if (node == NULL) // End of list
 		return;
 	
@@ -27,8 +25,7 @@ void Dirbrowse_RecursiveFree(File *node)
 }
 
 // Sort directories alphabetically. Folder first, then files.
-static int cmpstringp(const void *p1, const void *p2)
-{
+static int cmpstringp(const void *p1, const void *p2) {
 	FS_DirectoryEntry* entryA = (FS_DirectoryEntry*) p1;
 	FS_DirectoryEntry* entryB = (FS_DirectoryEntry*) p2;
 	
@@ -36,30 +33,25 @@ static int cmpstringp(const void *p1, const void *p2)
 		return -1;
 	else if (!(entryA->attributes & FS_ATTRIBUTE_DIRECTORY) && (entryB->attributes & FS_ATTRIBUTE_DIRECTORY))
 		return 1;
-	else 
-	{
-		if (config_sort_by == 0) // Sort alphabetically (ascending - A to Z)
-		{
+	else  {
+		if (config_sort_by == 0) { // Sort alphabetically (ascending - A to Z)
 			char entryNameA[256] = {'\0'}, entryNameB[256] = {'\0'};
-			Utils_U16_To_U8((u8 *) entryNameA, entryA->name, sizeof(entryNameA) - 1);
-			Utils_U16_To_U8((u8 *) entryNameB, entryB->name, sizeof(entryNameB) - 1);
+			Utils_U16_To_U8(entryNameA, entryA->name, sizeof(entryNameA) - 1);
+			Utils_U16_To_U8(entryNameB, entryB->name, sizeof(entryNameB) - 1);
 			return strcasecmp(entryNameA, entryNameB);
 		}
-		else if (config_sort_by == 1) // Sort alphabetically (descending - Z to A)
-		{
+		else if (config_sort_by == 1) { // Sort alphabetically (descending - Z to A)
 			char entryNameA[256] = {'\0'}, entryNameB[256] = {'\0'};
-			Utils_U16_To_U8((u8 *) entryNameA, entryA->name, sizeof(entryNameA) - 1);
-			Utils_U16_To_U8((u8 *) entryNameB, entryB->name, sizeof(entryNameB) - 1);
+			Utils_U16_To_U8(entryNameA, entryA->name, sizeof(entryNameA) - 1);
+			Utils_U16_To_U8(entryNameB, entryB->name, sizeof(entryNameB) - 1);
 			return strcasecmp(entryNameB, entryNameA);
 		}
-		else if (config_sort_by == 2) // Sort by file size (largest first)
-		{
+		else if (config_sort_by == 2) { // Sort by file size (largest first)
 			u64 sizeA = entryA->fileSize;
 			u64 sizeB = entryB->fileSize;
 			return sizeA > sizeB ? -1 : sizeA < sizeB ? 1 : 0;
 		}
-		else if (config_sort_by == 3) // Sort by file size (smallest first)
-		{
+		else if (config_sort_by == 3) { // Sort by file size (smallest first)
 			u64 sizeA = entryA->fileSize;
 			u64 sizeB = entryB->fileSize;
 			return sizeB > sizeA ? -1 : sizeB < sizeA ? 1 : 0;
@@ -69,8 +61,7 @@ static int cmpstringp(const void *p1, const void *p2)
 	return 0;
 }
 
-Result Dirbrowse_PopulateFiles(bool clear)
-{
+Result Dirbrowse_PopulateFiles(bool clear) {
 	Dirbrowse_RecursiveFree(files);
 	files = NULL;
 	fileCount = 0;
@@ -81,14 +72,12 @@ Result Dirbrowse_PopulateFiles(bool clear)
 	u16 u16_cwd[strlen(cwd) + 1];
 	Utils_U8_To_U16(u16_cwd, cwd, strlen(cwd) + 1);
 
-	if (R_SUCCEEDED(ret = FSUSER_OpenDirectory(&dir, archive, fsMakePath(PATH_UTF16, u16_cwd))))
-	{
+	if (R_SUCCEEDED(ret = FSUSER_OpenDirectory(&dir, archive, fsMakePath(PATH_UTF16, u16_cwd)))) {
 		/* Add fake ".." entry except on root */
-		if (strcmp(cwd, ROOT_PATH))
-		{
+		if (strcmp(cwd, ROOT_PATH)) {
 			files = (File *)malloc(sizeof(File)); // New list
 			memset(files, 0, sizeof(File)); // Clear memory
-			strcpy(files->name, ".."); // Copy file Name
+			strcpy((char *)files->name, ".."); // Copy file Name
 			files->isDir = 1; // Set folder flag
 			fileCount++;
 		}
@@ -96,28 +85,26 @@ Result Dirbrowse_PopulateFiles(bool clear)
 		u32 entryCount = 0;
 		FS_DirectoryEntry* entries = (FS_DirectoryEntry*) calloc(MAX_FILES, sizeof(FS_DirectoryEntry));
 
-		if (R_SUCCEEDED(ret = FSDIR_Read(dir, &entryCount, MAX_FILES, entries)))
-		{
+		if (R_SUCCEEDED(ret = FSDIR_Read(dir, &entryCount, MAX_FILES, entries))) {
 			qsort(entries, entryCount, sizeof(FS_DirectoryEntry), cmpstringp);
-			u8 name[256] = {'\0'};
+			char name[256] = {'\0'};
 			
-			for (u32 i = 0; i < entryCount; i++) 
-			{
+			for (u32 i = 0; i < entryCount; i++) {
 				Utils_U16_To_U8(&name[0], entries[i].name, 255);
 
 				if (name[0] == '\0') // Ignore "." in all Directories
 					continue;
 
-				if ((!config_hidden_files) && (strncmp(name, ".", 1) == RL_SUCCESS)) // Ignore "." in all Directories
+				if ((!config_hidden_files) && (!strncmp(name, ".", 1))) // Ignore "." in all Directories
 					continue;
 				
-				if (strcmp(cwd, ROOT_PATH) == 0 && strncmp(name, "..", 2) == 0) // Ignore ".." in Root Directory
+				if ((!strcmp(cwd, ROOT_PATH)) && (!strncmp(name, "..", 2))) // Ignore ".." in Root Directory
 					continue;
 					
 				File *item = (File *)malloc(sizeof(File));
 				memset(item, 0, sizeof(File));
 
-				strcpy(item->name, name); // Copy file name
+				strcpy((char *)item->name, name); // Copy file name
 				strcpy(item->ext, entries[i].shortExt); // Copy file extension
 				item->size = entries[i].fileSize; // Copy file size
 
@@ -132,8 +119,7 @@ Result Dirbrowse_PopulateFiles(bool clear)
 					files = item;
 				
 				// Existing list
-				else
-				{
+				else {
 					File *list = files;
 					
 					while(list->next != NULL)  // Append to list
@@ -145,8 +131,7 @@ Result Dirbrowse_PopulateFiles(bool clear)
 				fileCount++; // Increment file count
 			}
 		}	
-		else
-		{
+		else {
 			free(entries);
 			return ret;
 		}
@@ -160,8 +145,7 @@ Result Dirbrowse_PopulateFiles(bool clear)
 		return ret;
 		
 	// Attempt to keep index
-	if (!clear)
-	{
+	if (!clear) {
 		if (position >= fileCount)
 			position = fileCount - 1; // Fix position
 	}
@@ -171,8 +155,7 @@ Result Dirbrowse_PopulateFiles(bool clear)
 	return 0;
 }
 
-void Dirbrowse_DisplayFiles(void)
-{
+void Dirbrowse_DisplayFiles(void) {
 	//Draw_Image(icon_nav_drawer, 20, 58);
 	//Draw_Image(icon_actions, (380 - 64), 58);
 	float title_height = 0;
@@ -182,18 +165,15 @@ void Dirbrowse_DisplayFiles(void)
 	int i = 0, printed = 0;
 	File *file = files; // Draw file list
 
-	for(; file != NULL; file = file->next)
-	{
+	for(; file != NULL; file = file->next) {
 		if (printed == FILES_PER_PAGE) // Limit the files per page
 			break;
 
-		if (position < FILES_PER_PAGE || i > (position - FILES_PER_PAGE))
-		{
+		if (position < FILES_PER_PAGE || i > (position - FILES_PER_PAGE)) {
 			if (i == position)
 				Draw_Rect(0, 52 + (38 * printed), 400, 38, config_dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
 
-			if (strcmp(multi_select_dir, cwd) == 0)
-			{
+			if (!strcmp(multi_select_dir, cwd)) {
 				multi_select[i] == true? Draw_Image(config_dark_theme? icon_check_dark : icon_check, 5, 61 + (38 * printed)) : 
 					Draw_Image(config_dark_theme? icon_uncheck_dark : icon_uncheck, 5, 61 + (38 * printed));
 			}
@@ -206,32 +186,26 @@ void Dirbrowse_DisplayFiles(void)
 
 			if (file->isDir)
 				Draw_Image(config_dark_theme? icon_dir_dark : icon_dir, 30, 56 + (38 * printed));
-			else if ((strncasecmp(file->ext, "3ds", 3) == 0) || (strncasecmp(file->ext, "cia", 3) == 0) || (strncasecmp(file->ext, "bin", 3) == 0))
+			else if ((!strncasecmp(file->ext, "3ds", 3)) || (!strncasecmp(file->ext, "cia", 3)) || (!strncasecmp(file->ext, "bin", 3)))
 				Draw_Image(icon_app, 30, 56 + (38 * printed));
-			else if ((strncasecmp(file->ext, "zip", 3) == 0) || (strncasecmp(file->ext, "tar", 3) == 0)
-					|| (strncasecmp(file->ext, "lz4", 3) == 0) || (strncasecmp(file->ext, "rar", 3) == 0))
+			else if ((!strncasecmp(file->ext, "zip", 3)) || (!strncasecmp(file->ext, "tar", 3)) || (!strncasecmp(file->ext, "lz4", 3)) || (!strncasecmp(file->ext, "rar", 3)))
 				Draw_Image(icon_archive, 30, 56 + (38 * printed));
-			else if ((strncasecmp(file->ext, "mp3", 3) == 0) || (strncasecmp(file->ext, "ogg", 3) == 0)
-					|| (strncasecmp(file->ext, "wav", 3) == 0) || (strncasecmp(file->ext, "fla", 3) == 0))
+			else if ((!strncasecmp(file->ext, "mp3", 3)) || (!strncasecmp(file->ext, "ogg", 3)) || (!strncasecmp(file->ext, "wav", 3)) || (!strncasecmp(file->ext, "fla", 3)))
 				Draw_Image(icon_audio, 30, 56 + (38 * printed));
-			else if ((strncasecmp(file->ext, "png", 3) == 0) || (strncasecmp(file->ext, "jpg", 3) == 0) 
-					|| (strncasecmp(file->ext, "bmp", 3) == 0))
+			else if ((!strncasecmp(file->ext, "png", 3)) || (!strncasecmp(file->ext, "jpg", 3)) || (!strncasecmp(file->ext, "bmp", 3)))
 				Draw_Image(icon_image, 30, 56 + (38 * printed));
-			else if ((strncasecmp(file->ext, "txt", 3) == 0) || (strncasecmp(file->ext, "lua", 3) == 0) 
-            		|| (strncasecmp(file->ext, "cfg", 3) == 0))
+			else if ((!strncasecmp(file->ext, "txt", 3)) || (!strncasecmp(file->ext, "lua", 3)) || (!strncasecmp(file->ext, "cfg", 3)))
 				Draw_Image(icon_text, 30, 56 + (38 * printed));
-			else if ((strncasecmp(file->ext, "pdf", 3) == 0) || (strncasecmp(file->ext, "cbz", 3) == 0)
-					|| (strncasecmp(file->ext, "fb2", 3) == 0) || (strncasecmp(file->ext, "epub", 4) == 0))
+			else if ((!strncasecmp(file->ext, "pdf", 3)) || (!strncasecmp(file->ext, "cbz", 3)) || (!strncasecmp(file->ext, "fb2", 3)) || (!strncasecmp(file->ext, "epub", 4)))
 				Draw_Image(icon_doc, 30, 56 + (38 * printed));
 			else
 				Draw_Image(icon_file, 30, 56 + (38 * printed));
 
-			char buf[64], size[16];
+			char buf[64];
 			strncpy(buf, file->name, sizeof(buf));
 			buf[sizeof(buf) - 1] = '\0';
 
-			/*if (!file->isDir)
-			{
+			/*if (!file->isDir) {
 				Utils_GetSizeString(size, file->size);
 				float width = 0;
 				Draw_GetTextSize(0.48f, &width, NULL, size);
@@ -241,10 +215,10 @@ void Dirbrowse_DisplayFiles(void)
 			float height = 0;
 			Draw_GetTextSize(0.48f, NULL, &height, buf);
 			
-			if (strncmp(file->name, "..", 2) == 0)
-				Draw_Text(70, 52 + ((38 - height)/2) + (38 * printed), 0.48f, config_dark_theme? WHITE : BLACK, "Parent folder");
+			if (!strncmp(file->name, "..", 2))
+				Draw_Text(70, 52 + ((38 - height) / 2) + (38 * printed), 0.48f, config_dark_theme? WHITE : BLACK, "Parent folder");
 			else 
-				Draw_Text(70, 52 + ((38 - height)/2) + (38 * printed), 0.48f, config_dark_theme? WHITE : BLACK, buf);
+				Draw_Text(70, 52 + ((38 - height) / 2) + (38 * printed), 0.48f, config_dark_theme? WHITE : BLACK, buf);
 
 			printed++; // Increase printed counter
 		}
@@ -253,8 +227,7 @@ void Dirbrowse_DisplayFiles(void)
 	}
 }
 
-static Result Dirbrowse_SaveLastDirectory(void)
-{
+static Result Dirbrowse_SaveLastDirectory(void) {
 	Result ret = 0;
 
 	if (R_FAILED(ret = FS_Write(archive, "/3ds/3DShell/lastdir.txt", cwd)))
@@ -264,8 +237,7 @@ static Result Dirbrowse_SaveLastDirectory(void)
 }
 
 // Get file index
-File *Dirbrowse_GetFileIndex(int index)
-{
+File *Dirbrowse_GetFileIndex(int index) {
 	int i = 0;
 	File *file = files; // Find file Item
 	
@@ -278,8 +250,7 @@ File *Dirbrowse_GetFileIndex(int index)
 /**
  * Executes an operation on the file depending on the filetype.
  */
-void Dirbrowse_OpenFile(void)
-{
+void Dirbrowse_OpenFile(void) {
 	char path[512];
 	File *file = Dirbrowse_GetFileIndex(position);
 
@@ -289,55 +260,42 @@ void Dirbrowse_OpenFile(void)
 	strcpy(path, cwd);
 	strcpy(path + strlen(path), file->name);
 
-	if (file->isDir)
-	{
+	if (file->isDir) {
 		// Attempt to navigate to target
-		if (R_SUCCEEDED(Dirbrowse_Navigate(false)))
-		{
+		if (R_SUCCEEDED(Dirbrowse_Navigate(false))) {
 			Dirbrowse_SaveLastDirectory();
 			Dirbrowse_PopulateFiles(true);
 		}
 	}
-	else if ((strncasecmp(file->ext, "png", 3) == 0) || (strncasecmp(file->ext, "jpg", 3) == 0) || 
-			(strncasecmp(file->ext, "bmp", 3) == 0))
+	else if ((!strncasecmp(file->ext, "png", 3)) || (!strncasecmp(file->ext, "jpg", 3)) || (!strncasecmp(file->ext, "bmp", 3)))
 		Gallery_DisplayImage(path);
-	else if (strncasecmp(file->ext, "zip", 3) == 0)
-	{
+	else if (!strncasecmp(file->ext, "zip", 3)) {
 		Archive_ExtractZIP(path, cwd);
 		Dirbrowse_PopulateFiles(true);
 	}
-	else if (strncasecmp(file->ext, "rar", 3) == 0)
-	{
+	else if (!strncasecmp(file->ext, "rar", 3)) {
 		Archive_ExtractRAR(path, cwd);
 		Dirbrowse_PopulateFiles(true);
 	}
-	else if ((strncasecmp(file->ext, "mp3", 3) == 0) || (strncasecmp(file->ext, "ogg", 3) == 0)
-			|| (strncasecmp(file->ext, "wav", 3) == 0) || (strncasecmp(file->ext, "fla", 3) == 0))
+	else if ((!strncasecmp(file->ext, "mp3", 3)) || (!strncasecmp(file->ext, "ogg", 3)) || (!strncasecmp(file->ext, "wav", 3)) || (!strncasecmp(file->ext, "fla", 3)))
 		Menu_PlayMusic(path);
-	/*else if ((strncasecmp(file->ext, "pdf", 3) == 0) || (strncasecmp(file->ext, "cbz", 3) == 0)
-			|| (strncasecmp(file->ext, "fb2", 3) == 0) || (strncasecmp(file->ext, "epub", 4) == 0))
-		Menu_OpenBook(path);*/
 }
 
 // Navigate to Folder
-int Dirbrowse_Navigate(bool parent)
-{
+int Dirbrowse_Navigate(bool parent) {
 	File *file = Dirbrowse_GetFileIndex(position); // Get index
 	
 	if (file == NULL)
 		return -1;
 
 	// Special case ".."
-	if ((parent) || (strncmp(file->name, "..", 2) == 0))
-	{
+	if ((parent) || (!strncmp(file->name, "..", 2))) {
 		char *slash = NULL;
 
 		// Find last '/' in working directory
-		int i = strlen(cwd) - 2; for(; i >= 0; i--)
-		{
+		int i = strlen(cwd) - 2; for(; i >= 0; i--) {
 			// Slash discovered
-			if (cwd[i] == '/')
-			{
+			if (cwd[i] == '/') {
 				slash = cwd + i + 1; // Save pointer
 				break; // Stop search
 			}
@@ -347,10 +305,8 @@ int Dirbrowse_Navigate(bool parent)
 	}
 
 	// Normal folder
-	else
-	{
-		if (file->isDir)
-		{
+	else {
+		if (file->isDir) {
 			// Append folder to working directory
 			strcpy(cwd + strlen(cwd), file->name);
 			cwd[strlen(cwd) + 1] = 0;

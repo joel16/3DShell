@@ -5,14 +5,12 @@
 
 extern volatile bool stop;
 
-enum channel_e
-{
+enum channel_e {
 	BGM,
 	SFX
 };
 
-enum file_types
-{
+enum file_types {
 	FILE_TYPE_ERROR,
 	FILE_TYPE_BCSTM,
 	FILE_TYPE_WAV,
@@ -21,8 +19,7 @@ enum file_types
 	FILE_TYPE_MP3
 };
 
-struct decoder_fn
-{
+struct decoder_fn {
 	int (* init)(const char *file);
 	u32 (* rate)(void);
 	u8 (* channels)(void);

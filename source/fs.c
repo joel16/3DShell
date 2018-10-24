@@ -5,8 +5,7 @@
 #include "fs.h"
 #include "utils.h"
 
-Result FS_OpenArchive(FS_Archive *archive, FS_ArchiveID archiveID)
-{
+Result FS_OpenArchive(FS_Archive *archive, FS_ArchiveID archiveID) {
 	Result ret = 0;
 
 	if (R_FAILED(ret = FSUSER_OpenArchive(archive, archiveID, fsMakePath(PATH_EMPTY, ""))))
@@ -15,8 +14,7 @@ Result FS_OpenArchive(FS_Archive *archive, FS_ArchiveID archiveID)
 	return 0;
 }
 
-Result FS_CloseArchive(FS_Archive archive)
-{
+Result FS_CloseArchive(FS_Archive archive) {
 	Result ret = 0;
 
 	if (R_FAILED(ret = FSUSER_CloseArchive(archive)))
@@ -25,8 +23,7 @@ Result FS_CloseArchive(FS_Archive archive)
 	return 0;
 }
 
-Result FS_MakeDir(FS_Archive archive, const char *path)
-{	
+Result FS_MakeDir(FS_Archive archive, const char *path) {
 	Result ret = 0;
 
 	u16 path_u16[strlen(path) + 1];
@@ -38,8 +35,7 @@ Result FS_MakeDir(FS_Archive archive, const char *path)
 	return 0;
 }
 
-Result FS_RecursiveMakeDir(FS_Archive archive, const char *dir) 
-{
+Result FS_RecursiveMakeDir(FS_Archive archive, const char *dir) {
 	Result ret = 0;
 	char buf[256];
 	char *p = NULL;
@@ -51,10 +47,8 @@ Result FS_RecursiveMakeDir(FS_Archive archive, const char *dir)
 	if (buf[len - 1] == '/')
 		buf[len - 1] = 0;
 
-	for (p = buf + 1; *p; p++)
-	{
-		if (*p == '/') 
-		{
+	for (p = buf + 1; *p; p++) {
+		if (*p == '/') {
 			*p = 0;
 
 			ret = FS_MakeDir(archive, buf);
@@ -68,8 +62,7 @@ Result FS_RecursiveMakeDir(FS_Archive archive, const char *dir)
 	return ret;
 }
 
-bool FS_FileExists(FS_Archive archive, const char *path)
-{
+bool FS_FileExists(FS_Archive archive, const char *path) {
 	Handle handle;
 
 	u16 path_u16[strlen(path) + 1];
@@ -84,8 +77,7 @@ bool FS_FileExists(FS_Archive archive, const char *path)
 	return true;
 }
 
-bool FS_DirExists(FS_Archive archive, const char *path)
-{
+bool FS_DirExists(FS_Archive archive, const char *path) {
 	Handle handle;
 
 	u16 path_u16[strlen(path) + 1];
@@ -136,8 +128,7 @@ bool FS_DirExists(FS_Archive archive, const char *path)
 	return timeStr;
 }*/
 
-Result FS_GetFileSize(FS_Archive archive, const char *path, u64 *size)
-{
+Result FS_GetFileSize(FS_Archive archive, const char *path, u64 *size) {
 	Handle handle;
 	Result ret = 0;
 
@@ -152,10 +143,11 @@ Result FS_GetFileSize(FS_Archive archive, const char *path, u64 *size)
 
 	if (R_FAILED(ret = FSFILE_Close(handle)))
 		return ret;
+	
+	return 0;
 }
 
-u64 FS_GetFreeStorage(FS_SystemMediaType mediaType)
-{
+u64 FS_GetFreeStorage(FS_SystemMediaType mediaType) {
 	FS_ArchiveResource	resource = {0};
 
 	if (R_SUCCEEDED(FSUSER_GetArchiveResource(&resource, mediaType)))
@@ -164,8 +156,7 @@ u64 FS_GetFreeStorage(FS_SystemMediaType mediaType)
 	return 0;
 }
 
-u64 FS_GetTotalStorage(FS_SystemMediaType mediaType)
-{
+u64 FS_GetTotalStorage(FS_SystemMediaType mediaType) {
 	FS_ArchiveResource	resource = {0};
 
 	if (R_SUCCEEDED(FSUSER_GetArchiveResource(&resource, mediaType)))
@@ -174,8 +165,7 @@ u64 FS_GetTotalStorage(FS_SystemMediaType mediaType)
 	return 0;
 }
 
-u64 FS_GetUsedStorage(FS_SystemMediaType mediaType)
-{
+u64 FS_GetUsedStorage(FS_SystemMediaType mediaType) {
 	FS_ArchiveResource	resource = {0};
 
 	if (R_SUCCEEDED(FSUSER_GetArchiveResource(&resource, mediaType)))
@@ -184,8 +174,7 @@ u64 FS_GetUsedStorage(FS_SystemMediaType mediaType)
 	return 0;
 }
 
-Result FS_Remove(FS_Archive archive, const char *path)
-{
+Result FS_Remove(FS_Archive archive, const char *path) {
 	Result ret = 0;
 
 	u16 path_u16[strlen(path) + 1];
@@ -197,8 +186,7 @@ Result FS_Remove(FS_Archive archive, const char *path)
 	return 0;
 }
 
-Result FS_Rmdir(FS_Archive archive, const char *path)
-{
+Result FS_Rmdir(FS_Archive archive, const char *path) {
 	Result ret = 0;
 
 	u16 path_u16[strlen(path) + 1];
@@ -210,8 +198,7 @@ Result FS_Rmdir(FS_Archive archive, const char *path)
 	return 0;
 }
 
-Result FS_RmdirRecursive(FS_Archive archive, const char *path)
-{
+Result FS_RmdirRecursive(FS_Archive archive, const char *path) {
 	Result ret = 0;
 
 	u16 path_u16[strlen(path) + 1];
@@ -223,8 +210,7 @@ Result FS_RmdirRecursive(FS_Archive archive, const char *path)
 	return 0;
 }
 
-Result FS_RenameFile(FS_Archive archive, const char *old_filename, const char *new_filename)
-{
+Result FS_RenameFile(FS_Archive archive, const char *old_filename, const char *new_filename) {
 	Result ret = 0;
 
 	u16 old_filename_u16[strlen(old_filename) + 1];
@@ -239,8 +225,7 @@ Result FS_RenameFile(FS_Archive archive, const char *old_filename, const char *n
 	return 0;
 }
 
-Result FS_RenameDir(FS_Archive archive, const char *old_dirname, const char *new_dirname)
-{
+Result FS_RenameDir(FS_Archive archive, const char *old_dirname, const char *new_dirname) {
 	Result ret = 0;
 
 	u16 old_dirname_u16[strlen(old_dirname) + 1];
@@ -255,8 +240,7 @@ Result FS_RenameDir(FS_Archive archive, const char *old_dirname, const char *new
 	return 0;
 }
 
-Result FS_Open(Handle *handle, FS_Archive archive, const char *path, u32 flags)
-{
+Result FS_Open(Handle *handle, FS_Archive archive, const char *path, u32 flags) {
 	Result ret = 0;
 
 	u16 path_u16[strlen(path) + 1];
@@ -268,8 +252,7 @@ Result FS_Open(Handle *handle, FS_Archive archive, const char *path, u32 flags)
 	return 0;
 }
 
-Result FS_Read(FS_Archive archive, const char *path, u64 size, char *buf)
-{
+Result FS_Read(FS_Archive archive, const char *path, u64 size, char *buf) {
 	Handle handle;
 	Result ret = 0;
 
@@ -287,8 +270,7 @@ Result FS_Read(FS_Archive archive, const char *path, u64 size, char *buf)
 	return 0;
 }
 
-Result FS_Write(FS_Archive archive, const char *path, const char *buf)
-{
+Result FS_Write(FS_Archive archive, const char *path, const char *buf) {
 	Handle handle;
 	Result ret = 0;
 	
@@ -333,13 +315,11 @@ Result FS_Write(FS_Archive archive, const char *path, const char *buf)
 	return 0;
 }*/
 
-char *FS_GetFileTimestamp(FS_Archive archive, char *path)
-{
-	static char timeStr[20];
+char *FS_GetFileTimestamp(char *path) {
+	static char timeStr[60];
 	u64 mtime = 0;
 
-	if (R_SUCCEEDED(sdmc_getmtime(path, &mtime)))
-	{
+	if (R_SUCCEEDED(sdmc_getmtime(path, &mtime))) {
 		time_t mt = mtime;
 		struct tm *timeStruct = gmtime(&mt);
 
@@ -350,8 +330,10 @@ char *FS_GetFileTimestamp(FS_Archive archive, char *path)
 		int month = timeStruct->tm_mon + 1; // January being 0
 		int year = timeStruct->tm_year + 1900;
 
-		snprintf(timeStr, sizeof(timeStr), "%d/%d/%d %2i:%02i", year, month, day, hours, minutes);
+		snprintf(timeStr, 60, "%d/%d/%d %2i:%02i", year, month, day, hours, minutes);
 	}
+	else
+		return NULL;
 
 	return timeStr;
 }

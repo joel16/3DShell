@@ -11,12 +11,10 @@
 
 #include "dmc_unrar.c"
 
-static char *Archive_GetDirPat(char *path)
-{
+static char *Archive_GetDirPat(char *path) {
 	char *e = strrchr(path, '/');
 
-	if (!e)
-	{
+	if (!e) {
 		char* buf = strdup(path);
 		return buf;
 	}
@@ -29,8 +27,7 @@ static char *Archive_GetDirPat(char *path)
 	return str;
 }
 
-static char *Archive_GetFilename(dmc_unrar_archive *archive, size_t i)
-{
+static char *Archive_GetFilename(dmc_unrar_archive *archive, size_t i) {
 	size_t size = dmc_unrar_get_filename(archive, i, 0, 0);
 	if (!size)
 		return 0;
@@ -40,15 +37,13 @@ static char *Archive_GetFilename(dmc_unrar_archive *archive, size_t i)
 		return 0;
 
 	size = dmc_unrar_get_filename(archive, i, filename, size);
-	if (!size)
-	{
+	if (!size) {
 		free(filename);
 		return 0;
 	}
 
 	dmc_unrar_unicode_make_valid_utf8(filename);
-	if (filename[0] == '\0')
-	{
+	if (filename[0] == '\0') {
 		free(filename);
 		return 0;
 	}
@@ -56,8 +51,7 @@ static char *Archive_GetFilename(dmc_unrar_archive *archive, size_t i)
 	return filename;
 }
 
-static const char *Archive_GetFilenameWithoutDir(const char *filename)
-{
+/*static const char *Archive_GetFilenameWithoutDir(const char *filename) {
 	if (!filename)
 		return 0;
 
@@ -69,23 +63,20 @@ static const char *Archive_GetFilenameWithoutDir(const char *filename)
 		return 0;
 
 	return p + 1;
-}
+}*/
 
-static const char *Archive_GetFileExt(const char *filename)
-{
+static const char *Archive_GetFileExt(const char *filename) {
 	const char *ext = strrchr(filename, '.');
 	return (ext && ext != filename) ? ext : (filename + strlen(filename));
 }
 
-static Result unzExtractCurrentFile(unzFile *unzHandle, int *path)
-{
+static Result unzExtractCurrentFile(unzFile *unzHandle, int *path) {
 	Result res = 0;
 	char filename[256];
 	unsigned int bufsize = (64 * 1024);
 
 	unz_file_info file_info;
-	if ((res = unzGetCurrentFileInfo(unzHandle, &file_info, filename, sizeof(filename), NULL, 0, NULL, 0)) != RL_SUCCESS)
-	{
+	if ((res = unzGetCurrentFileInfo(unzHandle, &file_info, filename, sizeof(filename), NULL, 0, NULL, 0)) != RL_SUCCESS) {
 		unzClose(unzHandle);
 		return -1;
 	}
@@ -96,13 +87,11 @@ static Result unzExtractCurrentFile(unzFile *unzHandle, int *path)
 
 	char *filenameWithoutPath = Utils_Basename(filename);
 
-	if ((*filenameWithoutPath) == '\0')
-	{
+	if ((*filenameWithoutPath) == '\0') {
 		if ((*path) == 0)
 			mkdir(filename, 0777);
 	}
-	else
-	{
+	else {
 		const char *write;
 
 		if ((*path) == 0)
@@ -110,8 +99,7 @@ static Result unzExtractCurrentFile(unzFile *unzHandle, int *path)
 		else
 			write = filenameWithoutPath;
 		
-		if ((res = unzOpenCurrentFile(unzHandle)) != UNZ_OK)
-		{
+		if ((res = unzOpenCurrentFile(unzHandle)) != UNZ_OK) {
 			unzClose(unzHandle);
 			free(buf);
 			return res;
@@ -119,8 +107,7 @@ static Result unzExtractCurrentFile(unzFile *unzHandle, int *path)
 
 		FILE *out = fopen(write, "wb");
 
-		if ((out == NULL) && ((*path) == 0) && (filenameWithoutPath != (char *)filename))
-		{
+		if ((out == NULL) && ((*path) == 0) && (filenameWithoutPath != (char *)filename)) {
 			char c = *(filenameWithoutPath - 1);
 			*(filenameWithoutPath - 1) = '\0';
 			mkdir(write, 0777);
@@ -128,8 +115,7 @@ static Result unzExtractCurrentFile(unzFile *unzHandle, int *path)
 			out = fopen(write, "wb");
 		}
 
-		do
-		{
+		do {
 			res = unzReadCurrentFile(unzHandle, buf, bufsize);
 
 			if (res < 0)
@@ -151,8 +137,7 @@ static Result unzExtractCurrentFile(unzFile *unzHandle, int *path)
 	return res;
 }
 
-static Result unzExtractAll(const char *src, unzFile *unzHandle)
-{
+static Result unzExtractAll(const char *src, unzFile *unzHandle) {
 	Result res = 0;
 	int path = 0;
 	char *filename = Utils_Basename(src);
@@ -160,23 +145,19 @@ static Result unzExtractAll(const char *src, unzFile *unzHandle)
 	unz_global_info global_info;
 	memset(&global_info, 0, sizeof(unz_global_info));
 	
-	if ((res = unzGetGlobalInfo(unzHandle, &global_info)) != UNZ_OK) // Get info about the zip file
-	{
+	if ((res = unzGetGlobalInfo(unzHandle, &global_info)) != UNZ_OK) { // Get info about the zip file.
 		unzClose(unzHandle);
 		return res;
 	}
 
-	for (unsigned int i = 0; i < global_info.number_entry; i++)
-	{
+	for (unsigned int i = 0; i < global_info.number_entry; i++) {
 		ProgressBar_DisplayProgress("Extracting", filename, i, global_info.number_entry);
 
 		if ((res = unzExtractCurrentFile(unzHandle, &path)) != UNZ_OK)
 			break;
 
-		if ((i + 1) < global_info.number_entry)
-		{
-			if ((res = unzGoToNextFile(unzHandle)) != UNZ_OK) // Could not read next file.
-			{
+		if ((i + 1) < global_info.number_entry) {
+			if ((res = unzGoToNextFile(unzHandle)) != UNZ_OK) { // Could not read next file.
 				unzClose(unzHandle);
 				return res;
 			}
@@ -186,8 +167,7 @@ static Result unzExtractAll(const char *src, unzFile *unzHandle)
 	return res;
 }
 
-Result Archive_ExtractZIP(const char *src, const char *dst)
-{
+Result Archive_ExtractZIP(const char *src, const char *dst) {
 	char temp_file[512];
 	char temp_path[512];
 
@@ -211,8 +191,7 @@ Result Archive_ExtractZIP(const char *src, const char *dst)
 	return res;
 }
 
-Result Archive_ExtractRAR(const char *src, const char *dst)
-{
+Result Archive_ExtractRAR(const char *src, const char *dst) {
 	char temp_file[512];
 	char temp_path[512];
 
@@ -237,41 +216,35 @@ Result Archive_ExtractRAR(const char *src, const char *dst)
 		return -1;
 
 	size_t count = dmc_unrar_get_file_count(&rar_archive);
-	for (size_t i = 0; i < count; i++)
-	{
+	for (size_t i = 0; i < count; i++) {
 		char *name = Archive_GetFilename(&rar_archive, i);
 		char temp[512];
 		snprintf(temp, 512, "%s%s", dst, Archive_GetDirPat(name));
 		
-		if (!FS_DirExists(archive, temp))
-		{
+		if (!FS_DirExists(archive, temp)) {
 			if (strcmp(Archive_GetFileExt(temp), "") == 0)
 				FS_MakeDir(archive, temp);
 		}
 
-		const dmc_unrar_file *file = dmc_unrar_get_file_stat(&rar_archive, i);
+		//const dmc_unrar_file *file = dmc_unrar_get_file_stat(&rar_archive, i);
 
 		ProgressBar_DisplayProgress("Extracting", Utils_Basename(name), i, count);
 
-		const char *filename = Archive_GetFilenameWithoutDir(name);
+		//const char *filename = Archive_GetFilenameWithoutDir(name);
 
-		if (name && !dmc_unrar_file_is_directory(&rar_archive, i)) 
-		{
+		if (name && !dmc_unrar_file_is_directory(&rar_archive, i)) {
 			dmc_unrar_return supported = dmc_unrar_file_is_supported(&rar_archive, i);
 			
-			if (supported == DMC_UNRAR_OK)
-			{
+			if (supported == DMC_UNRAR_OK) {
 				dmc_unrar_return extracted = dmc_unrar_extract_file_to_path(&rar_archive, i, name, NULL, true);
 				
-				if (extracted != DMC_UNRAR_OK)
-				{
+				if (extracted != DMC_UNRAR_OK) {
 					free(name);
 					return -1;
 				}
 
 			}
-			else
-			{
+			else {
 				free(name);
 				return -1;
 			}

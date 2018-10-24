@@ -18,29 +18,24 @@ struct decoder_fn decoder;
 	return ndspChnIsPlaying(channel);
 }*/
 
-bool Audio_IsPaused(enum channel_e channel)
-{
+bool Audio_IsPaused(enum channel_e channel) {
 	return ndspChnIsPaused(channel);
 }
 
-bool Audio_TogglePlayback(enum channel_e channel)
-{
+bool Audio_TogglePlayback(enum channel_e channel) {
 	ndspChnSetPaused(channel, !(ndspChnIsPaused(channel)));
 	return !(ndspChnIsPaused(channel));
 }
 
-void Audio_StopPlayback(void)
-{
+void Audio_StopPlayback(void) {
 	stop = true;
 }
 
-bool Audio_IsPlaying(void)
-{
+bool Audio_IsPlaying(void) {
 	return !stop;
 }
 
-enum file_types Audio_GetMusicFileType(const char *file)
-{
+enum file_types Audio_GetMusicFileType(const char *file) {
 	Handle handle;
 	
 	u32 fileSig = 0, bytesRead = 0;
@@ -49,22 +44,19 @@ enum file_types Audio_GetMusicFileType(const char *file)
 	enum file_types file_type = FILE_TYPE_ERROR;
 	
 	/* Failure opening file */
-	if (R_FAILED(FS_Open(&handle, archive, file, FS_OPEN_READ))) 
-	{
+	if (R_FAILED(FS_Open(&handle, archive, file, FS_OPEN_READ))) {
 		FSFILE_Close(handle);
 		return -1;
 	}
 	
-	if (R_FAILED(FSFILE_Read(handle, &bytesRead, offset, &fileSig, 4)))
-	{
+	if (R_FAILED(FSFILE_Read(handle, &bytesRead, offset, &fileSig, 4))) {
 		FSFILE_Close(handle);
 		return -2;
 	}
 	
 	offset += bytesRead;
 	
-	switch(fileSig)
-	{
+	switch(fileSig) {
 		// "RIFF"
 		case 0x46464952:
 			if (WAV_Validate(file) == 0)
@@ -87,8 +79,7 @@ enum file_types Audio_GetMusicFileType(const char *file)
 			
 		// MP3 file with an ID3v2 container
 		default:
-			if ((fileSig << 16) == 0xFBFF0000 || (fileSig << 16) == 0xFAFF0000 || (fileSig << 8) == 0x33444900)
-			{
+			if ((fileSig << 16) == 0xFBFF0000 || (fileSig << 16) == 0xFAFF0000 || (fileSig << 8) == 0x33444900) {
 				file_type = FILE_TYPE_MP3;
 				break;
 			}
@@ -98,18 +89,15 @@ enum file_types Audio_GetMusicFileType(const char *file)
 	return file_type;
 }
 
-int Audio_GetPosition(void)
-{
+int Audio_GetPosition(void) {
 	return (*decoder.position)();
 }
 
-int Audio_GetLength(void)
-{
+int Audio_GetLength(void) {
 	return (*decoder.length)();
 }
 
-void Audio_PlayFile(void *path)
-{
+void Audio_PlayFile(void *path) {
 	const char *file = path;
 	s16 *buffer1 = NULL;
 	s16 *buffer2 = NULL;
@@ -120,8 +108,7 @@ void Audio_PlayFile(void *path)
 	/* Reset previous stop command */
 	stop = false;
 
-	switch(Audio_GetMusicFileType(file))
-	{
+	switch(Audio_GetMusicFileType(file)) {
 		case FILE_TYPE_WAV:
 			WAV_SetDecoder(&decoder);
 			break;
@@ -173,8 +160,7 @@ void Audio_PlayFile(void *path)
 	 */
 	while(ndspChnIsPlaying(SFX) == false);
 
-	while(stop == false)
-	{
+	while(stop == false) {
 		svcSleepThread(100 *1000);
 
 		/* When the last buffer has finished playing, break. */
@@ -184,12 +170,10 @@ void Audio_PlayFile(void *path)
 		if ((ndspChnIsPaused(SFX) == true) || (lastbuf == true))
 			continue;
 
-		if (waveBuf[0].status == NDSP_WBUF_DONE)
-		{
+		if (waveBuf[0].status == NDSP_WBUF_DONE) {
 			size_t read = (*decoder.decode)(&buffer1[0]);
 
-			if (read <= 0)
-			{
+			if (read <= 0) {
 				lastbuf = true;
 				continue;
 			}
@@ -199,12 +183,10 @@ void Audio_PlayFile(void *path)
 			ndspChnWaveBufAdd(SFX, &waveBuf[0]);
 		}
 
-		if (waveBuf[1].status == NDSP_WBUF_DONE)
-		{
+		if (waveBuf[1].status == NDSP_WBUF_DONE) {
 			size_t read = (*decoder.decode)(&buffer2[0]);
 
-			if (read <= 0)
-			{
+			if (read <= 0) {
 				lastbuf = true;
 				continue;
 			}

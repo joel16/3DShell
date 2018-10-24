@@ -11,8 +11,7 @@
 
 static u32 cpu_time_limit = 0;
 
-static void Term_Services(void)
-{
+static void Term_Services(void) {
 	Textures_Free();
 
 	if (Utils_IsN3DS())
@@ -38,8 +37,7 @@ static void Term_Services(void)
 	acExit();
 }
 
-static void Init_Services(void)
-{
+static void Init_Services(void) {
 	acInit();
 	amInit();
 	AM_QueryAvailableExternalTitleDatabase(NULL);
@@ -75,12 +73,10 @@ static void Init_Services(void)
 	Config_GetLastDirectory();
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 	Init_Services();
 
-	if (setjmp(exitJmp)) 
-	{
+	if (setjmp(exitJmp)) {
 		Term_Services();
 		return 0;
 	}

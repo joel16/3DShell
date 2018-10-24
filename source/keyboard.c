@@ -5,8 +5,7 @@
 #include "C2D_helper.h"
 #include "keyboard.h"
 
-const char *OSK_GetString(const char *initial_text, const char *hint_text)
-{
+const char *OSK_GetString(const char *initial_text, const char *hint_text) {
 	Draw_EndFrame();
 
 	static SwkbdState swkbd;

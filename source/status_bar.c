@@ -8,9 +8,8 @@
 
 static float percent_width = 0.0f;
 
-static char *Clock_GetCurrentTime(bool _12hour)
-{
-	static char buffer[10];
+static char *Clock_GetCurrentTime(bool _12hour) {
+	static char buffer[27];
 
 	time_t unix_time = time(0);
 	struct tm* time_struct = gmtime((const time_t*)&unix_time);
@@ -18,8 +17,7 @@ static char *Clock_GetCurrentTime(bool _12hour)
 	int minutes = time_struct->tm_min;
 	int amOrPm = 0;
 
-	if (_12hour)
-	{
+	if (_12hour) {
 		if (hours < 12)
 			amOrPm = 1;
 		if (hours == 0)
@@ -28,70 +26,61 @@ static char *Clock_GetCurrentTime(bool _12hour)
 			hours = hours - 12;
 
 		if ((hours >= 1) && (hours < 10))
-			snprintf(buffer, 10, "%2i:%02i %s", hours, minutes, amOrPm ? "AM" : "PM");
+			snprintf(buffer, 27, "%2i:%02i %s", hours, minutes, amOrPm ? "AM" : "PM");
 		else
-			snprintf(buffer, 10, "%2i:%02i %s", hours, minutes, amOrPm ? "AM" : "PM");
+			snprintf(buffer, 27, "%2i:%02i %s", hours, minutes, amOrPm ? "AM" : "PM");
 	}
 
 	return buffer;
 }
 
-static void StatusBar_GetBatteryStatus(int x, int y)
-{
+static void StatusBar_GetBatteryStatus(int x, int y) {
 	u8 percent = 0, state = 0;
 	char buf[5];
 
 	if (R_FAILED(PTMU_GetBatteryChargeState(&state)))
 		state = 0;
 
-	if (R_SUCCEEDED(MCUHWC_GetBatteryLevel(&percent)))
-	{
+	if (R_SUCCEEDED(MCUHWC_GetBatteryLevel(&percent))) {
 		if (percent < 20)
 			Draw_Image(battery_low, x, 1);
-		else if ((percent >= 20) && (percent < 30))
-		{
+		else if ((percent >= 20) && (percent < 30)) {
 			if (state == 1)
 				Draw_Image(battery_20_charging, x, 1);
 			else
 				Draw_Image(battery_20, x, 1);
 		}
-		else if ((percent >= 30) && (percent < 50))
-		{
+		else if ((percent >= 30) && (percent < 50)) {
 			if (state == 1)
 				Draw_Image(battery_50_charging, x, 1);
 			else
 				Draw_Image(battery_50, x, 1);
 		}
-		else if ((percent >= 50) && (percent < 60))
-		{
+		else if ((percent >= 50) && (percent < 60)) {
 			if (state == 1)
 				Draw_Image(battery_50_charging, x, 1);
 			else
 				Draw_Image(battery_50, x, 1);
 		}
-		else if ((percent >= 60) && (percent < 80))
-		{
+		else if ((percent >= 60) && (percent < 80)) {
 			if (state == 1)
 				Draw_Image(battery_60_charging, x, 1);
 			else
 				Draw_Image(battery_60, x, 1);
 		}
-		else if ((percent >= 80) && (percent < 90))
-		{
+		else if ((percent >= 80) && (percent < 90)) {
 			if (state == 1)
 				Draw_Image(battery_80_charging, x, 1);
 			else
 				Draw_Image(battery_80, x, 1);
 		}
-		else if ((percent >= 90) && (percent < 100))
-		{
+		else if ((percent >= 90) && (percent < 100)) {
 			if (state == 1)
 				Draw_Image(battery_90_charging, x, 1);
 			else
 				Draw_Image(battery_90, x, 1);
 		}
-		else if (percent == 100)
-		{
+		else if (percent == 100) {
 			if (state == 1)
 				Draw_Image(battery_full_charging, x, 1);
 			else
@@ -102,8 +91,7 @@ static void StatusBar_GetBatteryStatus(int x, int y)
 		percent_width = Draw_GetTextWidth(0.48f, buf);
 		Draw_Text((float)(x - percent_width - 5), y, 0.48f, WHITE, buf);
 	}
-	else
-	{
+	else {
 		snprintf(buf, 5, "%d%%", percent);
 		percent_width = Draw_GetTextWidth(0.45f, buf);
 		Draw_Text((float)(x - percent_width - 5), y, 0.45f, WHITE, buf);
@@ -111,10 +99,8 @@ static void StatusBar_GetBatteryStatus(int x, int y)
 	}
 }
 
-static void StatusBar_GetWifiStatus(int x)
-{
-	switch(osGetWifiStrength())
-	{
+static void StatusBar_GetWifiStatus(int x) {
+	switch(osGetWifiStrength()) {
 		case 0:
 			Draw_Image(icon_wifi_0, x, 2);
 			break;
@@ -130,8 +116,7 @@ static void StatusBar_GetWifiStatus(int x)
 	}
 }
 
-void StatusBar_DisplayTime(void)
-{
+void StatusBar_DisplayTime(void) {
 	float width = 0, height = 0;
 	Draw_GetTextSize(0.45f, &width, &height, Clock_GetCurrentTime(true));
 

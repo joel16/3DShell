@@ -63,7 +63,7 @@ ICON_FLAGS          :=	nosavebackups,visible
 #---------------------------------------------------------------------------------
 ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
-CFLAGS	:=	-g -Werror -O2 -mword-relocations \
+CFLAGS	:=	-g -Wall -Wextra -O3 -mword-relocations \
 			-fomit-frame-pointer -ffunction-sections \
 			-DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO) \
 	        -DAPP_TITLE="\"$(APP_TITLE)\"" \

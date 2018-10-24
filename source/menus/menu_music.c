@@ -21,8 +21,7 @@
 #define MUSIC_STATUS_BG_COLOUR  C2D_Color32(43, 53, 61, 255)
 #define MUSIC_SEPARATOR_COLOUR  C2D_Color32(34, 41, 48, 255)
 
-typedef enum
-{
+typedef enum {
 	MUSIC_STATE_NONE,   // 0
 	MUSIC_STATE_REPEAT, // 1
 	MUSIC_STATE_SHUFFLE // 2
@@ -33,37 +32,30 @@ static bool isMP3 = false;
 static char playlist[512][512], title[128];
 static int count = 0, selection = 0, state = 0;
 
-static Result Menu_GetMusicList(void)
-{
+static Result Menu_GetMusicList(void) {
 	Handle dir;
 	Result ret = 0;
 	
-	if (R_SUCCEEDED(ret = FSUSER_OpenDirectory(&dir, archive, fsMakePath(PATH_ASCII, cwd))))
-	{
+	if (R_SUCCEEDED(ret = FSUSER_OpenDirectory(&dir, archive, fsMakePath(PATH_ASCII, cwd)))) {
 		u32 entryCount = 0;
 		FS_DirectoryEntry* entries = (FS_DirectoryEntry*) calloc(MAX_FILES, sizeof(FS_DirectoryEntry));
 		
-		if (R_SUCCEEDED(ret = FSDIR_Read(dir, &entryCount, MAX_FILES, entries)))
-		{
+		if (R_SUCCEEDED(ret = FSDIR_Read(dir, &entryCount, MAX_FILES, entries))) {
 			qsort(entries, entryCount, sizeof(FS_DirectoryEntry), Utils_Alphasort);
-			u8 name[256] = {'\0'};
+			char name[256] = {'\0'};
 
-			for (u32 i = 0; i < entryCount; i++) 
-			{
+			for (u32 i = 0; i < entryCount; i++) {
 				Utils_U16_To_U8(&name[0], entries[i].name, 255);
-				int length = strlen(name);
 
-				if ((strncasecmp(entries[i].shortExt, "mp3", 3) == 0) || (strncasecmp(entries[i].shortExt, "ogg", 3) == 0) 
-					|| (strncasecmp(entries[i].shortExt, "fla", 3) == 0) || (strncasecmp(entries[i].shortExt, "wav", 3) == 0))
-				{
+				if ((!strncasecmp(entries[i].shortExt, "mp3", 3)) || (!strncasecmp(entries[i].shortExt, "ogg", 3)) || (!strncasecmp(entries[i].shortExt, "fla", 3)) 
+					|| (!strncasecmp(entries[i].shortExt, "wav", 3))) {
 					strcpy(playlist[count], cwd);
 					strcpy(playlist[count] + strlen(playlist[count]), name);
 					count++;
 				}
 			}
 		}
-		else
-		{
+		else {
 			free(entries);
 			return ret;
 		}
@@ -75,19 +67,20 @@ static Result Menu_GetMusicList(void)
 	}
 	else
 		return ret;
+
+	return 0;
 }
 
-static int Music_GetCurrentIndex(char *path)
-{
-	for(int i = 0; i < count; ++i)
-	{
+static int Music_GetCurrentIndex(char *path) {
+	for(int i = 0; i < count; ++i) {
 		if (!strcmp(playlist[i], path))
 			return i;
 	}
+
+	return 0;
 }
 
-static void Music_Play(char *path)
-{
+static void Music_Play(char *path) {
 	Menu_GetMusicList();
 
 	/* Reset previous stop command */
@@ -104,17 +97,14 @@ static void Music_Play(char *path)
 }
 
 
-static void Music_HandleNext(bool forward, int state)
-{
-	if (state == MUSIC_STATE_NONE)
-	{
+static void Music_HandleNext(bool forward, int state) {
+	if (state == MUSIC_STATE_NONE) {
 		if (forward)
 			selection++;
 		else
 			selection--;
 	}
-	else if (state == MUSIC_STATE_SHUFFLE)
-	{
+	else if (state == MUSIC_STATE_SHUFFLE) {
 		int old_selection = selection;
 		time_t t;
 		srand((unsigned) time(&t));
@@ -127,7 +117,6 @@ static void Music_HandleNext(bool forward, int state)
 	Utils_SetMax(&selection, 0, (count - 1));
 	Utils_SetMin(&selection, (count - 1), 0);
 
-	wait(1);
 	Audio_StopPlayback();
 	memset(title, 0, sizeof(title));
 
@@ -143,15 +132,13 @@ static void Music_HandleNext(bool forward, int state)
 	Music_Play(playlist[selection]);
 }
 
-void Menu_PlayMusic(char *path)
-{
+void Menu_PlayMusic(char *path) {
 	aptSetSleepAllowed(false);
 	Music_Play(path);
 
 	bool locked = false;
 	
-	while (aptMainLoop())
-	{
+	while (aptMainLoop()) {
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
 		C2D_TargetClear(RENDER_TOP, config_dark_theme? BLACK_BG : WHITE);
 		C2D_TargetClear(RENDER_BOTTOM, config_dark_theme? BLACK_BG : WHITE);
@@ -169,8 +156,7 @@ void Menu_PlayMusic(char *path)
 		Draw_Rect(178, 57, 222, 175, C2D_Color32(45, 48, 50, 255));
 		Draw_Rect(183, 62, 212, 165, C2D_Color32(46, 49, 51, 255));
 
-		if (isMP3) // Only print out ID3 tag info for MP3
-		{	
+		if (isMP3) { // Only print out ID3 tag info for MP3
 			Draw_Text(5, 22, 0.5f, WHITE, strupr(title));
 			Draw_Text(5, 38, 0.45f, WHITE, strupr(ID3.artist));
 
@@ -213,37 +199,28 @@ void Menu_PlayMusic(char *path)
 			Audio_TogglePlayback(SFX);
 
 		if ((kDown & KEY_Y) || ((TouchInRect(((320 - btn_repeat.subtex->width) / 2) + 65, ((240 - btn_shuffle.subtex->height) / 2) + 35, 
-			(((320 - btn_repeat.subtex->width) / 2) + 65) + 30, (((240 - btn_shuffle.subtex->height) / 2) + 35) + 30)) && (kDown & KEY_TOUCH)))
-		{
+			(((320 - btn_repeat.subtex->width) / 2) + 65) + 30, (((240 - btn_shuffle.subtex->height) / 2) + 35) + 30)) && (kDown & KEY_TOUCH))) {
 			if (state == MUSIC_STATE_REPEAT)
 				state = MUSIC_STATE_NONE;
 			else
 				state = MUSIC_STATE_REPEAT;
 		}
 		else if ((kDown & KEY_X) || ((TouchInRect(((320 - btn_shuffle.subtex->width) / 2) - 65, ((240 - btn_shuffle.subtex->height) / 2) + 35, 
-			(((320 - btn_shuffle.subtex->width) / 2) - 65) + 30, (((240 - btn_shuffle.subtex->height) / 2) + 35) + 30)) && (kDown & KEY_TOUCH)))
-		{
+			(((320 - btn_shuffle.subtex->width) / 2) - 65) + 30, (((240 - btn_shuffle.subtex->height) / 2) + 35) + 30)) && (kDown & KEY_TOUCH))) {
 			if (state == MUSIC_STATE_SHUFFLE)
 				state = MUSIC_STATE_NONE;
 			else
 				state = MUSIC_STATE_SHUFFLE;
 		}
 
-		if (!locked)
-		{
+		if (!locked) {
 			if ((kDown & KEY_LEFT) || (kDown & KEY_L) || ((TouchInRect(((320 - btn_rewind.subtex->width) / 2) - 80, ((240 - btn_rewind.subtex->height) / 2), 
-				(((320 - btn_rewind.subtex->width) / 2) - 80) + 45, ((240 - btn_rewind.subtex->height) / 2) + 45)) && (kDown & KEY_TOUCH)))
-			{
-				wait(1);
-				
+				(((320 - btn_rewind.subtex->width) / 2) - 80) + 45, ((240 - btn_rewind.subtex->height) / 2) + 45)) && (kDown & KEY_TOUCH))) {
 				if (count != 0)
 					Music_HandleNext(false, MUSIC_STATE_NONE);
 			}
 			else if ((kDown & KEY_RIGHT) || (kDown & KEY_R) || ((TouchInRect(((320 - btn_forward.subtex->width) / 2) + 80, ((240 - btn_forward.subtex->height) / 2), 
-				(((320 - btn_forward.subtex->width) / 2) + 80) + 45, ((240 - btn_forward.subtex->height) / 2) + 45)) && (kDown & KEY_TOUCH)))
-			{
-				wait(1);
-				
+				(((320 - btn_forward.subtex->width) / 2) + 80) + 45, ((240 - btn_forward.subtex->height) / 2) + 45)) && (kDown & KEY_TOUCH))) {
 				if (count != 0)
 					Music_HandleNext(true, MUSIC_STATE_NONE);
 			}
@@ -251,26 +228,19 @@ void Menu_PlayMusic(char *path)
 				Screenshot_Capture();
 		}
 
-		if (kDown & KEY_B)
-		{
-			wait(1);
+		if (kDown & KEY_B) {
 			Audio_StopPlayback();
 			break;
 		}
 
-		if (!Audio_IsPlaying())
-		{
-			wait(1);
-
-			if (state == MUSIC_STATE_NONE)
-			{
+		if (!Audio_IsPlaying()) {
+			if (state == MUSIC_STATE_NONE) {
 				if (count != 0)
 					Music_HandleNext(true, MUSIC_STATE_NONE);
 			}
 			else if (state == MUSIC_STATE_REPEAT)
 				Music_HandleNext(false, MUSIC_STATE_REPEAT);
-			else if (state == MUSIC_STATE_SHUFFLE)
-			{
+			else if (state == MUSIC_STATE_SHUFFLE) {
 				if (count != 0)
 					Music_HandleNext(false, MUSIC_STATE_SHUFFLE);
 			}
@@ -281,8 +251,7 @@ void Menu_PlayMusic(char *path)
 	threadFree(thread);
 	
 	// Clear ID3
-	if (isMP3)
-	{
+	if (isMP3) {
 		memset(ID3.artist, 0, 30);
 		memset(ID3.title, 0, 30);
 		memset(ID3.album, 0, 30);
@@ -294,5 +263,4 @@ void Menu_PlayMusic(char *path)
 	memset(playlist, 0, sizeof(playlist[0][0]) * 512 * 512);
 	count = 0;
 	aptSetSleepAllowed(true);
-	return;
 }

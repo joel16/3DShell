@@ -5,8 +5,7 @@
 
 static C2D_SpriteSheet spritesheet;
 
-void Textures_Load(void)
-{
+void Textures_Load(void) {
 	spritesheet = C2D_SpriteSheetLoad("romfs:/res/drawable/sprites.t3x");
 
 	icon_app = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_type_executable_idx);
@@ -94,7 +93,6 @@ void Textures_Load(void)
 	battery_unknown = C2D_SpriteSheetGetImage(spritesheet, sprites_battery_unknown_idx);
 }
 
-void Textures_Free(void)
-{
+void Textures_Free(void) {
 	C2D_SpriteSheetFree(spritesheet);
 }

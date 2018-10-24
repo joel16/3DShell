@@ -14,29 +14,23 @@
 #include "touch.h"
 #include "utils.h"
 
-void Menu_DisplayFTP(void)
-{
+void Menu_DisplayFTP(void) {
 	ftp_init();
 
 	Result ret = 0;
-
-	touchPosition touch;
-
-	char buf[30], hostname[128];
+	char buf[137], hostname[128];
 	u32 wifiStatus = 0;
 
 	int pBar = 0, xlim = 270;
 
 	ret = gethostname(hostname, sizeof(hostname));
 
-	if (R_SUCCEEDED(gspLcdInit()))
-	{
+	if (R_SUCCEEDED(gspLcdInit())) {
 		GSPLCD_PowerOffBacklight(GSPLCD_SCREEN_TOP);
 		gspLcdExit();
 	}
 
-	while(MENU_STATE == MENU_STATE_FTP)
-	{
+	while(MENU_STATE == MENU_STATE_FTP) {
 		ftp_loop();
 		
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
@@ -49,10 +43,9 @@ void Menu_DisplayFTP(void)
 			
 		Menu_DrawMenuBar();
 
-		if ((wifiStatus != 0) && R_SUCCEEDED(ret))
-		{
+		if ((wifiStatus != 0) && R_SUCCEEDED(ret)) {
 			Draw_Text(((320 - Draw_GetTextWidth(0.48f, "FTP initialized")) / 2), 40, 0.48f, WHITE, "FTP initialized");
-			sprintf(buf, "IP: %s:5000", R_FAILED(ret)? "Failed to get IP" : hostname);
+			snprintf(buf, 137, "IP: %s:5000", R_FAILED(ret)? "Failed to get IP" : hostname);
 
 			if (strlen(ftp_accepted_connection) != 0)
 				Draw_Text(((320 - Draw_GetTextWidth(0.48f, ftp_accepted_connection)) / 2), 80, 0.48f, WHITE, ftp_accepted_connection);
@@ -62,8 +55,7 @@ void Menu_DisplayFTP(void)
 			if (strlen(ftp_file_transfer) != 0)
 				Draw_Text(((320 - Draw_GetTextWidth(0.45f, ftp_file_transfer)) / 2), 150, 0.45f, WHITE, ftp_file_transfer);
 
-			if (isTransfering)
-			{
+			if (isTransfering) {
 				Draw_Rect(50, 140, 220, 3, config_dark_theme? STATUS_BAR_DARK : STATUS_BAR_LIGHT);
 				Draw_Rect(pBar, 140, 40, 3, WHITE);
 
@@ -76,10 +68,9 @@ void Menu_DisplayFTP(void)
 					pBar = 34;
 			}
 		}
-		else
-		{
+		else {
 			Draw_Text(((320 - Draw_GetTextWidth(0.48f, "Failed to initialize FTP.")) / 2), 40, 0.48f, WHITE, "Failed to initialize FTP.");
-			sprintf(buf, "WiFi not enabled.");
+			snprintf(buf, 18, "WiFi not enabled.");
 		}
 
 		Draw_Text(((320 - Draw_GetTextWidth(0.48f, buf)) / 2), 60, 0.48f, WHITE, buf);
@@ -98,8 +89,7 @@ void Menu_DisplayFTP(void)
 	memset(ftp_file_transfer, 0, 50); // Empty transfer status
 	ftp_exit();
 
-	if (R_SUCCEEDED(gspLcdInit()))
-	{
+	if (R_SUCCEEDED(gspLcdInit())) {
 		GSPLCD_PowerOnBacklight(GSPLCD_SCREEN_TOP);
 		gspLcdExit();
 	}

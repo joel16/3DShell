@@ -11,15 +11,13 @@ const char *config_file =
 	"config_hidden_files = %d\n"
 	"config_sort_by = %d";
 
-Result Config_Save(bool config_dark_theme, bool config_hidden_files, int config_sort_by)
-{
+Result Config_Save(bool config_dark_theme, bool config_hidden_files, int config_sort_by) {
 	Result ret = 0;
 	
 	char *buf = (char *)malloc(256);
 	snprintf(buf, 256, config_file, config_dark_theme, config_hidden_files, config_sort_by);
 	
-	if (R_FAILED(ret = FS_Write(archive, "/3ds/3DShell/config.cfg", buf)))
-	{
+	if (R_FAILED(ret = FS_Write(archive, "/3ds/3DShell/config.cfg", buf))) {
 		free(buf);
 		return ret;
 	}
@@ -28,13 +26,10 @@ Result Config_Save(bool config_dark_theme, bool config_hidden_files, int config_
 	return 0;
 }	
 	
-Result Config_Load(void)
-{
-	Handle handle;
+Result Config_Load(void) {
 	Result ret = 0;
 	
-	if (!FS_FileExists(archive, "/3ds/3DShell/config.cfg"))
-	{
+	if (!FS_FileExists(archive, "/3ds/3DShell/config.cfg")) {
 		// set these to the following by default:
 		config_dark_theme = false;
 		config_hidden_files = true;
@@ -49,8 +44,7 @@ Result Config_Load(void)
 	size = (u32)size64;
 	char *buf = (char *)malloc(size + 1);
 
-	if (R_FAILED(ret = FS_Read(archive, "/3ds/3DShell/config.cfg", size, buf)))
-	{
+	if (R_FAILED(ret = FS_Read(archive, "/3ds/3DShell/config.cfg", size, buf))) {
 		free(buf);
 		return ret;
 	}
@@ -63,18 +57,14 @@ Result Config_Load(void)
 	return 0;
 }
 
-Result Config_GetLastDirectory(void)
-{
-	Handle handle;
+Result Config_GetLastDirectory(void) {
 	Result ret = 0;
 	
-	if (!FS_FileExists(archive, "/3ds/3DShell/lastdir.txt"))
-	{
+	if (!FS_FileExists(archive, "/3ds/3DShell/lastdir.txt")) {
 		FS_Write(archive, "/3ds/3DShell/lastdir.txt", START_PATH);
 		strcpy(cwd, START_PATH); // Set Start Path to "sdmc:/" if lastDir.txt hasn't been created.
 	}
-	else
-	{
+	else {
 		u64 size64 = 0;
 		u32 size = 0;
 
@@ -82,8 +72,7 @@ Result Config_GetLastDirectory(void)
 		size = (u32)size64;
 		char *buf = (char *)malloc(size + 1);
 
-		if (R_FAILED(ret = FS_Read(archive, "/3ds/3DShell/lastdir.txt", size, buf)))
-		{
+		if (R_FAILED(ret = FS_Read(archive, "/3ds/3DShell/lastdir.txt", size, buf))) {
 			free(buf);
 			return ret;
 		}

@@ -12,8 +12,7 @@
 static int selection = 0, max_items = 3;
 static float confirm_width = 0, confirm_height = 0;
 
-void Menu_DisplayAbout(void)
-{
+void Menu_DisplayAbout(void) {
 	float text_width1 = 0, text_width2 = 0, text_width3 = 0, text_width4 = 0;
 	Draw_GetTextSize(0.45f, &text_width1, NULL, "3D Shell vx.x.x - xxxxxxx");
 	Draw_GetTextSize(0.45f, &text_width2, NULL, "Author: Joel16");
@@ -34,8 +33,7 @@ void Menu_DisplayAbout(void)
 	Draw_Text(288 - confirm_width, (159 - confirm_height), 0.45f, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "OK");
 }
 
-void Menu_ControlAbout(u32 input)
-{
+void Menu_ControlAbout(u32 input) {
 	if ((input & KEY_B) || (input & KEY_A))
 		MENU_STATE = MENU_STATE_SETTINGS;
 
@@ -44,8 +42,7 @@ void Menu_ControlAbout(u32 input)
 			MENU_STATE = MENU_STATE_SETTINGS;
 }
 
-void Menu_DisplaySortSettings(void)
-{
+void Menu_DisplaySortSettings(void) {
 	Draw_Rect(0, 0, 320, 20, config_dark_theme? STATUS_BAR_DARK : MENU_BAR_LIGHT);
 	Draw_Rect(0, 20, 320, 220, config_dark_theme? BLACK_BG : WHITE);
 
@@ -71,15 +68,12 @@ void Menu_DisplaySortSettings(void)
 	Draw_Image(config_sort_by == 3? (config_dark_theme? icon_radio_dark_on : icon_radio_on) : (config_dark_theme? icon_radio_dark_off : icon_radio_off), 270, 180);
 }
 
-void Menu_ControlSortSettings(u32 input)
-{
+void Menu_ControlSortSettings(u32 input) {
 	if (input & KEY_B)
 		MENU_STATE = MENU_STATE_SETTINGS;
 
-	if (input & KEY_A)
-	{
-		switch (selection)
-		{
+	if (input & KEY_A) {
+		switch (selection) {
 			case 0:
 				config_sort_by = 0;
 				break;
@@ -103,44 +97,36 @@ void Menu_ControlSortSettings(u32 input)
 	else if (input & KEY_DUP)
 		selection--;
 
-	if (TouchInRect(0, 55, 320, 94))
-	{
+	if (TouchInRect(0, 55, 320, 94)) {
 		selection = 0;
 		
-		if (input & KEY_TOUCH)
-		{
+		if (input & KEY_TOUCH) {
 			config_sort_by = 0;
 			Dirbrowse_PopulateFiles(true);
 			Config_Save(config_dark_theme, config_hidden_files, config_sort_by);
 		}
 	}
-	else if (TouchInRect(0, 95, 320, 134))
-	{
+	else if (TouchInRect(0, 95, 320, 134)) {
 		selection = 1;
-		if (input & KEY_TOUCH)
-		{
+		if (input & KEY_TOUCH) {
 			config_sort_by = 1;
 			Dirbrowse_PopulateFiles(true);
 			Config_Save(config_dark_theme, config_hidden_files, config_sort_by);
 		}
 	}
-	else if (TouchInRect(0, 135, 320, 174))
-	{
+	else if (TouchInRect(0, 135, 320, 174)) {
 		selection = 2;
 		
-		if (input & KEY_TOUCH)
-		{
+		if (input & KEY_TOUCH) {
 			config_sort_by = 2;
 			Dirbrowse_PopulateFiles(true);
 			Config_Save(config_dark_theme, config_hidden_files, config_sort_by);
 		}
 	}
-	else if (TouchInRect(0, 175, 320, 215))
-	{
+	else if (TouchInRect(0, 175, 320, 215)) {
 		selection = 3;
 		
-		if (input & KEY_TOUCH)
-		{
+		if (input & KEY_TOUCH) {
 			config_sort_by = 3;
 			Dirbrowse_PopulateFiles(true);
 			Config_Save(config_dark_theme, config_hidden_files, config_sort_by);
@@ -151,8 +137,7 @@ void Menu_ControlSortSettings(u32 input)
 	Utils_SetMin(&selection, max_items, 0);
 }
 
-void Menu_DisplaySettings(void)
-{
+void Menu_DisplaySettings(void) {
 	Draw_Rect(0, 0, 320, 20, config_dark_theme? STATUS_BAR_DARK : MENU_BAR_LIGHT);
 	Draw_Rect(0, 20, 320, 220, config_dark_theme? BLACK_BG : WHITE);
 
@@ -180,15 +165,12 @@ void Menu_DisplaySettings(void)
 	Draw_Image(config_hidden_files? (config_dark_theme? icon_toggle_dark_on : icon_toggle_on) : icon_toggle_off, 270, 137);
 }
 
-void Menu_ControlSettings(u32 input)
-{
+void Menu_ControlSettings(u32 input) {
 	if (input & KEY_B)
 		MENU_STATE = MENU_STATE_HOME;
 
-	if (input & KEY_A)
-	{
-		switch (selection)
-		{
+	if (input & KEY_A) {
+		switch (selection) {
 			case 0:
 				MENU_STATE = MENU_STATE_SORT;
 				break;
@@ -212,36 +194,30 @@ void Menu_ControlSettings(u32 input)
 	else if (input & KEY_DUP)
 		selection--;
 
-	if (TouchInRect(0, 55, 320, 94))
-	{
+	if (TouchInRect(0, 55, 320, 94)) {
 		selection = 0;
 
 		if (input & KEY_TOUCH)
 			MENU_STATE = MENU_STATE_SORT;
 	}
-	else if (TouchInRect(0, 95, 320, 134))
-	{
+	else if (TouchInRect(0, 95, 320, 134)) {
 		selection = 1;
 		
-		if (input & KEY_TOUCH)
-		{
+		if (input & KEY_TOUCH) {
 			config_dark_theme = !config_dark_theme;
 			Config_Save(config_dark_theme, config_hidden_files, config_sort_by);
 		}
 	}
-	else if (TouchInRect(0, 135, 320, 174))
-	{
+	else if (TouchInRect(0, 135, 320, 174)) {
 		selection = 2;
 		
-		if (input & KEY_TOUCH)
-		{
+		if (input & KEY_TOUCH) {
 			config_hidden_files = !config_hidden_files;
 			Config_Save(config_dark_theme, config_hidden_files, config_sort_by);
 			Dirbrowse_PopulateFiles(true);
 		}
 	}
-	else if (TouchInRect(0, 175, 320, 215))
-	{
+	else if (TouchInRect(0, 175, 320, 215)) {
 		selection = 3;
 		
 		if (input & KEY_TOUCH)

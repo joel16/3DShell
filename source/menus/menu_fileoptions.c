@@ -44,8 +44,7 @@ static float delete_cancel_width = 0, delete_cancel_height = 0;
 static float properties_ok_width = 0, properties_ok_height = 0;
 static float options_cancel_width = 0, options_cancel_height = 0;
 
-void FileOptions_ResetClipboard(void)
-{
+void FileOptions_ResetClipboard(void) {
 	multi_select_index = 0;
 	memset(multi_select, 0, sizeof(multi_select));
 	memset(multi_select_indices, 0, sizeof(multi_select_indices));
@@ -53,8 +52,7 @@ void FileOptions_ResetClipboard(void)
 	memset(multi_select_paths, 0, sizeof(multi_select_paths));
 }
 
-static Result FileOptions_CreateFolder(void)
-{
+static Result FileOptions_CreateFolder(void) {
 	char *buf = (char *)malloc(256);
 	strcpy(buf, OSK_GetString("", "Enter name"));
 
@@ -71,8 +69,7 @@ static Result FileOptions_CreateFolder(void)
 	return 0;
 }
 
-static Result FileOptions_Rename(void)
-{
+static Result FileOptions_Rename(void) {
 	Result ret = 0;
 	File *file = Dirbrowse_GetFileIndex(position);
 
@@ -94,13 +91,11 @@ static Result FileOptions_Rename(void)
 	strcat(newPath, buf);
 	free(buf);
 
-	if (file->isDir)
-	{
+	if (file->isDir) {
 		if (R_FAILED(ret = FS_RenameDir(archive, oldPath, newPath)))
 			return ret;
 	}
-	else
-	{
+	else {
 		if (R_FAILED(ret = FS_RenameFile(archive, oldPath, newPath)))
 			return ret;
 	}
@@ -109,8 +104,7 @@ static Result FileOptions_Rename(void)
 	return 0;
 }
 
-static int FileOptions_DeleteFile(void)
-{
+static int FileOptions_DeleteFile(void) {
 	File *file = Dirbrowse_GetFileIndex(position);
 
 	if (file == NULL)
@@ -125,13 +119,11 @@ static int FileOptions_DeleteFile(void)
 
 	Result ret = 0;
 
-	if (file->isDir) // Delete folder
-	{
+	if (file->isDir) { // Delete folder
 		if (R_FAILED(ret = FS_RmdirRecursive(archive, path)))
 			return ret;
 	}
-	else // Delete file
-	{
+	else { // Delete file
 		if (R_FAILED(ret = FS_Remove(archive, path)))
 			return ret;
 	}
@@ -140,8 +132,7 @@ static int FileOptions_DeleteFile(void)
 }
 
 // Copy file from src to dst
-static int FileOptions_CopyFile(char *src, char *dst, bool displayAnim)
-{
+static int FileOptions_CopyFile(char *src, char *dst, bool displayAnim) {
 	int chunksize = (512 * 1024); // Chunk size
 	char *buffer = (char *)malloc(chunksize); // Reading buffer
 
@@ -155,20 +146,17 @@ static int FileOptions_CopyFile(char *src, char *dst, bool displayAnim)
 	FS_GetFileSize(archive, src, &size);
 
 	// Opened file for reading
-	if (in >= 0)
-	{
+	if (in >= 0) {
 		if (FS_FileExists(archive, dst))
 			FS_Remove(archive, dst); // Delete output file (if existing)
 
 		int out = open(dst, O_WRONLY | O_CREAT | O_TRUNC, 0777); // Open output file for writing
 
-		if (out >= 0) // Opened file for writing
-		{
+		if (out >= 0) { // Opened file for writing
 			u64 b_read = 0; // Read byte count
 
 			// Copy loop (512KB at a time)
-			while((b_read = read(in, buffer, chunksize)) > 0)
-			{
+			while((b_read = read(in, buffer, chunksize)) > 0) {
 				totalread += b_read; // Accumulate read data
 				totalwrite += write(out, buffer, b_read); // Write data
 
@@ -197,8 +185,7 @@ static int FileOptions_CopyFile(char *src, char *dst, bool displayAnim)
 }
 
 // Recursively copy file from src to dst
-static Result FileOptions_CopyDir(char *src, char *dst)
-{
+static Result FileOptions_CopyDir(char *src, char *dst) {
 	Handle dirHandle;
 	Result ret = 0; // Open working Directory
 
@@ -206,22 +193,18 @@ static Result FileOptions_CopyDir(char *src, char *dst)
 	Utils_U8_To_U16(u16_src, src, strlen(src) + 1);
 
 	// Opened directory
-	if (R_SUCCEEDED(ret = FSUSER_OpenDirectory(&dirHandle, archive, fsMakePath(PATH_UTF16, u16_src))))
-	{
+	if (R_SUCCEEDED(ret = FSUSER_OpenDirectory(&dirHandle, archive, fsMakePath(PATH_UTF16, u16_src)))) {
 		FS_MakeDir(archive, dst); // Create output directory (is allowed to fail, we can merge folders after all)
 
 		u32 entryCount = 0;
 		FS_DirectoryEntry *entries = (FS_DirectoryEntry*) calloc(MAX_FILES, sizeof(FS_DirectoryEntry));
 		
-		if (R_SUCCEEDED(ret = FSDIR_Read(dirHandle, &entryCount, MAX_FILES, entries)))
-		{
-			u8 name[255] = {'\0'};
-			for (u32 i = 0; i < entryCount; i++) 
-			{
+		if (R_SUCCEEDED(ret = FSDIR_Read(dirHandle, &entryCount, MAX_FILES, entries))) {
+			char name[255] = {'\0'};
+			for (u32 i = 0; i < entryCount; i++) {
 				Utils_U16_To_U8(&name[0], entries[i].name, 254);
 
-				if (strlen(name) > 0)
-				{
+				if (strlen(name) > 0) {
 					// Calculate buffer size
 					int insize = strlen(src) + strlen(name) + 2;
 					int outsize = strlen(dst) + strlen(name) + 2;
@@ -243,11 +226,9 @@ static Result FileOptions_CopyDir(char *src, char *dst)
 					strcpy(outbuffer + strlen(outbuffer), name);
 
 					if (entries[i].attributes & FS_ATTRIBUTE_DIRECTORY) // Another folder
-						FileOptions_CopyDir(inbuffer, outbuffer); // Copy folder (via recursion)	
-						
-					else 
-					{
-						if (R_FAILED(ret = ret = FileOptions_CopyFile(inbuffer, outbuffer, false))) // Copy file
+						FileOptions_CopyDir(inbuffer, outbuffer); // Copy folder (via recursion)
+					else {
+						if (R_FAILED(ret = FileOptions_CopyFile(inbuffer, outbuffer, false))) // Copy file
 							return ret;
 					}
 
@@ -273,8 +254,7 @@ static Result FileOptions_CopyDir(char *src, char *dst)
 	return 0;
 }
 
-static void FileOptions_Copy(int flag)
-{
+static void FileOptions_Copy(int flag) {
 	File *file = Dirbrowse_GetFileIndex(position);
 	
 	if (file == NULL)
@@ -291,14 +271,13 @@ static void FileOptions_Copy(int flag)
 }
 
 // Paste file or folder
-static Result FileOptions_Paste(void)
-{
+static Result FileOptions_Paste(void) {
 	if (copymode == NOTHING_TO_COPY) // No copy source
 		return -1;
 
 	// Source and target folder are identical
 	char *lastslash = NULL;
-	int i = 0;
+	size_t i = 0;
 
 	for(; i < strlen(copysource); i++)
 		if (copysource[i] == '/')
@@ -324,19 +303,16 @@ static Result FileOptions_Paste(void)
 	Result ret = -3; // Return result
 
 	// Recursive folder copy
-	if ((copymode & COPY_FOLDER_RECURSIVE) == COPY_FOLDER_RECURSIVE)
-	{
+	if ((copymode & COPY_FOLDER_RECURSIVE) == COPY_FOLDER_RECURSIVE) {
 		// Check files in current folder
-		File *node = files; for(; node != NULL; node = node->next)
-		{
+		File *node = files; for(; node != NULL; node = node->next) {
 			if ((strcmp(filename, node->name) == 0) && (!node->isDir)) // Found a file matching the name (folder = ok, file = not)
 				return -4; // Error out
 		}
 
 		ret = FileOptions_CopyDir(copysource, copytarget); // Copy folder recursively
 
-		if ((R_SUCCEEDED(ret)) && (copymode & COPY_DELETE_ON_FINISH) == COPY_DELETE_ON_FINISH)
-		{
+		if ((R_SUCCEEDED(ret)) && (copymode & COPY_DELETE_ON_FINISH) == COPY_DELETE_ON_FINISH) {
 			// Needs to add a forward "/"
 			if (!(strcmp(&(copysource[(strlen(copysource)-1)]), "/") == 0))
 				strcat(copysource, "/");
@@ -344,10 +320,7 @@ static Result FileOptions_Paste(void)
 			FS_RmdirRecursive(archive, copysource); // Delete dir
 		}
 	}
-
-	// Simple file copy
-	else
-	{
+	else { // Simple file copy
 		ret = FileOptions_CopyFile(copysource, copytarget, true); // Copy file
 		
 		if ((R_SUCCEEDED(ret)) && (copymode & COPY_DELETE_ON_FINISH) == COPY_DELETE_ON_FINISH)
@@ -355,8 +328,7 @@ static Result FileOptions_Paste(void)
 	}
 
 	// Paste success
-	if (R_SUCCEEDED(ret))
-	{
+	if (R_SUCCEEDED(ret)) {
 		memset(copysource, 0, sizeof(copysource)); // Erase cache data
 		copymode = NOTHING_TO_COPY;
 	}
@@ -365,16 +337,11 @@ static Result FileOptions_Paste(void)
 	return ret; // Return result
 }
 
-static void HandleDelete(void) 
-{
-	if ((multi_select_index > 0) && (strlen(multi_select_dir) != 0))
-	{
-		for (int i = 0; i < multi_select_index; i++)
-		{
-			if (strlen(multi_select_paths[i]) != 0)
-			{
-				if (strncmp(multi_select_paths[i], "..", 2) != 0)
-				{
+static void HandleDelete(void) {
+	if ((multi_select_index > 0) && (strlen(multi_select_dir) != 0)) {
+		for (int i = 0; i < multi_select_index; i++) {
+			if (strlen(multi_select_paths[i]) != 0) {
+				if (strncmp(multi_select_paths[i], "..", 2) != 0) {
 					if (FS_DirExists(archive, multi_select_paths[i]))
 						FS_RmdirRecursive(archive, multi_select_paths[i]);
 					else if (FS_FileExists(archive, multi_select_paths[i]))
@@ -392,8 +359,7 @@ static void HandleDelete(void)
 	MENU_STATE = MENU_STATE_HOME;
 }
 
-void Menu_ControlDeleteDialog(u32 input)
-{
+void Menu_ControlDeleteDialog(u32 input) {
 	if (input & KEY_RIGHT)
 		delete_dialog_selection++;
 	else if (input & KEY_LEFT)
@@ -402,14 +368,12 @@ void Menu_ControlDeleteDialog(u32 input)
 	Utils_SetMax(&delete_dialog_selection, 0, 1);
 	Utils_SetMin(&delete_dialog_selection, 1, 0);
 
-	if (input & KEY_B)
-	{
+	if (input & KEY_B) {
 		delete_dialog_selection = 0;
 		MENU_STATE = MENU_STATE_FILEOPTIONS;
 	}
 
-	if (input & KEY_A)
-	{
+	if (input & KEY_A) {
 		if (delete_dialog_selection == 1)
 			HandleDelete();
 		else
@@ -418,8 +382,7 @@ void Menu_ControlDeleteDialog(u32 input)
 		delete_dialog_selection = 0;
 	}
 
-	if (TouchInRect((288 - delete_cancel_width) - 5, (159 - delete_cancel_height) - 5, ((288 - delete_cancel_width) - 5) + delete_cancel_width + 10, ((159 - delete_cancel_height) - 5) + delete_cancel_height + 10))
-	{
+	if (TouchInRect((288 - delete_cancel_width) - 5, (159 - delete_cancel_height) - 5, ((288 - delete_cancel_width) - 5) + delete_cancel_width + 10, ((159 - delete_cancel_height) - 5) + delete_cancel_height + 10)) {
 		delete_dialog_selection = 0;
 
 		if (input & KEY_TOUCH)
@@ -428,20 +391,17 @@ void Menu_ControlDeleteDialog(u32 input)
 			delete_dialog_selection = 0;
 		}
 	}
-	else if (TouchInRect((248 - (delete_confirm_width)) - 5, (159 - delete_confirm_height) - 5, ((248 - (delete_confirm_width)) - 5) + delete_confirm_width + 10, ((159 - delete_confirm_height) - 5) + delete_confirm_height + 10))
-	{
+	else if (TouchInRect((248 - (delete_confirm_width)) - 5, (159 - delete_confirm_height) - 5, ((248 - (delete_confirm_width)) - 5) + delete_confirm_width + 10, ((159 - delete_confirm_height) - 5) + delete_confirm_height + 10)) {
 		delete_dialog_selection = 1;
 
-		if (input & KEY_TOUCH)
-		{
+		if (input & KEY_TOUCH) {
 			HandleDelete();
 			delete_dialog_selection = 0;
 		}
 	}
 }
 
-void Menu_DisplayDeleteDialog(void)
-{
+void Menu_DisplayDeleteDialog(void) {
 	float text_width = 0;
 	Draw_GetTextSize(0.45f, &text_width, NULL, "Do you want to continue?");
 
@@ -463,8 +423,7 @@ void Menu_DisplayDeleteDialog(void)
 	Draw_Text(288 - delete_cancel_width, (159 - delete_cancel_height), 0.45f, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "NO");
 }
 
-void Menu_ControlProperties(u32 input)
-{
+void Menu_ControlProperties(u32 input) {
 	if ((input & KEY_A) || (input & KEY_B))
 		MENU_STATE = MENU_STATE_FILEOPTIONS;
 
@@ -473,8 +432,7 @@ void Menu_ControlProperties(u32 input)
 			MENU_STATE = MENU_STATE_FILEOPTIONS;
 }
 
-void Menu_DisplayProperties(void)
-{
+void Menu_DisplayProperties(void) {
 	// Find File
 	File *file = Dirbrowse_GetFileIndex(position);
 
@@ -488,8 +446,7 @@ void Menu_DisplayProperties(void)
 	char utils_size[16];
 	u64 size = 0;
 
-	if (!file->isDir)
-	{
+	if (!file->isDir) {
 		FS_GetFileSize(archive, path, &size);
 		Utils_GetSizeString(utils_size, size);
 	}
@@ -497,39 +454,31 @@ void Menu_DisplayProperties(void)
 	Draw_Textf(66, 60, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Name: %.22s", file->name);
 	Draw_Textf(66, 76, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Parent: %.20s", cwd);
 
-	if (!file->isDir)
-	{
+	if (!file->isDir) {
 		Draw_Textf(66, 92, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Size: %s", utils_size);
-		Draw_Textf(66, 108, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Modified time: %s", FS_GetFileTimestamp(archive, path));
+		Draw_Textf(66, 108, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Modified time: %s", FS_GetFileTimestamp(path));
 	}
 	else
-		Draw_Textf(66, 92, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Modified time: %s", FS_GetFileTimestamp(archive, path));
+		Draw_Textf(66, 92, 0.45f, config_dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Modified time: %s", FS_GetFileTimestamp(path));
 
 	Draw_GetTextSize(0.45f, &properties_ok_width, &properties_ok_height, "OK");
 	Draw_Rect((253 - properties_ok_width) - 5, (218 - properties_ok_height) - 5, properties_ok_width + 10, properties_ok_height + 10, config_dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
 	Draw_Text(253 - properties_ok_width, 218 - properties_ok_height, 0.45f, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "OK");
 }
 
-static void HandleCopy()
-{
-	if ((!copy_status) && (!cut_status))
-	{
+static void HandleCopy(void) {
+	if ((!copy_status) && (!cut_status)) {
 		copy_status = true;
 		FileOptions_Copy(COPY_KEEP_ON_FINISH);
 		MENU_STATE = MENU_STATE_HOME;
 	}
-	else if (copy_status)
-	{
-		if ((multi_select_index > 0) && (strlen(multi_select_dir) != 0))
-		{
+	else if (copy_status) {
+		if ((multi_select_index > 0) && (strlen(multi_select_dir) != 0)) {
 			char dest[512];
 			
-			for (int i = 0; i < multi_select_index; i++)
-			{
-				if (strlen(multi_select_paths[i]) != 0)
-				{
-					if (strncmp(multi_select_paths[i], "..", 2) != 0)
-					{
+			for (int i = 0; i < multi_select_index; i++) {
+				if (strlen(multi_select_paths[i]) != 0) {
+					if (strncmp(multi_select_paths[i], "..", 2) != 0) {
 						snprintf(dest, 512, "%s%s", cwd, Utils_Basename(multi_select_paths[i]));
 				
 						if (FS_DirExists(archive, multi_select_paths[i]))
@@ -553,24 +502,18 @@ static void HandleCopy()
 	}
 }
 
-static void HandleCut()
-{
-	if ((!cut_status) && (!copy_status))
-	{
+static void HandleCut(void) {
+	if ((!cut_status) && (!copy_status)) {
 		cut_status = true;
 		FileOptions_Copy(COPY_DELETE_ON_FINISH);
 		MENU_STATE = MENU_STATE_HOME;
 	}
-	else if (cut_status)
-	{
+	else if (cut_status) {
 		char dest[512];
 
-		if ((multi_select_index > 0) && (strlen(multi_select_dir) != 0))
-		{
-			for (int i = 0; i < multi_select_index; i++)
-			{
-				if (strlen(multi_select_paths[i]) != 0)
-				{
+		if ((multi_select_index > 0) && (strlen(multi_select_dir) != 0)) {
+			for (int i = 0; i < multi_select_index; i++) {
+				if (strlen(multi_select_paths[i]) != 0) {
 					snprintf(dest, 512, "%s%s", cwd, Utils_Basename(multi_select_paths[i]));
 					
 					if (FS_DirExists(archive, multi_select_paths[i]))
@@ -582,8 +525,7 @@ static void HandleCut()
 
 			FileOptions_ResetClipboard();
 		}
-		else
-		{
+		else {
 			snprintf(dest, 512, "%s%s", cwd, Utils_Basename(copysource));
 
 			if (FS_DirExists(archive, copysource))
@@ -599,8 +541,7 @@ static void HandleCut()
 	}
 }
 
-void Menu_ControlFileOptions(u32 input)
-{
+void Menu_ControlFileOptions(u32 input) {
 	if (input & KEY_RIGHT)
 		row++;
 	else if (input & KEY_LEFT)
@@ -617,8 +558,7 @@ void Menu_ControlFileOptions(u32 input)
 	Utils_SetMax(&column, 0, 2);
 	Utils_SetMin(&column, 2, 0);
 	
-	if (input & KEY_A)
-	{
+	if (input & KEY_A) {
 		if (row == 0 && column == 0)
 			MENU_STATE = MENU_STATE_PROPERTIES;
 		else if (row == 1 && column == 0)
@@ -633,8 +573,7 @@ void Menu_ControlFileOptions(u32 input)
 			MENU_STATE = MENU_STATE_DELETE;
 	}
 
-	if (input & KEY_B)
-	{
+	if (input & KEY_B) {
 		copy_status = false;
 		cut_status = false;
 		row = 0;
@@ -645,58 +584,50 @@ void Menu_ControlFileOptions(u32 input)
 	if (input & KEY_X)
 		MENU_STATE = MENU_STATE_HOME;
 
-	if (TouchInRect(56, 69, 159, 104))
-	{
+	if (TouchInRect(56, 69, 159, 104)) {
 		row = 0;
 		column = 0;
 		
 		if (input & KEY_TOUCH)
 			MENU_STATE = MENU_STATE_PROPERTIES;
 	}
-	else if (TouchInRect(160, 69, 263, 104))
-	{
+	else if (TouchInRect(160, 69, 263, 104)) {
 		row = 1;
 		column = 0;
 		
 		if (input & KEY_TOUCH)
 			FileOptions_CreateFolder();
 	}
-	else if (TouchInRect(56, 105, 159, 141))
-	{
+	else if (TouchInRect(56, 105, 159, 141)) {
 		row = 0;
 		column = 1;
 		
 		if (input & KEY_TOUCH)
 			FileOptions_Rename();
 	}
-	else if (TouchInRect(160, 105, 263, 141))
-	{
+	else if (TouchInRect(160, 105, 263, 141)) {
 		row = 1;
 		column = 1;
 		
 		if (input & KEY_TOUCH)
 			HandleCopy();
 	}
-	else if (TouchInRect(56, 142, 159, 178))
-	{
+	else if (TouchInRect(56, 142, 159, 178)) {
 		row = 0;
 		column = 2;
 		
 		if (input & KEY_TOUCH)
 			HandleCut();
 	}
-	else if (TouchInRect(160, 142, 263, 178))
-	{
+	else if (TouchInRect(160, 142, 263, 178)) {
 		row = 1;
 		column = 2;
 		
 		if (input & KEY_TOUCH)
 			MENU_STATE = MENU_STATE_DELETE;
 	}
-	else if (TouchInRect(258 - options_cancel_width, 223 - options_cancel_height, (258 - options_cancel_width) + options_cancel_width, (223 - options_cancel_height) + options_cancel_height))
-	{	
-		if (input & KEY_TOUCH)
-		{
+	else if (TouchInRect(258 - options_cancel_width, 223 - options_cancel_height, (258 - options_cancel_width) + options_cancel_width, (223 - options_cancel_height) + options_cancel_height)) {	
+		if (input & KEY_TOUCH) {
 			copy_status = false;
 			cut_status = false;
 			row = 0;
@@ -706,8 +637,7 @@ void Menu_ControlFileOptions(u32 input)
 	}
 }
 
-void Menu_DisplayFileOptions(void)
-{
+void Menu_DisplayFileOptions(void) {
 	Draw_Image(config_dark_theme? options_dialog_dark : options_dialog, 54, 30);
 	Draw_Text(61, 37, 0.45f, config_dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "Actions");
 

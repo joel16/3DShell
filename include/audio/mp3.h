@@ -4,14 +4,13 @@
 
 #include "audio.h"
 
-typedef struct 
-{
-	char title[0x1F];
-	char album[0x1F];
-	char artist[0x1F];
+typedef struct {
+	char title[34];
+	char album[34];
+	char artist[34];
 	char year[0x5];
 	char comment[0x1E];
-	char genre[0x1F];
+	char genre[34];
 } ID3_Tag;
 
 ID3_Tag ID3;
