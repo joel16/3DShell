@@ -23,6 +23,7 @@ install:
   - sudo dkp-pacman -S 3ds-libogg --noconfirm
   - sudo dkp-pacman -S 3ds-libvorbisidec --noconfirm
   - sudo dkp-pacman -S 3ds-mpg123 --noconfirm
+  - sudo dkp-pacman -S 3ds-libopus --noconfirm
   - source /etc/profile.d/devkit-env.sh
   - git clone --recursive https://github.com/Steveice10/bannertool && cd bannertool/
   - make && sudo cp output/linux-x86_64/bannertool /opt/devkitpro/devkitARM/bin/bannertool
