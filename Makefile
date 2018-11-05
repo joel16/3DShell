@@ -65,6 +65,7 @@ ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
 CFLAGS	:=	-g -Wall -Wextra -O3 -mword-relocations \
 			-fomit-frame-pointer -ffunction-sections \
+			-I$(DEVKITPRO)/portlibs/armv6k/include/opus -I$(DEVKITPRO)/portlibs/3ds/include/opus \
 			-DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO) \
 	        -DAPP_TITLE="\"$(APP_TITLE)\"" \
 	        -DGITVERSION="\"${GITVERSION}\"" \
@@ -77,7 +78,7 @@ CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:=  -lcurl -lmbedtls -lmbedx509 -lmbedcrypto -lmpg123 -lvorbisidec -logg \
+LIBS	:=  -lcurl -lmbedtls -lmbedx509 -lmbedcrypto -lmpg123 -lvorbisidec -lopusfile -lopus -logg \
             -lcitro2d -lcitro3d -lctru -lm -lz
 
 #---------------------------------------------------------------------------------

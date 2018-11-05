@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #include "audio.h"
+#include "audio_opus.h"
 #include "flac.h"
 #include "mp3.h"
 #include "vorbis.h"
@@ -70,7 +71,9 @@ enum file_types Audio_GetMusicFileType(const char *file) {
 
 		// "OggS"
 		case 0x5367674F:
-			if (FLAC_Validate(file) == 0)
+			if (Opus_Validate(file) == 0)
+				file_type = FILE_TYPE_OPUS;
+			else if (FLAC_Validate(file) == 0)
 				file_type = FILE_TYPE_FLAC;
 			else if (VORBIS_Validate(file) == 0)
 				file_type = FILE_TYPE_VORBIS;

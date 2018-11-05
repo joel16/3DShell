@@ -12,10 +12,10 @@ enum channel_e {
 
 enum file_types {
 	FILE_TYPE_ERROR,
-	FILE_TYPE_BCSTM,
 	FILE_TYPE_WAV,
 	FILE_TYPE_FLAC,
 	FILE_TYPE_VORBIS,
+	FILE_TYPE_OPUS,
 	FILE_TYPE_MP3
 };
 

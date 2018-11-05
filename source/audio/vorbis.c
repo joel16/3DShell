@@ -1,8 +1,10 @@
 /* Obtained from ctrmus source with permission. */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <tremor/ivorbiscodec.h>
+#include <tremor/ivorbisfile.h>
 
 #include "vorbis.h"
 

@@ -1,8 +1,4 @@
 /* Obtained from ctrmus source with permission. */
-
-#include <tremor/ivorbiscodec.h>
-#include <tremor/ivorbisfile.h>
-
 #include "audio.h"
 
 /**

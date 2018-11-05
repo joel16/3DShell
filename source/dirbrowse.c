@@ -190,7 +190,8 @@ void Dirbrowse_DisplayFiles(void) {
 				Draw_Image(icon_app, 30, 56 + (38 * printed));
 			else if ((!strncasecmp(file->ext, "zip", 3)) || (!strncasecmp(file->ext, "tar", 3)) || (!strncasecmp(file->ext, "lz4", 3)) || (!strncasecmp(file->ext, "rar", 3)))
 				Draw_Image(icon_archive, 30, 56 + (38 * printed));
-			else if ((!strncasecmp(file->ext, "mp3", 3)) || (!strncasecmp(file->ext, "ogg", 3)) || (!strncasecmp(file->ext, "wav", 3)) || (!strncasecmp(file->ext, "fla", 3)))
+			else if ((!strncasecmp(file->ext, "mp3", 3)) || (!strncasecmp(file->ext, "ogg", 3)) || (!strncasecmp(file->ext, "wav", 3)) || (!strncasecmp(file->ext, "fla", 3))
+				|| (!strncasecmp(file->ext, "opu", 3)))
 				Draw_Image(icon_audio, 30, 56 + (38 * printed));
 			else if ((!strncasecmp(file->ext, "png", 3)) || (!strncasecmp(file->ext, "jpg", 3)) || (!strncasecmp(file->ext, "bmp", 3)))
 				Draw_Image(icon_image, 30, 56 + (38 * printed));
@@ -277,7 +278,8 @@ void Dirbrowse_OpenFile(void) {
 		Archive_ExtractRAR(path, cwd);
 		Dirbrowse_PopulateFiles(true);
 	}
-	else if ((!strncasecmp(file->ext, "mp3", 3)) || (!strncasecmp(file->ext, "ogg", 3)) || (!strncasecmp(file->ext, "wav", 3)) || (!strncasecmp(file->ext, "fla", 3)))
+	else if ((!strncasecmp(file->ext, "mp3", 3)) || (!strncasecmp(file->ext, "ogg", 3)) || (!strncasecmp(file->ext, "wav", 3)) || (!strncasecmp(file->ext, "fla", 3))
+		|| (!strncasecmp(file->ext, "opu", 3)))
 		Menu_PlayMusic(path);
 }
 

@@ -73,7 +73,7 @@ static void Init_Services(void) {
 	Config_GetLastDirectory();
 }
 
-int main(int argc, char *argv[]) {
+int main(void) {
 	Init_Services();
 
 	if (setjmp(exitJmp)) {
