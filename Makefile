@@ -65,7 +65,7 @@ ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
 CFLAGS	:=	-g -Wall -Wextra -Wno-implicit-fallthrough -O3 -mword-relocations \
 			-fomit-frame-pointer -ffunction-sections \
-			-I$(DEVKITPRO)/portlibs/armv6k/include/opus -I$(DEVKITPRO)/portlibs/3ds/include/opus \
+			-I$(DEVKITPRO)/portlibs/3ds/include/opus \
 			-DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO) \
 	        -DAPP_TITLE="\"$(APP_TITLE)\"" \
 	        -DGITVERSION="\"${GITVERSION}\"" \
