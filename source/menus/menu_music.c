@@ -45,7 +45,7 @@ static Result Menu_GetMusicList(void) {
 			char name[256] = {'\0'};
 
 			for (u32 i = 0; i < entryCount; i++) {
-				Utils_U16_To_U8(&name[0], entries[i].name, 255);
+				Utils_U16_To_U8((u8 *)&name[0], entries[i].name, 255);
 
 				if ((!strncasecmp(entries[i].shortExt, "mp3", 3)) || (!strncasecmp(entries[i].shortExt, "ogg", 3)) || (!strncasecmp(entries[i].shortExt, "fla", 3)) 
 					|| (!strncasecmp(entries[i].shortExt, "wav", 3))) {

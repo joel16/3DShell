@@ -36,7 +36,7 @@ static int copymode = NOTHING_TO_COPY;
 static char copysource[1024];
 
 static int delete_dialog_selection = 0, row = 0, column = 0;
-static bool copy_status = false, cut_status = false;
+static bool copy_status = false, cut_status = false, options_more = false;
 
 static float delete_confirm_width = 0, delete_confirm_height = 0;
 static float delete_cancel_width = 0, delete_cancel_height = 0;
@@ -53,8 +53,9 @@ void FileOptions_ResetClipboard(void) {
 }
 
 static Result FileOptions_CreateFolder(void) {
+	Result ret = 0;
 	char *buf = (char *)malloc(256);
-	strcpy(buf, OSK_GetString("", "Enter name"));
+	strcpy(buf, OSK_GetString("New folder", "Enter name"));
 
 	if (strncmp(buf, "", 1) == 0)
 		return -1;
@@ -64,7 +65,29 @@ static Result FileOptions_CreateFolder(void) {
 	strcat(path, buf);
 	free(buf);
 
-	FS_RecursiveMakeDir(archive, path);
+	if (R_FAILED(ret = FS_RecursiveMakeDir(archive, path)))
+		return ret;
+
+	Dirbrowse_PopulateFiles(true);
+	return 0;
+}
+
+static Result FileOptions_CreateFile(void) {
+	Result ret = 0;
+	char *buf = (char *)malloc(256);
+	strcpy(buf, OSK_GetString("New file.txt", "Enter name"));
+
+	if (strncmp(buf, "", 1) == 0)
+		return -1;
+
+	char path[512];
+	strcpy(path, cwd);
+	strcat(path, buf);
+	free(buf);
+
+	if (R_FAILED(ret = FS_CreateFile(archive, path)))
+		return ret;
+	
 	Dirbrowse_PopulateFiles(true);
 	return 0;
 }
@@ -190,7 +213,7 @@ static Result FileOptions_CopyDir(char *src, char *dst) {
 	Result ret = 0; // Open working Directory
 
 	u16 u16_src[strlen(src) + 1];
-	Utils_U8_To_U16(u16_src, src, strlen(src) + 1);
+	Utils_U8_To_U16(u16_src, (const u8 *)src, strlen(src) + 1);
 
 	// Opened directory
 	if (R_SUCCEEDED(ret = FSUSER_OpenDirectory(&dirHandle, archive, fsMakePath(PATH_UTF16, u16_src)))) {
@@ -202,7 +225,7 @@ static Result FileOptions_CopyDir(char *src, char *dst) {
 		if (R_SUCCEEDED(ret = FSDIR_Read(dirHandle, &entryCount, MAX_FILES, entries))) {
 			char name[255] = {'\0'};
 			for (u32 i = 0; i < entryCount; i++) {
-				Utils_U16_To_U8(&name[0], entries[i].name, 254);
+				Utils_U16_To_U8((u8 *)&name[0], entries[i].name, 254);
 
 				if (strlen(name) > 0) {
 					// Calculate buffer size
@@ -552,33 +575,90 @@ void Menu_ControlFileOptions(u32 input) {
 	else if (input & KEY_DUP)
 		column--;
 
-	Utils_SetMax(&row, 0, 1);
-	Utils_SetMin(&row, 1, 0);
+	if (!options_more) {
+		Utils_SetMax(&row, 0, 1);
+		Utils_SetMin(&row, 1, 0);
 
-	Utils_SetMax(&column, 0, 2);
-	Utils_SetMin(&column, 2, 0);
+		Utils_SetMax(&column, 0, 3);
+		Utils_SetMin(&column, 3, 0);
+	}
+	else {
+		Utils_SetMax(&column, 0, 2);
+		Utils_SetMin(&column, 2, 0);
+
+		if (column == 0) {
+			Utils_SetMax(&row, 0, 1);
+			Utils_SetMin(&row, 1, 0);
+		}
+		else if (column == 1) {
+			Utils_SetMax(&row, 0, 0);
+			Utils_SetMin(&row, 0, 0);
+		}
+	}
 	
 	if (input & KEY_A) {
-		if (row == 0 && column == 0)
-			MENU_STATE = MENU_STATE_PROPERTIES;
-		else if (row == 1 && column == 0)
-			FileOptions_CreateFolder();
-		else if (row == 0 && column == 1)
-			FileOptions_Rename();
+		if (row == 0 && column == 0) {
+			if (options_more)
+				FileOptions_CreateFolder();
+			else
+				MENU_STATE = MENU_STATE_PROPERTIES;
+		}
+		else if (row == 1 && column == 0) {
+			if (options_more)
+				FileOptions_CreateFile();
+			else {
+				options_more = false;
+				row = 0;
+				column = 0;
+				Dirbrowse_PopulateFiles(true);
+				MENU_STATE = MENU_STATE_HOME;
+			}
+		}
+		else if (row == 0 && column == 1) {
+			if (options_more)
+				FileOptions_Rename();
+			else
+				HandleCopy();
+		}
 		else if (row == 1 && column == 1)
-			HandleCopy();
-		else if (row == 0 && column == 2)
 			HandleCut();
-		else if (row == 1 && column == 2)
+		else if (row == 0 && column == 2 && !options_more)
 			MENU_STATE = MENU_STATE_DELETE;
+		else if (row == 1 && column == 2 && !options_more) {
+			row = 0;
+			column = 0;
+			options_more = true;
+		}
+		else if (column == 3 && !options_more) {
+			copy_status = false;
+			cut_status = false;
+			row = 0;
+			column = 0;
+			MENU_STATE = MENU_STATE_HOME;
+		}
+		else if (column == 2 && options_more) {
+			options_more = false;
+			copy_status = false;
+			cut_status = false;
+			row = 0;
+			column = 0;
+			MENU_STATE = MENU_STATE_HOME;
+		}
 	}
 
 	if (input & KEY_B) {
-		copy_status = false;
-		cut_status = false;
-		row = 0;
-		column = 0;
-		MENU_STATE = MENU_STATE_HOME;
+		if (!options_more) {
+			copy_status = false;
+			cut_status = false;
+			row = 0;
+			column = 0;
+			MENU_STATE = MENU_STATE_HOME;
+		}
+		else {
+			row = 0;
+			column = 0;
+			options_more = false;
+		}
 	}
 
 	if (input & KEY_X)
@@ -588,46 +668,73 @@ void Menu_ControlFileOptions(u32 input) {
 		row = 0;
 		column = 0;
 		
-		if (input & KEY_TOUCH)
-			MENU_STATE = MENU_STATE_PROPERTIES;
+		if (input & KEY_TOUCH) {
+			if (options_more)
+				FileOptions_CreateFolder();
+			else
+				MENU_STATE = MENU_STATE_PROPERTIES;
+		}
 	}
 	else if (TouchInRect(160, 69, 263, 104)) {
 		row = 1;
 		column = 0;
 		
-		if (input & KEY_TOUCH)
-			FileOptions_CreateFolder();
+		if (input & KEY_TOUCH) {
+			if (options_more)
+				FileOptions_CreateFile();
+			else {
+				options_more = false;
+				row = 0;
+				column = 0;
+				Dirbrowse_PopulateFiles(true);
+				MENU_STATE = MENU_STATE_HOME;
+			}
+		}
 	}
 	else if (TouchInRect(56, 105, 159, 141)) {
 		row = 0;
 		column = 1;
 		
-		if (input & KEY_TOUCH)
-			FileOptions_Rename();
+		if (input & KEY_TOUCH) {
+			if (options_more)
+				FileOptions_Rename();
+			else
+				HandleCopy();
+		}
 	}
-	else if (TouchInRect(160, 105, 263, 141)) {
+	else if (TouchInRect(160, 105, 263, 141) && !options_more) {
 		row = 1;
 		column = 1;
 		
 		if (input & KEY_TOUCH)
-			HandleCopy();
-	}
-	else if (TouchInRect(56, 142, 159, 178)) {
-		row = 0;
-		column = 2;
-		
-		if (input & KEY_TOUCH)
 			HandleCut();
 	}
-	else if (TouchInRect(160, 142, 263, 178)) {
-		row = 1;
+	else if (TouchInRect(56, 142, 159, 178) && !options_more) {
+		row = 0;
 		column = 2;
 		
 		if (input & KEY_TOUCH)
 			MENU_STATE = MENU_STATE_DELETE;
 	}
-	else if (TouchInRect(258 - options_cancel_width, 223 - options_cancel_height, (258 - options_cancel_width) + options_cancel_width, (223 - options_cancel_height) + options_cancel_height)) {	
+	else if (TouchInRect(160, 142, 263, 178) && !options_more) {
+		row = 1;
+		column = 2;
+		
 		if (input & KEY_TOUCH) {
+			row = 0;
+			column = 0;
+			options_more = true;
+		}
+	}
+	else if (TouchInRect((256 - options_cancel_width) - 5, (221 - options_cancel_height) - 5, ((256 - options_cancel_width) - 5) + options_cancel_width + 10, 
+		((221 - options_cancel_height) - 5) + options_cancel_height + 10)) {
+		if (options_more)
+			column = 2;
+		else
+			column = 3;
+
+		if (input & KEY_TOUCH) {
+			options_more = false;
 			copy_status = false;
 			cut_status = false;
 			row = 0;
@@ -642,7 +749,6 @@ void Menu_DisplayFileOptions(void) {
 	Draw_Text(61, 37, 0.45f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "Actions");
 
 	Draw_GetTextSize(0.45f, &options_cancel_width, &options_cancel_height, "CANCEL");
-	Draw_Text(258 - options_cancel_width, 223 - options_cancel_height, 0.45f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "CANCEL");
 	
 	if (row == 0 && column == 0)
 		Draw_Rect(56, 69, 103, 36, config.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
@@ -652,16 +758,32 @@ void Menu_DisplayFileOptions(void) {
 		Draw_Rect(56, 105, 103, 36, config.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
 	else if (row == 1 && column == 1)
 		Draw_Rect(160, 105, 103, 36, config.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
-	else if (row == 0 && column == 2)
+	else if (row == 0 && column == 2 && !options_more)
 		Draw_Rect(56, 142, 103, 36, config.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
-	else if (row == 1 && column == 2)
+	else if (row == 1 && column == 2 && !options_more)
 		Draw_Rect(160, 142, 103, 36, config.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
+	else if (column == 3 && !options_more)
+		Draw_Rect((256 - options_cancel_width) - 5, (221 - options_cancel_height) - 5, options_cancel_width+ 10, options_cancel_height + 10, 
+			config.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
+	else if (column == 2 && options_more)
+		Draw_Rect((256 - options_cancel_width) - 5, (221 - options_cancel_height) - 5, options_cancel_width + 10, options_cancel_height + 10, 
+			config.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
 
-	Draw_Text(66, 80, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Properties");
-	Draw_Text(66, 116, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Rename");
-	Draw_Text(66, 152, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, cut_status? "Paste" : "Move");
+	Draw_Text(256 - options_cancel_width, 221 - options_cancel_height, 0.45f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "CANCEL");
+
+	if (!options_more) {
+		Draw_Text(66, 80, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Properties");
+		Draw_Text(66, 116, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, copy_status? "Paste" : "Copy");
+		Draw_Text(66, 152, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Delete");
 		
-	Draw_Text(170, 80, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "New folder");
-	Draw_Text(170, 116, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, copy_status? "Paste" : "Copy");
-	Draw_Text(170, 152, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Delete");
+		Draw_Text(170, 80, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Refresh");
+		Draw_Text(170, 116, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, cut_status? "Paste" : "Move");
+		Draw_Text(170, 152, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "More...");
+	}
+	else {
+		Draw_Text(66, 80, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "New folder");
+		Draw_Text(66, 116, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Rename");
+
+		Draw_Text(170, 80, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Rename");
+	}
 }

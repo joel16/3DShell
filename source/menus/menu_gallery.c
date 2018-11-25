@@ -214,7 +214,7 @@ static Result Gallery_GetImageList(void) {
 			char name[256] = {'\0'};
 
 			for (u32 i = 0; i < entryCount; i++) {
-				Utils_U16_To_U8(&name[0], entries[i].name, 255);
+				Utils_U16_To_U8((u8 *)&name[0], entries[i].name, 255);
 
 				if ((!strncasecmp(entries[i].shortExt, "png", 3)) || (!strncasecmp(entries[i].shortExt, "jpg", 3)) || (!strncasecmp(entries[i].shortExt, "bmp", 3))) {
 					strcpy(album[count], cwd);

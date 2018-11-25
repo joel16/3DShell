@@ -36,14 +36,14 @@ static int cmpstringp(const void *p1, const void *p2) {
 	else  {
 		if (config.sort == 0) { // Sort alphabetically (ascending - A to Z)
 			char entryNameA[256] = {'\0'}, entryNameB[256] = {'\0'};
-			Utils_U16_To_U8(entryNameA, entryA->name, sizeof(entryNameA) - 1);
-			Utils_U16_To_U8(entryNameB, entryB->name, sizeof(entryNameB) - 1);
+			Utils_U16_To_U8((u8 *)entryNameA, entryA->name, sizeof(entryNameA) - 1);
+			Utils_U16_To_U8((u8 *)entryNameB, entryB->name, sizeof(entryNameB) - 1);
 			return strcasecmp(entryNameA, entryNameB);
 		}
 		else if (config.sort == 1) { // Sort alphabetically (descending - Z to A)
 			char entryNameA[256] = {'\0'}, entryNameB[256] = {'\0'};
-			Utils_U16_To_U8(entryNameA, entryA->name, sizeof(entryNameA) - 1);
-			Utils_U16_To_U8(entryNameB, entryB->name, sizeof(entryNameB) - 1);
+			Utils_U16_To_U8((u8 *)entryNameA, entryA->name, sizeof(entryNameA) - 1);
+			Utils_U16_To_U8((u8 *)entryNameB, entryB->name, sizeof(entryNameB) - 1);
 			return strcasecmp(entryNameB, entryNameA);
 		}
 		else if (config.sort == 2) { // Sort by file size (largest first)
@@ -70,7 +70,7 @@ Result Dirbrowse_PopulateFiles(bool clear) {
 	Result ret = 0;
 
 	u16 u16_cwd[strlen(cwd) + 1];
-	Utils_U8_To_U16(u16_cwd, cwd, strlen(cwd) + 1);
+	Utils_U8_To_U16(u16_cwd, (const u8 *)cwd, strlen(cwd) + 1);
 
 	if (R_SUCCEEDED(ret = FSUSER_OpenDirectory(&dir, archive, fsMakePath(PATH_UTF16, u16_cwd)))) {
 		/* Add fake ".." entry except on root */
@@ -90,7 +90,7 @@ Result Dirbrowse_PopulateFiles(bool clear) {
 			char name[256] = {'\0'};
 			
 			for (u32 i = 0; i < entryCount; i++) {
-				Utils_U16_To_U8(&name[0], entries[i].name, 255);
+				Utils_U16_To_U8((u8 *)&name[0], entries[i].name, 255);
 
 				if (name[0] == '\0') // Ignore "." in all Directories
 					continue;

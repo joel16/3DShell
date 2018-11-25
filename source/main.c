@@ -62,10 +62,9 @@ static void Init_Services(void) {
 	sizeBuf = C2D_TextBufNew(4096);
 
 	RENDER_TOP = C2D_CreateScreenTarget(GFX_TOP, GFX_LEFT);
-    RENDER_BOTTOM = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
+	RENDER_BOTTOM = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
 
 	FS_OpenArchive(&archive, ARCHIVE_SDMC);
-
 	FS_RecursiveMakeDir(archive, "/3ds/3DShell/");
 	
 	Textures_Load();

@@ -14,8 +14,8 @@ bool Utils_IsN3DS(void) {
 	return false;
 }
 
-void Utils_U16_To_U8(char *buf, const u16 *input, size_t bufsize) {
-	ssize_t units = utf16_to_utf8((u8 *)buf, input, bufsize);
+void Utils_U16_To_U8(u8 *buf, const u16 *input, size_t bufsize) {
+	ssize_t units = utf16_to_utf8(buf, input, bufsize);
 
 	if (units < 0)
 		units = 0;
@@ -23,8 +23,8 @@ void Utils_U16_To_U8(char *buf, const u16 *input, size_t bufsize) {
 	buf[units] = 0;
 }
 
-void Utils_U8_To_U16(u16 *buf, const char *input, size_t bufsize) {
-	ssize_t units = utf8_to_utf16(buf, (const uint8_t*)input, bufsize);
+void Utils_U8_To_U16(u16 *buf, const u8 *input, size_t bufsize) {
+	ssize_t units = utf8_to_utf16(buf, input, bufsize);
 
 	if (units < 0)
 		units = 0;
@@ -71,8 +71,8 @@ int Utils_Alphasort(const void *p1, const void *p2) {
 		return 1;
 	
 	char entryNameA[256] = {'\0'}, entryNameB[256] = {'\0'};
-	Utils_U16_To_U8(entryNameA, entryA->name, sizeof(entryNameA) - 1);
-	Utils_U16_To_U8(entryNameB, entryB->name, sizeof(entryNameB) - 1);
+	Utils_U16_To_U8((u8 *)entryNameA, entryA->name, sizeof(entryNameA) - 1);
+	Utils_U16_To_U8((u8 *)entryNameB, entryB->name, sizeof(entryNameB) - 1);
 	return strcasecmp(entryNameA, entryNameB);
 }
 
