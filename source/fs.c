@@ -104,42 +104,6 @@ bool FS_DirExists(FS_Archive archive, const char *path) {
 	return true;
 }
 
-/*char *FS_GetFileModifiedTime(char *path)
-{
-	static char timeStr[20];
-	u64 mtime = 0;
-
-	if (R_SUCCEEDED(sdmc_getmtime(path, &mtime)))
-	{
-		time_t mt = mtime;
-		struct tm *timeStruct = gmtime(&mt);
-
-		int hours = timeStruct->tm_hour;
-		int minutes = timeStruct->tm_min;
-		bool amOrPm = false;
-
-		if (hours < 12)
-			amOrPm = true;
-		if (hours == 0)
-			hours = 12;
-		else if (hours > 12)
-			hours = hours - 12;
-
-		int day = timeStruct->tm_mday;
-		int month = timeStruct->tm_mon + 1; // January being 0
-		int year = timeStruct->tm_year + 1900;
-
-		if ((Utils_GetRegion() == CFG_REGION_JPN) || (Utils_GetRegion() == CFG_REGION_CHN) || (Utils_GetRegion() == CFG_REGION_KOR) || (Utils_GetRegion() == CFG_REGION_TWN))
-			snprintf(timeStr, sizeof(timeStr), "%d/%d/%d %2i:%02i %s", year, month, day, hours, minutes, amOrPm ? "AM" : "PM");
-		else if (Utils_GetRegion() == CFG_REGION_USA) // This is the worst one
-			snprintf(timeStr, sizeof(timeStr), "%d/%d/%d %2i:%02i %s", month, day, year, hours, minutes, amOrPm ? "AM" : "PM");
-		else 
-			snprintf(timeStr, sizeof(timeStr), "%d/%d/%d %2i:%02i %s", day, month, year, hours, minutes, amOrPm ? "AM" : "PM");
-	}
-
-	return timeStr;
-}*/
-
 Result FS_GetFileSize(FS_Archive archive, const char *path, u64 *size) {
 	Handle handle;
 	Result ret = 0;
