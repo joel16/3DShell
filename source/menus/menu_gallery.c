@@ -141,7 +141,7 @@ static C2D_Image Gallery_LoadImage(const char *path) {
         subtex->top = 1.0f;
         subtex->right = width/(float)w_pow2;
         subtex->bottom = 1.0 - (height/(float)h_pow2);
-        
+
         C3D_TexInit(tex, (u16)w_pow2, (u16)h_pow2, format);
         C3D_TexSetFilter(tex, GPU_LINEAR, GPU_LINEAR);
 
@@ -309,8 +309,6 @@ void Gallery_DisplayImage(char *path) {
                 break;
         }
 
-        Draw_EndFrame();
-
         hidScanInput();
         u32 kDown = hidKeysDown();
 
@@ -318,6 +316,8 @@ void Gallery_DisplayImage(char *path) {
             Gallery_HandleNext(false);
         else if ((kDown & KEY_RIGHT) || (kDown & KEY_R))
             Gallery_HandleNext(true);
+
+        Draw_EndFrame();
         
         if (kDown & KEY_B)
             break;
