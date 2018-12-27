@@ -1,4 +1,5 @@
 #include <malloc.h>
+#include <minizip/unzip.h>
 #include <string.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -6,7 +7,6 @@
 #include "archive.h"
 #include "fs.h"
 #include "progress_bar.h"
-#include "unzip.h"
 #include "utils.h"
 
 #include "dmc_unrar.c"
