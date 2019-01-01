@@ -162,12 +162,16 @@ static int FileOptions_CopyFile(char *src, char *dst, bool display_animation) {
 	Handle src_handle, dst_handle;
 	Result ret = 0;
 
-	if (R_FAILED(ret = FSUSER_OpenFile(&src_handle, copying_from_sd? sdmc_archive : nand_archive, fsMakePath(PATH_ASCII, src), FS_OPEN_READ, 0))) {
+	u16 u16_src[strlen(src) + 1];
+	Utils_U8_To_U16(u16_src, (const u8 *)src, strlen(src) + 1);
+	if (R_FAILED(ret = FSUSER_OpenFile(&src_handle, copying_from_sd? sdmc_archive : nand_archive, fsMakePath(PATH_UTF16, u16_src), FS_OPEN_READ, 0))) {
 		FSFILE_Close(src_handle);
 		return ret;
 	}
 
-	if (R_FAILED(ret = FSUSER_OpenFile(&dst_handle, copying_to_sd? sdmc_archive : nand_archive, fsMakePath(PATH_ASCII, dst), FS_OPEN_CREATE | FS_OPEN_WRITE, 0))) {
+	u16 u16_dst[strlen(dst) + 1];
+	Utils_U8_To_U16(u16_dst, (const u8 *)dst, strlen(dst) + 1);
+	if (R_FAILED(ret = FSUSER_OpenFile(&dst_handle, copying_to_sd? sdmc_archive : nand_archive, fsMakePath(PATH_UTF16, u16_dst), FS_OPEN_CREATE | FS_OPEN_WRITE, 0))) {
 		FSFILE_Close(src_handle);
 		FSFILE_Close(dst_handle);
 		return ret;
@@ -207,56 +211,6 @@ static int FileOptions_CopyFile(char *src, char *dst, bool display_animation) {
 	FSFILE_Close(src_handle);
 	FSFILE_Close(dst_handle);
 	return 0;
-
-	/*int chunksize = (512 * 1024); // Chunk size
-	char *buffer = (char *)malloc(chunksize); // Reading buffer
-
-	u64 totalwrite = 0; // Accumulated writing
-	u64 totalread = 0; // Accumulated reading
-
-	int result = 0; // Result
-
-	int in = open(src, O_RDONLY, 0777); // Open file for reading
-	u64 size = 0;
-	FS_GetFileSize(archive, src, &size);
-
-	// Opened file for reading
-	if (in >= 0) {
-		if (FS_FileExists(archive, dst))
-			FS_Remove(archive, dst); // Delete output file (if existing)
-
-		int out = open(dst, O_WRONLY | O_CREAT | O_TRUNC, 0777); // Open output file for writing
-
-		if (out >= 0) { // Opened file for writing
-			u64 b_read = 0; // Read byte count
-
-			// Copy loop (512KB at a time)
-			while((b_read = read(in, buffer, chunksize)) > 0) {
-				totalread += b_read; // Accumulate read data
-				totalwrite += write(out, buffer, b_read); // Write data
-
-				if (display_animation)
-					ProgressBar_DisplayProgress(copymode == 1? "Moving" : "Copying", Utils_Basename(src), totalread, size);
-			}
-
-			close(out); // Close output file
-			
-			if (totalread != totalwrite) // Insufficient copy
-				result = -3;
-		}
-		
-		else // Output open error
-			result = -2;
-			
-		close(in); // Close input file
-	}
-
-	// Input open error
-	else
-		result = -1;
-	
-	free(buffer); // Free memory
-	return result; // Return result*/
 }
 
 // Recursively copy file from src to dst
@@ -541,6 +495,14 @@ void Menu_DisplayProperties(void) {
 	Draw_Text(253 - properties_ok_width, 218 - properties_ok_height, 0.45f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "OK");
 }
 
+static void FileOptions_ClearCopyStatus(void) {
+	copying_to_sd = false;
+	copying_to_nand = false;
+	copying_from_sd = false;
+	copying_from_nand = false;
+	copy_status = false;
+}
+
 static void HandleCopy(void) {
 	if ((!copy_status) && (!cut_status)) {
 		copy_status = true;
@@ -577,14 +539,12 @@ static void HandleCopy(void) {
 			FileOptions_ResetClipboard();
 			copymode = NOTHING_TO_COPY;
 		}
-		else if (FileOptions_Paste() != 0)
+		else if (FileOptions_Paste() != 0) {
+			FileOptions_ClearCopyStatus();
 			return;
+		}
 
-		copying_to_sd = false;
-		copying_to_nand = false;
-		copying_from_sd = false;
-		copying_from_nand = false;
-		copy_status = false;
+		FileOptions_ClearCopyStatus();
 		Dirbrowse_PopulateFiles(true);
 		MENU_STATE = MENU_STATE_HOME;
 	}
