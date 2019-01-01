@@ -39,11 +39,8 @@ Result Config_Load(void) {
 		return Config_Save(config);
 	}
 
-	u64 size64 = 0;
-	u32 size = 0;
-
-	FS_GetFileSize(archive, "/3ds/3DShell/config.cfg", &size64);
-	size = (u32)size64;
+	u64 size = 0;
+	FS_GetFileSize(archive, "/3ds/3DShell/config.cfg", &size);
 	char *buf = (char *)malloc(size + 1);
 
 	if (R_FAILED(ret = FS_Read(archive, "/3ds/3DShell/config.cfg", size, buf))) {
@@ -67,11 +64,9 @@ Result Config_GetLastDirectory(void) {
 		strcpy(cwd, START_PATH); // Set Start Path to "sdmc:/" if lastDir.txt hasn't been created.
 	}
 	else {
-		u64 size64 = 0;
-		u32 size = 0;
+		u64 size = 0;
 
-		FS_GetFileSize(archive, "/3ds/3DShell/lastdir.txt", &size64);
-		size = (u32)size64;
+		FS_GetFileSize(archive, "/3ds/3DShell/lastdir.txt", &size);
 		char *buf = (char *)malloc(size + 1);
 
 		if (R_FAILED(ret = FS_Read(archive, "/3ds/3DShell/lastdir.txt", size, buf))) {
@@ -81,11 +76,11 @@ Result Config_GetLastDirectory(void) {
 
 		buf[size] = '\0';
 
-		char tempPath[513];
-		sscanf(buf, "%[^\n]s", tempPath);
+		char path[513];
+		sscanf(buf, "%[^\n]s", path);
 	
-		if (FS_DirExists(archive, tempPath)) // Incase a directory previously visited had been deleted, set start path to sdmc:/ to avoid errors.
-			strcpy(cwd, tempPath);
+		if (FS_DirExists(archive, path)) // Incase a directory previously visited had been deleted, set start path to sdmc:/ to avoid errors.
+			strcpy(cwd, path);
 		else
 			strcpy(cwd, START_PATH);
 		
