@@ -17,7 +17,8 @@ static void Term_Services(void) {
 	if (Utils_IsN3DS())
 		osSetSpeedupEnable(false);
 
-	FS_CloseArchive(archive);
+	FS_CloseArchive(nand_archive);
+	FS_CloseArchive(sdmc_archive);
 
 	C2D_TextBufDelete(sizeBuf);
 	C2D_TextBufDelete(dynamicBuf);
@@ -64,7 +65,10 @@ static void Init_Services(void) {
 	RENDER_TOP = C2D_CreateScreenTarget(GFX_TOP, GFX_LEFT);
 	RENDER_BOTTOM = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
 
-	FS_OpenArchive(&archive, ARCHIVE_SDMC);
+	FS_OpenArchive(&sdmc_archive, ARCHIVE_SDMC);
+	FS_OpenArchive(&nand_archive, ARCHIVE_NAND_CTR_FS);
+	archive = sdmc_archive;
+
 	FS_RecursiveMakeDir(archive, "/3ds/3DShell/");
 	
 	Textures_Load();

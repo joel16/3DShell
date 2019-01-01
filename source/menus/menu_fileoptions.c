@@ -44,6 +44,9 @@ static float delete_cancel_width = 0, delete_cancel_height = 0;
 static float properties_ok_width = 0, properties_ok_height = 0;
 static float options_cancel_width = 0, options_cancel_height = 0;
 
+static bool copying_from_sd = false, copying_from_nand = false;
+static bool copying_to_sd = false, copying_to_nand = false;
+
 void FileOptions_ResetClipboard(void) {
 	multi_select_index = 0;
 	memset(multi_select, 0, sizeof(multi_select));
@@ -54,7 +57,7 @@ void FileOptions_ResetClipboard(void) {
 
 static Result FileOptions_CreateFolder(void) {
 	Result ret = 0;
-	char *buf = (char *)malloc(256);
+	char *buf = malloc(256);
 	strcpy(buf, OSK_GetString("New folder", "Enter name"));
 
 	if (strncmp(buf, "", 1) == 0)
@@ -74,7 +77,7 @@ static Result FileOptions_CreateFolder(void) {
 
 static Result FileOptions_CreateFile(void) {
 	Result ret = 0;
-	char *buf = (char *)malloc(256);
+	char *buf = malloc(256);
 	strcpy(buf, OSK_GetString("New file.txt", "Enter name"));
 
 	if (strncmp(buf, "", 1) == 0)
@@ -104,7 +107,7 @@ static Result FileOptions_Rename(void) {
 
 	char oldPath[512], newPath[512];
 
-	char *buf = (char *)malloc(256);
+	char *buf = malloc(256);
 
 	strcpy(oldPath, cwd);
 	strcpy(newPath, cwd);
@@ -155,8 +158,57 @@ static int FileOptions_DeleteFile(void) {
 }
 
 // Copy file from src to dst
-static int FileOptions_CopyFile(char *src, char *dst, bool displayAnim) {
-	int chunksize = (512 * 1024); // Chunk size
+static int FileOptions_CopyFile(char *src, char *dst, bool display_animation) {
+	Handle src_handle, dst_handle;
+	Result ret = 0;
+
+	if (R_FAILED(ret = FSUSER_OpenFile(&src_handle, copying_from_sd? sdmc_archive : nand_archive, fsMakePath(PATH_ASCII, src), FS_OPEN_READ, 0))) {
+		FSFILE_Close(src_handle);
+		return ret;
+	}
+
+	if (R_FAILED(ret = FSUSER_OpenFile(&dst_handle, copying_to_sd? sdmc_archive : nand_archive, fsMakePath(PATH_ASCII, dst), FS_OPEN_CREATE | FS_OPEN_WRITE, 0))) {
+		FSFILE_Close(src_handle);
+		FSFILE_Close(dst_handle);
+		return ret;
+	}
+
+	u32 bytes_read = 0;
+	u64 offset = 0, size = 0;
+	size_t buf_size = 0x10000;
+	u8 *buf = malloc(buf_size); // Chunk size
+
+	FS_GetFileSize(copying_from_sd? sdmc_archive : nand_archive, src, &size);
+
+	do {
+		memset(buf, 0, buf_size);
+
+		if (R_FAILED(ret = FSFILE_Read(src_handle, &bytes_read, offset, buf, buf_size))) {
+			free(buf);
+			FSFILE_Close(src_handle);
+			FSFILE_Close(dst_handle);
+			return ret;
+		}
+		if (R_FAILED(ret = FSFILE_Write(dst_handle, NULL, offset, buf, bytes_read, FS_WRITE_FLUSH))) {
+			free(buf);
+			FSFILE_Close(src_handle);
+			FSFILE_Close(dst_handle);
+			return ret;
+		}
+
+		offset += bytes_read;
+
+		if (display_animation)
+			ProgressBar_DisplayProgress(copymode == 1? "Moving" : "Copying", Utils_Basename(src), offset, size);
+	}
+	while(offset < size);
+
+	free(buf);
+	FSFILE_Close(src_handle);
+	FSFILE_Close(dst_handle);
+	return 0;
+
+	/*int chunksize = (512 * 1024); // Chunk size
 	char *buffer = (char *)malloc(chunksize); // Reading buffer
 
 	u64 totalwrite = 0; // Accumulated writing
@@ -183,7 +235,7 @@ static int FileOptions_CopyFile(char *src, char *dst, bool displayAnim) {
 				totalread += b_read; // Accumulate read data
 				totalwrite += write(out, buffer, b_read); // Write data
 
-				if (displayAnim)
+				if (display_animation)
 					ProgressBar_DisplayProgress(copymode == 1? "Moving" : "Copying", Utils_Basename(src), totalread, size);
 			}
 
@@ -204,25 +256,25 @@ static int FileOptions_CopyFile(char *src, char *dst, bool displayAnim) {
 		result = -1;
 	
 	free(buffer); // Free memory
-	return result; // Return result
+	return result; // Return result*/
 }
 
 // Recursively copy file from src to dst
 static Result FileOptions_CopyDir(char *src, char *dst) {
-	Handle dirHandle;
+	Handle dir;
 	Result ret = 0; // Open working Directory
 
 	u16 u16_src[strlen(src) + 1];
 	Utils_U8_To_U16(u16_src, (const u8 *)src, strlen(src) + 1);
 
 	// Opened directory
-	if (R_SUCCEEDED(ret = FSUSER_OpenDirectory(&dirHandle, archive, fsMakePath(PATH_UTF16, u16_src)))) {
+	if (R_SUCCEEDED(ret = FSUSER_OpenDirectory(&dir, archive, fsMakePath(PATH_UTF16, u16_src)))) {
 		FS_MakeDir(archive, dst); // Create output directory (is allowed to fail, we can merge folders after all)
 
 		u32 entryCount = 0;
 		FS_DirectoryEntry *entries = (FS_DirectoryEntry *)calloc(MAX_FILES, sizeof(FS_DirectoryEntry));
 		
-		if (R_SUCCEEDED(ret = FSDIR_Read(dirHandle, &entryCount, MAX_FILES, entries))) {
+		if (R_SUCCEEDED(ret = FSDIR_Read(dir, &entryCount, MAX_FILES, entries))) {
 			char name[255] = {'\0'};
 			for (u32 i = 0; i < entryCount; i++) {
 				Utils_U16_To_U8((u8 *)&name[0], entries[i].name, 254);
@@ -233,8 +285,8 @@ static Result FileOptions_CopyDir(char *src, char *dst) {
 					int outsize = strlen(dst) + strlen(name) + 2;
 
 					// Allocate buffer
-					char *inbuffer = (char *)malloc(insize);
-					char *outbuffer = (char *)malloc(outsize);
+					char *inbuffer = malloc(insize);
+					char *outbuffer = malloc(outsize);
 
 					// Puzzle input path
 					strcpy(inbuffer, src);
@@ -268,7 +320,7 @@ static Result FileOptions_CopyDir(char *src, char *dst) {
 
 		free(entries);
 
-		if (R_FAILED(ret = FSDIR_Close(dirHandle))) // Close directory
+		if (R_FAILED(ret = FSDIR_Close(dir))) // Close directory
 			return ret;
 	}
 	else
@@ -317,7 +369,7 @@ static Result FileOptions_Paste(void) {
 	char *filename = lastslash + 1; // Source filename
 
 	int requiredlength = strlen(cwd) + strlen(filename) + 1; // Required target path buffer size
-	char *copytarget = (char *)malloc(requiredlength); // Allocate target path buffer
+	char *copytarget = malloc(requiredlength); // Allocate target path buffer
 
 	// Puzzle target path
 	strcpy(copytarget, cwd);
@@ -494,8 +546,18 @@ static void HandleCopy(void) {
 		copy_status = true;
 		FileOptions_Copy(COPY_KEEP_ON_FINISH);
 		MENU_STATE = MENU_STATE_HOME;
+
+		if (BROWSE_STATE == BROWSE_STATE_SD)
+			copying_from_sd = true;
+		else
+			copying_from_nand = true;
 	}
 	else if (copy_status) {
+		if (BROWSE_STATE == BROWSE_STATE_SD)
+			copying_to_sd = true;
+		else
+			copying_to_nand = true;
+
 		if ((multi_select_index > 0) && (strlen(multi_select_dir) != 0)) {
 			char dest[512];
 			
@@ -514,11 +576,14 @@ static void HandleCopy(void) {
 			
 			FileOptions_ResetClipboard();
 			copymode = NOTHING_TO_COPY;
-			
 		}
 		else if (FileOptions_Paste() != 0)
 			return;
 
+		copying_to_sd = false;
+		copying_to_nand = false;
+		copying_from_sd = false;
+		copying_from_nand = false;
 		copy_status = false;
 		Dirbrowse_PopulateFiles(true);
 		MENU_STATE = MENU_STATE_HOME;

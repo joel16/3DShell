@@ -3,7 +3,7 @@
 
 #include <3ds.h>
 
-FS_Archive archive;
+FS_Archive archive, sdmc_archive, nand_archive;
 
 Result FS_OpenArchive(FS_Archive *archive, FS_ArchiveID id);
 Result FS_CloseArchive(FS_Archive archive);

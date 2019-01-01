@@ -128,13 +128,9 @@ void Menu_ControlMenuBar(u32 input) {
 
 static void Menu_ControlBrowseOptions(u32 input) {
 	if ((input & KEY_TOUCH) && (TouchInRect(247, 0, 272, 20))) { // SD
-		FS_Write(archive, "/3ds/3DShell/lastdir.txt", START_PATH);
-		strcpy(cwd, START_PATH);
-			
 		BROWSE_STATE = BROWSE_STATE_SD;
-			
-		FS_CloseArchive(archive);
-		FS_OpenArchive(&archive, ARCHIVE_SDMC);
+		archive = sdmc_archive;
+		Config_GetLastDirectory();
 
 		Dirbrowse_PopulateFiles(true);
 	}
@@ -142,9 +138,7 @@ static void Menu_ControlBrowseOptions(u32 input) {
 		strcpy(cwd, START_PATH);
 
 		BROWSE_STATE = BROWSE_STATE_NAND;
-
-		FS_CloseArchive(archive);
-		FS_OpenArchive(&archive, ARCHIVE_NAND_CTR_FS);
+		archive = nand_archive;
 
 		Dirbrowse_PopulateFiles(true);
 	}
