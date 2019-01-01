@@ -23,7 +23,7 @@ static drflac_uint8 FLAC_GetChannels(void) {
 }
 
 static drflac_uint64 FLAC_Decode(void *buffer) {
-	samplesRead = drflac_read_s16(pFlac, buffSize, buffer);
+	samplesRead = drflac_read_pcm_frames_s16(pFlac, buffSize, (drflac_int16 *)buffer);
 	return samplesRead;
 }
 

@@ -1,53 +1,37 @@
 /* stb_image - v2.19 - public domain image loader - http://nothings.org/stb
                                   no warranty implied; use at your own risk
-
    Do this:
       #define STB_IMAGE_IMPLEMENTATION
    before you include this file in *one* C or C++ file to create the implementation.
-
    // i.e. it should look like this:
    #include ...
    #include ...
    #include ...
    #define STB_IMAGE_IMPLEMENTATION
    #include "stb_image.h"
-
    You can #define STBI_ASSERT(x) before the #include to avoid using assert.h.
    And #define STBI_MALLOC, STBI_REALLOC, and STBI_FREE to avoid using malloc,realloc,free
-
-
    QUICK NOTES:
       Primarily of interest to game developers and other people who can
           avoid problematic images and only need the trivial interface
-
       JPEG baseline & progressive (12 bpc/arithmetic not supported, same as stock IJG lib)
       PNG 1/2/4/8/16-bit-per-channel
-
       TGA (not sure what subset, if a subset)
       BMP non-1bpp, non-RLE
       PSD (composited view only, no extra channels, 8/16 bit-per-channel)
-
       GIF (*comp always reports as 4-channel)
       HDR (radiance rgbE format)
       PIC (Softimage PIC)
       PNM (PPM and PGM binary only)
-
       Animated GIF still needs a proper API, but here's one way to do it:
           http://gist.github.com/urraka/685d9a6340b26b830d49
-
       - decode from memory or through FILE (define STBI_NO_STDIO to remove code)
       - decode from arbitrary I/O callbacks
       - SIMD acceleration on x86/x64 (SSE2) and ARM (NEON)
-
    Full documentation under "DOCUMENTATION" below.
-
-
 LICENSE
-
   See end of file for license information.
-
 RECENT REVISION HISTORY:
-
       2.19  (2018-02-11) fix warning
       2.18  (2018-01-30) fix warnings
       2.17  (2018-01-29) bugfix, 1-bit BMP, 16-bitness query, fix warnings
@@ -62,12 +46,8 @@ RECENT REVISION HISTORY:
                          correct channel count for PNG & BMP
       2.10  (2016-01-22) avoid warning introduced in 2.09
       2.09  (2016-01-16) 16-bit TGA; comments in PNM files; STBI_REALLOC_SIZED
-
    See end of file for full revision history.
-
-
  ============================    Contributors    =========================
-
  Image formats                          Extensions, features
     Sean Barrett (jpeg, png, bmp)          Jetro Lauha (stbi_info)
     Nicolas Schulz (hdr, psd)              Martin "SpartanJ" Golini (stbi_info)
@@ -84,7 +64,6 @@ RECENT REVISION HISTORY:
     Fabian "ryg" Giesen                    Anael Seghezzi (is-16-bit query)
     Arseny Kapoulkine
     John-Mark Allen
-
  Bug & warning fixes
     Marc LeBlanc            David Woo          Guillaume George   Martins Mozeiko
     Christpher Lloyd        Jerry Jansson      Joseph Thomson     Phil Jordan
@@ -829,7 +808,7 @@ static int      stbi__pic_info(stbi__context *s, int *x, int *y, int *comp);
 
 #ifndef STBI_NO_GIF
 static int      stbi__gif_test(stbi__context *s);
-static void    *stbi__gif_load(stbi__context *s, int *x, int *y, int *comp, int req_comp, stbi__result_info *ri);
+static void    *stbi__gif_load(stbi__context *s, int *x, int *y, int *comp, int req_comp);
 static void    *stbi__load_gif_main(stbi__context *s, int **delays, int *x, int *y, int *z, int *comp, int req_comp);
 static int      stbi__gif_info(stbi__context *s, int *x, int *y, int *comp);
 #endif
@@ -986,7 +965,7 @@ static void *stbi__load_main(stbi__context *s, int *x, int *y, int *comp, int re
    if (stbi__bmp_test(s))  return stbi__bmp_load(s,x,y,comp,req_comp, ri);
    #endif
    #ifndef STBI_NO_GIF
-   if (stbi__gif_test(s))  return stbi__gif_load(s,x,y,comp,req_comp, ri);
+   if (stbi__gif_test(s))  return stbi__gif_load(s,x,y,comp,req_comp);
    #endif
    #ifndef STBI_NO_PSD
    if (stbi__psd_test(s))  return stbi__psd_load(s,x,y,comp,req_comp, ri, bpc);
@@ -4132,7 +4111,6 @@ Init algorithm:
    for (   ; i <= 255; ++i)     stbi__zdefault_length[i]   = 9;
    for (   ; i <= 279; ++i)     stbi__zdefault_length[i]   = 7;
    for (   ; i <= 287; ++i)     stbi__zdefault_length[i]   = 8;
-
    for (i=0; i <=  31; ++i)     stbi__zdefault_distance[i] = 5;
 }
 */
@@ -4969,7 +4947,7 @@ static int stbi__png_is16(stbi__context *s)
    stbi__png p;
    p.s = s;
    if (!stbi__png_info_raw(&p, NULL, NULL, NULL))
-	   return 0;
+     return 0;
    if (p.depth != 16) {
       stbi__rewind(p.s);
       return 0;
@@ -6336,15 +6314,15 @@ static stbi_uc *stbi__process_gif_raster(stbi__context *s, stbi__gif *g)
 
 // this function is designed to support animated gifs, although stb_image doesn't support it
 // two back is the image from two frames ago, used for a very specific disposal format
-static stbi_uc *stbi__gif_load_next(stbi__context *s, stbi__gif *g, int *comp, int req_comp, stbi_uc *two_back)
+static stbi_uc *stbi__gif_load_next(stbi__context *s, stbi__gif *g, int *comp, stbi_uc *two_back)
 {
    int dispose; 
-   int first_frame; 
+   //int first_frame; 
    int pi; 
    int pcount; 
 
    // on first frame, any non-written pixels get the background colour (non-transparent)
-   first_frame = 0; 
+   //first_frame = 0; 
    if (g->out == 0) {
       if (!stbi__gif_header(s, g, comp,0))     return 0; // stbi__g_failure_reason set by stbi__gif_header
       g->out = (stbi_uc *) stbi__malloc(4 * g->w * g->h);
@@ -6358,7 +6336,7 @@ static stbi_uc *stbi__gif_load_next(stbi__context *s, stbi__gif *g, int *comp, i
       memset( g->out, 0x00, 4 * g->w * g->h ); 
       memset( g->background, 0x00, 4 * g->w * g->h ); // state of the background (starts transparent)
       memset( g->history, 0x00, g->w * g->h );        // pixels that were affected previous frame
-      first_frame = 1; 
+      //first_frame = 1; 
    } else {
       // second frame - how do we dispoase of the previous one?
       dispose = (g->eflags & 0x1C) >> 2; 
@@ -6375,12 +6353,10 @@ static stbi_uc *stbi__gif_load_next(stbi__context *s, stbi__gif *g, int *comp, i
             }
          }
       } else if (dispose == 2) { 
-         // restore what was changed last frame to background before that frame; 
-         for (pi = 0; pi < pcount; ++pi) {
-            if (g->history[pi]) {
-               memcpy( &g->out[pi * 4], &g->background[pi * 4], 4 ); 
-            }
-         }
+   // clear canvas region to solid black transparency
+   for (pi = 0; pi < pcount; ++pi)
+      if (g->history[pi])
+         memset( g->out + pi * 4,  0x00, 4 );
       } else {
          // This is a non-disposal case eithe way, so just 
          // leave the pixels as is, and they will become the new background
@@ -6438,18 +6414,6 @@ static stbi_uc *stbi__gif_load_next(stbi__context *s, stbi__gif *g, int *comp, i
             
             o = stbi__process_gif_raster(s, g);
             if (o == NULL) return NULL;
-
-            // if this was the first frame, 
-            pcount = g->w * g->h; 
-            if (first_frame && (g->bgindex > 0)) {
-               // if first frame, any pixel not drawn to gets the background color
-               for (pi = 0; pi < pcount; ++pi) {
-                  if (g->history[pi] == 0) {
-                     g->pal[g->bgindex][3] = 255; // just in case it was made transparent, undo that; It will be reset next frame if need be; 
-                     memcpy( &g->out[pi * 4], &g->pal[g->bgindex], 4 ); 
-                  }
-               }
-            }
 
             return o;
          }
@@ -6513,7 +6477,7 @@ static void *stbi__load_gif_main(stbi__context *s, int **delays, int *x, int *y,
       }
 
       do {
-         u = stbi__gif_load_next(s, &g, comp, req_comp, two_back);
+         u = stbi__gif_load_next(s, &g, comp, two_back);
          if (u == (stbi_uc *) s) u = 0;  // end of animated gif marker
 
          if (u) {
@@ -6560,13 +6524,13 @@ static void *stbi__load_gif_main(stbi__context *s, int **delays, int *x, int *y,
    }
 }
 
-static void *stbi__gif_load(stbi__context *s, int *x, int *y, int *comp, int req_comp, stbi__result_info *ri)
+static void *stbi__gif_load(stbi__context *s, int *x, int *y, int *comp, int req_comp)
 {
    stbi_uc *u = 0;
    stbi__gif g;
    memset(&g, 0, sizeof(g));
 
-   u = stbi__gif_load_next(s, &g, comp, req_comp, 0);
+   u = stbi__gif_load_next(s, &g, comp, 0);
    if (u == (stbi_uc *) s) u = 0;  // end of animated gif marker
    if (u) {
       *x = g.w;
