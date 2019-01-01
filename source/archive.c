@@ -172,9 +172,7 @@ static Result unzExtractAll(const char *src, unzFile *unzHandle) {
 
 Result Archive_ExtractZIP(const char *src) {
 	char *path = malloc(256);
-	char *dirname_without_ext = malloc(256);
-
-	dirname_without_ext = Archive_RemoveFileExt((char *)src);
+	char *dirname_without_ext = Archive_RemoveFileExt((char *)src);
 
 	snprintf(path, 512, "%s/", dirname_without_ext);
 	FS_MakeDir(archive, path);
@@ -196,9 +194,7 @@ Result Archive_ExtractZIP(const char *src) {
 
 Result Archive_ExtractRAR(const char *src) {
 	char *path = malloc(256);
-	char *dirname_without_ext = malloc(256);
-
-	dirname_without_ext = Archive_RemoveFileExt((char *)src);
+	char *dirname_without_ext = Archive_RemoveFileExt((char *)src);
 
 	snprintf(path, 512, "%s/", dirname_without_ext);
 	FS_MakeDir(archive, path);
@@ -225,17 +221,17 @@ Result Archive_ExtractRAR(const char *src) {
 
 	for (size_t i = 0; i < count; i++) {
 		char *filename = Archive_GetFilename(&rar_archive, i);
+		const dmc_unrar_file *filestat = dmc_unrar_get_file_stat(&rar_archive, i);
 
-		char temp[512];
-		snprintf(temp, 512, "%s%s", path, Archive_GetDirPath(filename));
-		
-		if (!FS_DirExists(archive, temp)) {
-			if (strcmp(Archive_GetFileExt(temp), "") == 0)
-				FS_MakeDir(archive, temp);
-		}
+		char unrar_path[512];
+		snprintf(unrar_path, 512, "%s%s", path, Archive_GetDirPath(filename));
 
 		ProgressBar_DisplayProgress("Extracting", Utils_Basename(filename), i, count);
 
+		if (!FS_DirExists(archive, unrar_path)) {
+			if ((strcmp(Archive_GetFileExt(unrar_path), "") == 0) || (dmc_unrar_file_is_directory(&rar_archive, i)))
+				FS_MakeDir(archive, unrar_path);
+		}
 		if (filename && !dmc_unrar_file_is_directory(&rar_archive, i)) {
 			dmc_unrar_return supported = dmc_unrar_file_is_supported(&rar_archive, i);
 			
