@@ -11,7 +11,7 @@
 
 #include "dmc_unrar.c"
 
-static char *Archive_GetDirPat(char *path) {
+static char *Archive_GetDirPath(char *path) {
 	char *e = strrchr(path, '/');
 
 	if (!e) {
@@ -51,19 +51,22 @@ static char *Archive_GetFilename(dmc_unrar_archive *archive, size_t i) {
 	return filename;
 }
 
-/*static const char *Archive_GetFilenameWithoutDir(const char *filename) {
-	if (!filename)
-		return 0;
+static char *Archive_RemoveFileExt(char *filename) {
+	char *ret, *lastdot;
 
-	char *p = strrchr(filename, '/');
-	if (!p)
-		return filename;
+   	if (filename == NULL)
+   		return NULL;
+   	if ((ret = malloc(strlen(filename) + 1)) == NULL)
+   		return NULL;
 
-	if (p[1] == '\0')
-		return 0;
+   	strcpy(ret, filename);
+   	lastdot = strrchr(ret, '.');
 
-	return p + 1;
-}*/
+   	if (lastdot != NULL)
+   		*lastdot = '\0';
+
+   	return ret;
+}
 
 static const char *Archive_GetFileExt(const char *filename) {
 	const char *ext = strrchr(filename, '.');
@@ -167,23 +170,23 @@ static Result unzExtractAll(const char *src, unzFile *unzHandle) {
 	return res;
 }
 
-Result Archive_ExtractZIP(const char *src, const char *dst) {
-	char temp_file[512];
-	char temp_path[512];
+Result Archive_ExtractZIP(const char *src) {
+	char *path = malloc(256);
+	char *dirname_without_ext = malloc(256);
 
-	FS_MakeDir(archive, dst);
+	dirname_without_ext = Archive_RemoveFileExt((char *)src);
 
-	strncpy(temp_path, "sdmc:", sizeof(temp_path));
-	strncat(temp_path, (char *)dst, (1024 - strlen(temp_path) - 1));
-	chdir(temp_path);
-	
-	strncpy(temp_file, "sdmc:", sizeof(temp_file));
-	strncat(temp_file, (char*)src, (1024 - strlen(temp_file) - 1));
+	snprintf(path, 512, "%s/", dirname_without_ext);
+	FS_MakeDir(archive, path);
+	chdir(path);
 
-	unzFile *unzHandle = unzOpen(temp_file); // Open zip file
+	unzFile *unzHandle = unzOpen(src); // Open zip file
 
-	if (unzHandle == NULL) // not found
+	if (unzHandle == NULL) {// not found
+		free(path);
+		free(dirname_without_ext);
 		return -1;
+	}
 
 	Result res = unzExtractAll(src, unzHandle);
 	res = unzClose(unzHandle);
@@ -191,68 +194,75 @@ Result Archive_ExtractZIP(const char *src, const char *dst) {
 	return res;
 }
 
-Result Archive_ExtractRAR(const char *src, const char *dst) {
-	char temp_file[512];
-	char temp_path[512];
+Result Archive_ExtractRAR(const char *src) {
+	char *path = malloc(256);
+	char *dirname_without_ext = malloc(256);
 
-	FS_MakeDir(archive, dst);
+	dirname_without_ext = Archive_RemoveFileExt((char *)src);
 
-	strncpy(temp_path, "sdmc:", sizeof(temp_path));
-	strncat(temp_path, (char *)dst, (1024 - strlen(temp_path) - 1));
-	chdir(temp_path);
-	
-	strncpy(temp_file, "sdmc:", sizeof(temp_file));
-	strncat(temp_file, (char*)src, (1024 - strlen(temp_file) - 1));
+	snprintf(path, 512, "%s/", dirname_without_ext);
+	FS_MakeDir(archive, path);
+	chdir(path);
 
 	dmc_unrar_archive rar_archive;
 	dmc_unrar_return ret;
 
 	ret = dmc_unrar_archive_init(&rar_archive);
-	if (ret != DMC_UNRAR_OK)
+	if (ret != DMC_UNRAR_OK) {
+		free(path);
+		free(dirname_without_ext);
 		return -1;
+	}
 
-	ret = dmc_unrar_archive_open_path(&rar_archive, temp_file);
-	if (ret != DMC_UNRAR_OK)
+	ret = dmc_unrar_archive_open_path(&rar_archive, src);
+	if (ret != DMC_UNRAR_OK) {
+		free(path);
+		free(dirname_without_ext);
 		return -1;
+	}
 
 	size_t count = dmc_unrar_get_file_count(&rar_archive);
+
 	for (size_t i = 0; i < count; i++) {
-		char *name = Archive_GetFilename(&rar_archive, i);
+		char *filename = Archive_GetFilename(&rar_archive, i);
+
 		char temp[512];
-		snprintf(temp, 512, "%s%s", dst, Archive_GetDirPat(name));
+		snprintf(temp, 512, "%s%s", path, Archive_GetDirPath(filename));
 		
 		if (!FS_DirExists(archive, temp)) {
 			if (strcmp(Archive_GetFileExt(temp), "") == 0)
 				FS_MakeDir(archive, temp);
 		}
 
-		//const dmc_unrar_file *file = dmc_unrar_get_file_stat(&rar_archive, i);
+		ProgressBar_DisplayProgress("Extracting", Utils_Basename(filename), i, count);
 
-		ProgressBar_DisplayProgress("Extracting", Utils_Basename(name), i, count);
-
-		//const char *filename = Archive_GetFilenameWithoutDir(name);
-
-		if (name && !dmc_unrar_file_is_directory(&rar_archive, i)) {
+		if (filename && !dmc_unrar_file_is_directory(&rar_archive, i)) {
 			dmc_unrar_return supported = dmc_unrar_file_is_supported(&rar_archive, i);
 			
 			if (supported == DMC_UNRAR_OK) {
-				dmc_unrar_return extracted = dmc_unrar_extract_file_to_path(&rar_archive, i, name, NULL, true);
+				dmc_unrar_return extracted = dmc_unrar_extract_file_to_path(&rar_archive, i, filename, NULL, true);
 				
 				if (extracted != DMC_UNRAR_OK) {
-					free(name);
+					free(filename);
+					free(path);
+					free(dirname_without_ext);
 					return -1;
 				}
 
 			}
 			else {
-				free(name);
+				free(filename);
+				free(path);
+				free(dirname_without_ext);
 				return -1;
 			}
 		}
 
-		free(name);
+		free(filename);
 	}
 
+	free(path);
+	free(dirname_without_ext);
 	dmc_unrar_archive_close(&rar_archive);
 	return 0;
 }

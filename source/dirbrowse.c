@@ -8,6 +8,7 @@
 #include "fs.h"
 #include "menu_gallery.h"
 #include "menu_music.h"
+#include "menu_textviewer.h"
 #include "textures.h"
 #include "utils.h"
 
@@ -195,7 +196,7 @@ void Dirbrowse_DisplayFiles(void) {
 				Draw_Image(icon_audio, 30, 56 + (38 * printed));
 			else if ((!strncasecmp(file->ext, "png", 3)) || (!strncasecmp(file->ext, "jpg", 3)) || (!strncasecmp(file->ext, "bmp", 3)))
 				Draw_Image(icon_image, 30, 56 + (38 * printed));
-			else if ((!strncasecmp(file->ext, "txt", 3)) || (!strncasecmp(file->ext, "lua", 3)) || (!strncasecmp(file->ext, "cfg", 3)))
+			else if ((!strncasecmp(file->ext, "txt", 3)) || (!strncasecmp(file->ext, "log", 3)) || (!strncasecmp(file->ext, "lua", 3)) || (!strncasecmp(file->ext, "cfg", 3)))
 				Draw_Image(icon_text, 30, 56 + (38 * printed));
 			else if ((!strncasecmp(file->ext, "pdf", 3)) || (!strncasecmp(file->ext, "cbz", 3)) || (!strncasecmp(file->ext, "fb2", 3)) || (!strncasecmp(file->ext, "epub", 4)))
 				Draw_Image(icon_doc, 30, 56 + (38 * printed));
@@ -271,16 +272,18 @@ void Dirbrowse_OpenFile(void) {
 	else if ((!strncasecmp(file->ext, "png", 3)) || (!strncasecmp(file->ext, "jpg", 3)) || (!strncasecmp(file->ext, "bmp", 3)))
 		Gallery_DisplayImage(path);
 	else if (!strncasecmp(file->ext, "zip", 3)) {
-		Archive_ExtractZIP(path, cwd);
+		Archive_ExtractZIP(path);
 		Dirbrowse_PopulateFiles(true);
 	}
 	else if (!strncasecmp(file->ext, "rar", 3)) {
-		Archive_ExtractRAR(path, cwd);
+		Archive_ExtractRAR(path);
 		Dirbrowse_PopulateFiles(true);
 	}
 	else if ((!strncasecmp(file->ext, "mp3", 3)) || (!strncasecmp(file->ext, "ogg", 3)) || (!strncasecmp(file->ext, "wav", 3)) || (!strncasecmp(file->ext, "fla", 3))
 		|| (!strncasecmp(file->ext, "opu", 3)))
 		Menu_PlayMusic(path);
+	else if ((!strncasecmp(file->ext, "txt", 3)) || (!strncasecmp(file->ext, "log", 3)) || (!strncasecmp(file->ext, "cfg", 3)) || (!strncasecmp(file->ext, "lua", 3)))
+		Menu_DisplayText(path);
 }
 
 // Navigate to Folder
