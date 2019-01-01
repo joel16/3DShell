@@ -20,7 +20,7 @@ static char *Archive_GetDirPath(char *path) {
 	}
 
 	int index = (int)(e - path);
-	char *str = (char *) malloc(sizeof(char) * (index + 1));
+	char *str = malloc(sizeof(char) * (index + 1));
 	strncpy(str, path, index);
 	str[index] = '\0';
 
@@ -32,7 +32,7 @@ static char *Archive_GetFilename(dmc_unrar_archive *archive, size_t i) {
 	if (!size)
 		return 0;
 
-	char *filename = (char *)malloc(size);
+	char *filename = malloc(size);
 	if (!filename)
 		return 0;
 
@@ -84,7 +84,7 @@ static Result unzExtractCurrentFile(unzFile *unzHandle, int *path) {
 		return -1;
 	}
 
-	void *buf = (void *)malloc(bufsize);
+	void *buf = malloc(bufsize);
 	if (!buf)
 		return -2;
 
@@ -221,7 +221,6 @@ Result Archive_ExtractRAR(const char *src) {
 
 	for (size_t i = 0; i < count; i++) {
 		char *filename = Archive_GetFilename(&rar_archive, i);
-		const dmc_unrar_file *filestat = dmc_unrar_get_file_stat(&rar_archive, i);
 
 		char unrar_path[512];
 		snprintf(unrar_path, 512, "%s%s", path, Archive_GetDirPath(filename));
