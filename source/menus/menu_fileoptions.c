@@ -9,6 +9,7 @@
 #include "dirbrowse.h"
 #include "fs.h"
 #include "keyboard.h"
+#include "menu_error.h"
 #include "progress_bar.h"
 #include "textures.h"
 #include "touch.h"
@@ -67,8 +68,10 @@ static Result FileOptions_CreateFolder(void) {
 	strcat(path, buf);
 	free(buf);
 
-	if (R_FAILED(ret = FS_RecursiveMakeDir(archive, path)))
+	if (R_FAILED(ret = FS_RecursiveMakeDir(archive, path))) {
+		Menu_DisplayError("FS_RecursiveMakeDir failed:", ret);
 		return ret;
+	}
 
 	Dirbrowse_PopulateFiles(true);
 	return 0;
@@ -87,8 +90,10 @@ static Result FileOptions_CreateFile(void) {
 	strcat(path, buf);
 	free(buf);
 
-	if (R_FAILED(ret = FS_CreateFile(archive, path)))
+	if (R_FAILED(ret = FS_CreateFile(archive, path))) {
+		Menu_DisplayError("FS_CreateFile failed:", ret);
 		return ret;
+	}
 	
 	Dirbrowse_PopulateFiles(true);
 	return 0;
@@ -117,12 +122,16 @@ static Result FileOptions_Rename(void) {
 	free(buf);
 
 	if (file->isDir) {
-		if (R_FAILED(ret = FS_RenameDir(archive, oldPath, newPath)))
+		if (R_FAILED(ret = FS_RenameDir(archive, oldPath, newPath))) {
+			Menu_DisplayError("FS_RenameDir failed:", ret);
 			return ret;
+		}
 	}
 	else {
-		if (R_FAILED(ret = FS_RenameFile(archive, oldPath, newPath)))
+		if (R_FAILED(ret = FS_RenameFile(archive, oldPath, newPath))) {
+			Menu_DisplayError("FS_RenameFile failed:", ret);
 			return ret;
+		}
 	}
 
 	Dirbrowse_PopulateFiles(true);
@@ -145,12 +154,16 @@ static int FileOptions_DeleteFile(void) {
 	Result ret = 0;
 
 	if (file->isDir) { // Delete folder
-		if (R_FAILED(ret = FS_RemoveDirRecursive(archive, path)))
+		if (R_FAILED(ret = FS_RemoveDirRecursive(archive, path))) {
+			Menu_DisplayError("FS_RemoveDirRecursive failed:", ret);
 			return ret;
+		}
 	}
 	else { // Delete file
-		if (R_FAILED(ret = FS_RemoveFile(archive, path)))
+		if (R_FAILED(ret = FS_RemoveFile(archive, path))) {
+			Menu_DisplayError("FS_RemoveFile failed:", ret);
 			return ret;
+		}
 	}
 	
 	return 0;
@@ -165,6 +178,7 @@ static int FileOptions_CopyFile(char *src, char *dst, bool display_animation) {
 	Utils_U8_To_U16(u16_src, (const u8 *)src, strlen(src) + 1);
 	if (R_FAILED(ret = FSUSER_OpenFile(&src_handle, copying_from_sd? sdmc_archive : nand_archive, fsMakePath(PATH_UTF16, u16_src), FS_OPEN_READ, 0))) {
 		FSFILE_Close(src_handle);
+		Menu_DisplayError("FSUSER_OpenFile failed:", ret);
 		return ret;
 	}
 
@@ -173,6 +187,7 @@ static int FileOptions_CopyFile(char *src, char *dst, bool display_animation) {
 	if (R_FAILED(ret = FSUSER_OpenFile(&dst_handle, copying_to_sd? sdmc_archive : nand_archive, fsMakePath(PATH_UTF16, u16_dst), FS_OPEN_CREATE | FS_OPEN_WRITE, 0))) {
 		FSFILE_Close(src_handle);
 		FSFILE_Close(dst_handle);
+		Menu_DisplayError("FSUSER_OpenFile failed:", ret);
 		return ret;
 	}
 
@@ -190,12 +205,14 @@ static int FileOptions_CopyFile(char *src, char *dst, bool display_animation) {
 			free(buf);
 			FSFILE_Close(src_handle);
 			FSFILE_Close(dst_handle);
+			Menu_DisplayError("FSFILE_Read failed:", ret);
 			return ret;
 		}
 		if (R_FAILED(ret = FSFILE_Write(dst_handle, NULL, offset, buf, bytes_read, FS_WRITE_FLUSH))) {
 			free(buf);
 			FSFILE_Close(src_handle);
 			FSFILE_Close(dst_handle);
+			Menu_DisplayError("FSFILE_Write failed:", ret);
 			return ret;
 		}
 
@@ -221,8 +238,8 @@ static Result FileOptions_CopyDir(char *src, char *dst) {
 	Utils_U8_To_U16(u16_src, (const u8 *)src, strlen(src) + 1);
 
 	// Opened directory
-	if (R_SUCCEEDED(ret = FSUSER_OpenDirectory(&dir, archive, fsMakePath(PATH_UTF16, u16_src)))) {
-		FS_MakeDir(archive, dst); // Create output directory (is allowed to fail, we can merge folders after all)
+	if (R_SUCCEEDED(ret = FSUSER_OpenDirectory(&dir, copying_from_sd? sdmc_archive : nand_archive, fsMakePath(PATH_UTF16, u16_src)))) {
+		FS_MakeDir(copying_to_sd? sdmc_archive : nand_archive, dst); // Create output directory (is allowed to fail, we can merge folders after all)
 
 		u32 entryCount = 0;
 		FS_DirectoryEntry *entries = (FS_DirectoryEntry *)calloc(MAX_FILES, sizeof(FS_DirectoryEntry));
@@ -268,16 +285,22 @@ static Result FileOptions_CopyDir(char *src, char *dst) {
 				ProgressBar_DisplayProgress(copymode == 1? "Moving" : "Copying", Utils_Basename(name), i, entryCount);
 			}
 		}
-		else 
+		else {
+			Menu_DisplayError("FSDIR_Read failed:", ret);
 			return ret;
+		}
 
 		free(entries);
 
-		if (R_FAILED(ret = FSDIR_Close(dir))) // Close directory
+		if (R_FAILED(ret = FSDIR_Close(dir))) { // Close directory
+			Menu_DisplayError("FSDIR_Close failed:", ret);
 			return ret;
+		}
 	}
-	else
+	else {
+		Menu_DisplayError("FSUSER_OpenDirectory failed:", ret);
 		return ret;
+	}
 
 	return 0;
 }
@@ -527,9 +550,9 @@ static void HandleCopy(void) {
 					if (strncmp(multi_select_paths[i], "..", 2) != 0) {
 						snprintf(dest, 512, "%s%s", cwd, Utils_Basename(multi_select_paths[i]));
 				
-						if (FS_DirExists(archive, multi_select_paths[i]))
+						if (FS_DirExists(copying_from_sd? sdmc_archive : nand_archive, multi_select_paths[i]))
 							FileOptions_CopyDir(multi_select_paths[i], dest);
-						else if (FS_FileExists(archive, multi_select_paths[i]))
+						else if (FS_FileExists(copying_from_sd? sdmc_archive : nand_archive, multi_select_paths[i]))
 							FileOptions_CopyFile(multi_select_paths[i], dest, true);
 					}
 				}

@@ -6,6 +6,7 @@
 #include "config.h"
 #include "dirbrowse.h"
 #include "fs.h"
+#include "menu_error.h"
 #include "menu_gallery.h"
 #include "menu_music.h"
 #include "menu_textviewer.h"
@@ -134,16 +135,21 @@ Result Dirbrowse_PopulateFiles(bool clear) {
 		}	
 		else {
 			free(entries);
+			Menu_DisplayError("FSDIR_Read failed:", ret);
 			return ret;
 		}
 		
 		free(entries);
 		
-		if (R_FAILED(ret = FSDIR_Close(dir))) // Close directory
+		if (R_FAILED(ret = FSDIR_Close(dir))) { // Close directory
+			Menu_DisplayError("FSDIR_Close failed:", ret);
 			return ret;
+		}
 	}
-	else
+	else {
+		Menu_DisplayError("FSUSER_OpenDirectory failed:", ret);
 		return ret;
+	}
 		
 	// Attempt to keep index
 	if (!clear) {
@@ -207,13 +213,6 @@ void Dirbrowse_DisplayFiles(void) {
 			strncpy(buf, file->name, sizeof(buf));
 			buf[sizeof(buf) - 1] = '\0';
 
-			/*if (!file->isDir) {
-				Utils_GetSizeString(size, file->size);
-				float width = 0;
-				Draw_GetTextSize(0.48f, &width, NULL, size);
-				Draw_Text(390 - width, 180 + (73 * printed), 0.48f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, size);
-			}*/
-
 			float height = 0;
 			Draw_GetTextSize(0.48f, NULL, &height, buf);
 			
@@ -232,9 +231,13 @@ void Dirbrowse_DisplayFiles(void) {
 static Result Dirbrowse_SaveLastDirectory(void) {
 	Result ret = 0;
 
-	if (R_FAILED(ret = FS_Write(archive, "/3ds/3DShell/lastdir.txt", cwd)))
-		return ret;
-
+	if (!(BROWSE_STATE == BROWSE_STATE_NAND)) {
+		if (R_FAILED(ret = FS_Write(archive, "/3ds/3DShell/lastdir.txt", cwd))) {
+			Menu_DisplayError("Failed to save last directory:", ret);
+			return ret;
+		}
+	}
+	
 	return 0;
 }
 
