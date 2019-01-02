@@ -7,7 +7,6 @@
 #include "dirbrowse.h"
 #include "fs.h"
 #include "ftp.h"
-#include "menu_ftp.h"
 #include "menu_main.h"
 #include "status_bar.h"
 #include "textures.h"

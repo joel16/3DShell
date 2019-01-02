@@ -3,7 +3,6 @@
 #include "config.h"
 #include "dirbrowse.h"
 #include "menu_main.h"
-#include "menu_settings.h"
 #include "status_bar.h"
 #include "textures.h"
 #include "touch.h"

@@ -10,7 +10,6 @@
 #include "config.h"
 #include "dirbrowse.h"
 #include "fs.h"
-#include "menu_music.h"
 #include "screenshot.h"
 #include "status_bar.h"
 #include "textures.h"
