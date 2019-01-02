@@ -37,7 +37,7 @@ Result FS_MakeDir(FS_Archive archive, const char *path) {
 
 Result FS_CreateFile(FS_Archive archive, const char *path) {
 	Result ret = 0;
-
+	
 	u16 path_u16[strlen(path) + 1];
 	Utils_U8_To_U16(path_u16, (const u8 *)path, strlen(path) + 1);
 
@@ -63,12 +63,14 @@ Result FS_RecursiveMakeDir(FS_Archive archive, const char *dir) {
 		if (*p == '/') {
 			*p = 0;
 
-			ret = FS_MakeDir(archive, buf);
+			if (!FS_DirExists(archive, buf))
+				ret = FS_MakeDir(archive, buf);
 			
 			*p = '/';
 		}
 		
-		ret = FS_MakeDir(archive, buf);
+		if (!FS_DirExists(archive, buf))
+			ret = FS_MakeDir(archive, buf);
 	}
 	
 	return ret;
