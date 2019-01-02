@@ -52,12 +52,13 @@ void WAV_SetDecoder(struct decoder_fn *decoder) {
 }
 
 int WAV_Validate(const char *in) {
-	int err = -1;
-	drwav *wav_fiile = drwav_open_file(in);
+	drwav *pWav = drwav_open_file(in);
 
-	if (wav_fiile != NULL)
-		err = 0;
+	if (pWav == NULL) {
+		drwav_close(pWav);
+		return -1;
+	}
 
-	drwav_close(wav_fiile);
-	return err;
+	drwav_close(pWav);
+	return 0;
 }

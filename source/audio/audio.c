@@ -120,6 +120,10 @@ void Audio_PlayFile(void *path) {
 			FLAC_SetDecoder(&decoder);
 			break;
 
+		case FILE_TYPE_OPUS:
+			Opus_SetDecoder(&decoder);
+			break;
+
 		case FILE_TYPE_MP3:
 			MP3_SetDecoder(&decoder);
 			break;

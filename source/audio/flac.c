@@ -7,7 +7,6 @@
 
 static drflac *pFlac;
 static const drflac_uint64 buffSize = 16 * 1024;
-static drflac_uint64 samplesRead;
 
 static int FLAC_Init(const char *file) {
 	pFlac = drflac_open_file(file);
@@ -23,8 +22,7 @@ static drflac_uint8 FLAC_GetChannels(void) {
 }
 
 static drflac_uint64 FLAC_Decode(void *buffer) {
-	samplesRead = drflac_read_pcm_frames_s16(pFlac, buffSize, (drflac_int16 *)buffer);
-	return samplesRead;
+	return drflac_read_pcm_frames_s16(pFlac, buffSize, (drflac_int16 *)buffer);
 }
 
 static void FLAC_Term(void) {
@@ -41,12 +39,13 @@ void FLAC_SetDecoder(struct decoder_fn *decoder) {
 }
 
 int FLAC_Validate(const char *file) {
-	int err = -1;
 	drflac *pFlac = drflac_open_file(file);
 
-	if (pFlac != NULL)
-		err = 0;
-
+	if (pFlac == NULL) {
+		drflac_close(pFlac);
+		return -1;	
+	}
+	
 	drflac_close(pFlac);
-	return err;
+	return 0;
 }

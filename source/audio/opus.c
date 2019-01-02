@@ -29,7 +29,7 @@ static u8 Opus_GetChannels(void) {
 	return 2;
 }
 
-static u64 Opus_FillBuffer(void *buffer) {
+static u64 Opus_FillBuffer(s16 *buffer) {
 	u64 samplesRead = 0;
 	int samplesToRead = buffSize;
 
