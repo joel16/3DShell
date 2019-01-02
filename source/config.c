@@ -58,7 +58,7 @@ Result Config_Load(void) {
 
 	// Delete config file if config file is updated. This will rarely happen.
 	if (config_version_holder  < CONFIG_VERSION) {
-		FS_Remove(archive, "/3ds/3DShell/config.cfg");
+		FS_RemoveFile(archive, "/3ds/3DShell/config.cfg");
 		config.dark_theme = false;
 		config.hidden_files = false;
 		config.sort = 0;

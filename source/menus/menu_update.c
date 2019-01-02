@@ -6,7 +6,6 @@
 #include "config.h"
 #include "fs.h"
 #include "menu_main.h"
-#include "menu_update.h"
 #include "net.h"
 #include "textures.h"
 #include "touch.h"
@@ -98,7 +97,7 @@ static void Menu_InstallUpdate(void) {
 	if (wifiStatus != 0) {
 		if (envIsHomebrew()) {
 			if (FS_FileExists(archive, "/3ds/3DShell/3DShell.3dsx"))
-				FS_Remove(archive, "/3ds/3DShell/3DShell.3dsx");
+				FS_RemoveFile(archive, "/3ds/3DShell/3DShell.3dsx");
 
 			Net_DownloadFile("https://github.com/joel16/3DShell/raw/gh-pages/3DShell.3dsx", "/3ds/3DShell/3DShell.3dsx");
 			longjmp(exitJmp, 1);

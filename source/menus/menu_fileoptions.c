@@ -10,7 +10,6 @@
 #include "fs.h"
 #include "keyboard.h"
 #include "progress_bar.h"
-#include "menu_fileoptions.h"
 #include "textures.h"
 #include "touch.h"
 #include "utils.h"
@@ -146,11 +145,11 @@ static int FileOptions_DeleteFile(void) {
 	Result ret = 0;
 
 	if (file->isDir) { // Delete folder
-		if (R_FAILED(ret = FS_RmdirRecursive(archive, path)))
+		if (R_FAILED(ret = FS_RemoveDirRecursive(archive, path)))
 			return ret;
 	}
 	else { // Delete file
-		if (R_FAILED(ret = FS_Remove(archive, path)))
+		if (R_FAILED(ret = FS_RemoveFile(archive, path)))
 			return ret;
 	}
 	
@@ -346,14 +345,14 @@ static Result FileOptions_Paste(void) {
 			if (!(strcmp(&(copysource[(strlen(copysource)-1)]), "/") == 0))
 				strcat(copysource, "/");
 
-			FS_RmdirRecursive(archive, copysource); // Delete dir
+			FS_RemoveDirRecursive(archive, copysource); // Delete dir
 		}
 	}
 	else { // Simple file copy
 		ret = FileOptions_CopyFile(copysource, copytarget, true); // Copy file
 		
 		if ((R_SUCCEEDED(ret)) && (copymode & COPY_DELETE_ON_FINISH) == COPY_DELETE_ON_FINISH)
-			FS_Remove(archive, copysource); // Delete file
+			FS_RemoveFile(archive, copysource); // Delete file
 	}
 
 	// Paste success
@@ -372,9 +371,9 @@ static void HandleDelete(void) {
 			if (strlen(multi_select_paths[i]) != 0) {
 				if (strncmp(multi_select_paths[i], "..", 2) != 0) {
 					if (FS_DirExists(archive, multi_select_paths[i]))
-						FS_RmdirRecursive(archive, multi_select_paths[i]);
+						FS_RemoveDirRecursive(archive, multi_select_paths[i]);
 					else if (FS_FileExists(archive, multi_select_paths[i]))
-						FS_Remove(archive, multi_select_paths[i]);
+						FS_RemoveFile(archive, multi_select_paths[i]);
 				}
 			}
 		}

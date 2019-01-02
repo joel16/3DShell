@@ -105,8 +105,8 @@ bool FS_DirExists(FS_Archive archive, const char *path) {
 }
 
 Result FS_GetFileSize(FS_Archive archive, const char *path, u64 *size) {
-	Handle handle;
 	Result ret = 0;
+	Handle handle;
 
 	u16 path_u16[strlen(path) + 1];
 	Utils_U8_To_U16(path_u16, (const u8 *)path, strlen(path) + 1);
@@ -150,7 +150,7 @@ u64 FS_GetUsedStorage(FS_SystemMediaType mediaType) {
 	return 0;
 }
 
-Result FS_Remove(FS_Archive archive, const char *path) {
+Result FS_RemoveFile(FS_Archive archive, const char *path) {
 	Result ret = 0;
 
 	u16 path_u16[strlen(path) + 1];
@@ -162,7 +162,7 @@ Result FS_Remove(FS_Archive archive, const char *path) {
 	return 0;
 }
 
-Result FS_Rmdir(FS_Archive archive, const char *path) {
+Result FS_RemoveDir(FS_Archive archive, const char *path) {
 	Result ret = 0;
 
 	u16 path_u16[strlen(path) + 1];
@@ -174,7 +174,7 @@ Result FS_Rmdir(FS_Archive archive, const char *path) {
 	return 0;
 }
 
-Result FS_RmdirRecursive(FS_Archive archive, const char *path) {
+Result FS_RemoveDirRecursive(FS_Archive archive, const char *path) {
 	Result ret = 0;
 
 	u16 path_u16[strlen(path) + 1];
@@ -229,8 +229,8 @@ Result FS_Open(Handle *handle, FS_Archive archive, const char *path, u32 flags) 
 }
 
 Result FS_Read(FS_Archive archive, const char *path, u64 size, char *buf) {
-	Handle handle;
 	Result ret = 0;
+	Handle handle;
 
 	u32 bytesread = 0;
 
@@ -247,15 +247,15 @@ Result FS_Read(FS_Archive archive, const char *path, u64 size, char *buf) {
 }
 
 Result FS_Write(FS_Archive archive, const char *path, const char *buf) {
-	Handle handle;
 	Result ret = 0;
+	Handle handle;
 	
 	u32 len = strlen(buf);
 	u64 size = 0;
 	u32 bytesWritten = 0;
 
 	if (FS_FileExists(archive, path))
-		FS_Remove(archive, path);
+		FS_RemoveFile(archive, path);
 
 	if (R_FAILED(ret = FS_Open(&handle, archive, path, (FS_OPEN_WRITE | FS_OPEN_CREATE))))
 		return ret;
