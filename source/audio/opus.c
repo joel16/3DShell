@@ -29,12 +29,13 @@ static u8 Opus_GetChannels(void) {
 	return 2;
 }
 
-static u64 Opus_FillBuffer(s16 *buffer) {
+static u64 Opus_FillBuffer(void *buffer) {
 	u64 samplesRead = 0;
 	int samplesToRead = buffSize;
+	s16 *buf = buffer;
 
 	while(samplesToRead > 0) {
-		int samplesJustRead = op_read_stereo(opusFile, buffer, samplesToRead > 120*48*2 ? 120*48*2 : samplesToRead);
+		int samplesJustRead = op_read_stereo(opusFile, buf, samplesToRead > 120*48*2 ? 120*48*2 : samplesToRead);
 
 		if(samplesJustRead < 0)
 			return samplesJustRead;
@@ -45,7 +46,7 @@ static u64 Opus_FillBuffer(s16 *buffer) {
 
 		samplesRead += samplesJustRead * 2;
 		samplesToRead -= samplesJustRead * 2;
-		buffer += samplesJustRead * 2;
+		buf += samplesJustRead * 2;
 	}
 
 	return samplesRead;
