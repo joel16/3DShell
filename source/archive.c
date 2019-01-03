@@ -6,6 +6,7 @@
 
 #include "archive.h"
 #include "fs.h"
+#include "menu_error.h"
 #include "progress_bar.h"
 #include "utils.h"
 
@@ -81,12 +82,13 @@ static Result unzExtractCurrentFile(unzFile *unzHandle, int *path) {
 	unz_file_info file_info;
 	if ((res = unzGetCurrentFileInfo(unzHandle, &file_info, filename, sizeof(filename), NULL, 0, NULL, 0)) != RL_SUCCESS) {
 		unzClose(unzHandle);
-		return -1;
+		Menu_DisplayError("unzGetCurrentFileInfo failed:", res);
+		return res;
 	}
 
 	void *buf = malloc(bufsize);
 	if (!buf)
-		return -2;
+		return -1;
 
 	char *filenameWithoutPath = Utils_Basename(filename);
 
@@ -105,6 +107,7 @@ static Result unzExtractCurrentFile(unzFile *unzHandle, int *path) {
 		if ((res = unzOpenCurrentFile(unzHandle)) != UNZ_OK) {
 			unzClose(unzHandle);
 			free(buf);
+			Menu_DisplayError("unzOpenCurrentFile failed:", res);
 			return res;
 		}
 
@@ -131,13 +134,17 @@ static Result unzExtractCurrentFile(unzFile *unzHandle, int *path) {
 
 		fclose(out);
 
-		res = unzCloseCurrentFile(unzHandle);
+		if ((res = unzCloseCurrentFile(unzHandle)) != UNZ_OK) {
+			free(buf);
+			Menu_DisplayError("unzCloseCurrentFile failed:", res);
+			return res;
+		}
 	}
 	
 	if (buf)
 		free(buf);
 	
-	return res;
+	return 0;
 }
 
 static Result unzExtractAll(const char *src, unzFile *unzHandle) {
@@ -150,6 +157,7 @@ static Result unzExtractAll(const char *src, unzFile *unzHandle) {
 	
 	if ((res = unzGetGlobalInfo(unzHandle, &global_info)) != UNZ_OK) { // Get info about the zip file.
 		unzClose(unzHandle);
+		Menu_DisplayError("unzGetGlobalInfo failed:", res);
 		return res;
 	}
 
@@ -162,6 +170,7 @@ static Result unzExtractAll(const char *src, unzFile *unzHandle) {
 		if ((i + 1) < global_info.number_entry) {
 			if ((res = unzGoToNextFile(unzHandle)) != UNZ_OK) { // Could not read next file.
 				unzClose(unzHandle);
+				Menu_DisplayError("unzGoToNextFile failed:", res);
 				return res;
 			}
 		}
@@ -187,7 +196,11 @@ Result Archive_ExtractZIP(const char *src) {
 	}
 
 	Result res = unzExtractAll(src, unzHandle);
-	res = unzClose(unzHandle);
+
+	if ((res = unzClose(unzHandle)) != UNZ_OK) {
+		Menu_DisplayError("unzClose failed:", res);
+		return res;
+	}
 
 	return res;
 }
@@ -207,6 +220,7 @@ Result Archive_ExtractRAR(const char *src) {
 	if (ret != DMC_UNRAR_OK) {
 		free(path);
 		free(dirname_without_ext);
+		Menu_DisplayError("dmc_unrar_archive_init failed:", ret);
 		return -1;
 	}
 
@@ -214,6 +228,7 @@ Result Archive_ExtractRAR(const char *src) {
 	if (ret != DMC_UNRAR_OK) {
 		free(path);
 		free(dirname_without_ext);
+		Menu_DisplayError("dmc_unrar_archive_open_path failed:", ret);
 		return -1;
 	}
 
