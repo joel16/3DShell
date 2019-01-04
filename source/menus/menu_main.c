@@ -145,7 +145,7 @@ static void Menu_ControlBrowseOptions(u32 input) {
 
 	if ((input & KEY_TOUCH) && (TouchInRect(293, 0, 320, 20))) {
 		char path[256] = {0};
-		strcpy(path, OSK_GetString("/", "Enter path"));
+		strcpy(path, Keyboard_GetText("/", "Enter path"));
 
 		const int len = strlen(path);
 		if (len > 0 && path[len -1] != '/')

@@ -45,7 +45,6 @@ static float properties_ok_width = 0, properties_ok_height = 0;
 static float options_cancel_width = 0, options_cancel_height = 0;
 
 static bool copying_from_sd = false, copying_from_nand = false;
-static bool copying_to_sd = false, copying_to_nand = false;
 
 void FileOptions_ResetClipboard(void) {
 	multi_select_index = 0;
@@ -58,7 +57,7 @@ void FileOptions_ResetClipboard(void) {
 static Result FileOptions_CreateFolder(void) {
 	Result ret = 0;
 	char *buf = malloc(256);
-	strcpy(buf, OSK_GetString("New folder", "Enter name"));
+	strcpy(buf, Keyboard_GetText("New folder", "Enter name"));
 
 	if (strncmp(buf, "", 1) == 0)
 		return -1;
@@ -80,7 +79,7 @@ static Result FileOptions_CreateFolder(void) {
 static Result FileOptions_CreateFile(void) {
 	Result ret = 0;
 	char *buf = malloc(256);
-	strcpy(buf, OSK_GetString("New file.txt", "Enter name"));
+	strcpy(buf, Keyboard_GetText("New file.txt", "Enter name"));
 
 	if (strncmp(buf, "", 1) == 0)
 		return -1;
@@ -117,7 +116,7 @@ static Result FileOptions_Rename(void) {
 	strcpy(newPath, cwd);
 	strcat(oldPath, file->name);
 
-	strcpy(buf, OSK_GetString(file->name, "Enter name"));
+	strcpy(buf, Keyboard_GetText(file->name, "Enter name"));
 	strcat(newPath, buf);
 	free(buf);
 
@@ -184,7 +183,7 @@ static int FileOptions_CopyFile(char *src, char *dst, bool display_animation) {
 
 	u16 u16_dst[strlen(dst) + 1];
 	Utils_U8_To_U16(u16_dst, (const u8 *)dst, strlen(dst) + 1);
-	if (R_FAILED(ret = FSUSER_OpenFile(&dst_handle, copying_to_sd? sdmc_archive : nand_archive, fsMakePath(PATH_UTF16, u16_dst), FS_OPEN_CREATE | FS_OPEN_WRITE, 0))) {
+	if (R_FAILED(ret = FSUSER_OpenFile(&dst_handle, archive, fsMakePath(PATH_UTF16, u16_dst), FS_OPEN_CREATE | FS_OPEN_WRITE, 0))) {
 		FSFILE_Close(src_handle);
 		FSFILE_Close(dst_handle);
 		Menu_DisplayError("FSUSER_OpenFile failed:", ret);
@@ -239,7 +238,7 @@ static Result FileOptions_CopyDir(char *src, char *dst) {
 
 	// Opened directory
 	if (R_SUCCEEDED(ret = FSUSER_OpenDirectory(&dir, copying_from_sd? sdmc_archive : nand_archive, fsMakePath(PATH_UTF16, u16_src)))) {
-		FS_MakeDir(copying_to_sd? sdmc_archive : nand_archive, dst); // Create output directory (is allowed to fail, we can merge folders after all)
+		FS_MakeDir(archive, dst); // Create output directory (is allowed to fail, we can merge folders after all)
 
 		u32 entryCount = 0;
 		FS_DirectoryEntry *entries = (FS_DirectoryEntry *)calloc(MAX_FILES, sizeof(FS_DirectoryEntry));
@@ -518,8 +517,6 @@ void Menu_DisplayProperties(void) {
 }
 
 static void FileOptions_ClearCopyStatus(void) {
-	copying_to_sd = false;
-	copying_to_nand = false;
 	copying_from_sd = false;
 	copying_from_nand = false;
 	copy_status = false;
@@ -537,11 +534,6 @@ static void HandleCopy(void) {
 			copying_from_nand = true;
 	}
 	else if (copy_status) {
-		if (BROWSE_STATE == BROWSE_STATE_SD)
-			copying_to_sd = true;
-		else
-			copying_to_nand = true;
-
 		if ((multi_select_index > 0) && (strlen(multi_select_dir) != 0)) {
 			char dest[512];
 			
