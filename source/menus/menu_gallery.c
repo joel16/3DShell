@@ -9,21 +9,23 @@
 #include "touch.h"
 #include "utils.h"
 
-#define DIMENSION_DEFAULT             0
-#define DIMENSION_NINTENDO_SCREENSHOT 1
-#define DIMENSION_NINTENDO_PICTURE    2
-#define DIMENSION_3DSHELL_SCREENSHOT  3
-#define DIMENSION_OTHER               4
+enum IMAGE_STATES {
+    DIMENSION_DEFAULT = 0,
+    DIMENSION_NINTENDO_SCREENSHOT = 1,
+    DIMENSION_NINTENDO_PICTURE = 2,
+    DIMENSION_3DSHELL_SCREENSHOT = 3,
+    DIMENSION_OTHER = 4
+};
 
 static char album[512][512];
 static int count = 0, selection = 0, dimensions = 0, pos_x = 0, pos_y = 0;
 C2D_Image image;
 
 static void Gallery_FreeImage(C2D_Image *image) {
-    dimensions = 0;
     C3D_TexDelete(image->tex);
-    free(image->tex);
-    free((Tex3DS_SubTexture *)image->subtex);
+    linearFree(image->subtex);
+    C2D_TargetClear(RENDER_TOP, C2D_Color32(33, 39, 43, 255));
+    C2D_TargetClear(RENDER_BOTTOM, C2D_Color32(33, 39, 43, 255));
 }
 
 static bool Gallery_DrawImage(C2D_Image image, float x, float y, float start, float end, float scaleX, float scaleY) {

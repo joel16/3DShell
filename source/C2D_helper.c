@@ -1,6 +1,4 @@
-#include <stdlib.h>
 #include <stdarg.h>
-#include <sys/stat.h>
 
 #include "common.h"
 #include "C2D_helper.h"
@@ -107,7 +105,7 @@ static void Draw_C3DTexToC2DImage(C3D_Tex *tex, Tex3DS_SubTexture *subtex, void 
 
 	tex->border = 0xFFFFFFFF;
 	C3D_TexSetWrap(tex, GPU_CLAMP_TO_BORDER, GPU_CLAMP_TO_BORDER);
-	free(buf);
+	linearFree(buf);
 }
 
 bool Draw_LoadImageBMPFile(C2D_Image *texture, const char *path) {
@@ -135,8 +133,8 @@ bool Draw_LoadImageBMPFile(C2D_Image *texture, const char *path) {
 		}
 	}
 
-	C3D_Tex *tex = malloc(sizeof(C3D_Tex));
-	Tex3DS_SubTexture *subtex = malloc(sizeof(Tex3DS_SubTexture));
+	C3D_Tex *tex = linearAlloc(sizeof(C3D_Tex));
+	Tex3DS_SubTexture *subtex = linearAlloc(sizeof(Tex3DS_SubTexture));
 	Draw_C3DTexToC2DImage(tex, subtex, image, (u32)(width * height * 4), (u32)width, (u32)height, GPU_RGBA8);
 	texture->tex = tex;
 	texture->subtex = subtex;
@@ -164,8 +162,8 @@ bool Draw_LoadImageJPGFile(C2D_Image *texture, const char *path) {
 		}
 	}
 
-	C3D_Tex *tex = malloc(sizeof(C3D_Tex));
-	Tex3DS_SubTexture *subtex = malloc(sizeof(Tex3DS_SubTexture));
+	C3D_Tex *tex = linearAlloc(sizeof(C3D_Tex));
+	Tex3DS_SubTexture *subtex = linearAlloc(sizeof(Tex3DS_SubTexture));
 	Draw_C3DTexToC2DImage(tex, subtex, image, (u32)(width * height * channel), (u32)width, (u32)height, GPU_RGB8);
 	texture->tex = tex;
 	texture->subtex = subtex;
@@ -193,8 +191,8 @@ bool Draw_LoadImageJPGMemory(C2D_Image *texture, void *data, size_t size) {
 		}
 	}
 
-	C3D_Tex *tex = malloc(sizeof(C3D_Tex));
-	Tex3DS_SubTexture *subtex = malloc(sizeof(Tex3DS_SubTexture));
+	C3D_Tex *tex = linearAlloc(sizeof(C3D_Tex));
+	Tex3DS_SubTexture *subtex = linearAlloc(sizeof(Tex3DS_SubTexture));
 	Draw_C3DTexToC2DImage(tex, subtex, image, (u32)(width * height * channel), (u32)width, (u32)height, GPU_RGB8);
 	texture->tex = tex;
 	texture->subtex = subtex;
@@ -224,8 +222,8 @@ bool Draw_LoadImageOtherFile(C2D_Image *texture, const char *path) {
 		}
 	}
 
-	C3D_Tex *tex = malloc(sizeof(C3D_Tex));
-	Tex3DS_SubTexture *subtex = malloc(sizeof(Tex3DS_SubTexture));
+	C3D_Tex *tex = linearAlloc(sizeof(C3D_Tex));
+	Tex3DS_SubTexture *subtex = linearAlloc(sizeof(Tex3DS_SubTexture));
 	Draw_C3DTexToC2DImage(tex, subtex, image, (u32)(width * height * channel), (u32)width, (u32)height, GPU_RGBA8);
 	texture->tex = tex;
 	texture->subtex = subtex;
@@ -257,8 +255,8 @@ bool Draw_LoadImagePNGFile(C2D_Image *texture, const char *path) {
 		}
 	}
 
-	C3D_Tex *tex = malloc(sizeof(C3D_Tex));
-	Tex3DS_SubTexture *subtex = malloc(sizeof(Tex3DS_SubTexture));
+	C3D_Tex *tex = linearAlloc(sizeof(C3D_Tex));
+	Tex3DS_SubTexture *subtex = linearAlloc(sizeof(Tex3DS_SubTexture));
 	Draw_C3DTexToC2DImage(tex, subtex, image, (u32)(width * height * 4), (u32)width, (u32)height, GPU_RGBA8);
 	texture->tex = tex;
 	texture->subtex = subtex;
@@ -290,8 +288,8 @@ bool Draw_LoadImagePNGMemory(C2D_Image *texture, void *data, size_t size) {
 		}
 	}
 
-	C3D_Tex *tex = malloc(sizeof(C3D_Tex));
-	Tex3DS_SubTexture *subtex = malloc(sizeof(Tex3DS_SubTexture));
+	C3D_Tex *tex = linearAlloc(sizeof(C3D_Tex));
+	Tex3DS_SubTexture *subtex = linearAlloc(sizeof(Tex3DS_SubTexture));
 	Draw_C3DTexToC2DImage(tex, subtex, image, (u32)(width * height * 4), (u32)width, (u32)height, GPU_RGBA8);
 	texture->tex = tex;
 	texture->subtex = subtex;
