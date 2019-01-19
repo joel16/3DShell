@@ -6,18 +6,8 @@
 #include "config.h"
 #include "fs.h"
 
-#define LOADBMP_IMPLEMENTATION
-#include "loadbmp.h"
-#undef LOADBMP_IMPLEMENTATION
-#include "lodepng.h"
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-#undef STB_IMAGE_IMPLEMENTATION
-
 #include "touch.h"
 #include "utils.h"
-
-#define EXTENSION_SIZE 4
 
 #define DIMENSION_DEFAULT             0
 #define DIMENSION_NINTENDO_SCREENSHOT 1
@@ -29,159 +19,6 @@ static char album[512][512];
 static int count = 0, selection = 0, dimensions = 0, pos_x = 0, pos_y = 0;
 C2D_Image image;
 
-// Thanks to LiquidFenrir
-static u32 Gallery_GetNextPowerOf2(u32 v) {// from pp2d
-    v--;
-    v |= v >> 1;
-    v |= v >> 2;
-    v |= v >> 4;
-    v |= v >> 8;
-    v |= v >> 16;
-    v++;
-    return v >= 64 ? v : 64;
-}
-
-// Thanks to LiquidFenrir
-static C2D_Image Gallery_LoadImage(const char *path) {
-    C2D_Image img;
-    u32* outBuf = NULL;
-    u32 size = 0;
-    int width = 0, height = 0;
-    GPU_TEXCOLOR format;
-
-    char extension[EXTENSION_SIZE + 1] = {0};
-    strncpy(extension, &path[strlen(path)-EXTENSION_SIZE], EXTENSION_SIZE);
-
-    if (!strncasecmp(extension, ".png", EXTENSION_SIZE)) {
-        unsigned char *texture;
-        lodepng_decode32_file(&texture, (unsigned int *)&width, (unsigned int *)&height, path);
-
-        for (u32 i = 0; i < (u32)width; i++) {
-            for (u32 j = 0; j < (u32)height; j++) {
-                u32 p = (i + j* (u32)width) * 4;
-
-                u8 r = *(u8*)(texture + p);
-                u8 g = *(u8*)(texture + p + 1);
-                u8 b = *(u8*)(texture + p + 2);
-                u8 a = *(u8*)(texture + p + 3);
-
-                *(texture + p) = a;
-                *(texture + p + 1) = b;
-                *(texture + p + 2) = g;
-                *(texture + p + 3) = r;
-            }
-        }
-
-        size = (u32)(width * height * 4);
-        outBuf = (u32 *)malloc(size);
-        memcpy(outBuf, texture, size);
-        format = GPU_RGBA8;
-    }
-    else if (!strncasecmp(extension, ".jpg", EXTENSION_SIZE) || !strncasecmp(extension, ".jpeg", EXTENSION_SIZE)) {
-        int channel = 0;
-        stbi_uc *texture = stbi_load(path, &width, &height, &channel, STBI_rgb);
-
-        for (u32 x = 0; x < (u32)width; x++) {
-            for (u32 y = 0; y < (u32)height; y++) {
-                u32 pos = (y * (u32)width + x) * channel;
-
-                u8 c1 = texture[pos + 0];
-                u8 c2 = texture[pos + 1];
-                u8 c3 = texture[pos + 2];
-
-                texture[pos + 0] = c3;
-                texture[pos + 1] = c2;
-                texture[pos + 2] = c1;
-            }
-        }
-
-        size = (u32)(width * height * channel);
-        outBuf = (u32 *)malloc(size);
-        memcpy(outBuf, texture, size);
-        stbi_image_free(texture);
-        format = GPU_RGB8;
-    }
-    else if (!strncasecmp(extension, ".bmp", EXTENSION_SIZE)) {
-        u8* texture = NULL;
-        loadbmp_decode_file(path, &texture, (unsigned int *)&width, (unsigned int *)&height, LOADBMP_RGBA);
-    
-        for (u32 i = 0; i < (u32)width; i++) {
-            for (u32 j = 0; j < (u32)height; j++) {
-                u32 p = (i + j * (u32)width) * 4;
-
-                u8 r = *(u8*)(texture + p);
-                u8 g = *(u8*)(texture + p + 1);
-                u8 b = *(u8*)(texture + p + 2);
-                u8 a = *(u8*)(texture + p + 3);
-
-                *(texture + p) = a;
-                *(texture + p + 1) = b;
-                *(texture + p + 2) = g;
-                *(texture + p + 3) = r;
-            }
-        }
-        
-        size = (u32)(width * height * 4);
-        outBuf = (u32 *)malloc(size);
-        memcpy(outBuf, texture, size);
-        format = GPU_RGBA8;
-    }
-
-    if (outBuf) {
-        C3D_Tex *tex = malloc(sizeof(C3D_Tex));
-        Tex3DS_SubTexture *subtex = malloc(sizeof(Tex3DS_SubTexture));
-
-        u32 w_pow2 = Gallery_GetNextPowerOf2((u32)width);
-        u32 h_pow2 = Gallery_GetNextPowerOf2((u32)height);
-
-        subtex->width = width;
-        subtex->height = height;
-        subtex->left = 0.0f;
-        subtex->top = 1.0f;
-        subtex->right = width/(float)w_pow2;
-        subtex->bottom = 1.0 - (height/(float)h_pow2);
-
-        C3D_TexInit(tex, (u16)w_pow2, (u16)h_pow2, format);
-        C3D_TexSetFilter(tex, GPU_LINEAR, GPU_LINEAR);
-
-        memset(tex->data, 0, tex->size);
-
-        u32 pixelSize = size / width / height;
-
-        for (u32 x = 0; x < (u32)width; x++) {
-            for (u32 y = 0; y < (u32)height; y++) {
-                u32 dstPos = ((((y >> 3) * (w_pow2 >> 3) + (x >> 3)) << 6) + ((x & 1) | ((y & 1) << 1) | ((x & 2) << 1) | ((y & 2) << 2) | ((x & 4) << 2) | ((y & 4) << 3))) * pixelSize;
-                u32 srcPos = (y * width + x) * pixelSize;
-
-                memcpy(&((u8 *)tex->data)[dstPos], &((u8 *) outBuf)[srcPos], pixelSize);
-            }
-        }
-
-        C3D_TexFlush(tex);
-        
-        free(outBuf);
-        tex->border = 0xFFFFFFFF;
-        C3D_TexSetWrap(tex, GPU_CLAMP_TO_BORDER, GPU_CLAMP_TO_BORDER);
-
-        if ((subtex->width <= 400) && (subtex->height <= 240))
-            dimensions = DIMENSION_DEFAULT;
-        else if ((subtex->width == 432) && (subtex->height == 528)) // Nintnedo's screenshot (both screens) dimensions.
-            dimensions = DIMENSION_NINTENDO_SCREENSHOT;
-        else if ((subtex->width == 640) && (subtex->height == 480)) // Nintnedo's CAM dimensions.
-            dimensions = DIMENSION_NINTENDO_PICTURE;
-        else if ((subtex->width == 400) && ((subtex->height == 480) || (subtex->height == 482)))
-            dimensions = DIMENSION_3DSHELL_SCREENSHOT;
-        else if ((subtex->width > 400) && (subtex->height > 240))
-            dimensions = DIMENSION_OTHER;
-
-        img.tex = tex;
-        img.subtex = subtex;
-    }
-
-    return img;
-}
-
-// Thanks to LiquidFenrir
 static void Gallery_FreeImage(C2D_Image *image) {
     dimensions = 0;
     C3D_TexDelete(image->tex);
@@ -248,7 +85,29 @@ static int Gallery_GetCurrentIndex(char *path) {
 
 static void Gallery_LoadTexture(char *path) {
     selection = Gallery_GetCurrentIndex(path);
-    image = Gallery_LoadImage(path);
+
+    char extension[5] = {0};
+    strncpy(extension, &path[strlen(path) - 4], 4);
+
+    if (!strncasecmp(extension, ".bmp", 4))
+        Draw_LoadImageBMPFile(&image, path);
+    else if (!strncasecmp(extension, ".jpg", 4) || !strncasecmp(extension, ".jpeg", 4))
+        Draw_LoadImageJPGFile(&image, path);
+    else if (!strncasecmp(extension, ".png", 4))
+        Draw_LoadImagePNGFile(&image, path);
+    else
+        Draw_LoadImageOtherFile(&image, path);
+
+    if ((image.subtex->width <= 400) && (image.subtex->height <= 240))
+        dimensions = DIMENSION_DEFAULT;
+    else if ((image.subtex->width == 432) && (image.subtex->height == 528)) // Nintnedo's screenshot (both screens) dimensions.
+        dimensions = DIMENSION_NINTENDO_SCREENSHOT;
+    else if ((image.subtex->width == 640) && (image.subtex->height == 480)) // Nintnedo's CAM dimensions.
+        dimensions = DIMENSION_NINTENDO_PICTURE;
+    else if ((image.subtex->width == 400) && ((image.subtex->height == 480) || (image.subtex->height == 482)))
+        dimensions = DIMENSION_3DSHELL_SCREENSHOT;
+    else if ((image.subtex->width > 400) && (image.subtex->height > 240))
+        dimensions = DIMENSION_OTHER;
 }
 
 static void Gallery_HandleNext(bool forward) {
