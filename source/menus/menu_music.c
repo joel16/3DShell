@@ -28,8 +28,9 @@ typedef enum {
 
 static Thread thread = NULL;
 static bool isMP3 = false;
-static char playlist[512][512];
+static char playlist[512][512], title[128];
 static int count = 0, selection = 0, state = 0;
+static float cover_width = 0.0f, cover_height = 0.0f;
 
 static Result Menu_GetMusicList(void) {
 	Handle dir;
@@ -90,8 +91,15 @@ static void Music_Play(char *path) {
 	thread = threadCreate(Audio_PlayFile, path, 32 *1024, prio - 1, -2, false);
 
 	selection = Music_GetCurrentIndex(path);
-
+	strncpy(title, strlen(ID3.title) == 0? strupr(Utils_Basename(path)) : strupr(ID3.title), strlen(ID3.title) == 0? strlen(Utils_Basename(path)) + 1 : strlen(ID3.title) + 1);
 	isMP3 = (strncasecmp(&path[strlen(path)-3], "mp3", 3) == 0);
+
+	if (isMP3) {
+		if (cover_image.tex) {
+			cover_width = (175.0f / cover_image.subtex->width);
+			cover_height = (175.0f / cover_image.subtex->height);
+		}
+	}
 }
 
 
@@ -117,20 +125,26 @@ static void Music_HandleNext(bool forward, int state) {
 
 	Audio_StopPlayback();
 
-	memset(ID3.artist, 0, 30);
-	memset(ID3.title, 0, 30);
-	memset(ID3.album, 0, 30);
-	memset(ID3.year, 0, 4);
-	memset(ID3.genre, 0, 30);
+	memset(title, 0, sizeof(title));
+
+	if (isMP3) {
+		memset(ID3.artist, 0, 30);
+		memset(ID3.title, 0, 30);
+		memset(ID3.album, 0, 30);
+		memset(ID3.year, 0, 4);
+		memset(ID3.genre, 0, 30);
+
+		if (cover_image.tex) {
+			C3D_TexDelete(cover_image.tex);
+			linearFree((Tex3DS_SubTexture *)cover_image.subtex);
+			cover_image.tex = NULL;
+		}
+
+		isMP3 = false;
+	}
 
 	threadJoin(thread, U64_MAX);
 	threadFree(thread);
-
-	if (cover_image.tex) {
-		C3D_TexDelete(cover_image.tex);
-		linearFree((Tex3DS_SubTexture *)cover_image.subtex);
-		cover_image.tex = NULL;
-	}
 
 	Music_Play(playlist[selection]);
 }
@@ -161,9 +175,9 @@ void Menu_PlayMusic(char *path) {
 
 		if (isMP3) { // Only print out ID3 tag info for MP3
 			if (strlen(ID3.title) != 0)
-				Draw_Text(5, 22, 0.5f, WHITE, strupr(ID3.title));
+				Draw_Text(5, 22, 0.5f, WHITE, strupr(title));
 			else
-				Draw_Text(5, ((37 - Draw_GetTextHeight(0.5f, strupr(Utils_Basename(path)))) / 2) + 18, 0.5f, WHITE, strupr(Utils_Basename(path)));
+				Draw_Text(5, ((37 - Draw_GetTextHeight(0.5f, strupr(Utils_Basename(path)))) / 2) + 18, 0.5f, WHITE, strupr(title));
 
 			if (strlen(ID3.artist) != 0)
 				Draw_Text(5, 38, 0.45f, WHITE, strupr(ID3.artist));
@@ -173,7 +187,7 @@ void Menu_PlayMusic(char *path) {
 			Draw_Textf(184, 104, 0.5f, WHITE, "%.30s", ID3.genre);
 		}
 		else
-			Draw_Text(5, ((37 - Draw_GetTextHeight(0.5f, strupr(Utils_Basename(path)))) / 2) + 18, 0.5f, WHITE, strupr(Utils_Basename(path)));
+			Draw_Text(5, ((37 - Draw_GetTextHeight(0.5f, strupr(Utils_Basename(path)))) / 2) + 18, 0.5f, WHITE, strupr(title));
 
 		Draw_Rect(0, 57, 175, 175, MUSIC_GENRE_COLOUR);
 
@@ -279,6 +293,7 @@ void Menu_PlayMusic(char *path) {
 		isMP3 = false;
 	}
 
+	memset(title, 0, sizeof(title));
 	memset(playlist, 0, sizeof(playlist[0][0]) * 512 * 512);
 	count = 0;
 	aptSetSleepAllowed(true);
