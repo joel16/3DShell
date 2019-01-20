@@ -23,7 +23,7 @@ C2D_Image image;
 
 static void Gallery_FreeImage(C2D_Image *image) {
     C3D_TexDelete(image->tex);
-    linearFree(image->subtex);
+    linearFree((Tex3DS_SubTexture *)image->subtex);
     C2D_TargetClear(RENDER_TOP, C2D_Color32(33, 39, 43, 255));
     C2D_TargetClear(RENDER_BOTTOM, C2D_Color32(33, 39, 43, 255));
 }

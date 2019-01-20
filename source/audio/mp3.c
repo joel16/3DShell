@@ -1,45 +1,17 @@
 /* Obtained from ctrmus source with permission. */
-
-#include <ctype.h>
-#include <errno.h>
-#include <fcntl.h>
  
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "C2D_helper.h"
 #include "mp3.h"
-
-#if !(defined PLAIN_C89) && (defined SIZEOF_SIZE_T) && (SIZEOF_SIZE_T > SIZEOF_LONG) && (defined PRIuMAX)
-# define SIZE_P PRIuMAX
-typedef uintmax_t size_p;
-#else
-# define SIZE_P "lu"
-typedef unsigned long size_p;
-#endif
-
-#if !(defined PLAIN_C89) && (defined SIZEOF_SSIZE_T) && (SIZEOF_SSIZE_T > SIZEOF_LONG) && (defined PRIiMAX)
-# define SSIZE_P PRIuMAX
-typedef intmax_t ssize_p;
-#else
-# define SSIZE_P "li"
-typedef long ssize_p;
-#endif
+#include "textures.h"
 
 static size_t *buffSize;
-static mpg123_handle *mh = NULL;
+static mpg123_handle *mp3_handle = NULL;
 static u32 rate;
 static u8 channels;
-
-static int errors = 0;
-
-static struct {
-	int store_pics;
-	int do_scan;
-} param = {
-	  false
-	, true
-};
 
 struct genre {
 	int code;
@@ -139,243 +111,63 @@ static void print_v2(ID3_Tag *ID3tag, mpg123_id3v2 *v2) {
 	print_lines(ID3tag->genre, "",   v2->genre);
 }
 
-/* Easy conversion to string via lookup. */
-const char *pic_types[] = {
-	 "other"
-	,"icon"
-	,"other icon"
-	,"front cover"
-	,"back cover"
-	,"leaflet"
-	,"media"
-	,"lead"
-	,"artist"
-	,"conductor"
-	,"orchestra"
-	,"composer"
-	,"lyricist"
-	,"location"
-	,"recording"
-	,"performance"
-	,"video"
-	,"fish"
-	,"illustration"
-	,"artist logo"
-	,"publisher logo"
-};
-
-static const char *pic_type(unsigned int id) {
-	return (/*id >= 0 &&*/ id < (sizeof(pic_types)/sizeof(char*))) ? pic_types[id] : "invalid type";
-}
-
-static void print_raw_v2(mpg123_id3v2 *v2) {
-	size_t i;
-	for(i = 0; i<v2->texts; ++i) {
-		char id[5];
-		char lang[4];
-		memcpy(id, v2->text[i].id, 4);
-		id[4] = 0;
-		memcpy(lang, v2->text[i].lang, 3);
-		lang[3] = 0;
-		if (v2->text[i].description.fill)
-		printf("%s language(%s) description(%s)\n", id, lang, v2->text[i].description.p);
-		else printf("%s language(%s)\n", id, lang);
-
-		print_lines(NULL, " ", &v2->text[i].text);
-	}
-	for(i = 0; i<v2->extras; ++i) {
-		char id[5];
-		memcpy(id, v2->extra[i].id, 4);
-		id[4] = 0;
-		printf("%s description(%s)\n", id, v2->extra[i].description.fill ? v2->extra[i].description.p : "");
-		print_lines(NULL, " ", &v2->extra[i].text);
-	}
-	for(i = 0; i<v2->comments; ++i) {
-		char id[5];
-		char lang[4];
-		memcpy(id, v2->comment_list[i].id, 4);
-		id[4] = 0;
-		memcpy(lang, v2->comment_list[i].lang, 3);
-		lang[3] = 0;
-		printf("%s description(%s) language(%s):\n", id, v2->comment_list[i].description.fill ? v2->comment_list[i].description.p : "", lang);
-		print_lines(NULL, " ", &v2->comment_list[i].text);
-	}
-	for(i = 0; i<v2->pictures; ++i) {
-		mpg123_picture* pic;
-
-		pic = &v2->picture[i];
-		fprintf(stderr, "APIC type(%i, %s) mime(%s) size(%"SIZE_P")\n", pic->type, pic_type(pic->type), pic->mime_type.p, (size_p)pic->size);
-		print_lines(NULL, " ", &pic->description);
-	}
-}
-
-static const char *unknown_end = "picture";
-
-static char *mime2end(mpg123_string *mime) {
-	size_t len;
-	char *end;
-	if (strncasecmp("image/",mime->p, 6)) {
-		len = strlen(unknown_end)+1;
-		end = malloc(len);
-		memcpy(end, unknown_end, len);
-		return end;
-	}
-
-	/* Else, use fmt out of image/fmt ... but make sure that usage stops at
-	   non-alphabetic character, as MIME can have funny stuff following a ";". */
-	for(len = 1; len < mime-> fill - 6; ++len) {
-		if (!isalnum(mime->p[len-1+6])) 
-			break;
-	}
-	/* len now containing the number of bytes after the "/" up to the next
-	   invalid char or null */
-	if (len < 1) 
-		return "picture";
-
-	end = malloc(len);
-	if (!end)
-		exit(11); /* Come on, is it worth wasting lines for a message? If we're so broke, fprintf will also likely fail. */
-
-	memcpy(end, mime->p+6,len-1);
-	end[len-1] = 0;
-	return end;
-}
-
-/* Construct a sane file name without introducing spaces, then open.
-   Example: /some/where/some.mp3.front_cover.jpeg
-   If multiple ones are there: some.mp3.front_cover2.jpeg */
-static int open_picfile(const char *prefix, mpg123_picture *pic) {
-	char *end, *typestr, *pfn;
-	const char *pictype;
-	size_t i, len;
-	int fd;
-	unsigned long count = 1;
-
-	pictype = pic_type(pic->type);
-	len = strlen(pictype);
-	
-	if (!(typestr = malloc(len+1)))
-		return 0;
-	
-	memcpy(typestr, pictype, len);
-	
-	for(i = 0; i < len; ++i) 
-		if (typestr[i] == ' ') 
-			typestr[i] = '_';
-
-	typestr[len] = 0;
-	end = mime2end(&pic->mime_type);
-	len = strlen(prefix)+1+strlen(typestr)+1+strlen(end);
-	
-	if (!(pfn = malloc(len+1))) 
-		return 0;
-
-	sprintf(pfn, "%s.%s.%s", prefix, typestr, end);
-
-	pfn[len] = 0;
-
-	errno = 0;
-	fd = open(pfn, O_CREAT|O_WRONLY|O_EXCL);
-	
-	while((fd < 0) && (errno == EEXIST) /*&& (++count < U64_MAX)*/) {
-		char dum;
-		size_t digits;
-
-		digits = snprintf(&dum, 11, "%lu", count);
-		
-		if (!(pfn = realloc(pfn, len+digits + 1)))
-			return 0;
-
-		sprintf(pfn, "%s.%s%lu.%s", prefix, typestr, count, end);
-		pfn[len + digits] = 0;
-		errno = 0;		
-		fd = open(pfn, O_CREAT|O_WRONLY|O_EXCL);
-	}
-	
-	if (fd < 0)
-		++errors;
-
-	free(end);
-	free(typestr);
-	free(pfn);
-	return fd;
-}
-
-static void store_pictures(const char* prefix, mpg123_id3v2 *v2) {
-	size_t i;
-
-	for(i = 0; i<v2->pictures; ++i) {
-		int fd;
-		mpg123_picture* pic;
-
-		pic = &v2->picture[i];
-		fd = open_picfile(prefix, pic);
-		if (fd >= 0) { /* stream I/O for not having to care about interruptions */
-			FILE *picfile = fdopen(fd, "w");
-			if (picfile) {
-				if (fwrite(pic->data, pic->size, 1, picfile) != 1)
-					++errors;
-				
-				if (fclose(picfile))
-					++errors;
-			}
-			else
-				++errors;
-			
-		}
-	}
-}
-
 static int MP3_Init(const char *file) {
-	int err = 0;
-	int encoding = 0;
+	int err = 0, meta = 0, encoding = 0;
 
-	if ((err = mpg123_init()) != MPG123_OK)
+	err = mpg123_init();
+	if (err != MPG123_OK)
 		return err;
 
-	if ((mh = mpg123_new(NULL, &err)) == NULL) {
-		printf("Error: %s\n", mpg123_plain_strerror(err));
+	mp3_handle = mpg123_new(NULL, &err);
+	if (err != MPG123_OK)
 		return err;
-	}
-	
-	//mpg123_param(mh, MPG123_ADD_FLAGS, MPG123_PICTURE, 0.);
+
+	err = mpg123_param(mp3_handle, MPG123_ADD_FLAGS, MPG123_PICTURE, 0.0);
+	if (err != MPG123_OK)
+		return err;
+
+	err = mpg123_open(mp3_handle, file);
+	if (err != MPG123_OK)
+		return err;
+
+	err = mpg123_getformat(mp3_handle, (long *) &rate, (int *) &channels, &encoding);
+	if (err != MPG123_OK)
+		return err;
 	
 	mpg123_id3v1 *v1;
 	mpg123_id3v2 *v2;
-	int meta;
 
-	if (mpg123_open(mh, file) != MPG123_OK || mpg123_getformat(mh, (long *) &rate, (int *) &channels, &encoding) != MPG123_OK) {
-		printf("Trouble with mpg123: %s\n", mpg123_strerror(mh));
-		return -1;
-	}
+	mpg123_seek(mp3_handle, 0, SEEK_SET);
+	meta = mpg123_meta_check(mp3_handle);
 
-	meta = mpg123_meta_check(mh);
-	if (meta & MPG123_ID3 && mpg123_id3(mh, &v1, &v2) == MPG123_OK) {
+	if (meta & MPG123_ID3 && mpg123_id3(mp3_handle, &v1, &v2) == MPG123_OK) {
 		if (v1 != NULL)
 			print_v1(&ID3, v1);
 
-		if (v2 != NULL)
-			print_v2(&ID3, v2);
-		
 		if (v2 != NULL) {
-			print_raw_v2(v2);
-			if (param.store_pics)
-				store_pictures(id3_pic, v2);
+			print_v2(&ID3, v2);
+
+			for (size_t count = 0; count < v2->pictures; count++) {
+				mpg123_picture *pic = &v2->picture[count];
+				char *str = pic->mime_type.p;
+
+				if ((pic->type == 3 ) || (pic->type == 0)) {
+					if ((!strcasecmp(str, "image/jpg")) || (!strcasecmp(str, "image/jpeg"))) {
+						Draw_LoadImageJPGMemory(&cover_image, pic->data, pic->size);
+						break;
+					}
+					else if (!strcasecmp(str, "image/png")) {
+						Draw_LoadImagePNGMemory(&cover_image, pic->data, pic->size);
+						break;
+					}
+				}
+			}
 		}
 	}
-	
-	/*
-	 *Ensure that this output format will not change (it might, when we allow
-	 *it).
-	 */
-	mpg123_format_none(mh);
-	mpg123_format(mh, rate, channels, encoding);
 
-	/*
-	 *Buffer could be almost any size here, mpg123_outblock() is just some
-	 *recommendation. The size should be a multiple of the PCM frame size.
-	 */
-	*buffSize = (mpg123_outblock(mh) * 16);
+	mpg123_format_none(mp3_handle);
+	mpg123_format(mp3_handle, rate, channels, encoding);
+	*buffSize = (mpg123_outblock(mp3_handle) * 16);
 
 	return 0;
 }
@@ -389,22 +181,22 @@ static u8 MP3_GetChannels(void) {
 }
 
 static int MP3_GetPosition(void) {
-	return mpg123_tell(mh);
+	return mpg123_tell(mp3_handle);
 }
 
 static int MP3_GetLength(void) {
-	return mpg123_length(mh);
+	return mpg123_length(mp3_handle);
 }
 
 static u64 MP3_Decode(void *buffer) {
 	size_t done = 0;
-	mpg123_read(mh, buffer, *buffSize, &done);
+	mpg123_read(mp3_handle, buffer, *buffSize, &done);
 	return done / (sizeof(int16_t));
 }
 
 static void MP3_Term(void) {
-	mpg123_close(mh);
-	mpg123_delete(mh);
+	mpg123_close(mp3_handle);
+	mpg123_delete(mp3_handle);
 	mpg123_exit();
 }
 
@@ -417,10 +209,6 @@ void MP3_SetDecoder(struct decoder_fn *decoder) {
 	decoder->init = &MP3_Init;
 	decoder->rate = &MP3_GetSampleRate;
 	decoder->channels = &MP3_GetChannels;
-	/*
-	 *buffSize changes depending on input file. So we set buffSize later when
-	 *decoder is initialised.
-	 */
 	buffSize = &(decoder->buffSize);
 	decoder->position = &MP3_GetPosition;
 	decoder->length = &MP3_GetLength;
