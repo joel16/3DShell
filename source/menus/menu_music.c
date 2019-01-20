@@ -160,8 +160,13 @@ void Menu_PlayMusic(char *path) {
 		Draw_Rect(183, 62, 212, 165, C2D_Color32(46, 49, 51, 255));
 
 		if (isMP3) { // Only print out ID3 tag info for MP3
-			Draw_Text(5, 22, 0.5f, WHITE, strupr(ID3.title));
-			Draw_Text(5, 38, 0.45f, WHITE, strupr(ID3.artist));
+			if (strlen(ID3.title) != 0)
+				Draw_Text(5, 22, 0.5f, WHITE, strupr(ID3.title));
+			else
+				Draw_Text(5, ((37 - Draw_GetTextHeight(0.5f, strupr(Utils_Basename(path)))) / 2) + 18, 0.5f, WHITE, strupr(Utils_Basename(path)));
+
+			if (strlen(ID3.artist) != 0)
+				Draw_Text(5, 38, 0.45f, WHITE, strupr(ID3.artist));
 
 			Draw_Textf(184, 64, 0.5f, WHITE, "%.30s", ID3.album);
 			Draw_Textf(184, 84, 0.5f, WHITE, "%.30s", ID3.year);
@@ -270,6 +275,8 @@ void Menu_PlayMusic(char *path) {
 			linearFree((Tex3DS_SubTexture *)cover_image.subtex);
 			cover_image.tex = NULL;
 		}
+
+		isMP3 = false;
 	}
 
 	memset(playlist, 0, sizeof(playlist[0][0]) * 512 * 512);
