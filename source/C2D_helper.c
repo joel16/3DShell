@@ -2,14 +2,14 @@
 
 #include "common.h"
 #include "C2D_helper.h"
+#include "fs.h"
+#include "utils.h"
 
 #define LOADBMP_IMPLEMENTATION
 #include "loadbmp.h"
 #undef LOADBMP_IMPLEMENTATION
 #include "lodepng.h"
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-#undef STB_IMAGE_IMPLEMENTATION
+#include "nanojpeg.h"
 
 void Draw_EndFrame(void) {
 	C2D_TextBufClear(dynamicBuf);
@@ -142,91 +142,87 @@ bool Draw_LoadImageBMPFile(C2D_Image *texture, const char *path) {
 }
 
 bool Draw_LoadImageJPGFile(C2D_Image *texture, const char *path) {
-	int width = 0, height = 0, channel = 0;
-	stbi_uc *image = stbi_load(path, &width, &height, &channel, STBI_rgb);
+	Result ret = 0;
+	Handle handle;
 
-	if ((image == NULL) || (channel != STBI_rgb))
+	u16 u16_path[strlen(path) + 1];
+	Utils_U8_To_U16(u16_path, (const u8 *)path, strlen(path) + 1);
+	if (R_FAILED(ret = FSUSER_OpenFile(&handle, archive, fsMakePath(PATH_UTF16, u16_path), FS_OPEN_READ, 0))) {
+		FSFILE_Close(handle);
 		return false;
+	}
+
+	u64 size = 0;
+	if (R_FAILED(ret = FS_GetFileSize(archive, path, &size))) {
+		FSFILE_Close(handle);
+		return false;
+	}
+
+	u8 *buf = linearAlloc(size);
+	if (R_FAILED(ret = FSFILE_Read(handle, NULL, 0, buf, size))) {
+		linearFree(buf);
+		FSFILE_Close(handle);
+		return false;
+	}
+
+	njInit();
+	if (njDecode(buf, size)) {
+		njDone();
+		linearFree(buf);
+		FSFILE_Close(handle);
+		return false;
+	}
 	
-	for (u32 x = 0; x < (u32)width; x++) {
-		for (u32 y = 0; y < (u32)height; y++) {
-			u32 pos = (y * (u32)width + x) * (u32)channel;
+	for (u32 x = 0; x < (u32)njGetWidth(); x++) {
+		for (u32 y = 0; y < (u32)njGetHeight(); y++) {
+			u32 pos = (y * (u32)njGetWidth() + x) * 3;
 
-			u8 c1 = image[pos + 0];
-			u8 c2 = image[pos + 1];
-			u8 c3 = image[pos + 2];
+			u8 c1 = njGetImage()[pos + 0];
+			u8 c2 = njGetImage()[pos + 1];
+			u8 c3 = njGetImage()[pos + 2];
 
-			image[pos + 0] = c3;
-			image[pos + 1] = c2;
-			image[pos + 2] = c1;
+			njGetImage()[pos + 0] = c3;
+			njGetImage()[pos + 1] = c2;
+			njGetImage()[pos + 2] = c1;
 		}
 	}
 
 	C3D_Tex *tex = linearAlloc(sizeof(C3D_Tex));
 	Tex3DS_SubTexture *subtex = linearAlloc(sizeof(Tex3DS_SubTexture));
-	Draw_C3DTexToC2DImage(tex, subtex, image, (u32)(width * height * channel), (u32)width, (u32)height, GPU_RGB8);
+	Draw_C3DTexToC2DImage(tex, subtex, njGetImage(), (u32)(njGetWidth() * njGetHeight() * 3), (u32)njGetWidth(), (u32)njGetHeight(), GPU_RGB8);
 	texture->tex = tex;
 	texture->subtex = subtex;
+	linearFree(buf);
+	njDone();
+	FSFILE_Close(handle);
 	return true;
 }
 
 bool Draw_LoadImageJPGMemory(C2D_Image *texture, void *data, size_t size) {
-	int width = 0, height = 0, channel = 0;
-	stbi_uc *image = stbi_load_from_memory(data, size, &width, &height, &channel, STBI_rgb);
-
-	if ((image == NULL) || (channel != STBI_rgb))
+	njInit();
+	if (njDecode(data, size))
 		return false;
 	
-	for (u32 x = 0; x < (u32)width; x++) {
-		for (u32 y = 0; y < (u32)height; y++) {
-			u32 pos = (y * (u32)width + x) * (u32)channel;
+	for (u32 x = 0; x < (u32)njGetWidth(); x++) {
+		for (u32 y = 0; y < (u32)njGetHeight(); y++) {
+			u32 pos = (y * (u32)njGetWidth() + x) * 3;
 
-			u8 c1 = image[pos + 0];
-			u8 c2 = image[pos + 1];
-			u8 c3 = image[pos + 2];
+			u8 c1 = njGetImage()[pos + 0];
+			u8 c2 = njGetImage()[pos + 1];
+			u8 c3 = njGetImage()[pos + 2];
 
-			image[pos + 0] = c3;
-			image[pos + 1] = c2;
-			image[pos + 2] = c1;
+			njGetImage()[pos + 0] = c3;
+			njGetImage()[pos + 1] = c2;
+			njGetImage()[pos + 2] = c1;
 		}
 	}
 
 	C3D_Tex *tex = linearAlloc(sizeof(C3D_Tex));
 	Tex3DS_SubTexture *subtex = linearAlloc(sizeof(Tex3DS_SubTexture));
-	Draw_C3DTexToC2DImage(tex, subtex, image, (u32)(width * height * channel), (u32)width, (u32)height, GPU_RGB8);
+	Draw_C3DTexToC2DImage(tex, subtex, njGetImage(), (u32)(njGetWidth() * njGetHeight() * 3), (u32)njGetWidth(), (u32)njGetHeight(), GPU_RGB8);
 	texture->tex = tex;
 	texture->subtex = subtex;
-	return true;
-}
-
-bool Draw_LoadImageOtherFile(C2D_Image *texture, const char *path) {
-	int width = 0, height = 0, channel = 0;
-	stbi_uc *image = stbi_load(path, &width, &height, &channel, STBI_rgb_alpha);
-
-	if ((image == NULL) || (channel != STBI_rgb))
-		return false;
-	
-	for (u32 x = 0; x < (u32)width; x++) {
-		for (u32 y = 0; y < (u32)height; y++) {
-			u32 pos = (y * (u32)width + x) * (u32)channel;
-
-			u8 c1 = image[pos + 0];
-			u8 c2 = image[pos + 1];
-			u8 c3 = image[pos + 2];
-			u8 c4 = image[pos + 3];
-
-			image[pos + 0] = c4;
-			image[pos + 1] = c3;
-			image[pos + 2] = c2;
-			image[pos + 3] = c1;
-		}
-	}
-
-	C3D_Tex *tex = linearAlloc(sizeof(C3D_Tex));
-	Tex3DS_SubTexture *subtex = linearAlloc(sizeof(Tex3DS_SubTexture));
-	Draw_C3DTexToC2DImage(tex, subtex, image, (u32)(width * height * channel), (u32)width, (u32)height, GPU_RGBA8);
-	texture->tex = tex;
-	texture->subtex = subtex;
+	njDone();
 	return true;
 }
 

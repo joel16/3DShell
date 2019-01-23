@@ -35,7 +35,6 @@ bool Draw_ImageScale(C2D_Image image, float x, float y, float scaleX, float scal
 bool Draw_LoadImageBMPFile(C2D_Image *texture, const char *path);
 bool Draw_LoadImageJPGFile(C2D_Image *texture, const char *path);
 bool Draw_LoadImageJPGMemory(C2D_Image *texture, void *data, size_t size);
-bool Draw_LoadImageOtherFile(C2D_Image *texture, const char *path);
 bool Draw_LoadImagePNGFile(C2D_Image *texture, const char *path);
 bool Draw_LoadImagePNGMemory(C2D_Image *texture, void *data, size_t size);
 

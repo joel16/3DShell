@@ -97,8 +97,6 @@ static void Gallery_LoadTexture(char *path) {
         Draw_LoadImageJPGFile(&image, path);
     else if (!strncasecmp(extension, ".png", 4))
         Draw_LoadImagePNGFile(&image, path);
-    else
-        Draw_LoadImageOtherFile(&image, path);
 
     if ((image.subtex->width <= 400) && (image.subtex->height <= 240))
         dimensions = DIMENSION_DEFAULT;
