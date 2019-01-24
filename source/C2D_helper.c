@@ -1,5 +1,10 @@
 #include <assert.h>
+#include <errno.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/stat.h>
 #include <stdarg.h>
 
 #include "common.h"
@@ -7,12 +12,13 @@
 #include "fs.h"
 #include "utils.h"
 
+#include "libnsbmp.h"
 #include "libnsgif.h"
-#define LOADBMP_IMPLEMENTATION
-#include "loadbmp.h"
-#undef LOADBMP_IMPLEMENTATION
 #include "lodepng.h"
 #include "nanojpeg.h"
+
+#define BYTES_PER_PIXEL 4
+#define TRANSPARENT_COLOR 0xffffffff
 
 void Draw_EndFrame(void) {
 	C2D_TextBufClear(dynamicBuf);
@@ -66,113 +72,6 @@ bool Draw_ImageScale(C2D_Image image, float x, float y, float scaleX, float scal
 	return C2D_DrawImageAt(image, x, y, 0.5f, NULL, scaleX, scaleY);
 }
 
-static unsigned int Draw_GetNextPowerOf2(unsigned int v) {
-	v--;
-	v |= v >> 1;
-	v |= v >> 2;
-	v |= v >> 4;
-	v |= v >> 8;
-	v |= v >> 16;
-	v++;
-	return (v >= 64 ? v : 64);
-}
-
-static void Draw_C3DTexToC2DImage(C3D_Tex *tex, Tex3DS_SubTexture *subtex, void *buf, u32 size, int width, int height, GPU_TEXCOLOR format) {
-	u32 w_pow2 = Draw_GetNextPowerOf2((u32)width);
-	u32 h_pow2 = Draw_GetNextPowerOf2((u32)height);
-
-	subtex->width = (u16)width;
-	subtex->height = (u16)height;
-	subtex->left = 0.0f;
-	subtex->top = 1.0f;
-	subtex->right = (width / (float)w_pow2);
-	subtex->bottom = 1.0 - (height / (float)h_pow2);
-
-	C3D_TexInit(tex, (u16)w_pow2, (u16)h_pow2, format);
-	C3D_TexSetFilter(tex, GPU_NEAREST, GPU_NEAREST);
-
-	u32 pixel_size = size / width / height;
-
-	memset(tex->data, 0, tex->size);
-
-	for (u32 x = 0; x < (u32)width; x++) {
-		for (u32 y = 0; y < (u32)height; y++) {
-			u32 dst_pos = ((((y >> 3) * (w_pow2 >> 3) + (x >> 3)) << 6) + ((x & 1) | ((y & 1) << 1) | ((x & 2) << 1) | ((y & 2) << 2) | ((x & 4) << 2) | ((y & 4) << 3))) * pixel_size;
-			u32 src_pos = (y * width + x) * pixel_size;
-
-			memcpy(&((u8*)tex->data)[dst_pos], &((u8*)buf)[src_pos], pixel_size);
-		}
-	}
-
-	C3D_TexFlush(tex);
-
-	tex->border = 0xFFFFFFFF;
-	C3D_TexSetWrap(tex, GPU_CLAMP_TO_BORDER, GPU_CLAMP_TO_BORDER);
-	linearFree(buf);
-}
-
-bool Draw_LoadImageBMPFile(C2D_Image *texture, const char *path) {
-	unsigned char *image = NULL;
-	unsigned int width, height;
-
-	unsigned int err = loadbmp_decode_file(path, &image, &width, &height, LOADBMP_RGBA);
-
-	if (err)
-		return false;
-
-	for (u32 i = 0; i < (u32)width; i++) {
-		for (u32 j = 0; j < (u32)height; j++) {
-			u32 p = (i + j * (u32)width) * 4;
-
-			u8 r = *(u8*)(image + p);
-			u8 g = *(u8*)(image + p + 1);
-			u8 b = *(u8*)(image + p + 2);
-			u8 a = *(u8*)(image + p + 3);
-
-			*(image + p) = a;
-			*(image + p + 1) = b;
-			*(image + p + 2) = g;
-			*(image + p + 3) = r;
-		}
-	}
-
-	C3D_Tex *tex = linearAlloc(sizeof(C3D_Tex));
-	Tex3DS_SubTexture *subtex = linearAlloc(sizeof(Tex3DS_SubTexture));
-	Draw_C3DTexToC2DImage(tex, subtex, image, (u32)(width * height * 4), (u32)width, (u32)height, GPU_RGBA8);
-	texture->tex = tex;
-	texture->subtex = subtex;
-	return true;
-}
-
-static void *bitmap_create(int width, int height) {
-	return calloc(width * height, 4);
-}
-
-static void bitmap_set_opaque(void *bitmap, bool opaque) {
-	(void)opaque;  /* unused */
-	assert(bitmap);
-}
-
-static bool bitmap_test_opaque(void *bitmap) {
-	assert(bitmap);
-	return false;
-}
-
-static unsigned char *bitmap_get_buffer(void *bitmap) {
-	assert(bitmap);
-	return bitmap;
-}
-
-static void bitmap_destroy(void *bitmap) {
-	assert(bitmap);
-	free(bitmap);
-}
-
-static void bitmap_modified(void *bitmap) {
-	assert(bitmap);
-	return;
-}
-
 static u64 FSFILE_FRead(void *dst, u32 size, Handle file) {
 	Result ret = 0;
 	u32 bytes_read = 0;
@@ -221,20 +120,170 @@ static u8 *bitmap_load_file(const char *path, size_t *data_size) {
 	return buffer;
 }
 
-bool Draw_LoadImageGIFFile(C2D_Image *texture, const char *path) {
-	gif_bitmap_callback_vt bitmap_callbacks = {
-		bitmap_create,
-		bitmap_destroy,
-		bitmap_get_buffer,
-		bitmap_set_opaque,
-		bitmap_test_opaque,
-		bitmap_modified
+static unsigned int Draw_GetNextPowerOf2(unsigned int v) {
+	v--;
+	v |= v >> 1;
+	v |= v >> 2;
+	v |= v >> 4;
+	v |= v >> 8;
+	v |= v >> 16;
+	v++;
+	return (v >= 64 ? v : 64);
+}
+
+static void Draw_C3DTexToC2DImage(C3D_Tex *tex, Tex3DS_SubTexture *subtex, void *buf, u32 size, int width, int height, GPU_TEXCOLOR format) {
+	u32 w_pow2 = Draw_GetNextPowerOf2((u32)width);
+	u32 h_pow2 = Draw_GetNextPowerOf2((u32)height);
+
+	subtex->width = (u16)width;
+	subtex->height = (u16)height;
+	subtex->left = 0.0f;
+	subtex->top = 1.0f;
+	subtex->right = (width / (float)w_pow2);
+	subtex->bottom = 1.0 - (height / (float)h_pow2);
+
+	C3D_TexInit(tex, (u16)w_pow2, (u16)h_pow2, format);
+	C3D_TexSetFilter(tex, GPU_NEAREST, GPU_NEAREST);
+
+	u32 pixel_size = size / width / height;
+
+	memset(tex->data, 0, tex->size);
+
+	for (u32 x = 0; x < (u32)width; x++) {
+		for (u32 y = 0; y < (u32)height; y++) {
+			u32 dst_pos = ((((y >> 3) * (w_pow2 >> 3) + (x >> 3)) << 6) + ((x & 1) | ((y & 1) << 1) | ((x & 2) << 1) | ((y & 2) << 2) | ((x & 4) << 2) | ((y & 4) << 3))) * pixel_size;
+			u32 src_pos = (y * width + x) * pixel_size;
+
+			memcpy(&((u8*)tex->data)[dst_pos], &((u8*)buf)[src_pos], pixel_size);
+		}
+	}
+
+	C3D_TexFlush(tex);
+
+	tex->border = 0xFFFFFFFF;
+	C3D_TexSetWrap(tex, GPU_CLAMP_TO_BORDER, GPU_CLAMP_TO_BORDER);
+	linearFree(buf);
+}
+
+static void *bmp_bitmap_create(int width, int height, unsigned int state) {
+	(void) state;  /* unused */
+	return calloc(width * height, BYTES_PER_PIXEL);
+}
+
+static unsigned char *bmp_bitmap_get_buffer(void *bitmap) {
+	assert(bitmap);
+	return bitmap;
+}
+
+static size_t bmp_bitmap_get_bpp(void *bitmap) {
+	(void) bitmap;  /* unused */
+	return BYTES_PER_PIXEL;
+}
+
+static void bmp_bitmap_destroy(void *bitmap) {
+	assert(bitmap);
+	free(bitmap);
+}
+
+bool Draw_LoadImageBMPFile(C2D_Image *texture, const char *path) {
+	bmp_bitmap_callback_vt bitmap_callbacks = {
+		bmp_bitmap_create,
+		bmp_bitmap_destroy,
+		bmp_bitmap_get_buffer,
+		bmp_bitmap_get_bpp
 	};
+
+	bmp_result code;
+	bmp_image bmp;
+	size_t size;
+
+	bmp_create(&bmp, &bitmap_callbacks);
+	unsigned char *data = bitmap_load_file(path, &size);
+
+	code = bmp_analyse(&bmp, size, data);
+	if (code != BMP_OK)
+		return false;
+
+	code = bmp_decode(&bmp);
+
+	if (code != BMP_OK) {
+		if (code != BMP_INSUFFICIENT_DATA)
+			return false;
+	}
+
+	u8 *image = (u8 *)bmp.bitmap;
+
+	for (u32 i = 0; i < (u32)bmp.width; i++) {
+		for (u32 j = 0; j < (u32)bmp.height; j++) {
+			u32 p = (i + j * (u32)bmp.width) * BYTES_PER_PIXEL;
+
+			u8 r = *(u8*)(image + p);
+			u8 g = *(u8*)(image + p + 1);
+			u8 b = *(u8*)(image + p + 2);
+			u8 a = *(u8*)(image + p + 3);
+
+			*(image + p) = a;
+			*(image + p + 1) = b;
+			*(image + p + 2) = g;
+			*(image + p + 3) = r;
+		}
+	}
+
+	bmp_finalise(&bmp);
+
+	C3D_Tex *tex = linearAlloc(sizeof(C3D_Tex));
+	Tex3DS_SubTexture *subtex = linearAlloc(sizeof(Tex3DS_SubTexture));
+	Draw_C3DTexToC2DImage(tex, subtex, image, (u32)(bmp.width * bmp.height * BYTES_PER_PIXEL), (u32)bmp.width, (u32)bmp.height, GPU_RGBA8);
+	texture->tex = tex;
+	texture->subtex = subtex;
+	free(data);
+	return true;
+}
+
+static void *gif_bitmap_create(int width, int height) {
+	return calloc(width * height, BYTES_PER_PIXEL);
+}
+
+static void gif_bitmap_set_opaque(void *bitmap, bool opaque) {
+	(void) opaque;  /* unused */
+	assert(bitmap);
+}
+
+static bool gif_bitmap_test_opaque(void *bitmap) {
+	assert(bitmap);
+	return false;
+}
+
+static unsigned char *gif_bitmap_get_buffer(void *bitmap) {
+	assert(bitmap);
+	return bitmap;
+}
+
+static void gif_bitmap_destroy(void *bitmap) {
+	assert(bitmap);
+	free(bitmap);
+}
+
+static void gif_bitmap_modified(void *bitmap) {
+	assert(bitmap);
+	return;
+}
+
+bool Draw_LoadImageGIFFile(C2D_Image *texture, const char *path) {
+	gif_bitmap_callback_vt gif_bitmap_callbacks = {
+		gif_bitmap_create,
+		gif_bitmap_destroy,
+		gif_bitmap_get_buffer,
+		gif_bitmap_set_opaque,
+		gif_bitmap_test_opaque,
+		gif_bitmap_modified
+	};
+
 	gif_animation gif;
 	size_t size = 0;
 	gif_result code;
 
-	gif_create(&gif, &bitmap_callbacks);
+	gif_create(&gif, &gif_bitmap_callbacks);
 	u8 *data = bitmap_load_file(path, &size);
 
 	do {
@@ -251,7 +300,7 @@ bool Draw_LoadImageGIFFile(C2D_Image *texture, const char *path) {
 
 	for (u32 i = 0; i < (u32)gif.width; i++) {
 		for (u32 j = 0; j < (u32)gif.height; j++) {
-			u32 p = (i + j * (u32)gif.width) * 4;
+			u32 p = (i + j * (u32)gif.width) * BYTES_PER_PIXEL;
 
 			u8 r = *(u8*)(image + p);
 			u8 g = *(u8*)(image + p + 1);
@@ -267,7 +316,7 @@ bool Draw_LoadImageGIFFile(C2D_Image *texture, const char *path) {
 
 	C3D_Tex *tex = linearAlloc(sizeof(C3D_Tex));
 	Tex3DS_SubTexture *subtex = linearAlloc(sizeof(Tex3DS_SubTexture));
-	Draw_C3DTexToC2DImage(tex, subtex, image, (u32)(gif.width * gif.height * 4), (u32)gif.width, (u32)gif.height, GPU_RGBA8);
+	Draw_C3DTexToC2DImage(tex, subtex, image, (u32)(gif.width * gif.height * BYTES_PER_PIXEL), (u32)gif.width, (u32)gif.height, GPU_RGBA8);
 	texture->tex = tex;
 	texture->subtex = subtex;
 	gif_finalise(&gif);
@@ -309,7 +358,7 @@ bool Draw_LoadImageJPGFile(C2D_Image *texture, const char *path) {
 	
 	for (u32 x = 0; x < (u32)njGetWidth(); x++) {
 		for (u32 y = 0; y < (u32)njGetHeight(); y++) {
-			u32 pos = (y * (u32)njGetWidth() + x) * 3;
+			u32 pos = (y * (u32)njGetWidth() + x) * (BYTES_PER_PIXEL - 1);
 
 			u8 c1 = njGetImage()[pos + 0];
 			u8 c2 = njGetImage()[pos + 1];
@@ -323,7 +372,7 @@ bool Draw_LoadImageJPGFile(C2D_Image *texture, const char *path) {
 
 	C3D_Tex *tex = linearAlloc(sizeof(C3D_Tex));
 	Tex3DS_SubTexture *subtex = linearAlloc(sizeof(Tex3DS_SubTexture));
-	Draw_C3DTexToC2DImage(tex, subtex, njGetImage(), (u32)(njGetWidth() * njGetHeight() * 3), (u32)njGetWidth(), (u32)njGetHeight(), GPU_RGB8);
+	Draw_C3DTexToC2DImage(tex, subtex, njGetImage(), (u32)(njGetWidth() * njGetHeight() * (BYTES_PER_PIXEL - 1)), (u32)njGetWidth(), (u32)njGetHeight(), GPU_RGB8);
 	texture->tex = tex;
 	texture->subtex = subtex;
 	linearFree(buf);
@@ -339,7 +388,7 @@ bool Draw_LoadImageJPGMemory(C2D_Image *texture, void *data, size_t size) {
 	
 	for (u32 x = 0; x < (u32)njGetWidth(); x++) {
 		for (u32 y = 0; y < (u32)njGetHeight(); y++) {
-			u32 pos = (y * (u32)njGetWidth() + x) * 3;
+			u32 pos = (y * (u32)njGetWidth() + x) * (BYTES_PER_PIXEL - 1);
 
 			u8 c1 = njGetImage()[pos + 0];
 			u8 c2 = njGetImage()[pos + 1];
@@ -353,7 +402,7 @@ bool Draw_LoadImageJPGMemory(C2D_Image *texture, void *data, size_t size) {
 
 	C3D_Tex *tex = linearAlloc(sizeof(C3D_Tex));
 	Tex3DS_SubTexture *subtex = linearAlloc(sizeof(Tex3DS_SubTexture));
-	Draw_C3DTexToC2DImage(tex, subtex, njGetImage(), (u32)(njGetWidth() * njGetHeight() * 3), (u32)njGetWidth(), (u32)njGetHeight(), GPU_RGB8);
+	Draw_C3DTexToC2DImage(tex, subtex, njGetImage(), (u32)(njGetWidth() * njGetHeight() * (BYTES_PER_PIXEL - 1)), (u32)njGetWidth(), (u32)njGetHeight(), GPU_RGB8);
 	texture->tex = tex;
 	texture->subtex = subtex;
 	njDone();
@@ -371,7 +420,7 @@ bool Draw_LoadImagePNGFile(C2D_Image *texture, const char *path) {
 
 	for (u32 i = 0; i < (u32)width; i++) {
 		for (u32 j = 0; j < (u32)height; j++) {
-			u32 p = (i + j * (u32)width) * 4;
+			u32 p = (i + j * (u32)width) * BYTES_PER_PIXEL;
 
 			u8 r = *(u8*)(image + p);
 			u8 g = *(u8*)(image + p + 1);
@@ -387,7 +436,7 @@ bool Draw_LoadImagePNGFile(C2D_Image *texture, const char *path) {
 
 	C3D_Tex *tex = linearAlloc(sizeof(C3D_Tex));
 	Tex3DS_SubTexture *subtex = linearAlloc(sizeof(Tex3DS_SubTexture));
-	Draw_C3DTexToC2DImage(tex, subtex, image, (u32)(width * height * 4), (u32)width, (u32)height, GPU_RGBA8);
+	Draw_C3DTexToC2DImage(tex, subtex, image, (u32)(width * height * BYTES_PER_PIXEL), (u32)width, (u32)height, GPU_RGBA8);
 	texture->tex = tex;
 	texture->subtex = subtex;
 	return true;
@@ -404,7 +453,7 @@ bool Draw_LoadImagePNGMemory(C2D_Image *texture, void *data, size_t size) {
 
 	for (u32 i = 0; i < (u32)width; i++) {
 		for (u32 j = 0; j < (u32)height; j++) {
-			u32 p = (i + j * (u32)width) * 4;
+			u32 p = (i + j * (u32)width) * BYTES_PER_PIXEL;
 
 			u8 r = *(u8*)(image + p);
 			u8 g = *(u8*)(image + p + 1);
@@ -420,7 +469,7 @@ bool Draw_LoadImagePNGMemory(C2D_Image *texture, void *data, size_t size) {
 
 	C3D_Tex *tex = linearAlloc(sizeof(C3D_Tex));
 	Tex3DS_SubTexture *subtex = linearAlloc(sizeof(Tex3DS_SubTexture));
-	Draw_C3DTexToC2DImage(tex, subtex, image, (u32)(width * height * 4), (u32)width, (u32)height, GPU_RGBA8);
+	Draw_C3DTexToC2DImage(tex, subtex, image, (u32)(width * height * BYTES_PER_PIXEL), (u32)width, (u32)height, GPU_RGBA8);
 	texture->tex = tex;
 	texture->subtex = subtex;
 	return true;
