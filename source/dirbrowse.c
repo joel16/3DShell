@@ -200,7 +200,7 @@ void Dirbrowse_DisplayFiles(void) {
 			else if ((!strncasecmp(file->ext, "mp3", 3)) || (!strncasecmp(file->ext, "ogg", 3)) || (!strncasecmp(file->ext, "wav", 3)) || (!strncasecmp(file->ext, "fla", 3))
 				|| (!strncasecmp(file->ext, "opu", 3)))
 				Draw_Image(icon_audio, 30, 56 + (38 * printed));
-			else if ((!strncasecmp(file->ext, "png", 3)) || (!strncasecmp(file->ext, "jpg", 3)) || (!strncasecmp(file->ext, "bmp", 3)))
+			else if ((!strncasecmp(file->ext, "png", 3)) || (!strncasecmp(file->ext, "jpg", 3)) || (!strncasecmp(file->ext, "bmp", 3)) || (!strncasecmp(file->ext, "gif", 3)))
 				Draw_Image(icon_image, 30, 56 + (38 * printed));
 			else if ((!strncasecmp(file->ext, "txt", 3)) || (!strncasecmp(file->ext, "log", 3)) || (!strncasecmp(file->ext, "lua", 3)) || (!strncasecmp(file->ext, "cfg", 3)))
 				Draw_Image(icon_text, 30, 56 + (38 * printed));
@@ -272,7 +272,7 @@ void Dirbrowse_OpenFile(void) {
 			Dirbrowse_PopulateFiles(true);
 		}
 	}
-	else if ((!strncasecmp(file->ext, "png", 3)) || (!strncasecmp(file->ext, "jpg", 3)) || (!strncasecmp(file->ext, "bmp", 3)))
+	else if ((!strncasecmp(file->ext, "png", 3)) || (!strncasecmp(file->ext, "jpg", 3)) || (!strncasecmp(file->ext, "bmp", 3)) || (!strncasecmp(file->ext, "gif", 3)))
 		Gallery_DisplayImage(path);
 	else if (!strncasecmp(file->ext, "zip", 3)) {
 		Archive_ExtractZIP(path);

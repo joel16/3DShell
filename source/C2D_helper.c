@@ -1,3 +1,5 @@
+#include <assert.h>
+#include <stdlib.h>
 #include <stdarg.h>
 
 #include "common.h"
@@ -5,6 +7,7 @@
 #include "fs.h"
 #include "utils.h"
 
+#include "libnsgif.h"
 #define LOADBMP_IMPLEMENTATION
 #include "loadbmp.h"
 #undef LOADBMP_IMPLEMENTATION
@@ -138,6 +141,137 @@ bool Draw_LoadImageBMPFile(C2D_Image *texture, const char *path) {
 	Draw_C3DTexToC2DImage(tex, subtex, image, (u32)(width * height * 4), (u32)width, (u32)height, GPU_RGBA8);
 	texture->tex = tex;
 	texture->subtex = subtex;
+	return true;
+}
+
+static void *bitmap_create(int width, int height) {
+	return calloc(width * height, 4);
+}
+
+static void bitmap_set_opaque(void *bitmap, bool opaque) {
+	(void)opaque;  /* unused */
+	assert(bitmap);
+}
+
+static bool bitmap_test_opaque(void *bitmap) {
+	assert(bitmap);
+	return false;
+}
+
+static unsigned char *bitmap_get_buffer(void *bitmap) {
+	assert(bitmap);
+	return bitmap;
+}
+
+static void bitmap_destroy(void *bitmap) {
+	assert(bitmap);
+	free(bitmap);
+}
+
+static void bitmap_modified(void *bitmap) {
+	assert(bitmap);
+	return;
+}
+
+static u64 FSFILE_FRead(void *dst, u32 size, Handle file) {
+	Result ret = 0;
+	u32 bytes_read = 0;
+	u64 offset = 0;
+
+	if (R_FAILED(ret = FSFILE_Read(file, &bytes_read, offset, (u32 *)dst, size)))
+		return ret;
+
+	offset += bytes_read;
+	return offset;
+}
+
+static u8 *bitmap_load_file(const char *path, size_t *data_size) {
+	Result ret = 0;
+	Handle handle;
+	unsigned char *buffer;
+	u64 size = 0, n = 0;
+
+	u16 u16_path[strlen(path) + 1];
+	Utils_U8_To_U16(u16_path, (const u8 *)path, strlen(path) + 1);
+	if (R_FAILED(ret = FSUSER_OpenFile(&handle, archive, fsMakePath(PATH_UTF16, u16_path), FS_OPEN_READ, 0))) {
+		FSFILE_Close(handle);
+		return NULL;
+	}
+
+	if (R_FAILED(ret = FS_GetFileSize(archive, path, &size))) {
+		FSFILE_Close(handle);
+		return NULL;
+	}
+
+	buffer = malloc(size);
+	if (!buffer) {
+		free(buffer);
+		return NULL;
+	}
+
+	n = FSFILE_FRead(buffer, size, handle);
+	if (n != size) {
+		free(buffer);
+		return NULL;
+	}
+
+	FSFILE_Close(handle);
+
+	*data_size = size;
+	return buffer;
+}
+
+bool Draw_LoadImageGIFFile(C2D_Image *texture, const char *path) {
+	gif_bitmap_callback_vt bitmap_callbacks = {
+		bitmap_create,
+		bitmap_destroy,
+		bitmap_get_buffer,
+		bitmap_set_opaque,
+		bitmap_test_opaque,
+		bitmap_modified
+	};
+	gif_animation gif;
+	size_t size = 0;
+	gif_result code;
+
+	gif_create(&gif, &bitmap_callbacks);
+	u8 *data = bitmap_load_file(path, &size);
+
+	do {
+		code = gif_initialise(&gif, size, data);
+		if (code != GIF_OK && code != GIF_WORKING)
+			return false;
+	} while (code != GIF_OK);
+
+	code = gif_decode_frame(&gif, 0);
+	if (code != GIF_OK)
+		return false;
+
+	u8 *image = (unsigned char *)gif.frame_image;
+
+	for (u32 i = 0; i < (u32)gif.width; i++) {
+		for (u32 j = 0; j < (u32)gif.height; j++) {
+			u32 p = (i + j * (u32)gif.width) * 4;
+
+			u8 r = *(u8*)(image + p);
+			u8 g = *(u8*)(image + p + 1);
+			u8 b = *(u8*)(image + p + 2);
+			u8 a = *(u8*)(image + p + 3);
+
+			*(image + p) = a;
+			*(image + p + 1) = b;
+			*(image + p + 2) = g;
+			*(image + p + 3) = r;
+		}
+	}
+
+	C3D_Tex *tex = linearAlloc(sizeof(C3D_Tex));
+	Tex3DS_SubTexture *subtex = linearAlloc(sizeof(Tex3DS_SubTexture));
+	Draw_C3DTexToC2DImage(tex, subtex, image, (u32)(gif.width * gif.height * 4), (u32)gif.width, (u32)gif.height, GPU_RGBA8);
+	texture->tex = tex;
+	texture->subtex = subtex;
+	gif_finalise(&gif);
+	free(data);
 	return true;
 }
 

@@ -53,7 +53,8 @@ static Result Gallery_GetImageList(void) {
             for (u32 i = 0; i < entryCount; i++) {
                 Utils_U16_To_U8((u8 *)&name[0], entries[i].name, 255);
 
-                if ((!strncasecmp(entries[i].shortExt, "png", 3)) || (!strncasecmp(entries[i].shortExt, "jpg", 3)) || (!strncasecmp(entries[i].shortExt, "bmp", 3))) {
+                if ((!strncasecmp(entries[i].shortExt, "png", 3)) || (!strncasecmp(entries[i].shortExt, "jpg", 3)) || (!strncasecmp(entries[i].shortExt, "bmp", 3))
+                    || (!strncasecmp(entries[i].shortExt, "gif", 3))) {
                     strcpy(album[count], cwd);
                     strcpy(album[count] + strlen(album[count]), name);
                     count++;
@@ -97,6 +98,8 @@ static void Gallery_LoadTexture(char *path) {
         Draw_LoadImageJPGFile(&image, path);
     else if (!strncasecmp(extension, ".png", 4))
         Draw_LoadImagePNGFile(&image, path);
+    else if (!strncasecmp(extension, ".gif", 4))
+        Draw_LoadImageGIFFile(&image, path);
 
     if ((image.subtex->width <= 400) && (image.subtex->height <= 240))
         dimensions = DIMENSION_DEFAULT;
