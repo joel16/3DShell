@@ -78,10 +78,10 @@ static u64 FSFILE_FRead(void *dst, u32 size, Handle file) {
 	return offset;
 }
 
-static u8 *bitmap_load_file(const char *path, size_t *data_size) {
+static u8 *Draw_LoadExternalImageFile(const char *path, u32 *data_size) {
 	Result ret = 0;
 	Handle handle;
-	unsigned char *buffer;
+	u8 *buffer = NULL;
 	u64 size = 0, n = 0;
 
 	u16 u16_path[strlen(path) + 1];
@@ -137,7 +137,7 @@ static void Draw_C3DTexToC2DImage(C3D_Tex *tex, Tex3DS_SubTexture *subtex, void 
 	subtex->bottom = 1.0 - (height / (float)h_pow2);
 
 	C3D_TexInit(tex, (u16)w_pow2, (u16)h_pow2, format);
-	C3D_TexSetFilter(tex, GPU_LINEAR, GPU_LINEAR);
+	C3D_TexSetFilter(tex, GPU_NEAREST, GPU_NEAREST);
 
 	u32 pixel_size = (size / (u32)width / (u32)height);
 
@@ -164,7 +164,7 @@ static void *bitmap_create(int width, int height, unsigned int state) {
 	return calloc(width * height, BYTES_PER_PIXEL);
 }
 
-static unsigned char *bitmap_get_buffer(void *bitmap) {
+static u8 *bitmap_get_buffer(void *bitmap) {
 	assert(bitmap);
 	return bitmap;
 }
@@ -187,22 +187,26 @@ bool Draw_LoadImageBMPFile(C2D_Image *texture, const char *path) {
 		bitmap_get_bpp
 	};
 
-	bmp_result code;
+	bmp_result code = BMP_OK;
 	bmp_image bmp;
-	size_t size;
+	u32 size = 0;
 
 	bmp_create(&bmp, &bmp_bitmap_callbacks);
-	unsigned char *data = bitmap_load_file(path, &size);
+	u8 *data = Draw_LoadExternalImageFile(path, &size);
 
 	code = bmp_analyse(&bmp, size, data);
-	if (code != BMP_OK)
+	if (code != BMP_OK) {
+		linearFree(data);
 		return false;
+	}
 
 	code = bmp_decode(&bmp);
 
 	if (code != BMP_OK) {
-		if (code != BMP_INSUFFICIENT_DATA)
+		if (code != BMP_INSUFFICIENT_DATA) {
+			linearFree(data);
 			return false;
+		}
 	}
 
 	u8 *image = (u8 *)bmp.bitmap;
@@ -247,7 +251,7 @@ static bool gif_bitmap_test_opaque(void *bitmap) {
 	return false;
 }
 
-static unsigned char *gif_bitmap_get_buffer(void *bitmap) {
+static u8 *gif_bitmap_get_buffer(void *bitmap) {
 	assert(bitmap);
 	return bitmap;
 }
@@ -273,23 +277,27 @@ bool Draw_LoadImageGIFFile(C2D_Image *texture, const char *path) {
 	};
 
 	gif_animation gif;
-	size_t size = 0;
-	gif_result code;
+	u32 size = 0;
+	gif_result code = GIF_OK;
 
 	gif_create(&gif, &gif_bitmap_callbacks);
-	u8 *data = bitmap_load_file(path, &size);
+	u8 *data = Draw_LoadExternalImageFile(path, &size);
 
 	do {
 		code = gif_initialise(&gif, size, data);
-		if (code != GIF_OK && code != GIF_WORKING)
+		if (code != GIF_OK && code != GIF_WORKING) {
+			linearFree(data);
 			return false;
+		}
 	} while (code != GIF_OK);
 
 	code = gif_decode_frame(&gif, 0);
-	if (code != GIF_OK)
+	if (code != GIF_OK) {
+		linearFree(data);
 		return false;
+	}
 
-	u8 *image = (unsigned char *)gif.frame_image;
+	u8 *image = (u8 *)gif.frame_image;
 
 	for (u32 row = 0; row < (u32)gif.width; row++) {
 		for (u32 col = 0; col < (u32)gif.height; col++) {
@@ -318,34 +326,13 @@ bool Draw_LoadImageGIFFile(C2D_Image *texture, const char *path) {
 }
 
 bool Draw_LoadImageJPGFile(C2D_Image *texture, const char *path) {
-	Result ret = 0;
-	Handle handle;
-
-	u16 u16_path[strlen(path) + 1];
-	Utils_U8_To_U16(u16_path, (const u8 *)path, strlen(path) + 1);
-	if (R_FAILED(ret = FSUSER_OpenFile(&handle, archive, fsMakePath(PATH_UTF16, u16_path), FS_OPEN_READ, 0))) {
-		FSFILE_Close(handle);
-		return false;
-	}
-
-	u64 size = 0;
-	if (R_FAILED(ret = FS_GetFileSize(archive, path, &size))) {
-		FSFILE_Close(handle);
-		return false;
-	}
-
-	u8 *buf = linearAlloc(size);
-	if (R_FAILED(ret = FSFILE_Read(handle, NULL, 0, buf, size))) {
-		linearFree(buf);
-		FSFILE_Close(handle);
-		return false;
-	}
+	u32 size = 0;
+	u8 *data = Draw_LoadExternalImageFile(path, &size);
 
 	njInit();
-	if (njDecode(buf, size)) {
+	if (njDecode(data, size)) {
 		njDone();
-		linearFree(buf);
-		FSFILE_Close(handle);
+		linearFree(data);
 		return false;
 	}
 	
@@ -353,11 +340,11 @@ bool Draw_LoadImageJPGFile(C2D_Image *texture, const char *path) {
 		for (u32 col = 0; col < (u32)njGetHeight(); col++) {
 			u32 z = (col * (u32)njGetWidth() + row) * (BYTES_PER_PIXEL - 1);
 
-			u8 r = njGetImage()[z + 0];
+			u8 r = njGetImage()[z];
 			u8 g = njGetImage()[z + 1];
 			u8 b = njGetImage()[z + 2];
 
-			njGetImage()[z + 0] = b;
+			njGetImage()[z] = b;
 			njGetImage()[z + 1] = g;
 			njGetImage()[z + 2] = r;
 		}
@@ -368,9 +355,8 @@ bool Draw_LoadImageJPGFile(C2D_Image *texture, const char *path) {
 	Draw_C3DTexToC2DImage(tex, subtex, njGetImage(), (u32)(njGetWidth() * njGetHeight() * (BYTES_PER_PIXEL - 1)), (u32)njGetWidth(), (u32)njGetHeight(), GPU_RGB8);
 	texture->tex = tex;
 	texture->subtex = subtex;
-	linearFree(buf);
 	njDone();
-	FSFILE_Close(handle);
+	linearFree(data);
 	return true;
 }
 
@@ -383,11 +369,11 @@ bool Draw_LoadImageJPGMemory(C2D_Image *texture, void *data, size_t size) {
 		for (u32 col = 0; col < (u32)njGetHeight(); col++) {
 			u32 z = (col * (u32)njGetWidth() + row) * (BYTES_PER_PIXEL - 1);
 
-			u8 r = njGetImage()[z + 0];
+			u8 r = njGetImage()[z];
 			u8 g = njGetImage()[z + 1];
 			u8 b = njGetImage()[z + 2];
 
-			njGetImage()[z + 0] = b;
+			njGetImage()[z] = b;
 			njGetImage()[z + 1] = g;
 			njGetImage()[z + 2] = r;
 		}
@@ -403,13 +389,18 @@ bool Draw_LoadImageJPGMemory(C2D_Image *texture, void *data, size_t size) {
 }
 
 bool Draw_LoadImagePNGFile(C2D_Image *texture, const char *path) {
-	unsigned char *image;
-	unsigned width, height;
-	unsigned error;
+	u32 size = 0;
+	u8 *data = Draw_LoadExternalImageFile(path, &size);
 
-	error = lodepng_decode32_file(&image, &width, &height, path);
-	if (error)
+	u8 *image = NULL;
+	unsigned width = 0, height = 0;
+	unsigned error = 0;
+
+	error = lodepng_decode32(&image, &width, &height, data, size);
+	if (error) {
+		linearFree(data);
 		return false;
+	}
 
 	for (u32 row = 0; row < (u32)width; row++) {
 		for (u32 col = 0; col < (u32)height; col++) {
@@ -432,13 +423,14 @@ bool Draw_LoadImagePNGFile(C2D_Image *texture, const char *path) {
 	Draw_C3DTexToC2DImage(tex, subtex, image, (u32)(width * height * BYTES_PER_PIXEL), (u32)width, (u32)height, GPU_RGBA8);
 	texture->tex = tex;
 	texture->subtex = subtex;
+	linearFree(data);
 	return true;
 }
 
 bool Draw_LoadImagePNGMemory(C2D_Image *texture, void *data, size_t size) {
-	unsigned char *image;
-	unsigned width, height;
-	unsigned error;
+	u8 *image = NULL;
+	unsigned width = 0, height = 0;
+	unsigned error = 0;
 
 	error = lodepng_decode32(&image, &width, &height, data, size);
 	if (error)

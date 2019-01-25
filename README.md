@@ -18,7 +18,7 @@ Current features:
 - Copy/Move files and folders.
 - Multi-select items for delete/cut/copy (using Y button).
 - FTP server (Press select or tap the ftp icon to toggle).
-- Image preview (If the image is around 400 * 480 which is the size of both screens, the image will be split in half and displayed. Support for the following image formats. PNG, JPG, TGA (untested ->) HDR, PIC, PNM, PSD)
+- Image preview (If the image is around 400 * 480 which is the size of both screens, the image will be split in half and displayed. Support for the following image formats: BMP, JPG/JPEG, GIF and PNG)
 - ZIP/RAR file extraction.
 - Searching for directories (allows you to quickly visit a directory by clicking the search icon on the top right (bottom screen).)
 - File properties - lets you view info on current file/folder.
