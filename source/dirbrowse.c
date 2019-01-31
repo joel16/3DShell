@@ -274,13 +274,9 @@ void Dirbrowse_OpenFile(void) {
 	}
 	else if ((!strncasecmp(file->ext, "png", 3)) || (!strncasecmp(file->ext, "jpg", 3)) || (!strncasecmp(file->ext, "bmp", 3)) || (!strncasecmp(file->ext, "gif", 3)))
 		Gallery_DisplayImage(path);
-	else if (!strncasecmp(file->ext, "zip", 3)) {
-		Archive_ExtractZIP(path);
-		Dirbrowse_PopulateFiles(true);
-	}
-	else if (!strncasecmp(file->ext, "rar", 3)) {
-		Archive_ExtractRAR(path);
-		Dirbrowse_PopulateFiles(true);
+	else if ((!strncasecmp(file->ext, "zip", 3)) || (!strncasecmp(file->ext, "rar", 3))) {
+		if (R_SUCCEEDED(Archive_ExtractFile(path)))
+			Dirbrowse_PopulateFiles(true);
 	}
 	else if ((!strncasecmp(file->ext, "mp3", 3)) || (!strncasecmp(file->ext, "ogg", 3)) || (!strncasecmp(file->ext, "wav", 3)) || (!strncasecmp(file->ext, "fla", 3))
 		|| (!strncasecmp(file->ext, "opu", 3)))

@@ -3,7 +3,6 @@
 
 #include <3ds.h>
 
-Result Archive_ExtractZIP(const char *src);
-Result Archive_ExtractRAR(const char *src);
+Result Archive_ExtractFile(const char *path);
 
 #endif

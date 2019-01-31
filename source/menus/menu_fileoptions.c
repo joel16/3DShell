@@ -435,8 +435,7 @@ void Menu_ControlDeleteDialog(u32 input) {
 	if (TouchInRect((288 - delete_cancel_width) - 5, (159 - delete_cancel_height) - 5, ((288 - delete_cancel_width) - 5) + delete_cancel_width + 10, ((159 - delete_cancel_height) - 5) + delete_cancel_height + 10)) {
 		delete_dialog_selection = 0;
 
-		if (input & KEY_TOUCH)
-		{
+		if (input & KEY_TOUCH) {
 			MENU_STATE = MENU_STATE_FILEOPTIONS;
 			delete_dialog_selection = 0;
 		}
