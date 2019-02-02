@@ -1,43 +1,10 @@
-#include <stdlib.h>
+#include <string.h>
 
 #include "cia.h"
+#include "fs.h"
 #include "menu_error.h"
 #include "progress_bar.h"
 #include "utils.h"
-
-static Result CIA_RemoveTitle(u64 titleID, FS_MediaType media) {
-	Result ret = 0;
-	u32 count = 0;
-
-	if (R_FAILED(ret = AM_GetTitleCount(media, &count))) {
-		Menu_DisplayError("AM_GetTitleCount failed:", ret);
-		return ret;
-	}
-	
-	u32 read = 0;
-	u64 *titleIDs = malloc(count *sizeof(u64));
-	
-	if (R_FAILED(ret = AM_GetTitleList(&read, media, count, titleIDs))) {
-		Menu_DisplayError("AM_GetTitleList failed:", ret);
-		free(titleIDs);
-		return ret;
-	}
-	
-	for (unsigned int i = 0; i < read; i++) {
-		if (titleIDs[i] == titleID) {
-			if (R_FAILED(ret = AM_DeleteAppTitle(media, titleID))) {
-				Menu_DisplayError("AM_DeleteAppTitle failed:", ret);
-				free(titleIDs);
-				return ret;
-			}
-
-			break;
-		}
-	}
-	
-	free(titleIDs);
-	return 0;
-}
 
 static Result CIA_LaunchTitle(u64 titleId, FS_MediaType mediaType) {
 	Result ret = 0;
@@ -57,65 +24,80 @@ static Result CIA_LaunchTitle(u64 titleId, FS_MediaType mediaType) {
 }
 
 Result CIA_InstallTitle(const char *path, FS_MediaType media, bool update) {
-	u32 bytesRead = 0, bytesWritten = 0;
-	u64 fileSize = 0, offset = 0;
-	Handle ciaHandle, fileHandle;
-	AM_TitleEntry title;
-	
 	Result ret = 0;
+	u32 bytes_read = 0, bytes_written = 0;
+	u64 size = 0, offset = 0;
+	Handle dst_handle, src_handle;
+	AM_TitleEntry title;
 
-	char *filename = Utils_Basename(path);
-
-	if (R_FAILED(ret = FSUSER_OpenFileDirectly(&fileHandle, ARCHIVE_SDMC, fsMakePath(PATH_ASCII, ""), fsMakePath(PATH_ASCII, path), FS_OPEN_READ, 0))) {
-		Menu_DisplayError("FSUSER_OpenFileDirectly failed:", ret);
+	if (R_FAILED(ret = FS_OpenFile(&src_handle, archive, path, FS_OPEN_READ, 0))) {
+		Menu_DisplayError("FS_OpenFile failed:", ret);
 		return ret;
 	}
 	
-	if (R_FAILED(ret = AM_GetCiaFileInfo(media, &title, fileHandle))) {
+	if (R_FAILED(ret = AM_GetCiaFileInfo(media, &title, src_handle))) {
 		Menu_DisplayError("AM_GetCiaFileInfo failed:", ret);
 		return ret;
 	}
 	
 	if (!update) { // As long as we aren't updating 3DShell, remove the title before installing.
-		if (R_FAILED(ret = CIA_RemoveTitle(title.titleID, media)))
+		if (R_FAILED(ret = AM_DeleteAppTitle(media, title.titleID))) {
+			Menu_DisplayError("AM_DeleteAppTitle failed:", ret);
 			return ret;
+		}
 	}
 	
-	if (R_FAILED(ret = FSFILE_GetSize(fileHandle, &fileSize))) {
+	if (R_FAILED(ret = FSFILE_GetSize(src_handle, &size))) {
 		Menu_DisplayError("FSFILE_GetSize failed:", ret);
 		return ret;
 	}
 	
-	if (R_FAILED(ret = AM_StartCiaInstall(media, &ciaHandle))) {
+	if (R_FAILED(ret = AM_StartCiaInstall(media, &dst_handle))) {
 		Menu_DisplayError("AM_StartCiaInstall failed:", ret);
 		return ret;
 	}
-	
-	u8 *cia_buffer = malloc((512 *1024));
 
-	while (offset < fileSize) {
-		ProgressBar_DisplayProgress("Installing", filename, bytesRead, fileSize);
+	size_t buf_size = 0x10000;
+	u8 *buf = linearAlloc(buf_size); // Chunk size
 
-		ret = FSFILE_Read(fileHandle, &bytesRead, offset, cia_buffer, (512 *1024)); // (512 *1024) - chunk size
-		ret = FSFILE_Write(ciaHandle, &bytesWritten, offset, cia_buffer, bytesRead, 0);
+	do {
+		memset(buf, 0, buf_size);
 
-		if (bytesRead != bytesWritten) {
-			AM_CancelCIAInstall(ciaHandle);
+		if (R_FAILED(ret = FSFILE_Read(src_handle, &bytes_read, offset, buf, buf_size))) {
+			linearFree(buf);
+			FSFILE_Close(src_handle);
+			FSFILE_Close(dst_handle);
+			Menu_DisplayError("FSFILE_Read failed:", ret);
+			return ret;
+		}
+		if (R_FAILED(ret = FSFILE_Write(dst_handle, &bytes_written, offset, buf, bytes_read, FS_WRITE_FLUSH))) {
+			linearFree(buf);
+			FSFILE_Close(src_handle);
+			FSFILE_Close(dst_handle);
+			Menu_DisplayError("FSFILE_Write failed:", ret);
 			return ret;
 		}
 
-		offset += bytesWritten;
+		offset += bytes_read;
+		ProgressBar_DisplayProgress("Installing", Utils_Basename(path), offset, size);
+	} while(offset < size);
+
+	if (bytes_read != bytes_written) {
+		AM_CancelCIAInstall(dst_handle);
+		linearFree(buf);
+		Menu_DisplayError("CIA bytes written mismatch:", ret);
+		return ret;
 	}
 	
-	free(cia_buffer);
+	linearFree(buf);
 
-	if (R_FAILED(ret = AM_FinishCiaInstall(ciaHandle))) {
+	if (R_FAILED(ret = AM_FinishCiaInstall(dst_handle))) {
 		Menu_DisplayError("AM_FinishCiaInstall failed:", ret);
 		return ret;
 	}
 
-	if (R_FAILED(ret = svcCloseHandle(fileHandle))) {
-		Menu_DisplayError("svcCloseHandle failed:", ret);
+	if (R_FAILED(ret = FSFILE_Close(src_handle))) {
+		Menu_DisplayError("FSFILE_Close failed:", ret);
 		return ret;
 	}
 	
