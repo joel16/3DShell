@@ -90,12 +90,11 @@ Result Net_DownloadFile(const char *url, const char *path) {
 		return ret;
 	}
 	
-	Handle fileHandle;
+	Handle handle;
 	u64 offset = 0;
 	u32 bytesWritten = 0;
 
-	//ret = openFile(&fileHandle, path.c_str(), true);
-	ret = FS_Open(&fileHandle, archive, path, (FS_OPEN_WRITE | FS_OPEN_CREATE));
+	ret = FS_OpenFile(&handle, archive, path, (FS_OPEN_WRITE | FS_OPEN_CREATE), 0);
 
 	if (R_FAILED(ret)) {
 		printf("Error: couldn't open file to write.\n");
@@ -124,7 +123,7 @@ Result Net_DownloadFile(const char *url, const char *path) {
 		return -1;
 	}
 
-	FSFILE_Write(fileHandle, &bytesWritten, offset, result_buf, result_written, 0);
+	FSFILE_Write(handle, &bytesWritten, offset, result_buf, result_written, 0);
 
 	//ProgressBar_DisplayProgress("Downloading", Utils_Basename(path), 0, 0);
 
@@ -138,6 +137,6 @@ Result Net_DownloadFile(const char *url, const char *path) {
 	result_buf = NULL;
 	result_sz = 0;
 	result_written = 0;
-	FSFILE_Close(fileHandle);
+	FSFILE_Close(handle);
 	return 0;
 }

@@ -4,7 +4,6 @@
 #include "common.h"
 #include "C2D_helper.h"
 #include "fs.h"
-#include "utils.h"
 
 #include "libnsbmp.h"
 #include "libnsgif.h"
@@ -84,9 +83,7 @@ static u8 *Draw_LoadExternalImageFile(const char *path, u32 *data_size) {
 	u8 *buffer = NULL;
 	u64 size = 0, n = 0;
 
-	u16 u16_path[strlen(path) + 1];
-	Utils_U8_To_U16(u16_path, (const u8 *)path, strlen(path) + 1);
-	if (R_FAILED(ret = FSUSER_OpenFile(&handle, archive, fsMakePath(PATH_UTF16, u16_path), FS_OPEN_READ, 0))) {
+	if (R_FAILED(ret = FS_OpenFile(&handle, archive, path, FS_OPEN_READ, 0))) {
 		FSFILE_Close(handle);
 		return NULL;
 	}

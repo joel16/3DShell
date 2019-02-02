@@ -45,7 +45,7 @@ enum file_types Audio_GetMusicFileType(const char *file) {
 	enum file_types file_type = FILE_TYPE_ERROR;
 	
 	/* Failure opening file */
-	if (R_FAILED(FS_Open(&handle, archive, file, FS_OPEN_READ))) {
+	if (R_FAILED(FS_OpenFile(&handle, archive, file, FS_OPEN_READ, 0))) {
 		FSFILE_Close(handle);
 		return -1;
 	}

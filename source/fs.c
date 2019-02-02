@@ -23,6 +23,30 @@ Result FS_CloseArchive(FS_Archive archive) {
 	return 0;
 }
 
+Result FS_OpenDir(Handle *handle, FS_Archive archive, const char *path) {
+	Result ret = 0;
+
+	u16 path_u16[strlen(path) + 1];
+	Utils_U8_To_U16(path_u16, (const u8 *)path, strlen(path) + 1);
+
+	if (R_FAILED(ret = FSUSER_OpenDirectory(handle, archive, fsMakePath(PATH_UTF16, path_u16))))
+		return ret;
+	
+	return 0;
+}
+
+Result FS_OpenFile(Handle *handle, FS_Archive archive, const char *path, u32 flags, u32 attributes) {
+	Result ret = 0;
+
+	u16 path_u16[strlen(path) + 1];
+	Utils_U8_To_U16(path_u16, (const u8 *)path, strlen(path) + 1);
+
+	if (R_FAILED(ret = FSUSER_OpenFile(handle, archive, fsMakePath(PATH_UTF16, path_u16), flags, attributes)))
+		return ret;
+	
+	return 0;
+}
+
 Result FS_MakeDir(FS_Archive archive, const char *path) {
 	Result ret = 0;
 
@@ -218,25 +242,13 @@ Result FS_RenameDir(FS_Archive archive, const char *old_dirname, const char *new
 	return 0;
 }
 
-Result FS_Open(Handle *handle, FS_Archive archive, const char *path, u32 flags) {
-	Result ret = 0;
-
-	u16 path_u16[strlen(path) + 1];
-	Utils_U8_To_U16(path_u16, (const u8 *)path, strlen(path) + 1);
-
-	if (R_FAILED(ret = FSUSER_OpenFile(handle, archive, fsMakePath(PATH_UTF16, path_u16), flags, 0)))
-		return ret;
-	
-	return 0;
-}
-
 Result FS_Read(FS_Archive archive, const char *path, u64 size, char *buf) {
 	Result ret = 0;
 	Handle handle;
 
 	u32 bytesread = 0;
 
-	if (R_FAILED(ret = FS_Open(&handle, archive, path, FS_OPEN_READ)))
+	if (R_FAILED(ret = FS_OpenFile(&handle, archive, path, FS_OPEN_READ, 0)))
 		return ret;
 	
 	if (R_FAILED(ret = FSFILE_Read(handle, &bytesread, 0, (u32 *)buf, size)))
@@ -259,7 +271,7 @@ Result FS_Write(FS_Archive archive, const char *path, const char *buf) {
 	if (FS_FileExists(archive, path))
 		FS_RemoveFile(archive, path);
 
-	if (R_FAILED(ret = FS_Open(&handle, archive, path, (FS_OPEN_WRITE | FS_OPEN_CREATE))))
+	if (R_FAILED(ret = FS_OpenFile(&handle, archive, path, (FS_OPEN_WRITE | FS_OPEN_CREATE), 0)))
 		return ret;
 
 	if (R_FAILED(ret = FSFILE_GetSize(handle, &size)))

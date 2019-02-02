@@ -23,7 +23,7 @@ static Result Screenshot_GenerateScreenshot(const char *path) {
 	u8 *gfxTopLeft = gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL);
 
 	// Open file for writing screenshot
-	if (R_FAILED(ret = FS_Open(&handle, archive, path, (FS_OPEN_CREATE | FS_OPEN_WRITE)))) {
+	if (R_FAILED(ret = FS_OpenFile(&handle, archive, path, (FS_OPEN_CREATE | FS_OPEN_WRITE), 0))) {
 		Menu_DisplayError("FS_Open failed:", ret);
 		return ret;
 	}

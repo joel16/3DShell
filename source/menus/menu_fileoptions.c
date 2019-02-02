@@ -173,17 +173,13 @@ static int FileOptions_CopyFile(char *src, char *dst, bool display_animation) {
 	Handle src_handle, dst_handle;
 	Result ret = 0;
 
-	u16 u16_src[strlen(src) + 1];
-	Utils_U8_To_U16(u16_src, (const u8 *)src, strlen(src) + 1);
-	if (R_FAILED(ret = FSUSER_OpenFile(&src_handle, copying_from_sd? sdmc_archive : nand_archive, fsMakePath(PATH_UTF16, u16_src), FS_OPEN_READ, 0))) {
+	if (R_FAILED(ret = FS_OpenFile(&src_handle, copying_from_sd? sdmc_archive : nand_archive, src, FS_OPEN_READ, 0))) {
 		FSFILE_Close(src_handle);
 		Menu_DisplayError("FSUSER_OpenFile failed:", ret);
 		return ret;
 	}
 
-	u16 u16_dst[strlen(dst) + 1];
-	Utils_U8_To_U16(u16_dst, (const u8 *)dst, strlen(dst) + 1);
-	if (R_FAILED(ret = FSUSER_OpenFile(&dst_handle, archive, fsMakePath(PATH_UTF16, u16_dst), FS_OPEN_CREATE | FS_OPEN_WRITE, 0))) {
+	if (R_FAILED(ret = FS_OpenFile(&dst_handle, archive, dst, FS_OPEN_CREATE | FS_OPEN_WRITE, 0))) {
 		FSFILE_Close(src_handle);
 		FSFILE_Close(dst_handle);
 		Menu_DisplayError("FSUSER_OpenFile failed:", ret);
@@ -233,11 +229,8 @@ static Result FileOptions_CopyDir(char *src, char *dst) {
 	Handle dir;
 	Result ret = 0; // Open working Directory
 
-	u16 u16_src[strlen(src) + 1];
-	Utils_U8_To_U16(u16_src, (const u8 *)src, strlen(src) + 1);
-
 	// Opened directory
-	if (R_SUCCEEDED(ret = FSUSER_OpenDirectory(&dir, copying_from_sd? sdmc_archive : nand_archive, fsMakePath(PATH_UTF16, u16_src)))) {
+	if (R_SUCCEEDED(ret = FS_OpenDir(&dir, copying_from_sd? sdmc_archive : nand_archive, src))) {
 		FS_MakeDir(archive, dst); // Create output directory (is allowed to fail, we can merge folders after all)
 
 		u32 entryCount = 0;
