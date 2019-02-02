@@ -71,10 +71,7 @@ Result Dirbrowse_PopulateFiles(bool clear) {
 	Handle dir;
 	Result ret = 0;
 
-	u16 u16_cwd[strlen(cwd) + 1];
-	Utils_U8_To_U16(u16_cwd, (const u8 *)cwd, strlen(cwd) + 1);
-
-	if (R_SUCCEEDED(ret = FSUSER_OpenDirectory(&dir, archive, fsMakePath(PATH_UTF16, u16_cwd)))) {
+	if (R_SUCCEEDED(ret = FS_OpenDir(&dir, archive, cwd))) {
 		/* Add fake ".." entry except on root */
 		if (strcmp(cwd, ROOT_PATH)) {
 			files = (File *)malloc(sizeof(File)); // New list
@@ -180,12 +177,15 @@ void Dirbrowse_DisplayFiles(void) {
 			if (i == position)
 				Draw_Rect(0, 52 + (38 * printed), 400, 38, config.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
 
-			if (!strcmp(multi_select_dir, cwd)) {
-				multi_select[i] == true? Draw_Image(config.dark_theme? icon_check_dark : icon_check, 5, 61 + (38 * printed)) : 
+			// Do not allow parent dir to be multi-selected
+			if (strncmp(file->name, "..", 2)) {
+				if (!strcmp(multi_select_dir, cwd)) {
+					multi_select[i] == true? Draw_Image(config.dark_theme? icon_check_dark : icon_check, 5, 61 + (38 * printed)) : 
+						Draw_Image(config.dark_theme? icon_uncheck_dark : icon_uncheck, 5, 61 + (38 * printed));
+				}
+				else
 					Draw_Image(config.dark_theme? icon_uncheck_dark : icon_uncheck, 5, 61 + (38 * printed));
 			}
-			else
-				Draw_Image(config.dark_theme? icon_uncheck_dark : icon_uncheck, 5, 61 + (38 * printed));
 
 			char path[512];
 			strcpy(path, cwd);
