@@ -32,7 +32,7 @@ static bool Gallery_DrawImage(C2D_Image image, float x, float y, float start, fl
 	C2D_DrawParams params = {
 		{ x - (pos_x * zoom_factor - pos_x) / 2, y - (pos_y * zoom_factor - pos_y) / 2, w * zoom_factor, h * zoom_factor },
 		{ start, end },
-		0.5f, 0.0f
+		0.0f, 0.0f
 	};
 
 	return C2D_DrawImage(image, &params, NULL);

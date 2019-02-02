@@ -93,7 +93,7 @@ static u8 *Draw_LoadExternalImageFile(const char *path, u32 *data_size) {
 		return NULL;
 	}
 
-	buffer = linearAlloc(size);
+	buffer = malloc(size);
 	if (!buffer) {
 		free(buffer);
 		return NULL;
@@ -134,7 +134,7 @@ static void Draw_C3DTexToC2DImage(C3D_Tex *tex, Tex3DS_SubTexture *subtex, void 
 	subtex->bottom = 1.0 - (height / (float)h_pow2);
 
 	C3D_TexInit(tex, (u16)w_pow2, (u16)h_pow2, format);
-	C3D_TexSetFilter(tex, GPU_NEAREST, GPU_NEAREST);
+	C3D_TexSetFilter(tex, GPU_LINEAR, GPU_NEAREST);
 
 	u32 pixel_size = (size / (u32)width / (u32)height);
 

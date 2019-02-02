@@ -16,7 +16,6 @@ typedef struct File
 
 extern File *files;
 
-extern int initialPosition;
 extern int position;
 extern int fileCount;
 

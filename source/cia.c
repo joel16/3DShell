@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <string.h>
 
 #include "cia.h"
@@ -58,20 +59,20 @@ Result CIA_InstallTitle(const char *path, FS_MediaType media, bool update) {
 	}
 
 	size_t buf_size = 0x10000;
-	u8 *buf = linearAlloc(buf_size); // Chunk size
+	u8 *buf = malloc(buf_size); // Chunk size
 
 	do {
 		memset(buf, 0, buf_size);
 
 		if (R_FAILED(ret = FSFILE_Read(src_handle, &bytes_read, offset, buf, buf_size))) {
-			linearFree(buf);
+			free(buf);
 			FSFILE_Close(src_handle);
 			FSFILE_Close(dst_handle);
 			Menu_DisplayError("FSFILE_Read failed:", ret);
 			return ret;
 		}
 		if (R_FAILED(ret = FSFILE_Write(dst_handle, &bytes_written, offset, buf, bytes_read, FS_WRITE_FLUSH))) {
-			linearFree(buf);
+			free(buf);
 			FSFILE_Close(src_handle);
 			FSFILE_Close(dst_handle);
 			Menu_DisplayError("FSFILE_Write failed:", ret);
@@ -84,12 +85,12 @@ Result CIA_InstallTitle(const char *path, FS_MediaType media, bool update) {
 
 	if (bytes_read != bytes_written) {
 		AM_CancelCIAInstall(dst_handle);
-		linearFree(buf);
+		free(buf);
 		Menu_DisplayError("CIA bytes written mismatch:", ret);
 		return ret;
 	}
 	
-	linearFree(buf);
+	free(buf);
 
 	if (R_FAILED(ret = AM_FinishCiaInstall(dst_handle))) {
 		Menu_DisplayError("AM_FinishCiaInstall failed:", ret);

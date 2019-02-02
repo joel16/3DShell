@@ -1,6 +1,3 @@
-#include <dirent.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include <stdlib.h>
 
 #include "C2D_helper.h"
@@ -319,25 +316,25 @@ static Result FileOptions_Paste(void) {
 		return -1;
 
 	// Source and target folder are identical
-	char *lastslash = NULL;
+	char *last_slash = NULL;
 	size_t i = 0;
 
 	for(; i < strlen(copysource); i++)
 		if (copysource[i] == '/')
-			lastslash = copysource + i;
+			last_slash = copysource + i;
 
-	char backup = lastslash[1];
-	lastslash[1] = 0;
+	char backup = last_slash[1];
+	last_slash[1] = 0;
 	int identical = strcmp(copysource, cwd) == 0;
-	lastslash[1] = backup;
+	last_slash[1] = backup;
 
 	if (identical)
 		return -2;
 
-	char *filename = lastslash + 1; // Source filename
+	char *filename = last_slash + 1; // Source filename
 
-	int requiredlength = strlen(cwd) + strlen(filename) + 1; // Required target path buffer size
-	char *copytarget = malloc(requiredlength); // Allocate target path buffer
+	int required_length = strlen(cwd) + strlen(filename) + 1; // Required target path buffer size
+	char *copytarget = malloc(required_length); // Allocate target path buffer
 
 	// Puzzle target path
 	strcpy(copytarget, cwd);

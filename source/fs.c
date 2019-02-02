@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "fs.h"
@@ -246,12 +245,12 @@ Result FS_Read(FS_Archive archive, const char *path, u64 size, char *buf) {
 	Result ret = 0;
 	Handle handle;
 
-	u32 bytesread = 0;
+	u32 bytes_read = 0;
 
 	if (R_FAILED(ret = FS_OpenFile(&handle, archive, path, FS_OPEN_READ, 0)))
 		return ret;
 	
-	if (R_FAILED(ret = FSFILE_Read(handle, &bytesread, 0, (u32 *)buf, size)))
+	if (R_FAILED(ret = FSFILE_Read(handle, &bytes_read, 0, (u32 *)buf, size)))
 		return ret;
 
 	if (R_FAILED(ret = FSFILE_Close(handle)))
@@ -266,7 +265,7 @@ Result FS_Write(FS_Archive archive, const char *path, const char *buf) {
 	
 	u32 len = strlen(buf);
 	u64 size = 0;
-	u32 bytesWritten = 0;
+	u32 bytes_written = 0;
 
 	if (FS_FileExists(archive, path))
 		FS_RemoveFile(archive, path);
@@ -280,7 +279,7 @@ Result FS_Write(FS_Archive archive, const char *path, const char *buf) {
 	if (R_FAILED(ret = FSFILE_SetSize(handle, size + len)))
 		return ret;
 
-	if (R_FAILED(ret = FSFILE_Write(handle, &bytesWritten, size, buf, len, FS_WRITE_FLUSH)))
+	if (R_FAILED(ret = FSFILE_Write(handle, &bytes_written, size, buf, len, FS_WRITE_FLUSH)))
 		return ret;
 
 	if (R_FAILED(ret = FSFILE_Close(handle)))

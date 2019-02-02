@@ -13,7 +13,8 @@
 #include "textures.h"
 #include "utils.h"
 
-int initialPosition = 0;
+#define FILES_PER_PAGE 5
+
 int position = 0; // menu position
 int fileCount = 0; // file count
 File *files = NULL; // file list
