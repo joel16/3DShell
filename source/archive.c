@@ -5,9 +5,13 @@
 #include <sys/stat.h>
 
 #include "archive.h"
+#include "C2D_helper.h"
+#include "config.h"
 #include "fs.h"
 #include "menu_error.h"
 #include "progress_bar.h"
+#include "textures.h"
+#include "touch.h"
 #include "utils.h"
 
 #include "dmc_unrar.c"
@@ -179,7 +183,7 @@ static Result unzExtractAll(const char *src, unzFile *unzHandle) {
 	return res;
 }
 
-Result Archive_ExtractZIP(const char *src) {
+static Result Archive_ExtractZIP(const char *src) {
 	char *path = malloc(256);
 	char *dirname_without_ext = Archive_RemoveFileExt((char *)src);
 
@@ -205,7 +209,7 @@ Result Archive_ExtractZIP(const char *src) {
 	return res;
 }
 
-Result Archive_ExtractRAR(const char *src) {
+static Result Archive_ExtractRAR(const char *src) {
 	char *path = malloc(256);
 	char *dirname_without_ext = Archive_RemoveFileExt((char *)src);
 
@@ -275,4 +279,86 @@ Result Archive_ExtractRAR(const char *src) {
 	free(dirname_without_ext);
 	dmc_unrar_archive_close(&rar_archive);
 	return 0;
+}
+
+Result Archive_ExtractFile(const char *path) {
+	int dialog_selection = 0;
+	float text_width1 = 0, text_width2 = 0, confirm_width = 0, confirm_height = 0, cancel_width = 0, cancel_height = 0;
+	
+	Draw_GetTextSize(0.45f, &text_width1, NULL, "This may take a few minutes.");
+	Draw_GetTextSize(0.45f, &text_width2, NULL, "Do you want to continue?");
+	Draw_GetTextSize(0.45f, &confirm_width, &confirm_height, "YES");
+	Draw_GetTextSize(0.45f, &cancel_width, &cancel_height, "NO");
+
+	char extension[5] = {0};
+	strncpy(extension, &path[strlen(path) - 4], 4);
+
+	while(aptMainLoop()) {
+		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
+		C2D_TargetClear(RENDER_BOTTOM, config.dark_theme? BLACK_BG : WHITE);
+		C2D_SceneBegin(RENDER_BOTTOM);
+		Draw_Rect(0, 0, 320, 20, config.dark_theme? STATUS_BAR_DARK : MENU_BAR_LIGHT); // Status bar
+		Draw_Rect(0, 20, 320, 220, config.dark_theme? MENU_BAR_DARK : STATUS_BAR_LIGHT); // Menu bar
+
+		Draw_Image(config.dark_theme? dialog_dark : dialog, ((320 - (dialog.subtex->width)) / 2), ((240 - (dialog.subtex->height)) / 2));
+
+		Draw_Text(((320 - (dialog.subtex->width)) / 2) + 6, ((240 - (dialog.subtex->height)) / 2) + 6, 0.45f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "Extract file");
+
+		Draw_Text(((320 - (text_width1)) / 2), ((240 - (dialog.subtex->height)) / 2) + 35, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "This may take a few minutes.");
+		Draw_Text(((320 - (text_width2)) / 2), ((240 - (dialog.subtex->height)) / 2) + 50, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Do you wish to continue?");
+
+		if (dialog_selection == 0)
+			Draw_Rect((288 - cancel_width) - 5, (159 - cancel_height) - 5, cancel_width + 10, cancel_height + 10, config.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
+		else if (dialog_selection == 1)
+			Draw_Rect((248 - (confirm_width)) - 5, (159 - confirm_height) - 5, confirm_width + 10, confirm_height + 10, config.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
+
+		Draw_Text(248 - (confirm_width), (159 - confirm_height), 0.45f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "YES");
+		Draw_Text(288 - cancel_width, (159 - cancel_height), 0.45f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "NO");
+
+		Draw_EndFrame();
+
+		hidScanInput();
+		u32 kDown = hidKeysDown();
+
+		if (kDown & KEY_RIGHT)
+			dialog_selection++;
+		else if (kDown & KEY_LEFT)
+			dialog_selection--;
+
+		Utils_SetMax(&dialog_selection, 0, 1);
+		Utils_SetMin(&dialog_selection, 1, 0);
+
+		if (kDown & KEY_B)
+			break;
+
+		if (kDown & KEY_A) {
+			if (dialog_selection == 1) {
+				if (!strncasecmp(extension, ".rar", 4))
+					return Archive_ExtractRAR(path);
+				else if (!strncasecmp(extension, ".zip", 4))
+					return Archive_ExtractZIP(path);
+			}
+			else
+				break;
+		}
+
+		if (TouchInRect((288 - cancel_width) - 5, (159 - cancel_height) - 5, ((288 - cancel_width) - 5) + cancel_width + 10, ((159 - cancel_height) - 5) + cancel_height + 10)) {
+			dialog_selection = 0;
+
+			if (kDown & KEY_TOUCH)
+				break;
+		}
+		else if (TouchInRect((248 - (confirm_width)) - 5, (159 - confirm_height) - 5, ((248 - (confirm_width)) - 5) + confirm_width + 10, ((159 - confirm_height) - 5) + confirm_height + 10)) {
+			dialog_selection = 1;
+
+			if (kDown & KEY_TOUCH) {
+				if (!strncasecmp(extension, ".rar", 4))
+					return Archive_ExtractRAR(path);
+				else if (!strncasecmp(extension, ".zip", 4))
+					return Archive_ExtractZIP(path);
+			}
+		}
+	}
+
+	return -1;
 }
