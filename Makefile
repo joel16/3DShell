@@ -44,7 +44,7 @@ APP_TITLE           :=	3DShell
 APP_DESCRIPTION     :=	Multi-purpose file manager
 APP_AUTHOR          :=	Joel16
 VERSION_MAJOR       :=  4
-VERSION_MINOR       :=  1
+VERSION_MINOR       :=  2
 VERSION_MICRO       :=  0
 GITVERSION          :=  $(shell git log -1 --pretty='%h')
 ICON                :=	res/ic_launcher_filemanager.png
