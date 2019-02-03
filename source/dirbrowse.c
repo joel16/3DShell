@@ -161,9 +161,7 @@ Result Dirbrowse_PopulateFiles(bool clear) {
 }
 
 void Dirbrowse_DisplayFiles(void) {
-	//Draw_Image(icon_nav_drawer, 20, 58);
-	//Draw_Image(icon_actions, (380 - 64), 58);
-	float title_height = 0;
+	float title_height = 0, text_height = 0;
 	Draw_GetTextSize(0.48f, NULL, &title_height, cwd);
 	Draw_Text(70, 18 + ((34 - title_height) / 2), 0.48f, WHITE, cwd);
 
@@ -188,10 +186,6 @@ void Dirbrowse_DisplayFiles(void) {
 					Draw_Image(config.dark_theme? icon_uncheck_dark : icon_uncheck, 5, 61 + (38 * printed));
 			}
 
-			char path[512];
-			strcpy(path, cwd);
-			strcpy(path + strlen(path), file->name);
-
 			if (file->isDir)
 				Draw_Image(config.dark_theme? icon_dir_dark : icon_dir, 30, 56 + (38 * printed));
 			else if ((!strncasecmp(file->ext, "3ds", 3)) || (!strncasecmp(file->ext, "cia", 3)) || (!strncasecmp(file->ext, "bin", 3)))
@@ -210,17 +204,12 @@ void Dirbrowse_DisplayFiles(void) {
 			else
 				Draw_Image(icon_file, 30, 56 + (38 * printed));
 
-			char buf[64];
-			strncpy(buf, file->name, sizeof(buf));
-			buf[sizeof(buf) - 1] = '\0';
-
-			float height = 0;
-			Draw_GetTextSize(0.48f, NULL, &height, buf);
+			Draw_GetTextSize(0.48f, NULL, &text_height, file->name);
 			
 			if (!strncmp(file->name, "..", 2))
-				Draw_Text(70, 52 + ((38 - height) / 2) + (38 * printed), 0.48f, config.dark_theme? WHITE : BLACK, "Parent folder");
+				Draw_Text(70, 52 + ((38 - text_height) / 2) + (38 * printed), 0.48f, config.dark_theme? WHITE : BLACK, "Parent folder");
 			else 
-				Draw_Text(70, 52 + ((38 - height) / 2) + (38 * printed), 0.48f, config.dark_theme? WHITE : BLACK, buf);
+				Draw_Text(70, 52 + ((38 - text_height) / 2) + (38 * printed), 0.48f, config.dark_theme? WHITE : BLACK, file->name);
 
 			printed++; // Increase printed counter
 		}

@@ -81,7 +81,7 @@ static u8 *Draw_LoadExternalImageFile(const char *path, u32 *data_size) {
 	Result ret = 0;
 	Handle handle;
 	u8 *buffer = NULL;
-	u64 size = 0, n = 0;
+	u64 size = 0, bytes_read = 0;
 
 	if (R_FAILED(ret = FS_OpenFile(&handle, archive, path, FS_OPEN_READ, 0))) {
 		FSFILE_Close(handle);
@@ -99,8 +99,8 @@ static u8 *Draw_LoadExternalImageFile(const char *path, u32 *data_size) {
 		return NULL;
 	}
 
-	n = FSFILE_FRead(buffer, size, handle);
-	if (n != size) {
+	bytes_read = FSFILE_FRead(buffer, size, handle);
+	if (bytes_read != size) {
 		free(buffer);
 		return NULL;
 	}
@@ -134,7 +134,7 @@ static void Draw_C3DTexToC2DImage(C3D_Tex *tex, Tex3DS_SubTexture *subtex, void 
 	subtex->bottom = 1.0 - (height / (float)h_pow2);
 
 	C3D_TexInit(tex, (u16)w_pow2, (u16)h_pow2, format);
-	C3D_TexSetFilter(tex, GPU_LINEAR, GPU_NEAREST);
+	C3D_TexSetFilter(tex, GPU_NEAREST, GPU_NEAREST);
 
 	u32 pixel_size = (size / (u32)width / (u32)height);
 
