@@ -161,9 +161,10 @@ Result Dirbrowse_PopulateFiles(bool clear) {
 }
 
 void Dirbrowse_DisplayFiles(void) {
-	float title_height = 0, text_height = 0;
-	Draw_GetTextSize(0.48f, NULL, &title_height, cwd);
-	Draw_Text(70, 18 + ((34 - title_height) / 2), 0.48f, WHITE, cwd);
+	char file_size[16];
+	float title_height = 0, text_height = 0, file_size_width = 0, file_size_height = 0;
+	Draw_GetTextSize(0.45f, NULL, &title_height, cwd);
+	Draw_Textf(70, 18 + ((34 - title_height) / 2), 0.45f, WHITE, strlen(cwd) > 45? "%.45s..." : "%s", cwd);
 
 	int i = 0, printed = 0;
 	File *file = files; // Draw file list
@@ -204,12 +205,19 @@ void Dirbrowse_DisplayFiles(void) {
 			else
 				Draw_Image(icon_file, 30, 56 + (38 * printed));
 
-			Draw_GetTextSize(0.48f, NULL, &text_height, file->name);
-			
+			Draw_GetTextSize(0.45f, NULL, &text_height, file->name);
+
 			if (!strncmp(file->name, "..", 2))
-				Draw_Text(70, 52 + ((38 - text_height) / 2) + (38 * printed), 0.48f, config.dark_theme? WHITE : BLACK, "Parent folder");
-			else 
-				Draw_Text(70, 52 + ((38 - text_height) / 2) + (38 * printed), 0.48f, config.dark_theme? WHITE : BLACK, file->name);
+				Draw_Text(70, 52 + ((38 - text_height) / 2) + (38 * printed), 0.45f, config.dark_theme? WHITE : BLACK, "Parent folder");
+			else {
+				Draw_Textf(70, 52 + ((38 - text_height) / 2) + (38 * printed), 0.45f, config.dark_theme? WHITE : BLACK, strlen(file->name) > 42? "%.42s..." : "%s", file->name);
+
+				if (!file->isDir) {
+					Utils_GetSizeString(file_size, file->size);
+					Draw_GetTextSize(0.40f, &file_size_width, &file_size_height, file_size);
+					Draw_Text((395 - file_size_width), 52 + (38 - file_size_height - 5) + (38 * printed), 0.40f, config.dark_theme? WHITE : BLACK, file_size);
+				}
+			}
 
 			printed++; // Increase printed counter
 		}

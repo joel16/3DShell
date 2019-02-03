@@ -88,8 +88,8 @@ static void StatusBar_GetBatteryStatus(int x, int y) {
 		}
 
 		snprintf(buf, 5, "%d%%", percent);
-		percent_width = Draw_GetTextWidth(0.48f, buf);
-		Draw_Text((float)(x - percent_width - 5), y, 0.48f, WHITE, buf);
+		percent_width = Draw_GetTextWidth(0.45f, buf);
+		Draw_Text((float)(x - percent_width - 5), y, 0.45f, WHITE, buf);
 	}
 	else {
 		snprintf(buf, 5, "%d%%", percent);
