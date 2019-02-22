@@ -171,14 +171,12 @@ static int FileOptions_CopyFile(char *src, char *dst, bool display_animation) {
 	Result ret = 0;
 
 	if (R_FAILED(ret = FS_OpenFile(&src_handle, copying_from_sd? sdmc_archive : nand_archive, src, FS_OPEN_READ, 0))) {
-		FSFILE_Close(src_handle);
 		Menu_DisplayError("FSUSER_OpenFile failed:", ret);
 		return ret;
 	}
 
 	if (R_FAILED(ret = FS_OpenFile(&dst_handle, archive, dst, FS_OPEN_CREATE | FS_OPEN_WRITE, 0))) {
 		FSFILE_Close(src_handle);
-		FSFILE_Close(dst_handle);
 		Menu_DisplayError("FSUSER_OpenFile failed:", ret);
 		return ret;
 	}

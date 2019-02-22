@@ -139,8 +139,10 @@ Result FS_GetFileSize(FS_Archive archive, const char *path, u64 *size) {
 	if (R_FAILED(ret = FSUSER_OpenFile(&handle, archive, fsMakePath(PATH_UTF16, path_u16), FS_OPEN_READ, 0)))
 		return ret;
 
-	if (R_FAILED(ret = FSFILE_GetSize(handle, size)))
+	if (R_FAILED(ret = FSFILE_GetSize(handle, size))) {
+		FSFILE_Close(handle);
 		return ret;
+	}
 
 	if (R_FAILED(ret = FSFILE_Close(handle)))
 		return ret;
@@ -250,8 +252,10 @@ Result FS_Read(FS_Archive archive, const char *path, u64 size, char *buf) {
 	if (R_FAILED(ret = FS_OpenFile(&handle, archive, path, FS_OPEN_READ, 0)))
 		return ret;
 	
-	if (R_FAILED(ret = FSFILE_Read(handle, &bytes_read, 0, (u32 *)buf, size)))
+	if (R_FAILED(ret = FSFILE_Read(handle, &bytes_read, 0, (u32 *)buf, size))) {
+		FSFILE_Close(handle);
 		return ret;
+	}
 
 	if (R_FAILED(ret = FSFILE_Close(handle)))
 		return ret;
@@ -273,14 +277,20 @@ Result FS_Write(FS_Archive archive, const char *path, const char *buf) {
 	if (R_FAILED(ret = FS_OpenFile(&handle, archive, path, (FS_OPEN_WRITE | FS_OPEN_CREATE), 0)))
 		return ret;
 
-	if (R_FAILED(ret = FSFILE_GetSize(handle, &size)))
+	if (R_FAILED(ret = FSFILE_GetSize(handle, &size))) {
+		FSFILE_Close(handle);
 		return ret;
+	}
 
-	if (R_FAILED(ret = FSFILE_SetSize(handle, size + len)))
+	if (R_FAILED(ret = FSFILE_SetSize(handle, size + len))) {
+		FSFILE_Close(handle);
 		return ret;
+	}
 
-	if (R_FAILED(ret = FSFILE_Write(handle, &bytes_written, size, buf, len, FS_WRITE_FLUSH)))
+	if (R_FAILED(ret = FSFILE_Write(handle, &bytes_written, size, buf, len, FS_WRITE_FLUSH))) {
+		FSFILE_Close(handle);
 		return ret;
+	}
 
 	if (R_FAILED(ret = FSFILE_Close(handle)))
 		return ret;
