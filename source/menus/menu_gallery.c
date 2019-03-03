@@ -53,8 +53,9 @@ static Result Gallery_GetImageList(void) {
 			for (u32 i = 0; i < entryCount; i++) {
 				Utils_U16_To_U8((u8 *)&name[0], entries[i].name, 255);
 
-				if ((!strncasecmp(entries[i].shortExt, "png", 3)) || (!strncasecmp(entries[i].shortExt, "jpg", 3)) || (!strncasecmp(entries[i].shortExt, "bmp", 3))
-					|| (!strncasecmp(entries[i].shortExt, "gif", 3))) {
+				if ((!strncasecmp(entries[i].shortExt, "bmp", 3)) || (!strncasecmp(entries[i].shortExt, "gif", 3)) || (!strncasecmp(entries[i].shortExt, "jpg", 3))
+					|| (!strncasecmp(entries[i].shortExt, "jpe", 3)) || (!strncasecmp(entries[i].shortExt, "png", 3)) || (!strncasecmp(entries[i].shortExt, "pgm", 3)) 
+					|| (!strncasecmp(entries[i].shortExt, "ppm", 3)) || (!strncasecmp(entries[i].shortExt, "tga", 3))) {
 					strcpy(album[count], cwd);
 					strcpy(album[count] + strlen(album[count]), name);
 					count++;
@@ -92,14 +93,10 @@ static void Gallery_LoadTexture(char *path) {
 	char extension[5] = {0};
 	strncpy(extension, &path[strlen(path) - 4], 4);
 
-	if (!strncasecmp(extension, ".bmp", 4))
-		Draw_LoadImageBMPFile(&image, path);
-	else if (!strncasecmp(extension, ".jpg", 4) || !strncasecmp(extension, ".jpeg", 4))
-		Draw_LoadImageJPGFile(&image, path);
-	else if (!strncasecmp(extension, ".png", 4))
-		Draw_LoadImagePNGFile(&image, path);
-	else if (!strncasecmp(extension, ".gif", 4))
-		Draw_LoadImageGIFFile(&image, path);
+	if (!strncasecmp(extension, ".gif", 4))
+		Draw_LoadImageFileGIF(&image, path);
+	else
+		Draw_LoadImageFile(&image, path);
 
 	if ((image.subtex->width == 432) && (image.subtex->height == 528)) // Nintnedo's screenshot (both screens) dimensions.
 		dimensions = DIMENSION_NINTENDO_SCREENSHOT;

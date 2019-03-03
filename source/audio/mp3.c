@@ -153,11 +153,11 @@ static int MP3_Init(const char *file) {
 
 				if ((pic->type == 3 ) || (pic->type == 0)) {
 					if ((!strcasecmp(str, "image/jpg")) || (!strcasecmp(str, "image/jpeg"))) {
-						Draw_LoadImageJPGMemory(&cover_image, pic->data, pic->size);
+						Draw_LoadImageMemory(&cover_image, pic->data, pic->size);
 						break;
 					}
 					else if (!strcasecmp(str, "image/png")) {
-						Draw_LoadImagePNGMemory(&cover_image, pic->data, pic->size);
+						Draw_LoadImageMemory(&cover_image, pic->data, pic->size);
 						break;
 					}
 				}

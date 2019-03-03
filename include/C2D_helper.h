@@ -32,11 +32,8 @@ float Draw_GetTextHeight(float size, const char *text);
 bool Draw_Rect(float x, float y, float w, float h, Colour colour);
 bool Draw_Image(C2D_Image image, float x, float y);
 bool Draw_ImageScale(C2D_Image image, float x, float y, float scaleX, float scaleY);
-bool Draw_LoadImageBMPFile(C2D_Image *texture, const char *path);
-bool Draw_LoadImageGIFFile(C2D_Image *texture, const char *path);
-bool Draw_LoadImageJPGFile(C2D_Image *texture, const char *path);
-bool Draw_LoadImageJPGMemory(C2D_Image *texture, void *data, size_t size);
-bool Draw_LoadImagePNGFile(C2D_Image *texture, const char *path);
-bool Draw_LoadImagePNGMemory(C2D_Image *texture, void *data, size_t size);
+bool Draw_LoadImageFile(C2D_Image *texture, const char *path);
+bool Draw_LoadImageFileGIF(C2D_Image *texture, const char *path);
+bool Draw_LoadImageMemory(C2D_Image *texture, void *data, size_t size);
 
 #endif
