@@ -72,21 +72,7 @@ void Menu_ControlSortSettings(u32 input) {
 		MENU_STATE = MENU_STATE_SETTINGS;
 
 	if (input & KEY_A) {
-		switch (selection) {
-			case 0:
-				config.sort = 0;
-				break;
-			case 1:
-				config.sort = 1;
-				break;
-			case 2:
-				config.sort = 2;
-				break;
-			case 3:
-				config.sort = 3;
-				break;
-		}
-		
+		config.sort = selection;
 		Dirbrowse_PopulateFiles(true);
 		Config_Save(config);
 	}
@@ -100,15 +86,16 @@ void Menu_ControlSortSettings(u32 input) {
 		selection = 0;
 		
 		if (input & KEY_TOUCH) {
-			config.sort = 0;
+			config.sort = selection;
 			Dirbrowse_PopulateFiles(true);
 			Config_Save(config);
 		}
 	}
 	else if (TouchInRect(0, 95, 320, 134)) {
 		selection = 1;
+
 		if (input & KEY_TOUCH) {
-			config.sort = 1;
+			config.sort = selection;
 			Dirbrowse_PopulateFiles(true);
 			Config_Save(config);
 		}
@@ -117,7 +104,7 @@ void Menu_ControlSortSettings(u32 input) {
 		selection = 2;
 		
 		if (input & KEY_TOUCH) {
-			config.sort = 2;
+			config.sort = selection;
 			Dirbrowse_PopulateFiles(true);
 			Config_Save(config);
 		}
@@ -126,7 +113,7 @@ void Menu_ControlSortSettings(u32 input) {
 		selection = 3;
 		
 		if (input & KEY_TOUCH) {
-			config.sort = 3;
+			config.sort = selection;
 			Dirbrowse_PopulateFiles(true);
 			Config_Save(config);
 		}
