@@ -68,8 +68,12 @@ void Menu_DisplaySortSettings(void) {
 }
 
 void Menu_ControlSortSettings(u32 input) {
-	if (input & KEY_B)
+	if (input & KEY_B) {
+		if (selection != 0)
+			selection = 0;
+
 		MENU_STATE = MENU_STATE_SETTINGS;
+	}
 
 	if (input & KEY_A) {
 		config.sort = selection;
