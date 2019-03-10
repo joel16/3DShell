@@ -78,7 +78,7 @@ void Menu_DisplayFTP(void) {
                                     Draw_Text(((320 - Draw_GetTextWidth(0.45f, buf2)) / 2), 150, 0.45f, WHITE, buf2);
                                     Draw_Text(((320 - Draw_GetTextWidth(0.35f, my_basename(file->name))) / 2), 170, 0.35f, WHITE, my_basename(file->name));
                                     position = 0;
-                                    progress = round(fraction * (float)xlim);
+                                    progress = 40+round(fraction * (float)(xlim-40));
                                 }                                   
                                 else {
                                     snprintf(buf2, 512, "Receiving %.2fMB", 
