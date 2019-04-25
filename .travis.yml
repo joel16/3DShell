@@ -3,10 +3,6 @@ language: c
 sudo: true
 
 before_install:
-  - cd include/dr_libs/
-  - git clone https://github.com/mackron/dr_libs.git
-  - git submodule foreach git pull origin master
-  - cd ../..
   - wget https://github.com/devkitPro/pacman/releases/download/devkitpro-pacman-1.0.1/devkitpro-pacman.deb
   - sudo dpkg -i devkitpro-pacman.deb
 
