@@ -35,7 +35,7 @@ TARGET		:= $(notdir $(CURDIR))
 BUILD		:= build
 SOURCES     := source source/audio source/ftp source/menus
 DATA        := data
-INCLUDES    := include include/audio include/dr_libs include/ftp include/menus
+INCLUDES    := include include/audio include/ftp include/menus libs/include
 GRAPHICS	:= res/drawable
 ROMFS		:= romfs
 GFXBUILD	:= $(ROMFS)/res/drawable
@@ -78,14 +78,14 @@ CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:=  -lcurl -lmbedtls -lmbedx509 -lmbedcrypto -lmpg123 -lvorbisidec -lopusfile -lopus -logg \
-            -lcitro2d -lcitro3d -lctru -lm -lminizip -lz
+LIBS	:=  -lcurl -lmbedtls -lmbedx509 -lmbedcrypto -lxmp-lite -lmpg123 -lvorbisidec -lopusfile -lopus -logg \
+            -lSDL -lcitro2d -lcitro3d -lctru -lm -lminizip -lz
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
-LIBDIRS	:= $(PORTLIBS) $(CTRULIB)
+LIBDIRS	:= $(PORTLIBS) $(CTRULIB) $(CURDIR)/libs
 
 #---------------------------------------------------------------------------------
 # no real need to edit anything past this point unless you need to add additional

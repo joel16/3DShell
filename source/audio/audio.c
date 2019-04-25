@@ -1,221 +1,337 @@
-#include <3ds.h>
+#include <SDL/SDL.h>
 #include <string.h>
-#include <stdlib.h>
 
 #include "audio.h"
-#include "audio_opus.h"
-#include "flac.h"
-#include "mp3.h"
-#include "vorbis.h"
-#include "wav.h"
-
 #include "fs.h"
 
-volatile bool stop = true;
-struct decoder_fn decoder;
+#include "flac.h"
+#include "mp3.h"
+#include "ogg.h"
+#include "audio/opus.h"
+#include "wav.h"
+#include "xm.h"
 
-/*bool Audio_IsPlaying(enum channel_e channel)
-{
-	return ndspChnIsPlaying(channel);
-}*/
+bool playing = true, paused = false;
+Audio_Metadata metadata;
 
-bool Audio_IsPaused(enum channel_e channel) {
-	return ndspChnIsPaused(channel);
-}
+enum Audio_FileType {
+	FILE_TYPE_NONE = 0,
+	FILE_TYPE_FLAC = 1,
+	FILE_TYPE_MP3 = 2,
+	FILE_TYPE_OGG = 3,
+	FILE_TYPE_OPUS = 4,
+	FILE_TYPE_WAV = 5,
+	FILE_TYPE_XM = 6
+};
 
-bool Audio_TogglePlayback(enum channel_e channel) {
-	ndspChnSetPaused(channel, !(ndspChnIsPaused(channel)));
-	return !(ndspChnIsPaused(channel));
-}
+static enum Audio_FileType file_type = FILE_TYPE_NONE;
 
-void Audio_StopPlayback(void) {
-	stop = true;
-}
+static u32 Audio_GetSampleRate(void) {
+	u32 sample_rate = 0;
 
-bool Audio_IsPlaying(void) {
-	return !stop;
-}
-
-enum file_types Audio_GetMusicFileType(const char *file) {
-	Handle handle;
-	
-	u32 fileSig = 0, bytesRead = 0;
-	u64 offset = 0;
-	
-	enum file_types file_type = FILE_TYPE_ERROR;
-	
-	/* Failure opening file */
-	if (R_FAILED(FS_OpenFile(&handle, archive, file, FS_OPEN_READ, 0))) {
-		FSFILE_Close(handle);
-		return -1;
-	}
-	
-	if (R_FAILED(FSFILE_Read(handle, &bytesRead, offset, &fileSig, 4))) {
-		FSFILE_Close(handle);
-		return -2;
-	}
-	
-	offset += bytesRead;
-	
-	switch(fileSig) {
-		// "RIFF"
-		case 0x46464952:
-			if (WAV_Validate(file) == 0)
-				file_type = FILE_TYPE_WAV;
-			break;
-
-		// "fLaC"
-		case 0x43614c66:
-			file_type = FILE_TYPE_FLAC;
-			break;
-
-		// "OggS"
-		case 0x5367674F:
-			if (Opus_Validate(file) == 0)
-				file_type = FILE_TYPE_OPUS;
-			else if (FLAC_Validate(file) == 0)
-				file_type = FILE_TYPE_FLAC;
-			else if (VORBIS_Validate(file) == 0)
-				file_type = FILE_TYPE_VORBIS;
-
-			break;
-			
-		// MP3 file with an ID3v2 container
-		default:
-			if ((fileSig << 16) == 0xFBFF0000 || (fileSig << 16) == 0xFAFF0000 || (fileSig << 8) == 0x33444900) {
-				file_type = FILE_TYPE_MP3;
-				break;
-			}
-	}
-
-	FSFILE_Close(handle);
-	return file_type;
-}
-
-int Audio_GetPosition(void) {
-	return (*decoder.position)();
-}
-
-int Audio_GetLength(void) {
-	return (*decoder.length)();
-}
-
-void Audio_PlayFile(void *path) {
-	const char *file = path;
-	s16 *buffer1 = NULL;
-	s16 *buffer2 = NULL;
-	ndspWaveBuf waveBuf[2];
-	bool lastbuf = false;
-	Result ret = -1;
-
-	/* Reset previous stop command */
-	stop = false;
-
-	switch(Audio_GetMusicFileType(file)) {
-		case FILE_TYPE_WAV:
-			WAV_SetDecoder(&decoder);
-			break;
-
+	switch(file_type) {
 		case FILE_TYPE_FLAC:
-			FLAC_SetDecoder(&decoder);
-			break;
-
-		case FILE_TYPE_OPUS:
-			Opus_SetDecoder(&decoder);
+			sample_rate = FLAC_GetSampleRate();
 			break;
 
 		case FILE_TYPE_MP3:
-			MP3_SetDecoder(&decoder);
+			sample_rate = MP3_GetSampleRate();
 			break;
 
-		case FILE_TYPE_VORBIS:
-			VORBIS_SetDecoder(&decoder);
+		case FILE_TYPE_OGG:
+			sample_rate = OGG_GetSampleRate();
+			break;
+
+		case FILE_TYPE_OPUS:
+			sample_rate = OPUS_GetSampleRate();
+			break;
+
+		case FILE_TYPE_WAV:
+			sample_rate = WAV_GetSampleRate();
+			break;
+
+		case FILE_TYPE_XM:
+			sample_rate = XM_GetSampleRate();
 			break;
 
 		default:
-			goto out;
+			break;
 	}
 
-	if ((ret = (*decoder.init)(file)) != 0)
-		goto out;
+	return sample_rate;
+}
 
-	if ((*decoder.channels)() > 2 || (*decoder.channels)() < 1)
-		goto out;
+static u8 Audio_GetChannels(void) {
+	u8 channels = 0;
 
-	buffer1 = linearAlloc(decoder.buffSize *sizeof(s16));
-	buffer2 = linearAlloc(decoder.buffSize *sizeof(s16));
-
-	ndspChnReset(SFX);
-	ndspChnWaveBufClear(SFX);
-	ndspSetOutputMode(NDSP_OUTPUT_STEREO);
-	ndspChnSetInterp(SFX, NDSP_INTERP_POLYPHASE);
-	ndspChnSetRate(SFX, (*decoder.rate)());
-	ndspChnSetFormat(SFX, (*decoder.channels)() == 2 ? NDSP_FORMAT_STEREO_PCM16 : NDSP_FORMAT_MONO_PCM16);
-
-	memset(waveBuf, 0, sizeof(waveBuf));
-	waveBuf[0].nsamples = (*decoder.decode)(&buffer1[0]) / (*decoder.channels)();
-	waveBuf[0].data_vaddr = &buffer1[0];
-	ndspChnWaveBufAdd(SFX, &waveBuf[0]);
-
-	waveBuf[1].nsamples = (*decoder.decode)(&buffer2[0]) / (*decoder.channels)();
-	waveBuf[1].data_vaddr = &buffer2[0];
-	ndspChnWaveBufAdd(SFX, &waveBuf[1]);
-	
-	/**
-	 *There may be a chance that the music has not started by the time we get
-	 *to the while loop. So we ensure that music has started here.
-	 */
-	while(ndspChnIsPlaying(SFX) == false);
-
-	while(stop == false) {
-		svcSleepThread(100 *1000);
-
-		/* When the last buffer has finished playing, break. */
-		if ((lastbuf == true) && (waveBuf[0].status == NDSP_WBUF_DONE) && (waveBuf[1].status == NDSP_WBUF_DONE))
+	switch(file_type) {
+		case FILE_TYPE_FLAC:
+			channels = FLAC_GetChannels();
 			break;
 
-		if ((ndspChnIsPaused(SFX) == true) || (lastbuf == true))
-			continue;
+		case FILE_TYPE_MP3:
+			channels = MP3_GetChannels();
+			break;
 
-		if (waveBuf[0].status == NDSP_WBUF_DONE) {
-			size_t read = (*decoder.decode)(&buffer1[0]);
+		case FILE_TYPE_OGG:
+			channels = OGG_GetChannels();
+			break;
 
-			if (read <= 0) {
-				lastbuf = true;
-				continue;
-			}
-			else if (read < decoder.buffSize)
-				waveBuf[0].nsamples = read / (*decoder.channels)();
+		case FILE_TYPE_OPUS:
+			channels = OPUS_GetChannels();
+			break;
 
-			ndspChnWaveBufAdd(SFX, &waveBuf[0]);
-		}
+		case FILE_TYPE_WAV:
+			channels = WAV_GetChannels();
+			break;
 
-		if (waveBuf[1].status == NDSP_WBUF_DONE) {
-			size_t read = (*decoder.decode)(&buffer2[0]);
+		case FILE_TYPE_XM:
+			channels = XM_GetChannels();
+			break;
 
-			if (read <= 0) {
-				lastbuf = true;
-				continue;
-			}
-			else if (read < decoder.buffSize)
-				waveBuf[1].nsamples = read / (*decoder.channels)();
-
-			ndspChnWaveBufAdd(SFX, &waveBuf[1]);
-		}
-
-		if (R_FAILED(DSP_FlushDataCache(buffer1, decoder.buffSize *sizeof(s16))))
-			return;
-		if (R_FAILED(DSP_FlushDataCache(buffer2, decoder.buffSize *sizeof(s16))))
-			return;
+		default:
+			break;
 	}
 
-	(*decoder.exit)();
+	return channels;
+}
 
-out:
-	Audio_StopPlayback();
-	linearFree(buffer1);
-	linearFree(buffer2);
+static void Audio_Callback(void *userdata, Uint8 *stream, int length) {
+	memset(stream, 0, (length / (sizeof(s16) * Audio_GetChannels())));
 
-	threadExit(0);
-	return;
+	switch(file_type) {
+		case FILE_TYPE_FLAC:
+			FLAC_Decode(stream, (length / (sizeof(s16) * Audio_GetChannels())), userdata);
+			break;
+
+		case FILE_TYPE_MP3:
+			MP3_Decode(stream, (length / (sizeof(s16) * Audio_GetChannels())), userdata);
+			break;
+
+		case FILE_TYPE_OGG:
+			OGG_Decode(stream, (length / (sizeof(s16) * Audio_GetChannels())), userdata);
+			break;
+
+		case FILE_TYPE_OPUS:
+			OPUS_Decode(stream, (length / (sizeof(s16) * Audio_GetChannels())), userdata);
+			break;
+
+		case FILE_TYPE_WAV:
+			WAV_Decode(stream, (length / (sizeof(s16) * Audio_GetChannels())), userdata);
+			break;
+
+		case FILE_TYPE_XM:
+			XM_Decode(stream, (length / (sizeof(s16) * Audio_GetChannels())), userdata);
+			break;
+
+		default:
+			break;
+	}
+}
+
+static const char *Audio_GetFileExt(const char *filename) {
+	const char *dot = strrchr(filename, '.');
+	
+	if (!dot || dot == filename)
+		return "";
+	
+	return dot + 1;
+}
+
+void Audio_Init(const char *path) {
+	playing = true;
+	paused = false;
+
+	SDL_AudioSpec want, have;
+	SDL_memset(&want, 0, sizeof(want));
+
+	// Clear struct
+	static const Audio_Metadata empty;
+	metadata = empty;
+	metadata.cover_image.tex = NULL;
+
+	if (!strncasecmp(Audio_GetFileExt(path), "flac", 4))
+		file_type = FILE_TYPE_FLAC;
+	else if (!strncasecmp(Audio_GetFileExt(path), "mp3", 3))
+		file_type = FILE_TYPE_MP3;
+	else if (!strncasecmp(Audio_GetFileExt(path), "ogg", 3))
+		file_type = FILE_TYPE_OGG;
+	else if (!strncasecmp(Audio_GetFileExt(path), "opus", 4))
+		file_type = FILE_TYPE_OPUS;
+	else if (!strncasecmp(Audio_GetFileExt(path), "wav", 3))
+		file_type = FILE_TYPE_WAV;
+	else if ((!strncasecmp(Audio_GetFileExt(path), "it", 2)) || (!strncasecmp(Audio_GetFileExt(path), "mod", 3))
+		|| (!strncasecmp(Audio_GetFileExt(path), "s3m", 3)) || (!strncasecmp(Audio_GetFileExt(path), "xm", 2)))
+		file_type = FILE_TYPE_XM;
+
+	switch(file_type) {
+		case FILE_TYPE_FLAC:
+			FLAC_Init(path);
+			want.samples = 4096;
+			break;
+
+		case FILE_TYPE_MP3:
+			MP3_Init(path);
+			want.samples = 4096;
+			break;
+
+		case FILE_TYPE_OGG:
+			OGG_Init(path);
+			want.samples = 4096;
+			break;
+
+		case FILE_TYPE_OPUS:
+			OPUS_Init(path);
+			want.samples = 960;
+			break;
+
+		case FILE_TYPE_WAV:
+			WAV_Init(path);
+			want.samples = 4096;
+			break;
+
+		case FILE_TYPE_XM:
+			XM_Init(path);
+			want.samples = 4096;
+			break;
+
+		default:
+			break;
+	}
+
+	want.freq = Audio_GetSampleRate();
+	want.format = AUDIO_S16;
+	want.channels = Audio_GetChannels();
+	want.userdata = NULL;
+	want.callback = Audio_Callback;
+	if (R_FAILED(SDL_OpenAudio(&want, &have)))
+		return;
+	SDL_PauseAudio(paused);
+}
+
+bool Audio_IsPaused(void) {
+	return paused;
+}
+
+void Audio_Pause(void) {
+	paused = !paused;
+	SDL_PauseAudio(paused);
+}
+
+void Audio_Stop(void) {
+	playing = !playing;
+}
+
+u64 Audio_GetPosition(void) {
+	u64 position = -1;
+
+	switch(file_type) {
+		case FILE_TYPE_FLAC:
+			position = FLAC_GetPosition();
+			break;
+
+		case FILE_TYPE_MP3:
+			position = MP3_GetPosition();
+			break;
+
+		case FILE_TYPE_OGG:
+			position = OGG_GetPosition();
+			break;
+
+		case FILE_TYPE_OPUS:
+			position = OPUS_GetPosition();
+			break;
+
+		case FILE_TYPE_WAV:
+			position = WAV_GetPosition();
+			break;
+
+		case FILE_TYPE_XM:
+			position = XM_GetPosition();
+			break;
+
+		default:
+			break;
+	}
+
+	return position;
+}
+
+u64 Audio_GetLength(void) {
+	u64 length = 0;
+
+	switch(file_type) {
+		case FILE_TYPE_FLAC:
+			length = FLAC_GetLength();
+			break;
+
+		case FILE_TYPE_MP3:
+			length = MP3_GetLength();
+			break;
+
+		case FILE_TYPE_OGG:
+			length = OGG_GetLength();
+			break;
+
+		case FILE_TYPE_OPUS:
+			length = OPUS_GetLength();
+			break;
+
+		case FILE_TYPE_WAV:
+			length = WAV_GetLength();
+			break;
+
+		case FILE_TYPE_XM:
+			length = XM_GetLength();
+			break;
+
+		default:
+			break;
+	}
+
+	return length;
+}
+
+u64 Audio_GetPositionSeconds(void) {
+	return (Audio_GetPosition()/Audio_GetSampleRate());
+}
+
+u64 Audio_GetLengthSeconds(void) {
+	return (Audio_GetLength()/Audio_GetSampleRate());
+}
+
+void Audio_Term(void) {
+	switch(file_type) {
+		case FILE_TYPE_FLAC:
+			FLAC_Term();
+			break;
+
+		case FILE_TYPE_MP3:
+			MP3_Term();
+			break;
+
+		case FILE_TYPE_OGG:
+			OGG_Term();
+			break;
+
+		case FILE_TYPE_OPUS:
+			OPUS_Term();
+			break;
+
+		case FILE_TYPE_WAV:
+			WAV_Term();
+			break;
+
+		case FILE_TYPE_XM:
+			XM_Term();
+			break;
+
+		default:
+			break;
+	}
+
+	playing = true;
+	paused = false;
+	SDL_PauseAudio(1);
+	SDL_CloseAudio();
 }

@@ -1,18 +1,12 @@
-/* Obtained from ctrmus source with permission. */
+#ifndef _3D_SHELL_AUDIO_FLAC_H
+#define _3D_SHELL_AUDIO_FLAC_H
 
-#include "audio.h"
+int FLAC_Init(const char *path);
+u32 FLAC_GetSampleRate(void);
+u8 FLAC_GetChannels(void);
+void FLAC_Decode(void *buf, unsigned int length, void *userdata);
+u64 FLAC_GetPosition(void);
+u64 FLAC_GetLength(void);
+void FLAC_Term(void);
 
-/**
- *Set decoder parameters for flac.
- *
- *\param decoder Structure to store parameters.
- */
-void FLAC_SetDecoder(struct decoder_fn *decoder);
-
-/**
- *Checks if the input file is Flac
- *
- *\param file Input file.
- *\return 0 if Flac file, else not or failure.
- */
-int FLAC_Validate(const char *file);
+#endif

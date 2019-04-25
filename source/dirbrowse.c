@@ -193,8 +193,9 @@ void Dirbrowse_DisplayFiles(void) {
 				Draw_Image(icon_app, 30, 56 + (38 * printed));
 			else if ((!strncasecmp(file->ext, "zip", 3)) || (!strncasecmp(file->ext, "tar", 3)) || (!strncasecmp(file->ext, "lz4", 3)) || (!strncasecmp(file->ext, "rar", 3)))
 				Draw_Image(icon_archive, 30, 56 + (38 * printed));
-			else if ((!strncasecmp(file->ext, "mp3", 3)) || (!strncasecmp(file->ext, "ogg", 3)) || (!strncasecmp(file->ext, "wav", 3)) || (!strncasecmp(file->ext, "fla", 3))
-				|| (!strncasecmp(file->ext, "opu", 3)))
+			else if ((!strncasecmp(file->ext, "fla", 3)) || (!strncasecmp(file->ext, "it", 2)) || (!strncasecmp(file->ext, "mod", 3)) || (!strncasecmp(file->ext, "mp3", 3))
+				|| (!strncasecmp(file->ext, "ogg", 3)) || (!strncasecmp(file->ext, "opu", 3)) || (!strncasecmp(file->ext, "s3m", 3)) || (!strncasecmp(file->ext, "wav", 3))
+				|| (!strncasecmp(file->ext, "xm", 2)))
 				Draw_Image(icon_audio, 30, 56 + (38 * printed));
 			else if ((!strncasecmp(file->ext, "bmp", 3)) || (!strncasecmp(file->ext, "gif", 3)) || (!strncasecmp(file->ext, "jpg", 3)) || (!strncasecmp(file->ext, "jpe", 3))
 				|| (!strncasecmp(file->ext, "png", 3)) || (!strncasecmp(file->ext, "pgm", 3)) || (!strncasecmp(file->ext, "ppm", 3)) || (!strncasecmp(file->ext, "tga", 3)))
@@ -278,8 +279,9 @@ void Dirbrowse_OpenFile(void) {
 		if (R_SUCCEEDED(Archive_ExtractFile(path)))
 			Dirbrowse_PopulateFiles(true);
 	}
-	else if ((!strncasecmp(file->ext, "mp3", 3)) || (!strncasecmp(file->ext, "ogg", 3)) || (!strncasecmp(file->ext, "wav", 3)) || (!strncasecmp(file->ext, "fla", 3))
-		|| (!strncasecmp(file->ext, "opu", 3)))
+	else if ((!strncasecmp(file->ext, "fla", 3)) || (!strncasecmp(file->ext, "it", 2)) || (!strncasecmp(file->ext, "mod", 3)) || (!strncasecmp(file->ext, "mp3", 3))
+		|| (!strncasecmp(file->ext, "ogg", 3)) || (!strncasecmp(file->ext, "opu", 3)) || (!strncasecmp(file->ext, "s3m", 3)) || (!strncasecmp(file->ext, "wav", 3))
+		|| (!strncasecmp(file->ext, "xm", 2)))
 		Menu_PlayMusic(path);
 	else if ((!strncasecmp(file->ext, "txt", 3)) || (!strncasecmp(file->ext, "log", 3)) || (!strncasecmp(file->ext, "cfg", 3)) || (!strncasecmp(file->ext, "lua", 3)))
 		Menu_DisplayText(path);

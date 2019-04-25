@@ -1,16 +1,12 @@
-#include "audio.h"
+#ifndef _3D_SHELL_AUDIO_WAV_H
+#define _3D_SHELL_AUDIO_WAV_H
 
-/**
- *Set decoder parameters for WAV.
- *
- *\param decoder Structure to store parameters.
- */
-void WAV_SetDecoder(struct decoder_fn *decoder);
+int WAV_Init(const char *path);
+u32 WAV_GetSampleRate(void);
+u8 WAV_GetChannels(void);
+void WAV_Decode(void *buf, unsigned int length, void *userdata);
+u64 WAV_GetPosition(void);
+u64 WAV_GetLength(void);
+void WAV_Term(void);
 
-/**
- *Checks if the input file is Wav
- *
- *\param file Input file.
- *\return 0 if Wav file, else not or failure.
- */
-int WAV_Validate(const char *file);
+#endif

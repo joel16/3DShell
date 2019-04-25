@@ -1,74 +1,50 @@
-/* Obtained from ctrmus source with permission. */
 #include <opus/opusfile.h>
-#include "audio_opus.h"
 
-static OggOpusFile *opusFile;
-static const OpusHead *opusHead;
-static const size_t buffSize = 32 * 1024;
+#include "audio.h"
 
-static int Opus_Init(const char* file) {
-	int err = 0;
+static OggOpusFile *opus;
+static ogg_int64_t samples_read = 0, max_samples = 0;
 
-	if ((opusFile = op_open_file(file, &err)) == NULL)
-		goto out;
+int OPUS_Init(const char *path) {
+	int error = 0;
 
-	if ((err = op_current_link(opusFile)) < 0)
-		goto out;
+	if ((opus = op_open_file(path, &error)) == NULL)
+		return -1;
 
-	opusHead = op_head(opusFile, err);
+	if ((error = op_current_link(opus)) < 0)
+		return -1;
 
-out:
-	return err;
+	max_samples = op_pcm_total(opus, -1);
+
+	return 0;
 }
 
-static u32 Opus_GetSampleRate(void) {
+u32 OPUS_GetSampleRate(void) {
 	return 48000;
 }
 
-static u8 Opus_GetChannels(void) {
+u8 OPUS_GetChannels(void) {
 	return 2;
 }
 
-static u64 Opus_FillBuffer(void *buffer) {
-	u64 samplesRead = 0;
-	int samplesToRead = buffSize;
-	s16 *buf = buffer;
+void OPUS_Decode(void *buf, unsigned int length, void *userdata) {
+	int read = op_read_stereo(opus, (opus_int16 *)buf, (int)length * (sizeof(s16) * 2));
+	if (read)
+		samples_read = op_pcm_tell(opus);
 
-	while(samplesToRead > 0) {
-		int samplesJustRead = op_read_stereo(opusFile, buf, samplesToRead > 120*48*2 ? 120*48*2 : samplesToRead);
-
-		if(samplesJustRead < 0)
-			return samplesJustRead;
-		else if(samplesJustRead == 0) {
-			/* End of file reached. */
-			break;
-		}
-
-		samplesRead += samplesJustRead * 2;
-		samplesToRead -= samplesJustRead * 2;
-		buf += samplesJustRead * 2;
-	}
-
-	return samplesRead;
+	if (samples_read == max_samples)
+		playing = false;
 }
 
-static void Opus_Term(void) {
-	op_free(opusFile);
+u64 OPUS_GetPosition(void) {
+	return samples_read;
 }
 
-void Opus_SetDecoder(struct decoder_fn *decoder) {
-	decoder->init = &Opus_Init;
-	decoder->rate = &Opus_GetSampleRate;
-	decoder->channels = &Opus_GetChannels;
-	decoder->buffSize = buffSize;
-	decoder->decode = &Opus_FillBuffer;
-	decoder->exit = &Opus_Term;
+u64 OPUS_GetLength(void) {
+	return max_samples;
 }
 
-int Opus_Validate(const char *file) {
-	int err = 0;
-	OggOpusFile* opusTest = op_test_file(file, &err);
-
-	op_free(opusTest);
-	return err;
+void OPUS_Term(void) {
+	samples_read = 0;
+	op_free(opus);
 }

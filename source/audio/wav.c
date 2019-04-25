@@ -1,64 +1,41 @@
-/* Obtained from ctrmus source with permission. */
-
+#include "audio.h"
 #define DR_WAV_IMPLEMENTATION
-#include <dr_libs/dr_wav.h>
+#include "dr_wav.h"
 
-#include "fs.h"
-#include "wav.h"
+static drwav wav;
+static drwav_uint64 samples_read = 0;
 
-static const drwav_uint64 buffSize = 16 * 1024;
-static drwav* pWav;
-static drwav_uint64 samplesRead;
-
-static int WAV_Init(const char* filename) {
-	pWav = drwav_open_file(filename);
-	return pWav == NULL ? -1 : 0;
-}
-
-static drwav_uint32 WAV_GetSampleRate(void) {
-	return pWav->sampleRate;
-}
-
-static drwav_uint8 WAV_GetChannels(void) {
-	return pWav->channels;
-}
-
-static int WAV_GetPosition(void) {
-	return (samplesRead / (pWav->totalSampleCount / 100));
-}
-
-static int WAV_GetLength(void) {
-	return (pWav->totalSampleCount / 100);
-}
-
-static drwav_uint64 WAV_Decode(void *buffer) {
-	samplesRead = drwav_read_s16(pWav, buffSize, buffer);
-	return samplesRead;
-}
-
-static void WAV_Term(void) {
-	drwav_close(pWav);
-}
-
-void WAV_SetDecoder(struct decoder_fn *decoder) {
-	decoder->init = &WAV_Init;
-	decoder->rate = &WAV_GetSampleRate;
-	decoder->channels = &WAV_GetChannels;
-	decoder->buffSize = buffSize;
-	decoder->position = &WAV_GetPosition;
-	decoder->length = &WAV_GetLength;
-	decoder->decode = &WAV_Decode;
-	decoder->exit = &WAV_Term;
-}
-
-int WAV_Validate(const char *in) {
-	drwav *pWav = drwav_open_file(in);
-
-	if (pWav == NULL) {
-		drwav_close(pWav);
+int WAV_Init(const char *path) {
+	if (!drwav_init_file(&wav, path))
 		return -1;
-	}
 
-	drwav_close(pWav);
 	return 0;
+}
+
+u32 WAV_GetSampleRate(void) {
+	return wav.sampleRate;
+}
+
+u8 WAV_GetChannels(void) {
+	return wav.channels;
+}
+
+void WAV_Decode(void *buf, unsigned int length, void *userdata) {
+	samples_read += drwav_read_pcm_frames_s16(&wav, (drwav_uint64)length, (drwav_int16 *)buf);
+
+	if (samples_read == wav.totalPCMFrameCount)
+		playing = false;
+}
+
+u64 WAV_GetPosition(void) {
+	return samples_read;
+}
+
+u64 WAV_GetLength(void) {
+	return wav.totalPCMFrameCount;
+}
+
+void WAV_Term(void) {
+	samples_read = 0;
+	drwav_uninit(&wav);
 }

@@ -1,10 +1,7 @@
-#include <time.h>
-
 #include <3ds.h>
+#include <stdlib.h>
 
 #include "audio.h"
-#include "mp3.h"
-
 #include "C2D_helper.h"
 #include "common.h"
 #include "config.h"
@@ -26,11 +23,10 @@ typedef enum {
 	MUSIC_STATE_SHUFFLE // 2
 } Music_State;
 
-static Thread thread = NULL;
-static bool isMP3 = false;
-static char playlist[512][512], title[128];
+static char playlist[1024][512];
 static int count = 0, selection = 0, state = 0;
-static float cover_width = 0.0f, cover_height = 0.0f;
+static float title_height = 0, length_time_width = 0;
+char *position_time = NULL, *length_time = NULL, *filename = NULL;
 
 static Result Menu_GetMusicList(void) {
 	Handle dir;
@@ -47,8 +43,9 @@ static Result Menu_GetMusicList(void) {
 			for (u32 i = 0; i < entryCount; i++) {
 				Utils_U16_To_U8((u8 *)&name[0], entries[i].name, 255);
 
-				if ((!strncasecmp(entries[i].shortExt, "mp3", 3)) || (!strncasecmp(entries[i].shortExt, "ogg", 3)) || (!strncasecmp(entries[i].shortExt, "fla", 3)) 
-					|| (!strncasecmp(entries[i].shortExt, "wav", 3))) {
+				if ((!strncasecmp(entries[i].shortExt, "fla", 3)) || (!strncasecmp(entries[i].shortExt, "it", 2)) || (!strncasecmp(entries[i].shortExt, "mod", 3))
+					|| (!strncasecmp(entries[i].shortExt, "mp3", 3)) || (!strncasecmp(entries[i].shortExt, "ogg", 3)) || (!strncasecmp(entries[i].shortExt, "opu", 3))
+					|| (!strncasecmp(entries[i].shortExt, "s3m", 3)) || (!strncasecmp(entries[i].shortExt, "wav", 3)) || (!strncasecmp(entries[i].shortExt, "xm", 2))) {
 					strcpy(playlist[count], cwd);
 					strcpy(playlist[count] + strlen(playlist[count]), name);
 					count++;
@@ -80,28 +77,32 @@ static int Music_GetCurrentIndex(char *path) {
 	return 0;
 }
 
-static void Music_Play(char *path) {
-	Menu_GetMusicList();
+static void Menu_ConvertSecondsToString(char *string, u64 seconds) {
+	int h = 0, m = 0, s = 0;
+	h = (seconds / 3600);
+	m = (seconds - (3600 * h)) / 60;
+	s = (seconds - (3600 * h) - (m * 60));
 
-	/* Reset previous stop command */
-	stop = false;
-
-	s32 prio = 0;
-	svcGetThreadPriority(&prio, CUR_THREAD_HANDLE);
-	thread = threadCreate(Audio_PlayFile, path, 32 *1024, prio - 1, -2, false);
-
-	selection = Music_GetCurrentIndex(path);
-	strncpy(title, strlen(ID3.title) == 0? strupr(Utils_Basename(path)) : strupr(ID3.title), strlen(ID3.title) == 0? strlen(Utils_Basename(path)) + 1 : strlen(ID3.title) + 1);
-	isMP3 = (strncasecmp(&path[strlen(path)-3], "mp3", 3) == 0);
-
-	if (isMP3) {
-		if (cover_image.tex) {
-			cover_width = (175.0f / cover_image.subtex->width);
-			cover_height = (175.0f / cover_image.subtex->height);
-		}
-	}
+	if (h > 0)
+		snprintf(string, 35, "%02d:%02d:%02d", h, m, s);
+	else
+		snprintf(string, 35, "%02d:%02d", m, s);
 }
 
+static void Music_Play(char *path) {
+	Audio_Init(path);
+
+	filename = malloc(128);
+	snprintf(filename, 128, Utils_Basename(path));
+	position_time = malloc(35);
+	length_time = malloc(35);
+	length_time_width = 0;
+
+	Menu_ConvertSecondsToString(length_time, Audio_GetLengthSeconds());
+	length_time_width = Draw_GetTextWidth(0.45f, length_time);
+	title_height = Draw_GetTextHeight(0.5f, strupr(filename));
+	selection = Music_GetCurrentIndex(path);
+}
 
 static void Music_HandleNext(bool forward, int state) {
 	if (state == MUSIC_STATE_NONE) {
@@ -123,34 +124,19 @@ static void Music_HandleNext(bool forward, int state) {
 	Utils_SetMax(&selection, 0, (count - 1));
 	Utils_SetMin(&selection, (count - 1), 0);
 
-	Audio_StopPlayback();
+	Audio_Stop();
 
-	memset(title, 0, sizeof(title));
+	free(filename);
+	free(length_time);
+	free(position_time);
 
-	if (isMP3) {
-		memset(ID3.artist, 0, 30);
-		memset(ID3.title, 0, 30);
-		memset(ID3.album, 0, 30);
-		memset(ID3.year, 0, 4);
-		memset(ID3.genre, 0, 30);
-
-		if (cover_image.tex) {
-			C3D_TexDelete(cover_image.tex);
-			linearFree((Tex3DS_SubTexture *)cover_image.subtex);
-			cover_image.tex = NULL;
-		}
-
-		isMP3 = false;
-	}
-
-	threadJoin(thread, U64_MAX);
-	threadFree(thread);
-
+	Audio_Term();
 	Music_Play(playlist[selection]);
 }
 
 void Menu_PlayMusic(char *path) {
 	aptSetSleepAllowed(false);
+	Menu_GetMusicList();
 	Music_Play(path);
 
 	bool locked = false;
@@ -168,39 +154,53 @@ void Menu_PlayMusic(char *path) {
 		if (locked)
 			Draw_Image(icon_lock, 2, 2);
 
+		if ((metadata.has_meta) && (metadata.title[0] != '\0') && (metadata.artist[0] != '\0')) {
+			Draw_Text(5, 22, 0.5f, WHITE, strupr(metadata.title));
+			Draw_Text(5, 38, 0.45f, WHITE, strupr(metadata.artist));
+		}
+		else if ((metadata.has_meta) && (metadata.title[0] != '\0'))
+			Draw_Text(5, ((37 - title_height) / 2) + 18, 0.5f, WHITE, strupr(metadata.title));
+		else
+			Draw_Text(5, ((37 - title_height) / 2) + 18, 0.5f, WHITE, strupr(filename));
+
 		StatusBar_DisplayTime();
 
 		Draw_Rect(178, 57, 222, 175, C2D_Color32(45, 48, 50, 255));
 		Draw_Rect(183, 62, 212, 165, C2D_Color32(46, 49, 51, 255));
 
-		if (isMP3) { // Only print out ID3 tag info for MP3
-			if (strlen(ID3.title) != 0)
-				Draw_Text(5, 22, 0.5f, WHITE, strupr(title));
-			else
-				Draw_Text(5, ((37 - Draw_GetTextHeight(0.5f, strupr(Utils_Basename(path)))) / 2) + 18, 0.5f, WHITE, strupr(title));
-
-			if (strlen(ID3.artist) != 0)
-				Draw_Text(5, 38, 0.45f, WHITE, strupr(ID3.artist));
-
-			Draw_Textf(184, 64, 0.5f, WHITE, "%.30s", ID3.album);
-			Draw_Textf(184, 84, 0.5f, WHITE, "%.30s", ID3.year);
-			Draw_Textf(184, 104, 0.5f, WHITE, "%.30s", ID3.genre);
-		}
-		else
-			Draw_Text(5, ((37 - Draw_GetTextHeight(0.5f, strupr(Utils_Basename(path)))) / 2) + 18, 0.5f, WHITE, strupr(title));
-
 		Draw_Rect(0, 57, 175, 175, MUSIC_GENRE_COLOUR);
 
-		if (cover_image.tex)
-			Draw_ImageScale(cover_image, 0, 57, (175.0f / cover_image.subtex->width), (175.0f / cover_image.subtex->height));
+		if (metadata.has_meta) {
+			if (metadata.album[0] != '\0')
+				Draw_Textf(185, 64, 0.5f, WHITE, "%.30s", metadata.album);
+
+			if (metadata.year[0] != '\0')
+				Draw_Textf(185, 84, 0.5f, WHITE, "%.30s", metadata.year);
+			
+			if (metadata.genre[0] != '\0')
+				Draw_Textf(185, 104, 0.5f, WHITE, "%.30s", metadata.genre);
+		}
+
+		if (metadata.cover_image.tex)
+			Draw_ImageScale(metadata.cover_image, 0, 57, (175.0f / metadata.cover_image.subtex->width), (175.0f / metadata.cover_image.subtex->height));
 		else
-			Draw_Image(default_artwork, 0, 57);
+			Draw_Image(default_artwork, 0, 57); // Default album art
+
+		Menu_ConvertSecondsToString(position_time, Audio_GetPositionSeconds());
+		Draw_Text(185, 205, 0.45f, WHITE, position_time);
+		Draw_Text(392 - length_time_width, 205, 0.45f, WHITE, length_time);
+
+		// Progress bar
+		if (Audio_GetPosition() != -1) {
+			Draw_Rect(185, 220, 207, 2, C2D_Color32(97, 97, 97, 150));
+			Draw_Rect(185, 220, (((double)Audio_GetPosition()/(double)Audio_GetLength()) * 207.0), 2, WHITE);
+		}
 
 		C2D_SceneBegin(RENDER_BOTTOM);
 
 		Draw_Image(ic_music_bg_bottom, 0, 0);
 
-		if (!(Audio_IsPaused(SFX)))
+		if (!paused)
 			Draw_Image(btn_pause, ((320 - btn_pause.subtex->width) / 2) - 2, ((240 - btn_pause.subtex->height) / 2));
 		else
 			Draw_Image(btn_play, ((320 - btn_play.subtex->width) / 2), ((240 - btn_play.subtex->height) / 2));
@@ -222,7 +222,7 @@ void Menu_PlayMusic(char *path) {
 			locked = !locked;
 
 		if ((kDown & KEY_A) || ((TouchInRect(114, 76, 204, 164)) && (kDown & KEY_TOUCH)))
-			Audio_TogglePlayback(SFX);
+			Audio_Pause();
 
 		if ((kDown & KEY_Y) || ((TouchInRect(((320 - btn_repeat.subtex->width) / 2) + 65, ((240 - btn_shuffle.subtex->height) / 2) + 35, 
 			(((320 - btn_repeat.subtex->width) / 2) + 65) + 30, (((240 - btn_shuffle.subtex->height) / 2) + 35) + 30)) && (kDown & KEY_TOUCH))) {
@@ -255,11 +255,11 @@ void Menu_PlayMusic(char *path) {
 		}
 
 		if (kDown & KEY_B) {
-			Audio_StopPlayback();
+			Audio_Stop();
 			break;
 		}
 
-		if (!Audio_IsPlaying()) {
+		if (!playing) {
 			if (state == MUSIC_STATE_NONE) {
 				if (count != 0)
 					Music_HandleNext(true, MUSIC_STATE_NONE);
@@ -273,27 +273,12 @@ void Menu_PlayMusic(char *path) {
 		}
 	}
 
-	threadJoin(thread, U64_MAX);
-	threadFree(thread);
-	
-	// Clear ID3
-	if (isMP3) {
-		memset(ID3.artist, 0, 30);
-		memset(ID3.title, 0, 30);
-		memset(ID3.album, 0, 30);
-		memset(ID3.year, 0, 4);
-		memset(ID3.genre, 0, 30);
+	free(filename);
+	free(length_time);
+	free(position_time);
 
-		if (cover_image.tex) {
-			C3D_TexDelete(cover_image.tex);
-			linearFree((Tex3DS_SubTexture *)cover_image.subtex);
-			cover_image.tex = NULL;
-		}
+	Audio_Term();
 
-		isMP3 = false;
-	}
-
-	memset(title, 0, sizeof(title));
 	memset(playlist, 0, sizeof(playlist[0][0]) * 512 * 512);
 	count = 0;
 	aptSetSleepAllowed(true);

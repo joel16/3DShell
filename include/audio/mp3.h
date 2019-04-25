@@ -1,25 +1,12 @@
-/* Obtained from ctrmus source with permission. */
+#ifndef _3D_SHELL_AUDIO_MP3_H
+#define _3D_SHELL_AUDIO_MP3_H
 
-#include <mpg123.h>
+int MP3_Init(const char *path);
+u32 MP3_GetSampleRate(void);
+u8 MP3_GetChannels(void);
+void MP3_Decode(void *buf, unsigned int length, void *userdata);
+u64 MP3_GetPosition(void);
+u64 MP3_GetLength(void);
+void MP3_Term(void);
 
-#include "audio.h"
-
-typedef struct {
-	char title[34];
-	char album[34];
-	char artist[34];
-	char year[0x5];
-	char comment[0x1E];
-	char genre[34];
-} ID3_Tag;
-
-ID3_Tag ID3;
-
-char *id3_pic;
-
-/**
- *Set decoder parameters for MP3.
- *
- *\param decoder Structure to store parameters.
- */
-void MP3_SetDecoder(struct decoder_fn *decoder);
+#endif
