@@ -1,7 +1,7 @@
 #include <string.h>
 
 #include "audio.h"
-#include "xmp.h"
+#include "xmp/xmp.h"
 
 static xmp_context xmp;
 static struct xmp_frame_info frame_info;
