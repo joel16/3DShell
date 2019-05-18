@@ -5,7 +5,11 @@
 #include "C2D_helper.h"
 #include "fs.h"
 
+#define DR_PCX_IMPLEMENTATION
+#include "dr_pcx.h"
+
 #include "libnsgif.h"
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #define STBI_NO_STDIO
@@ -166,13 +170,10 @@ static void Draw_C3DTexToC2DImage(C3D_Tex *tex, Tex3DS_SubTexture *subtex, void 
 }
 
 bool Draw_LoadImageFile(C2D_Image *texture, const char *path) {
-	u32 size = 0;
-	u8 *data = Draw_LoadExternalImageFile(path, &size);
-
 	stbi_uc *image = NULL;
 	int width = 0, height = 0;
 
-	image = stbi_load_from_memory((stbi_uc const *)data, size, &width, &height, NULL, STBI_rgb_alpha);
+	image = stbi_load(path, &width, &height, NULL, STBI_rgb_alpha);
 
 	for (u32 row = 0; row < (u32)width; row++) {
 		for (u32 col = 0; col < (u32)height; col++) {
@@ -195,7 +196,6 @@ bool Draw_LoadImageFile(C2D_Image *texture, const char *path) {
 	Draw_C3DTexToC2DImage(tex, subtex, image, (u32)(width * height * BYTES_PER_PIXEL), (u32)width, (u32)height, GPU_RGBA8);
 	texture->tex = tex;
 	texture->subtex = subtex;
-	linearFree(data);
 	return true;
 }
 
@@ -284,6 +284,36 @@ bool Draw_LoadImageFileGIF(C2D_Image *texture, const char *path) {
 	texture->subtex = subtex;
 	gif_finalise(&gif);
 	linearFree(data);
+	return true;
+}
+
+bool Draw_LoadImageFilePCX(C2D_Image *texture, const char *path) {
+	drpcx_uint8 *image = NULL;
+	int width = 0, height = 0;
+
+	image = drpcx_load_file(path, DRPCX_FALSE, &width, &height, NULL, BYTES_PER_PIXEL);
+
+	for (u32 row = 0; row < (u32)width; row++) {
+		for (u32 col = 0; col < (u32)height; col++) {
+			u32 z = (row + col * (u32)width) * BYTES_PER_PIXEL;
+
+			u8 r = *(u8 *)(image + z);
+			u8 g = *(u8 *)(image + z + 1);
+			u8 b = *(u8 *)(image + z + 2);
+			u8 a = *(u8 *)(image + z + 3);
+
+			*(image + z) = a;
+			*(image + z + 1) = b;
+			*(image + z + 2) = g;
+			*(image + z + 3) = r;
+		}
+	}
+
+	C3D_Tex *tex = linearAlloc(sizeof(C3D_Tex));
+	Tex3DS_SubTexture *subtex = linearAlloc(sizeof(Tex3DS_SubTexture));
+	Draw_C3DTexToC2DImage(tex, subtex, image, (u32)(width * height * BYTES_PER_PIXEL), (u32)width, (u32)height, GPU_RGBA8);
+	texture->tex = tex;
+	texture->subtex = subtex;
 	return true;
 }
 

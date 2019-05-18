@@ -54,8 +54,8 @@ static Result Gallery_GetImageList(void) {
 				Utils_U16_To_U8((u8 *)&name[0], entries[i].name, 255);
 
 				if ((!strncasecmp(entries[i].shortExt, "bmp", 3)) || (!strncasecmp(entries[i].shortExt, "gif", 3)) || (!strncasecmp(entries[i].shortExt, "jpg", 3))
-					|| (!strncasecmp(entries[i].shortExt, "jpe", 3)) || (!strncasecmp(entries[i].shortExt, "png", 3)) || (!strncasecmp(entries[i].shortExt, "pgm", 3)) 
-					|| (!strncasecmp(entries[i].shortExt, "ppm", 3)) || (!strncasecmp(entries[i].shortExt, "tga", 3))) {
+					|| (!strncasecmp(entries[i].shortExt, "jpe", 3)) || (!strncasecmp(entries[i].shortExt, "pcx", 3)) || (!strncasecmp(entries[i].shortExt, "png", 3))
+					|| (!strncasecmp(entries[i].shortExt, "pgm", 3)) || (!strncasecmp(entries[i].shortExt, "ppm", 3)) || (!strncasecmp(entries[i].shortExt, "tga", 3))) {
 					strcpy(album[count], cwd);
 					strcpy(album[count] + strlen(album[count]), name);
 					count++;
@@ -95,6 +95,8 @@ static void Gallery_LoadTexture(char *path) {
 
 	if (!strncasecmp(extension, ".gif", 4))
 		Draw_LoadImageFileGIF(&image, path);
+	else if (!strncasecmp(extension, ".pcx", 4))
+		Draw_LoadImageFilePCX(&image, path);
 	else
 		Draw_LoadImageFile(&image, path);
 
