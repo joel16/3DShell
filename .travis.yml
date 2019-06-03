@@ -10,8 +10,6 @@ addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
-    packages:
-      - libstdc++-4.9-dev
 
 install:
   - sudo dkp-pacman -Syu 3ds-dev --noconfirm --needed
