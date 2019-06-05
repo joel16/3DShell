@@ -38,7 +38,7 @@ void XM_Decode(void *buf, unsigned int length, void *userdata) {
     xmp_play_buffer(xmp, buf, (int)length * (sizeof(s16) * 2), 0);
     samples_read += length;
 
-    if (samples_read == total_samples)
+    if (samples_read >= total_samples)
         playing = false;
 }
 

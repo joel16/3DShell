@@ -23,7 +23,7 @@ u8 WAV_GetChannels(void) {
 void WAV_Decode(void *buf, unsigned int length, void *userdata) {
 	samples_read += drwav_read_pcm_frames_s16(&wav, (drwav_uint64)length, (drwav_int16 *)buf);
 
-	if (samples_read == wav.totalPCMFrameCount)
+	if (samples_read >= wav.totalPCMFrameCount)
 		playing = false;
 }
 

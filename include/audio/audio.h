@@ -8,17 +8,18 @@ extern bool playing, paused;
 
 typedef struct {
 	bool has_meta;
-    char title[31];
-    char album[31];
-    char artist[31];
-    char year[5];
-    char comment[31];
-    char genre[31];
+    char title[64];
+    char album[64];
+    char artist[64];
+    char year[64];
+    char comment[64];
+    char genre[64];
     C2D_Image cover_image;
 } Audio_Metadata;
 
 extern Audio_Metadata metadata;
 
+void Audio_Callback(void *userdata, s16 *stream, int length);
 void Audio_Init(const char *path);
 bool Audio_IsPaused(void);
 void Audio_Pause(void);

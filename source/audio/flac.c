@@ -24,7 +24,7 @@ u8 FLAC_GetChannels(void) {
 void FLAC_Decode(void *buf, unsigned int length, void *userdata) {
 	frames_read += drflac_read_s16(flac, (drflac_uint64)length * flac->channels, (drflac_int16 *)buf);
 	
-	if (frames_read == flac->totalSampleCount)
+	if (frames_read >= flac->totalSampleCount)
 		playing = false;
 }
 

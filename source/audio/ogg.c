@@ -58,11 +58,11 @@ u8 OGG_GetChannels(void) {
 
 static u64 OGG_FillBuffer(char *out) {
 	u64 samples_read = 0;
-	int samples_to_read = (sizeof(s16) * ogg_info->channels) * 4096;
+	int samples_to_read = (sizeof(s16) * ogg_info->channels) * 960;
 
 	while(samples_to_read > 0) {
 		static int current_section;
-		int samples_just_read = ov_read(&ogg, out, samples_to_read > 4096 ? 4096 : samples_to_read, &current_section);
+		int samples_just_read = ov_read(&ogg, out, samples_to_read > 960 ? 960 : samples_to_read, &current_section);
 
 		if (samples_just_read < 0)
 			return samples_just_read;
@@ -81,7 +81,7 @@ void OGG_Decode(void *buf, unsigned int length, void *userdata) {
 	OGG_FillBuffer((char *)buf);
 	samples_read = ov_pcm_tell(&ogg);
 
-	if (samples_read == max_lenth)
+	if (samples_read >= max_lenth)
 		playing = false;
 }
 
