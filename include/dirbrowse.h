@@ -3,8 +3,7 @@
 
 #include <3ds.h>
 
-typedef struct File
-{
+typedef struct File {
 	struct File *next; // Next item
 	int isDir;          // Folder flag
 	int isReadOnly;     // Read-only flag

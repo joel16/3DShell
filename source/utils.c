@@ -34,7 +34,8 @@ void Utils_U8_To_U16(u16 *buf, const u8 *input, size_t bufsize) {
 
 char *Utils_Basename(const char *filename) {
 	char *p = strrchr (filename, '/');
-	return p ? p + 1 : (char *) filename;
+	char *string = strdup(filename);
+	return p ? p + 1 : string;
 }
 
 void Utils_GetSizeString(char *string, u64 size) {
@@ -62,8 +63,8 @@ void Utils_SetMin(int *set, int value, int min) {
 }
 
 int Utils_Alphasort(const void *p1, const void *p2) {
-	FS_DirectoryEntry* entryA = (FS_DirectoryEntry*) p1;
-	FS_DirectoryEntry* entryB = (FS_DirectoryEntry*) p2;
+	FS_DirectoryEntry *entryA = (FS_DirectoryEntry *)p1;
+	FS_DirectoryEntry *entryB = (FS_DirectoryEntry *)p2;
 
 	if ((entryA->attributes & FS_ATTRIBUTE_DIRECTORY) && !(entryB->attributes & FS_ATTRIBUTE_DIRECTORY))
 		return -1;

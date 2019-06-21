@@ -28,11 +28,11 @@ enum BROWSE_STATES {
     BROWSE_STATE_NAND = 1
 };
 
-jmp_buf exitJmp;
+extern jmp_buf exitJmp;
 
-int MENU_STATE;
-int BROWSE_STATE;
+extern int MENU_STATE;
+extern int BROWSE_STATE;
 
-char cwd[512];
+extern char cwd[512];
 
 #endif

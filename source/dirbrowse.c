@@ -29,8 +29,8 @@ void Dirbrowse_RecursiveFree(File *node) {
 
 // Sort directories alphabetically. Folder first, then files.
 static int cmpstringp(const void *p1, const void *p2) {
-	FS_DirectoryEntry* entryA = (FS_DirectoryEntry*) p1;
-	FS_DirectoryEntry* entryB = (FS_DirectoryEntry*) p2;
+	FS_DirectoryEntry *entryA = (FS_DirectoryEntry *)p1;
+	FS_DirectoryEntry *entryB = (FS_DirectoryEntry *)p2;
 	
 	if ((entryA->attributes & FS_ATTRIBUTE_DIRECTORY) && !(entryB->attributes & FS_ATTRIBUTE_DIRECTORY))
 		return -1;
