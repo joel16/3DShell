@@ -11,7 +11,7 @@
 #include "wav.h"
 #include "xm.h"
 
-bool playing = true, paused = false;
+bool playing = true;
 Audio_Metadata metadata = {0};
 static Audio_Metadata empty = {0};
 
@@ -139,7 +139,6 @@ static const char *Audio_GetFileExt(const char *filename) {
 
 void Audio_Init(const char *path) {
 	playing = true;
-	paused = false;
 
 	if (!strncasecmp(Audio_GetFileExt(path), "flac", 4))
 		file_type = FILE_TYPE_FLAC;
@@ -188,11 +187,11 @@ void Audio_Init(const char *path) {
 }
 
 bool Audio_IsPaused(void) {
-	return paused;
+	return ndspChnIsPaused(0);
 }
 
 void Audio_Pause(void) {
-	paused = !paused;
+	ndspChnSetPaused(0, !(ndspChnIsPaused(0)));
 }
 
 void Audio_Stop(void) {
@@ -308,7 +307,6 @@ void Audio_Term(void) {
 	}
 
 	playing = true;
-	paused = false;
 
 	// Clear metadata struct
 	metadata = empty;

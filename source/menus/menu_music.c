@@ -200,7 +200,7 @@ void Menu_PlayMusic(char *path) {
 
 		Draw_Image(ic_music_bg_bottom, 0, 0);
 
-		if (!paused)
+		if (!Audio_IsPaused())
 			Draw_Image(btn_pause, ((320 - btn_pause.subtex->width) / 2) - 2, ((240 - btn_pause.subtex->height) / 2));
 		else
 			Draw_Image(btn_play, ((320 - btn_play.subtex->width) / 2), ((240 - btn_play.subtex->height) / 2));
