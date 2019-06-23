@@ -18,7 +18,7 @@ Current features:
 - Copy/Move files and folders.
 - Multi-select items for delete/cut/copy (using Y button).
 - FTP server (Press select or tap the ftp icon to toggle).
-- Image preview (If the image is around 400 * 480 which is the size of both screens, the image will be split in half and displayed. Support for the following image formats: BMP, JPG/JPEG, GIF and PNG)
+- Image preview (If the image is around 400 * 480 which is the size of both screens, the image will be split in half and displayed. Support for the following image formats -> BMP, GIF - non animated, JPG, PCX, PNG, PGM, PPM and TGA)
 - ZIP/RAR file extraction.
 - Searching for directories (allows you to quickly visit a directory by clicking the search icon on the top right (bottom screen).)
 - File properties - lets you view info on current file/folder.
@@ -26,7 +26,7 @@ Current features:
 - Fast scroll - Use analog stick.
 - File timestamps.
 - Browsing CTRNAND and copying data to/from CTRNAND.
-- MP3, vorbis (ogg), flac and wav playback support. (All thanks to deltabeard/MaK11-12)
+- Audio playback support for the following formats -> IT, OGG, MOD, MP3, S3M, WAV and XM.
 - Dir list Sorting (alphabetical - ascending, alphabetical - descending, size - largest to smallest, and size - smallest to largest).
 - Online updater (nightly/releases)
 
@@ -41,6 +41,7 @@ Building from source:
 * `sudo dkp-pacman -Syu 3ds-libvorbisidec --noconfirm`
 * `sudo dkp-pacman -Syu 3ds-mpg123 --noconfirm`
 * `sudo dkp-pacman -Syu 3ds-opusfile --noconfirm`
+* `sudo dkp-pacman -Syu 3ds-flac --noconfirm`
 
 3. Recursively clone the repo:
 ```bash
@@ -61,9 +62,8 @@ make
 
 Credits:
 --------------------------------------------------------------------------------
-- deltabeard/MaK11-12 for sound support.
+- deltabeard/MaK11-12 for the inital ctrmus code port.
 - mtheall for ftpd.
-- Steveice10 for allowing me to use his screen.c C3D code as a template to build and make  modifications on.
 - preetisketch for the banner.
 - FrozenFire for the boot logo.
 
