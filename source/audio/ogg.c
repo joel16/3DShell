@@ -81,7 +81,7 @@ void OGG_Decode(void *buf, unsigned int length, void *userdata) {
 	OGG_FillBuffer((char *)buf);
 	samples_read = ov_pcm_tell(&ogg);
 
-	if (samples_read == max_lenth)
+	if (samples_read >= max_lenth)
 		playing = false;
 }
 

@@ -116,8 +116,9 @@ static Result unzExtractCurrentFile(unzFile *unzHandle, int *path) {
 		}
 
 		FILE *out = fopen(write, "wb");
+		char *string = strdup(filename);
 
-		if ((out == NULL) && ((*path) == 0) && (filenameWithoutPath != (char *)filename)) {
+		if ((out == NULL) && ((*path) == 0) && (filenameWithoutPath != string)) {
 			char c = *(filenameWithoutPath - 1);
 			*(filenameWithoutPath - 1) = '\0';
 			mkdir(write, 0777);
@@ -185,7 +186,8 @@ static Result unzExtractAll(const char *src, unzFile *unzHandle) {
 
 static Result Archive_ExtractZIP(const char *src) {
 	char *path = malloc(256);
-	char *dirname_without_ext = Archive_RemoveFileExt((char *)src);
+	char *src_string = strdup(src);
+	char *dirname_without_ext = Archive_RemoveFileExt(src_string);
 
 	snprintf(path, 512, "%s/", dirname_without_ext);
 	FS_MakeDir(archive, path);
@@ -211,7 +213,8 @@ static Result Archive_ExtractZIP(const char *src) {
 
 static Result Archive_ExtractRAR(const char *src) {
 	char *path = malloc(256);
-	char *dirname_without_ext = Archive_RemoveFileExt((char *)src);
+	char *src_string = strdup(src);
+	char *dirname_without_ext = Archive_RemoveFileExt(src_string);
 
 	snprintf(path, 512, "%s/", dirname_without_ext);
 	FS_MakeDir(archive, path);

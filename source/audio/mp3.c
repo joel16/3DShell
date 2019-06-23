@@ -8,7 +8,6 @@
 
 static mpg123_handle *mp3;
 static u64 frames_read = 0, total_samples = 0;
-static long sample_rate = 0;
 static int channels = 0;
 
 // 147 ID3 tagv1 list
@@ -97,7 +96,7 @@ static void print_lines(char *data, const char *prefix, mpg123_string *inlines) 
 				if (data == NULL)
 					printf("%s%s\n", prefix, line);
 				else
-					snprintf(data, 0x1F, "%s%s\n", prefix, line);
+					snprintf(data, 64, "%s%s\n", prefix, line);
 				line = NULL;
 				lines[i] = save;
 			}
@@ -123,6 +122,7 @@ static void print_v2(Audio_Metadata *ID3tag, mpg123_id3v2 *v2) {
 
 int MP3_Init(const char *path) {
 	int error = 0;
+	long sample_rate = 0;
 
 	error = mpg123_init();
 	if (error != MPG123_OK)
@@ -167,15 +167,16 @@ int MP3_Init(const char *path) {
 		}
 	}
 
-	total_samples = mpg123_length(mp3);
 	mpg123_getformat(mp3, &sample_rate, &channels, NULL);
 	mpg123_format_none(mp3);
-	mpg123_format(mp3, sample_rate, channels, MPG123_ENC_SIGNED_16);
+	mpg123_format(mp3, 44100, channels, MPG123_ENC_SIGNED_16);
+
+	total_samples = mpg123_length(mp3);
 	return 0;
 }
 
 u32 MP3_GetSampleRate(void) {
-	return sample_rate;
+	return 44100;
 }
 
 u8 MP3_GetChannels(void) {
@@ -184,10 +185,10 @@ u8 MP3_GetChannels(void) {
 
 void MP3_Decode(void *buf, unsigned int length, void *userdata) {
 	size_t done = 0;
-	mpg123_read(mp3, buf, length * (sizeof(s16) * 2), &done);
+	mpg123_read(mp3, buf, length * (sizeof(s16) * channels), &done);
 	frames_read += done/(sizeof(s16) * 2);
 
-	if (frames_read == total_samples)
+	if (frames_read >= total_samples)
 		playing = false;
 }
 

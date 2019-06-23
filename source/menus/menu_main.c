@@ -18,6 +18,11 @@
 #include "touch.h"
 #include "utils.h"
 
+int multi_select_index;
+bool multi_select[256];
+int multi_select_indices[256];
+char multi_select_dir[256];
+char multi_select_paths[51][256];
 static char multi_select_dir_old[256];
 
 static void Menu_HandleMultiSelect(void) {
@@ -49,7 +54,7 @@ static void Menu_HandleMultiSelect(void) {
 }
 
 static void Menu_ControlHome(u32 input) {
-	if (fileCount > 0) {
+	if (file_count > 0) {
 		if (input & KEY_DUP)
 			position--;
 		else if (input & KEY_DDOWN)
@@ -64,13 +69,13 @@ static void Menu_ControlHome(u32 input) {
 			position++;
 		}
 
-		Utils_SetMax(&position, 0, (fileCount - 1));
-		Utils_SetMin(&position, (fileCount - 1), 0);
+		Utils_SetMax(&position, 0, (file_count - 1));
+		Utils_SetMin(&position, (file_count - 1), 0);
 
 		if (input & KEY_LEFT)
 			position = 0;
 		else if (input & KEY_RIGHT)
-			position = fileCount - 1;
+			position = file_count - 1;
 
 		// Open options
 		if (input & KEY_X) {

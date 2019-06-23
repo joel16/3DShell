@@ -4,6 +4,8 @@
 #include "fs.h"
 #include "utils.h"
 
+FS_Archive archive, sdmc_archive, nand_archive;
+
 Result FS_OpenArchive(FS_Archive *archive, FS_ArchiveID archiveID) {
 	Result ret = 0;
 
@@ -70,13 +72,13 @@ Result FS_CreateFile(FS_Archive archive, const char *path) {
 	return 0;
 }
 
-Result FS_RecursiveMakeDir(FS_Archive archive, const char *dir) {
+Result FS_RecursiveMakeDir(FS_Archive archive, const char *path) {
 	Result ret = 0;
 	char buf[256];
 	char *p = NULL;
 	size_t len;
 
-	snprintf(buf, sizeof(buf), "%s",dir);
+	snprintf(buf, sizeof(buf), "%s", path);
 	len = strlen(buf);
 
 	if (buf[len - 1] == '/')
@@ -150,31 +152,26 @@ Result FS_GetFileSize(FS_Archive archive, const char *path, u64 *size) {
 	return 0;
 }
 
-u64 FS_GetFreeStorage(FS_SystemMediaType mediaType) {
-	FS_ArchiveResource	resource = {0};
+u64 FS_GetFreeStorage(FS_SystemMediaType media_type) {
+	FS_ArchiveResource resource = {0};
 
-	if (R_SUCCEEDED(FSUSER_GetArchiveResource(&resource, mediaType)))
-		return (((u64) resource.freeClusters *(u64) resource.clusterSize));
-
-	return 0;
-}
-
-u64 FS_GetTotalStorage(FS_SystemMediaType mediaType) {
-	FS_ArchiveResource	resource = {0};
-
-	if (R_SUCCEEDED(FSUSER_GetArchiveResource(&resource, mediaType)))
-		return (((u64) resource.totalClusters *(u64) resource.clusterSize));
+	if (R_SUCCEEDED(FSUSER_GetArchiveResource(&resource, media_type)))
+		return (((u64)resource.freeClusters * (u64)resource.clusterSize));
 
 	return 0;
 }
 
-u64 FS_GetUsedStorage(FS_SystemMediaType mediaType) {
-	FS_ArchiveResource	resource = {0};
+u64 FS_GetTotalStorage(FS_SystemMediaType media_type) {
+	FS_ArchiveResource resource = {0};
 
-	if (R_SUCCEEDED(FSUSER_GetArchiveResource(&resource, mediaType)))
-		return ((((u64) resource.totalClusters *(u64) resource.clusterSize)) - (((u64) resource.freeClusters *(u64) resource.clusterSize)));
+	if (R_SUCCEEDED(FSUSER_GetArchiveResource(&resource, media_type)))
+		return (((u64)resource.totalClusters * (u64)resource.clusterSize));
 
 	return 0;
+}
+
+u64 FS_GetUsedStorage(FS_SystemMediaType media_type) {
+	return (FS_GetTotalStorage(media_type) - FS_GetUsedStorage(media_type));
 }
 
 Result FS_RemoveFile(FS_Archive archive, const char *path) {
@@ -243,7 +240,7 @@ Result FS_RenameDir(FS_Archive archive, const char *old_dirname, const char *new
 	return 0;
 }
 
-Result FS_Read(FS_Archive archive, const char *path, u64 size, char *buf) {
+Result FS_Read(FS_Archive archive, const char *path, u64 size, void *buf) {
 	Result ret = 0;
 	Handle handle;
 
@@ -252,7 +249,7 @@ Result FS_Read(FS_Archive archive, const char *path, u64 size, char *buf) {
 	if (R_FAILED(ret = FS_OpenFile(&handle, archive, path, FS_OPEN_READ, 0)))
 		return ret;
 	
-	if (R_FAILED(ret = FSFILE_Read(handle, &bytes_read, 0, (u32 *)buf, size))) {
+	if (R_FAILED(ret = FSFILE_Read(handle, &bytes_read, 0, buf, size))) {
 		FSFILE_Close(handle);
 		return ret;
 	}
@@ -263,7 +260,7 @@ Result FS_Read(FS_Archive archive, const char *path, u64 size, char *buf) {
 	return 0;
 }
 
-Result FS_Write(FS_Archive archive, const char *path, const char *buf) {
+Result FS_Write(FS_Archive archive, const char *path, const void *buf) {
 	Result ret = 0;
 	Handle handle;
 	
@@ -298,7 +295,7 @@ Result FS_Write(FS_Archive archive, const char *path, const char *buf) {
 	return 0;
 }
 
-char *FS_GetFileTimestamp(char *path) {
+char *FS_GetFileTimestamp(const char *path) {
 	static char timeStr[60];
 	u64 mtime = 0;
 

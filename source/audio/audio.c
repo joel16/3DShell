@@ -1,9 +1,9 @@
-#include <SDL/SDL.h>
 #include <string.h>
 
 #include "audio.h"
 #include "fs.h"
 
+#include "3dsaudiolib.h"
 #include "flac.h"
 #include "mp3.h"
 #include "ogg.h"
@@ -11,8 +11,9 @@
 #include "wav.h"
 #include "xm.h"
 
-bool playing = true, paused = false;
-Audio_Metadata metadata;
+bool playing = true;
+Audio_Metadata metadata = {0};
+static Audio_Metadata empty = {0};
 
 enum Audio_FileType {
 	FILE_TYPE_NONE = 0,
@@ -96,32 +97,30 @@ static u8 Audio_GetChannels(void) {
 	return channels;
 }
 
-static void Audio_Callback(void *userdata, Uint8 *stream, int length) {
-	memset(stream, 0, (length / (sizeof(s16) * Audio_GetChannels())));
-
+void Audio_Callback(void *userdata, void *stream, int length) {
 	switch(file_type) {
 		case FILE_TYPE_FLAC:
-			FLAC_Decode(stream, (length / (sizeof(s16) * Audio_GetChannels())), userdata);
+			FLAC_Decode(stream, length / (Audio_GetChannels() * sizeof(s16)), userdata);
 			break;
 
 		case FILE_TYPE_MP3:
-			MP3_Decode(stream, (length / (sizeof(s16) * Audio_GetChannels())), userdata);
+			MP3_Decode(stream, length / (Audio_GetChannels() * sizeof(s16)), userdata);
 			break;
 
 		case FILE_TYPE_OGG:
-			OGG_Decode(stream, (length / (sizeof(s16) * Audio_GetChannels())), userdata);
+			OGG_Decode(stream, length / (Audio_GetChannels() * sizeof(s16)), userdata);
 			break;
 
 		case FILE_TYPE_OPUS:
-			OPUS_Decode(stream, (length / (sizeof(s16) * Audio_GetChannels())), userdata);
+			OPUS_Decode(stream, length / (Audio_GetChannels() * sizeof(s16)), userdata);
 			break;
 
 		case FILE_TYPE_WAV:
-			WAV_Decode(stream, (length / (sizeof(s16) * Audio_GetChannels())), userdata);
+			WAV_Decode(stream, length / (Audio_GetChannels() * sizeof(s16)), userdata);
 			break;
 
 		case FILE_TYPE_XM:
-			XM_Decode(stream, (length / (sizeof(s16) * Audio_GetChannels())), userdata);
+			XM_Decode(stream, length / (Audio_GetChannels() * sizeof(s16)), userdata);
 			break;
 
 		default:
@@ -140,15 +139,6 @@ static const char *Audio_GetFileExt(const char *filename) {
 
 void Audio_Init(const char *path) {
 	playing = true;
-	paused = false;
-
-	SDL_AudioSpec want, have;
-	SDL_memset(&want, 0, sizeof(want));
-
-	// Clear struct
-	static const Audio_Metadata empty;
-	metadata = empty;
-	metadata.cover_image.tex = NULL;
 
 	if (!strncasecmp(Audio_GetFileExt(path), "flac", 4))
 		file_type = FILE_TYPE_FLAC;
@@ -164,58 +154,53 @@ void Audio_Init(const char *path) {
 		|| (!strncasecmp(Audio_GetFileExt(path), "s3m", 3)) || (!strncasecmp(Audio_GetFileExt(path), "xm", 2)))
 		file_type = FILE_TYPE_XM;
 
+	u32 samples = 0;
+
 	switch(file_type) {
 		case FILE_TYPE_FLAC:
 			FLAC_Init(path);
-			want.samples = 4096;
+			samples = 1024;
 			break;
 
 		case FILE_TYPE_MP3:
 			MP3_Init(path);
-			want.samples = 4096;
+			samples = 4096;
 			break;
 
 		case FILE_TYPE_OGG:
 			OGG_Init(path);
-			want.samples = 4096;
+			samples = 4096;
 			break;
 
 		case FILE_TYPE_OPUS:
 			OPUS_Init(path);
-			want.samples = 960;
+			samples = 960;
 			break;
 
 		case FILE_TYPE_WAV:
 			WAV_Init(path);
-			want.samples = 4096;
+			samples = 4096;
 			break;
 
 		case FILE_TYPE_XM:
 			XM_Init(path);
-			want.samples = 4096;
+			samples = 4096;
 			break;
 
 		default:
 			break;
 	}
 
-	want.freq = Audio_GetSampleRate();
-	want.format = AUDIO_S16;
-	want.channels = Audio_GetChannels();
-	want.userdata = NULL;
-	want.callback = Audio_Callback;
-	if (R_FAILED(SDL_OpenAudio(&want, &have)))
-		return;
-	SDL_PauseAudio(paused);
+	_3dsAudioInit(Audio_GetChannels(), Audio_GetSampleRate(), samples);
+	_3dsAudioCreateThread();
 }
 
 bool Audio_IsPaused(void) {
-	return paused;
+	return ndspChnIsPaused(0);
 }
 
 void Audio_Pause(void) {
-	paused = !paused;
-	SDL_PauseAudio(paused);
+	ndspChnSetPaused(0, !(ndspChnIsPaused(0)));
 }
 
 void Audio_Stop(void) {
@@ -331,7 +316,9 @@ void Audio_Term(void) {
 	}
 
 	playing = true;
-	paused = false;
-	SDL_PauseAudio(1);
-	SDL_CloseAudio();
+
+	// Clear metadata struct
+	metadata = empty;
+	_3dsAudioExitThread();
+	_3dsAudioEnd();
 }

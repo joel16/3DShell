@@ -16,7 +16,7 @@
 #define FILES_PER_PAGE 5
 
 int position = 0; // menu position
-int fileCount = 0; // file count
+int file_count = 0; // file count
 File *files = NULL; // file list
 
 void Dirbrowse_RecursiveFree(File *node) {
@@ -29,8 +29,8 @@ void Dirbrowse_RecursiveFree(File *node) {
 
 // Sort directories alphabetically. Folder first, then files.
 static int cmpstringp(const void *p1, const void *p2) {
-	FS_DirectoryEntry* entryA = (FS_DirectoryEntry*) p1;
-	FS_DirectoryEntry* entryB = (FS_DirectoryEntry*) p2;
+	FS_DirectoryEntry *entryA = (FS_DirectoryEntry *)p1;
+	FS_DirectoryEntry *entryB = (FS_DirectoryEntry *)p2;
 	
 	if ((entryA->attributes & FS_ATTRIBUTE_DIRECTORY) && !(entryB->attributes & FS_ATTRIBUTE_DIRECTORY))
 		return -1;
@@ -67,7 +67,7 @@ static int cmpstringp(const void *p1, const void *p2) {
 Result Dirbrowse_PopulateFiles(bool clear) {
 	Dirbrowse_RecursiveFree(files);
 	files = NULL;
-	fileCount = 0;
+	file_count = 0;
 	
 	Handle dir;
 	Result ret = 0;
@@ -79,7 +79,7 @@ Result Dirbrowse_PopulateFiles(bool clear) {
 			memset(files, 0, sizeof(File)); // Clear memory
 			strcpy((char *)files->name, ".."); // Copy file Name
 			files->isDir = 1; // Set folder flag
-			fileCount++;
+			file_count++;
 		}
 		
 		u32 entryCount = 0;
@@ -103,7 +103,6 @@ Result Dirbrowse_PopulateFiles(bool clear) {
 					
 				File *item = (File *)malloc(sizeof(File));
 				memset(item, 0, sizeof(File));
-
 				strcpy((char *)item->name, name); // Copy file name
 				strcpy(item->ext, entries[i].shortExt); // Copy file extension
 				item->size = entries[i].fileSize; // Copy file size
@@ -128,7 +127,7 @@ Result Dirbrowse_PopulateFiles(bool clear) {
 					list->next = item; // Link item
 				}
 				
-				fileCount++; // Increment file count
+				file_count++; // Increment file count
 			}
 		}	
 		else {
@@ -151,8 +150,8 @@ Result Dirbrowse_PopulateFiles(bool clear) {
 		
 	// Attempt to keep index
 	if (!clear) {
-		if (position >= fileCount)
-			position = fileCount - 1; // Fix position
+		if (position >= file_count)
+			position = file_count - 1; // Fix position
 	}
 	else
 		position = 0; // Reset position
@@ -193,8 +192,8 @@ void Dirbrowse_DisplayFiles(void) {
 				Draw_Image(icon_app, 30, 56 + (38 * printed));
 			else if ((!strncasecmp(file->ext, "zip", 3)) || (!strncasecmp(file->ext, "tar", 3)) || (!strncasecmp(file->ext, "lz4", 3)) || (!strncasecmp(file->ext, "rar", 3)))
 				Draw_Image(icon_archive, 30, 56 + (38 * printed));
-			else if ((!strncasecmp(file->ext, "fla", 3)) || (!strncasecmp(file->ext, "it", 2)) || (!strncasecmp(file->ext, "mod", 3)) || (!strncasecmp(file->ext, "mp3", 3))
-				|| (!strncasecmp(file->ext, "ogg", 3)) || (!strncasecmp(file->ext, "opu", 3)) || (!strncasecmp(file->ext, "s3m", 3)) || (!strncasecmp(file->ext, "wav", 3))
+			else if (/*(!strncasecmp(file->ext, "fla", 3)) || */(!strncasecmp(file->ext, "it", 2)) || (!strncasecmp(file->ext, "mod", 3)) || (!strncasecmp(file->ext, "mp3", 3))
+				|| (!strncasecmp(file->ext, "ogg", 3)) /*|| (!strncasecmp(file->ext, "opu", 3))*/ || (!strncasecmp(file->ext, "s3m", 3)) || (!strncasecmp(file->ext, "wav", 3))
 				|| (!strncasecmp(file->ext, "xm", 2)))
 				Draw_Image(icon_audio, 30, 56 + (38 * printed));
 			else if ((!strncasecmp(file->ext, "bmp", 3)) || (!strncasecmp(file->ext, "gif", 3)) || (!strncasecmp(file->ext, "jpg", 3)) || (!strncasecmp(file->ext, "jpe", 3))
@@ -281,8 +280,8 @@ void Dirbrowse_OpenFile(void) {
 		if (R_SUCCEEDED(Archive_ExtractFile(path)))
 			Dirbrowse_PopulateFiles(true);
 	}
-	else if ((!strncasecmp(file->ext, "fla", 3)) || (!strncasecmp(file->ext, "it", 2)) || (!strncasecmp(file->ext, "mod", 3)) || (!strncasecmp(file->ext, "mp3", 3))
-		|| (!strncasecmp(file->ext, "ogg", 3)) || (!strncasecmp(file->ext, "opu", 3)) || (!strncasecmp(file->ext, "s3m", 3)) || (!strncasecmp(file->ext, "wav", 3))
+	else if (/*(!strncasecmp(file->ext, "fla", 3)) || */(!strncasecmp(file->ext, "it", 2)) || (!strncasecmp(file->ext, "mod", 3)) || (!strncasecmp(file->ext, "mp3", 3))
+		|| (!strncasecmp(file->ext, "ogg", 3)) /*|| (!strncasecmp(file->ext, "opu", 3))*/ || (!strncasecmp(file->ext, "s3m", 3)) || (!strncasecmp(file->ext, "wav", 3))
 		|| (!strncasecmp(file->ext, "xm", 2)))
 		Menu_PlayMusic(path);
 	else if ((!strncasecmp(file->ext, "txt", 3)) || (!strncasecmp(file->ext, "log", 3)) || (!strncasecmp(file->ext, "cfg", 3)) || (!strncasecmp(file->ext, "lua", 3)))

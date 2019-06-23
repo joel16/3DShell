@@ -38,7 +38,7 @@ static bool Menu_ValidateUpdate(bool nighlty) {
 
 			FS_GetFileSize(archive, "/3ds/3DShell/UPDATE_NIGHTLY.txt", &size64);
 			size = (u32)size64;
-			char *buf = (char *)malloc(size + 1);
+			char *buf = malloc(size + 1);
 
 			if (R_FAILED(FS_Read(archive, "/3ds/3DShell/UPDATE_NIGHTLY.txt", size, buf))) {
 				free(buf);
@@ -62,7 +62,7 @@ static bool Menu_ValidateUpdate(bool nighlty) {
 
 			FS_GetFileSize(archive, "/3ds/3DShell/UPDATE_MILESTONE.txt", &size64);
 			size = (u32)size64;
-			char *buf = (char *)malloc(size + 1);
+			char *buf = malloc(size + 1);
 
 			if (R_FAILED(FS_Read(archive, "/3ds/3DShell/UPDATE_MILESTONE.txt", size, buf))) {
 				free(buf);

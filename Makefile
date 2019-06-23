@@ -44,7 +44,7 @@ APP_TITLE           :=	3DShell
 APP_DESCRIPTION     :=	Multi-purpose file manager
 APP_AUTHOR          :=	Joel16
 VERSION_MAJOR       :=  4
-VERSION_MINOR       :=  2
+VERSION_MINOR       :=  3
 VERSION_MICRO       :=  0
 GITVERSION          :=  $(shell git log -1 --pretty='%h')
 ICON                :=	res/ic_launcher_filemanager.png
@@ -78,8 +78,8 @@ CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:=  -lcurl -lmbedtls -lmbedx509 -lmbedcrypto -lxmp-lite -lmpg123 -lvorbisidec -lopusfile -lopus -logg \
-            -lSDL -lcitro2d -lcitro3d -lctru -lm -lminizip -lz
+LIBS	:=  -lcurl -lmbedtls -lmbedx509 -lmbedcrypto -lxmp-lite -lmpg123 -lvorbisidec -lopusfile -lopus -lFLAC -logg \
+            -lcitro2d -lcitro3d -lctru -lm -lminizip -lz
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing

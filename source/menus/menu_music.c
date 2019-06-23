@@ -1,6 +1,7 @@
 #include <3ds.h>
 #include <stdlib.h>
 
+#include "3dsaudiolib.h"
 #include "audio.h"
 #include "C2D_helper.h"
 #include "common.h"
@@ -43,8 +44,8 @@ static Result Menu_GetMusicList(void) {
 			for (u32 i = 0; i < entryCount; i++) {
 				Utils_U16_To_U8((u8 *)&name[0], entries[i].name, 255);
 
-				if ((!strncasecmp(entries[i].shortExt, "fla", 3)) || (!strncasecmp(entries[i].shortExt, "it", 2)) || (!strncasecmp(entries[i].shortExt, "mod", 3))
-					|| (!strncasecmp(entries[i].shortExt, "mp3", 3)) || (!strncasecmp(entries[i].shortExt, "ogg", 3)) || (!strncasecmp(entries[i].shortExt, "opu", 3))
+				if (/*(!strncasecmp(entries[i].shortExt, "fla", 3)) || */(!strncasecmp(entries[i].shortExt, "it", 2)) || (!strncasecmp(entries[i].shortExt, "mod", 3))
+					|| (!strncasecmp(entries[i].shortExt, "mp3", 3)) || (!strncasecmp(entries[i].shortExt, "ogg", 3)) /*|| (!strncasecmp(entries[i].shortExt, "opu", 3))*/
 					|| (!strncasecmp(entries[i].shortExt, "s3m", 3)) || (!strncasecmp(entries[i].shortExt, "wav", 3)) || (!strncasecmp(entries[i].shortExt, "xm", 2))) {
 					strcpy(playlist[count], cwd);
 					strcpy(playlist[count] + strlen(playlist[count]), name);
@@ -142,6 +143,7 @@ void Menu_PlayMusic(char *path) {
 	bool locked = false;
 	
 	while (aptMainLoop()) {
+		_3dsAudioRunThread();
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
 		C2D_TargetClear(RENDER_TOP, config.dark_theme? BLACK_BG : WHITE);
 		C2D_TargetClear(RENDER_BOTTOM, config.dark_theme? BLACK_BG : WHITE);
@@ -200,7 +202,7 @@ void Menu_PlayMusic(char *path) {
 
 		Draw_Image(ic_music_bg_bottom, 0, 0);
 
-		if (!paused)
+		if (!Audio_IsPaused())
 			Draw_Image(btn_pause, ((320 - btn_pause.subtex->width) / 2) - 2, ((240 - btn_pause.subtex->height) / 2));
 		else
 			Draw_Image(btn_play, ((320 - btn_play.subtex->width) / 2), ((240 - btn_play.subtex->height) / 2));

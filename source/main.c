@@ -1,5 +1,4 @@
 #include <3ds.h>
-#include <SDL/SDL.h>
 
 #include "common.h"
 #include "config.h"
@@ -31,7 +30,6 @@ static void Term_Services(void) {
 	C3D_Fini();
 	gfxExit();
 	romfsExit();
-	SDL_Quit();
 	ptmuExit();
 	mcuHwcExit();
 	amExit();
@@ -44,7 +42,6 @@ static void Init_Services(void) {
 	AM_QueryAvailableExternalTitleDatabase(NULL);
 	mcuHwcInit();
 	ptmuInit();
-	SDL_Init(SDL_INIT_AUDIO);
 	romfsInit();
 	gfxInitDefault();
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
