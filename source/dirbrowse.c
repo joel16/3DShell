@@ -103,7 +103,6 @@ Result Dirbrowse_PopulateFiles(bool clear) {
 					
 				File *item = (File *)malloc(sizeof(File));
 				memset(item, 0, sizeof(File));
-
 				strcpy((char *)item->name, name); // Copy file name
 				strcpy(item->ext, entries[i].shortExt); // Copy file extension
 				item->size = entries[i].fileSize; // Copy file size
