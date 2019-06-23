@@ -185,7 +185,7 @@ u8 MP3_GetChannels(void) {
 
 void MP3_Decode(void *buf, unsigned int length, void *userdata) {
 	size_t done = 0;
-	mpg123_read(mp3, buf, length * (sizeof(s16) * 2), &done);
+	mpg123_read(mp3, buf, length * (sizeof(s16) * channels), &done);
 	frames_read += done/(sizeof(s16) * 2);
 
 	if (frames_read >= total_samples)

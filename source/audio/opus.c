@@ -97,5 +97,16 @@ u64 OPUS_GetLength(void) {
 
 void OPUS_Term(void) {
 	samples_read = 0;
+
+	if (metadata.has_meta) {
+		metadata.has_meta = false;
+
+		if (metadata.cover_image.tex) {
+			C3D_TexDelete(metadata.cover_image.tex);
+			linearFree((Tex3DS_SubTexture *)metadata.cover_image.subtex);
+			metadata.cover_image.tex = NULL;
+		}
+	}
+
 	op_free(opus);
 }

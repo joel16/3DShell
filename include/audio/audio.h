@@ -19,7 +19,7 @@ typedef struct {
 
 extern Audio_Metadata metadata;
 
-void Audio_Callback(void *userdata, s16 *stream, int length);
+void Audio_Callback(void *userdata, void *stream, int length);
 void Audio_Init(const char *path);
 bool Audio_IsPaused(void);
 void Audio_Pause(void);

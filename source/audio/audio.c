@@ -97,30 +97,30 @@ static u8 Audio_GetChannels(void) {
 	return channels;
 }
 
-void Audio_Callback(void *userdata, s16 *stream, int length) {
+void Audio_Callback(void *userdata, void *stream, int length) {
 	switch(file_type) {
 		case FILE_TYPE_FLAC:
-			FLAC_Decode(stream, length / 4, userdata);
+			FLAC_Decode(stream, length / (Audio_GetChannels() * sizeof(s16)), userdata);
 			break;
 
 		case FILE_TYPE_MP3:
-			MP3_Decode(stream, length / 4, userdata);
+			MP3_Decode(stream, length / (Audio_GetChannels() * sizeof(s16)), userdata);
 			break;
 
 		case FILE_TYPE_OGG:
-			OGG_Decode(stream, length / 4, userdata);
+			OGG_Decode(stream, length / (Audio_GetChannels() * sizeof(s16)), userdata);
 			break;
 
 		case FILE_TYPE_OPUS:
-			OPUS_Decode(stream, length / 4, userdata);
+			OPUS_Decode(stream, length / (Audio_GetChannels() * sizeof(s16)), userdata);
 			break;
 
 		case FILE_TYPE_WAV:
-			WAV_Decode(stream, length / 4, userdata);
+			WAV_Decode(stream, length / (Audio_GetChannels() * sizeof(s16)), userdata);
 			break;
 
 		case FILE_TYPE_XM:
-			XM_Decode(stream, length / 4, userdata);
+			XM_Decode(stream, length / (Audio_GetChannels() * sizeof(s16)), userdata);
 			break;
 
 		default:
@@ -154,36 +154,45 @@ void Audio_Init(const char *path) {
 		|| (!strncasecmp(Audio_GetFileExt(path), "s3m", 3)) || (!strncasecmp(Audio_GetFileExt(path), "xm", 2)))
 		file_type = FILE_TYPE_XM;
 
+	u32 samples = 0;
+
 	switch(file_type) {
 		case FILE_TYPE_FLAC:
 			FLAC_Init(path);
+			samples = 1024;
 			break;
 
 		case FILE_TYPE_MP3:
 			MP3_Init(path);
+			samples = 4096;
 			break;
 
 		case FILE_TYPE_OGG:
 			OGG_Init(path);
+			samples = 4096;
 			break;
 
 		case FILE_TYPE_OPUS:
 			OPUS_Init(path);
+			samples = 960;
 			break;
 
 		case FILE_TYPE_WAV:
 			WAV_Init(path);
+			samples = 4096;
 			break;
 
 		case FILE_TYPE_XM:
 			XM_Init(path);
+			samples = 4096;
 			break;
 
 		default:
 			break;
 	}
 
-	_3dsAudioInit(Audio_GetChannels(), Audio_GetSampleRate());
+	_3dsAudioInit(Audio_GetChannels(), Audio_GetSampleRate(), samples);
+	_3dsAudioCreateThread();
 }
 
 bool Audio_IsPaused(void) {
@@ -310,6 +319,6 @@ void Audio_Term(void) {
 
 	// Clear metadata struct
 	metadata = empty;
-	_3dsAudioEndPre();
+	_3dsAudioExitThread();
 	_3dsAudioEnd();
 }

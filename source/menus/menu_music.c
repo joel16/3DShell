@@ -1,6 +1,7 @@
 #include <3ds.h>
 #include <stdlib.h>
 
+#include "3dsaudiolib.h"
 #include "audio.h"
 #include "C2D_helper.h"
 #include "common.h"
@@ -142,6 +143,7 @@ void Menu_PlayMusic(char *path) {
 	bool locked = false;
 	
 	while (aptMainLoop()) {
+		_3dsAudioRunThread();
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
 		C2D_TargetClear(RENDER_TOP, config.dark_theme? BLACK_BG : WHITE);
 		C2D_TargetClear(RENDER_BOTTOM, config.dark_theme? BLACK_BG : WHITE);

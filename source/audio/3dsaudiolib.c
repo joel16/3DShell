@@ -4,39 +4,24 @@
 #include "3dsaudiolib.h"
 #include "audio.h"
 
-#define AUDIO_BUFSIZE 960
-#define NUM_BUFFERS   2
+static ndspWaveBuf wave_buf[2];
+static s16 *audio_buffer[2] = {0};
+static size_t buf_size = 0;
+Thread thread;
+Handle handle;
+volatile bool run_thread = true;
 
-static ndspWaveBuf wave_buf[NUM_BUFFERS];
-static u32 *audio_buffer = NULL;
-static bool fill_block = false;
-static int buf_size = 0;
-
-static void ndsp_callback(void *userdata) {
-	if (wave_buf[fill_block].status == NDSP_WBUF_DONE) {
-		Audio_Callback(userdata, wave_buf[fill_block].data_pcm16, buf_size);
-		DSP_FlushDataCache(wave_buf[fill_block].data_pcm8, AUDIO_BUFSIZE * 4);
-		wave_buf[fill_block].status = NDSP_WBUF_FREE;
-		ndspChnWaveBufAdd(0, &wave_buf[fill_block]);
-		fill_block = !fill_block;
-	}
+static void _3dsAudioDecodeSamples(s16 *buf, u32 size) {
+	Audio_Callback(NULL, buf, size);
+	DSP_FlushDataCache(buf, size);
 }
 
-Result _3dsAudioInit(u8 channels, float rate) {
+Result _3dsAudioInit(u8 channels, float rate, u32 samples) {
 	Result ret = 0;
-	
-	buf_size = sizeof(s16) * 2 * AUDIO_BUFSIZE;
 
 	if (R_FAILED(ret = ndspInit()))
 		return ret;
-
-	audio_buffer = (u32 *)linearAlloc(buf_size * 2);
-	memset(audio_buffer, 0, buf_size * 2);
-	ndspSetCallback(ndsp_callback, audio_buffer);
-
-	memset(&wave_buf[0], 0, sizeof(ndspWaveBuf));
-	memset(&wave_buf[1], 0, sizeof(ndspWaveBuf));
-
+	
 	ndspChnReset(0);
 	ndspChnWaveBufClear(0);
 	ndspSetOutputMode(channels == 2? NDSP_OUTPUT_STEREO : NDSP_OUTPUT_MONO);
@@ -44,22 +29,62 @@ Result _3dsAudioInit(u8 channels, float rate) {
 	ndspChnSetRate(0, rate);
 	ndspChnSetFormat(0, channels == 2? NDSP_FORMAT_STEREO_PCM16 : NDSP_FORMAT_MONO_PCM16);
 
-	wave_buf[0].data_vaddr = &audio_buffer[0];
-	wave_buf[0].nsamples = AUDIO_BUFSIZE;
-	ndspChnWaveBufAdd(0, &wave_buf[0]);
+	buf_size = sizeof(s16) * channels * samples;
 
-	wave_buf[1].data_vaddr = &audio_buffer[buf_size];
-	wave_buf[1].nsamples = AUDIO_BUFSIZE;
-	ndspChnWaveBufAdd(0, &wave_buf[1]);
+	for (int i = 0; i < 2; i++) {
+		ndspWaveBuf *buf = &wave_buf[i];
+		memset(buf, 0, sizeof(ndspWaveBuf));
+
+		audio_buffer[i] = (s16 *)linearAlloc(buf_size);
+		buf->data_vaddr = audio_buffer[i];
+		buf->nsamples = samples;
+		_3dsAudioDecodeSamples(buf->data_pcm16, buf_size);
+		ndspChnWaveBufAdd(0, buf);
+	}
 
 	return 0;
 }
 
-void _3dsAudioEndPre(void) {
-	return;
+void _3dsAudioEnd(void) {
+	ndspChnWaveBufClear(0);
+
+	for (int i = 0; i < 2; i++) {
+		if (audio_buffer[i])
+			linearFree(audio_buffer[i]);
+	}
 }
 
-void _3dsAudioEnd(void) {
-	linearFree(audio_buffer);
-	ndspExit();
+static void _3dsAudioFillBuffers(void) {
+	for (int i = 0; i < 2; i++) {
+		ndspWaveBuf *buf = &wave_buf[i];
+		if (buf->status == NDSP_WBUF_DONE || buf->status == NDSP_WBUF_FREE) {
+			_3dsAudioDecodeSamples(buf->data_pcm16, buf_size);
+			ndspChnWaveBufAdd(0, buf);
+		}
+	}
+}
+
+void _3dsAudioThread(void *arg) {
+	while(run_thread) {
+		svcWaitSynchronization(handle, U64_MAX);
+		svcClearEvent(handle);
+		_3dsAudioFillBuffers();
+	}
+}
+
+void _3dsAudioCreateThread(void) {
+	run_thread = true;
+	svcCreateEvent(&handle, 0);
+	thread = threadCreate(_3dsAudioThread, 0, 4 * 1024, 0x3f, -2, true);
+}
+
+void _3dsAudioRunThread(void) {
+	svcSignalEvent(handle);
+}
+
+void _3dsAudioExitThread(void) {
+	run_thread = false;
+	svcSignalEvent(handle);
+	threadJoin(thread, U64_MAX);
+	svcCloseHandle(handle);
 }

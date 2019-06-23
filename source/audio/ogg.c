@@ -58,11 +58,11 @@ u8 OGG_GetChannels(void) {
 
 static u64 OGG_FillBuffer(char *out) {
 	u64 samples_read = 0;
-	int samples_to_read = (sizeof(s16) * ogg_info->channels) * 960;
+	int samples_to_read = (sizeof(s16) * ogg_info->channels) * 4096;
 
 	while(samples_to_read > 0) {
 		static int current_section;
-		int samples_just_read = ov_read(&ogg, out, samples_to_read > 960 ? 960 : samples_to_read, &current_section);
+		int samples_just_read = ov_read(&ogg, out, samples_to_read > 4096 ? 4096 : samples_to_read, &current_section);
 
 		if (samples_just_read < 0)
 			return samples_just_read;
