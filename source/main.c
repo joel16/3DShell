@@ -40,7 +40,7 @@ static void Init_Services(void) {
 	acInit();
 	amInit();
 	AM_QueryAvailableExternalTitleDatabase(NULL);
-	//mcuHwcInit();
+	mcuHwcInit();
 	ptmuInit();
 	romfsInit();
 	gfxInitDefault();
