@@ -9,6 +9,7 @@
 static mpg123_handle *mp3;
 static u64 frames_read = 0, total_samples = 0;
 static int channels = 0;
+static long sample_rate = 0;
 
 // 147 ID3 tagv1 list
 static char *genre_list[] = {
@@ -122,7 +123,6 @@ static void print_v2(Audio_Metadata *ID3tag, mpg123_id3v2 *v2) {
 
 int MP3_Init(const char *path) {
 	int error = 0;
-	long sample_rate = 0;
 
 	error = mpg123_init();
 	if (error != MPG123_OK)
@@ -169,14 +169,14 @@ int MP3_Init(const char *path) {
 
 	mpg123_getformat(mp3, &sample_rate, &channels, NULL);
 	mpg123_format_none(mp3);
-	mpg123_format(mp3, 44100, channels, MPG123_ENC_SIGNED_16);
+	mpg123_format(mp3, sample_rate, channels, MPG123_ENC_SIGNED_16);
 
 	total_samples = mpg123_length(mp3);
 	return 0;
 }
 
 u32 MP3_GetSampleRate(void) {
-	return 44100;
+	return sample_rate;
 }
 
 u8 MP3_GetChannels(void) {
