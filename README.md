@@ -45,7 +45,7 @@ Building from source:
 
 3. Recursively clone the repo:
 ```bash
-git clone --recursive https://github.com/joel16/3DShell.git
+git clone https://github.com/joel16/3DShell.git
 ```
 4. Open the project diretory:
 ```bash
