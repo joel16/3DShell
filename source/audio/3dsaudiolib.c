@@ -52,6 +52,8 @@ void _3dsAudioEnd(void) {
 		if (audio_buffer[i])
 			linearFree(audio_buffer[i]);
 	}
+
+	ndspExit();
 }
 
 static void _3dsAudioFillBuffers(void) {
@@ -75,7 +77,10 @@ void _3dsAudioThread(void *arg) {
 void _3dsAudioCreateThread(void) {
 	run_thread = true;
 	svcCreateEvent(&handle, 0);
-	thread = threadCreate(_3dsAudioThread, 0, 4 * 1024, 0x3f, -2, true);
+	
+	s32 priority = 0;
+	svcGetThreadPriority(&priority, CUR_THREAD_HANDLE);
+	thread = threadCreate(_3dsAudioThread, NULL, 16 * 1024, priority - 1, -2, true);
 }
 
 void _3dsAudioRunThread(void) {
