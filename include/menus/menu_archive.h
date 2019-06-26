@@ -1,5 +1,5 @@
-#ifndef ARCHIVE_H
-#define ARCHIVE_H
+#ifndef _3D_SHELL_MENU_ARCHIVE_H
+#define _3D_SHELL_MENU_ARCHIVE_H
 
 #include <3ds.h>
 

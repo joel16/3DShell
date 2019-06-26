@@ -6,7 +6,7 @@
 #include "C2D_helper.h"
 #include "textures.h"
 
-void ProgressBar_DisplayProgress(char *msg, char *src, u32 offset, u32 size) {
+void ProgressBar_DisplayProgress(char *msg, const char *src, u32 offset, u32 size) {
 	C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
 	C2D_TargetClear(RENDER_BOTTOM, config.dark_theme? BLACK_BG : WHITE);
 	C2D_SceneBegin(RENDER_BOTTOM);

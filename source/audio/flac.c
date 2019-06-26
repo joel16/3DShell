@@ -120,7 +120,3 @@ int chmod(const char *pathname, mode_t mode) {
 int chown(const char *path, int owner, int group) {
 	return 0;
 }
-
-int utime(const char *filename, const void *buf) {
-	return 0;
-}

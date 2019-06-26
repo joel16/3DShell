@@ -13,7 +13,6 @@ void Textures_Load(void) {
 	icon_audio = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_type_audio_idx);
 	icon_dir = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_folder_idx);
 	icon_dir_dark = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_folder_dark_idx);
-	icon_doc = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_type_document_idx);
 	icon_file = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_default_idx);
 	icon_image = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_type_image_idx);
 	icon_text = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_type_text_idx);

@@ -44,9 +44,11 @@ static Result Menu_GetMusicList(void) {
 			for (u32 i = 0; i < entryCount; i++) {
 				Utils_U16_To_U8((u8 *)&name[0], entries[i].name, 255);
 
-				if (/*(!strncasecmp(entries[i].shortExt, "fla", 3)) || */(!strncasecmp(entries[i].shortExt, "it", 2)) || (!strncasecmp(entries[i].shortExt, "mod", 3))
-					|| (!strncasecmp(entries[i].shortExt, "mp3", 3)) || (!strncasecmp(entries[i].shortExt, "ogg", 3)) /*|| (!strncasecmp(entries[i].shortExt, "opu", 3))*/
-					|| (!strncasecmp(entries[i].shortExt, "s3m", 3)) || (!strncasecmp(entries[i].shortExt, "wav", 3)) || (!strncasecmp(entries[i].shortExt, "xm", 2))) {
+				if (/*(!strncasecmp(entries[i].shortExt, "fla", 3)) || */(!strncasecmp(entries[i].shortExt, "it", 2))
+					|| (!strncasecmp(entries[i].shortExt, "mod", 3)) || (!strncasecmp(entries[i].shortExt, "mp3", 3))
+					|| (!strncasecmp(entries[i].shortExt, "ogg", 3)) /*|| (!strncasecmp(entries[i].shortExt, "opu", 3))*/
+					|| (!strncasecmp(entries[i].shortExt, "s3m", 3)) || (!strncasecmp(entries[i].shortExt, "wav", 3))
+					|| (!strncasecmp(entries[i].shortExt, "xm", 2))) {
 					strcpy(playlist[count], cwd);
 					strcpy(playlist[count] + strlen(playlist[count]), name);
 					count++;

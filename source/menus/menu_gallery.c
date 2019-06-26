@@ -53,9 +53,11 @@ static Result Gallery_GetImageList(void) {
 			for (u32 i = 0; i < entryCount; i++) {
 				Utils_U16_To_U8((u8 *)&name[0], entries[i].name, 255);
 
-				if ((!strncasecmp(entries[i].shortExt, "bmp", 3)) || (!strncasecmp(entries[i].shortExt, "gif", 3)) || (!strncasecmp(entries[i].shortExt, "jpg", 3))
-					|| (!strncasecmp(entries[i].shortExt, "jpe", 3)) || (!strncasecmp(entries[i].shortExt, "pcx", 3)) || (!strncasecmp(entries[i].shortExt, "png", 3))
-					|| (!strncasecmp(entries[i].shortExt, "pgm", 3)) || (!strncasecmp(entries[i].shortExt, "ppm", 3)) || (!strncasecmp(entries[i].shortExt, "tga", 3))) {
+				if ((!strncasecmp(entries[i].shortExt, "bmp", 3)) || (!strncasecmp(entries[i].shortExt, "gif", 3))
+					|| (!strncasecmp(entries[i].shortExt, "jpg", 3)) || (!strncasecmp(entries[i].shortExt, "jpe", 3))
+					|| (!strncasecmp(entries[i].shortExt, "pcx", 3)) || (!strncasecmp(entries[i].shortExt, "png", 3))
+					|| (!strncasecmp(entries[i].shortExt, "pgm", 3)) || (!strncasecmp(entries[i].shortExt, "ppm", 3))
+					|| (!strncasecmp(entries[i].shortExt, "tga", 3))) {
 					strcpy(album[count], cwd);
 					strcpy(album[count] + strlen(album[count]), name);
 					count++;
@@ -154,7 +156,8 @@ void Gallery_DisplayImage(char *path) {
 
 		switch (dimensions) {
 			case DIMENSION_DEFAULT:
-				Gallery_DrawImage(image, ((400 - (width * zoom_factor)) / 2), ((240 - (height * zoom_factor)) / 2), 0, 0, width, height, zoom_factor);
+				Gallery_DrawImage(image, ((400 - (width * zoom_factor)) / 2), ((240 - (height * zoom_factor)) / 2), 0, 0, 
+					width, height, zoom_factor);
 				break;
 
 			case DIMENSION_NINTENDO_SCREENSHOT:
