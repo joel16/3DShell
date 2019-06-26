@@ -42,10 +42,11 @@ Building from source:
 * `sudo dkp-pacman -Syu 3ds-mpg123 --noconfirm`
 * `sudo dkp-pacman -Syu 3ds-opusfile --noconfirm`
 * `sudo dkp-pacman -Syu 3ds-flac --noconfirm`
+* `sudo dkp-pacman -Syu 3ds-libarchive --noconfirm`
 
 3. Recursively clone the repo:
 ```bash
-git clone https://github.com/joel16/3DShell.git
+git clone --recursive https://github.com/joel16/3DShell.git
 ```
 4. Open the project diretory:
 ```bash
