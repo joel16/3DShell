@@ -103,6 +103,8 @@ Result CIA_InstallTitle(const char *path, FS_MediaType media, bool update) {
 	}
 	
 	if (update) {
+		FS_RemoveFile(archive, path);
+		
 		if (R_FAILED(ret = CIA_LaunchTitle(title.titleID, MEDIATYPE_SD)))
 			return ret;
 	}
