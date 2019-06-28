@@ -175,6 +175,11 @@ bool Draw_LoadImageFile(C2D_Image *texture, const char *path) {
 
 	image = stbi_load(path, &width, &height, NULL, STBI_rgb_alpha);
 
+	if (width > 1024 || height > 1024) {
+		stbi_image_free(image);
+		return false;
+	}
+
 	for (u32 row = 0; row < (u32)width; row++) {
 		for (u32 col = 0; col < (u32)height; col++) {
 			u32 z = (row + col * (u32)width) * BYTES_PER_PIXEL;
@@ -196,6 +201,7 @@ bool Draw_LoadImageFile(C2D_Image *texture, const char *path) {
 	Draw_C3DTexToC2DImage(tex, subtex, image, (u32)(width * height * BYTES_PER_PIXEL), (u32)width, (u32)height, GPU_RGBA8);
 	texture->tex = tex;
 	texture->subtex = subtex;
+	stbi_image_free(image);
 	return true;
 }
 
@@ -261,6 +267,12 @@ bool Draw_LoadImageFileGIF(C2D_Image *texture, const char *path) {
 
 	u8 *image = (u8 *)gif.frame_image;
 
+	if (gif.width > 1024 || gif.height > 1024) {
+		gif_finalise(&gif);
+		linearFree(image);
+		return false;
+	}
+
 	for (u32 row = 0; row < (u32)gif.width; row++) {
 		for (u32 col = 0; col < (u32)gif.height; col++) {
 			u32 z = (row + col * (u32)gif.width) * BYTES_PER_PIXEL;
@@ -293,6 +305,11 @@ bool Draw_LoadImageFilePCX(C2D_Image *texture, const char *path) {
 
 	image = drpcx_load_file(path, DRPCX_FALSE, &width, &height, NULL, BYTES_PER_PIXEL);
 
+	if (width > 1024 || height > 1024) {
+		drpcx_free(image);
+		return false;
+	}
+
 	for (u32 row = 0; row < (u32)width; row++) {
 		for (u32 col = 0; col < (u32)height; col++) {
 			u32 z = (row + col * (u32)width) * BYTES_PER_PIXEL;
@@ -314,6 +331,7 @@ bool Draw_LoadImageFilePCX(C2D_Image *texture, const char *path) {
 	Draw_C3DTexToC2DImage(tex, subtex, image, (u32)(width * height * BYTES_PER_PIXEL), (u32)width, (u32)height, GPU_RGBA8);
 	texture->tex = tex;
 	texture->subtex = subtex;
+	drpcx_free(image);
 	return true;
 }
 
@@ -322,6 +340,11 @@ bool Draw_LoadImageMemory(C2D_Image *texture, void *data, size_t size) {
 	int width = 0, height = 0;
 
 	image = stbi_load_from_memory((stbi_uc const *)data, size, &width, &height, NULL, STBI_rgb_alpha);
+
+	if (width > 1024 || height > 1024) {
+		stbi_image_free(image);
+		return false;
+	}
 	
 	for (u32 row = 0; row < (u32)width; row++) {
 		for (u32 col = 0; col < (u32)height; col++) {
@@ -344,5 +367,6 @@ bool Draw_LoadImageMemory(C2D_Image *texture, void *data, size_t size) {
 	Draw_C3DTexToC2DImage(tex, subtex, image, (u32)(width * height * BYTES_PER_PIXEL), (u32)width, (u32)height, GPU_RGBA8);
 	texture->tex = tex;
 	texture->subtex = subtex;
+	stbi_image_free(image);
 	return true;
 }
