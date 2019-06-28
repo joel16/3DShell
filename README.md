@@ -1,11 +1,12 @@
 # 3DShell [![Build Status](https://travis-ci.org/joel16/3DShell.svg?branch=master)](https://travis-ci.org/joel16/3DShell) ![Github latest downloads](https://img.shields.io/github/downloads/joel16/3DShell/total.svg)
 
-![3DShell Banner](http://i.imgur.com/Z2pzVVZ.png)
-
+<p align="center">
+  <img src="https://i.imgur.com/pNZ3gPh.png" alt="3DShell Screenshot"/>
+</p>
 
 Purpose:
 --------------------------------------------------------------------------------
-3DShell (pronounced 3D-Shell) - is a multi-purpose file manager for the Nintendo 3DS that aims towards handling media files. Unlike [FBI](https://github.com/Steveice10/FBI) which specializes more in title management, 3DShell leans towards more of the file management features such as opening and managing various files types and includes the basic necessity of a standard file manager. This program's design elements are clearly inspired by CyanogenMod/LineageOs's built in file manager, and so all credits towards the deisgn go to the CyanogenMod/LineageOs contributors.
+3DShell (pronounced 3D-Shell) - is a multi-purpose file manager for the Nintendo 3DS that aims towards handling media files. Unlike [FBI](https://github.com/Steveice10/FBI) which specializes more in title management, 3DShell leans towards more of the file management features such as opening and managing various files types and includes the basic necessity of a standard file manager. This program's design elements are clearly inspired by CyanogenMod/LineageOS's built in file manager, and so all credits towards the design go to the CyanogenMod/LineageOS contributors.
 
 
 Current features:
