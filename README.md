@@ -1,12 +1,12 @@
 # 3DShell [![Build Status](https://travis-ci.org/joel16/3DShell.svg?branch=master)](https://travis-ci.org/joel16/3DShell) ![Github latest downloads](https://img.shields.io/github/downloads/joel16/3DShell/total.svg)
 
-![3DShell Banner](http://i.imgur.com/Z2pzVVZ.png)
-
-
 Purpose:
 --------------------------------------------------------------------------------
-3DShell (pronounced 3D-Shell) - is a multi-purpose file manager GUI for the Nintendo 3DS. The program is currently in its early stages and lacks many features that are currently in development. More information will be given once the program matures. This program's design elements are clearly inspired by CyanogenMod's built in file manager, and so I take no credit for that.
+3DShell (pronounced 3D-Shell) - is a multi-purpose file manager for the Nintendo 3DS that aims towards handling media files. Unlike [FBI](https://github.com/Steveice10/FBI) which specializes more in title management, 3DShell leans towards more of the file management features such as opening and managing various files types and includes the basic necessity of a standard file manager. This program's design elements are clearly inspired by CyanogenMod/LineageOS's built in file manager, and so all credits towards the design go to the CyanogenMod/LineageOS contributors.
 
+<p align="center">
+  <img src="https://i.imgur.com/pNZ3gPh.png" alt="3DShell Screenshot"/>
+</p>
 
 Current features:
 --------------------------------------------------------------------------------
@@ -21,7 +21,7 @@ Current features:
 - Image preview (If the image is around 400 * 480 which is the size of both screens, the image will be split in half and displayed. Support for the following image formats -> BMP, GIF - non animated, JPG, PCX, PNG, PGM, PPM and TGA)
 - Extract various archives such as ZIP, RAR, 7Z, ISO 9660, AR, XAR and others supported by libarchive.
 - Searching for directories (allows you to quickly visit a directory by clicking the search icon on the top right (bottom screen).)
-- File properties - lets you view info on current file/folder.
+- File properties - lets you view info on current file/folder, such as size, modified time, parent folder etc.
 - Screenshots - Press (L + R) -> (/screenshots/Screenshot_YearMonthDay-Num.bmp)
 - Fast scroll - Use analog stick.
 - File timestamps.
@@ -32,7 +32,7 @@ Current features:
 
 Building from source:
 --------------------------------------------------------------------------------
-1. Ensure you have the devkitPro, ctrulib and citro3D installed correctly. Make sure you have [makerom](https://github.com/profi200/Project_CTR) and [bannertool](https://github.com/Steveice10/bannertool) in your path as well.
+1. Ensure you have the devkitPro, ctrulib and citro3D and citro2D installed correctly. Make sure you have [makerom](https://github.com/profi200/Project_CTR) and [bannertool](https://github.com/Steveice10/bannertool) installed into your path as well.
 
 2. Install the following dependecies from [devkitPro's pacman](https://devkitpro.org/viewtopic.php?f=13&t=8702):
 * `sudo dkp-pacman -Syu 3ds-dev --noconfirm --needed`
@@ -44,7 +44,7 @@ Building from source:
 * `sudo dkp-pacman -Syu 3ds-flac --noconfirm`
 * `sudo dkp-pacman -Syu 3ds-libarchive --noconfirm`
 
-3. Recursively clone the repo:
+3. Clone the 3DShell repository:
 ```bash
 git clone --recursive https://github.com/joel16/3DShell.git
 ```
@@ -52,11 +52,7 @@ git clone --recursive https://github.com/joel16/3DShell.git
 ```bash
 cd 3DShell/
 ```
-5. Update the submodules:
-```bash
-git submodule foreach git pull origin master
-```
-6. Build the binary using make:
+5. Build the binary using make:
 ```bash
 make
 ```
