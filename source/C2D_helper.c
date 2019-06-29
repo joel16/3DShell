@@ -26,15 +26,19 @@
 #define BYTES_PER_PIXEL 4
 #define TRANSPARENT_COLOR 0xFFFFFFFF
 
+C3D_RenderTarget *RENDER_TOP, *RENDER_BOTTOM;
+C2D_TextBuf c2d_static_buf, c2d_dynamic_buf, c2d_size_buf;
+C2D_Font font;
+
 void Draw_EndFrame(void) {
-	C2D_TextBufClear(dynamicBuf);
-	C2D_TextBufClear(sizeBuf);
+	C2D_TextBufClear(c2d_dynamic_buf);
+	C2D_TextBufClear(c2d_size_buf);
 	C3D_FrameEnd(0);
 }
 
 void Draw_Text(float x, float y, float size, Colour colour, const char *text) {
 	C2D_Text c2d_text;
-	C2D_TextParse(&c2d_text, dynamicBuf, text);
+	C2D_TextFontParse(&c2d_text, font, c2d_dynamic_buf, text);
 	C2D_TextOptimize(&c2d_text);
 	C2D_DrawText(&c2d_text, C2D_WithColor, x, y, 0.5f, size, size, colour);
 }
@@ -50,7 +54,7 @@ void Draw_Textf(float x, float y, float size, Colour colour, const char* text, .
 
 void Draw_GetTextSize(float size, float *width, float *height, const char *text) {
 	C2D_Text c2d_text;
-	C2D_TextParse(&c2d_text, sizeBuf, text);
+	C2D_TextFontParse(&c2d_text, font, c2d_size_buf, text);
 	C2D_TextGetDimensions(&c2d_text, size, size, width, height);
 }
 

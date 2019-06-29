@@ -18,9 +18,9 @@
 #define TEXT_MIN_COLOUR_DARK  C2D_Color32(185, 185, 185, 255)
 #define BAR_COLOUR            C2D_Color32(200, 200, 200, 255)
 
-C3D_RenderTarget *RENDER_TOP, *RENDER_BOTTOM;
-C2D_TextBuf staticBuf, dynamicBuf, sizeBuf;
-
+extern C3D_RenderTarget *RENDER_TOP, *RENDER_BOTTOM;
+extern C2D_TextBuf c2d_static_buf, c2d_dynamic_buf, c2d_size_buf;
+extern C2D_Font font;
 typedef u32 Colour;
 
 void Draw_EndFrame(void);

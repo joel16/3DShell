@@ -19,9 +19,10 @@ static void Term_Services(void) {
 	FS_CloseArchive(nand_archive);
 	FS_CloseArchive(sdmc_archive);
 
-	C2D_TextBufDelete(sizeBuf);
-	C2D_TextBufDelete(dynamicBuf);
-	C2D_TextBufDelete(staticBuf);
+	C2D_FontFree(font);
+	C2D_TextBufDelete(c2d_size_buf);
+	C2D_TextBufDelete(c2d_dynamic_buf);
+	C2D_TextBufDelete(c2d_static_buf);
 
 	if (cpu_time_limit != UINT32_MAX)
 		APT_SetAppCpuTimeLimit(cpu_time_limit);
@@ -54,9 +55,10 @@ static void Init_Services(void) {
 	APT_GetAppCpuTimeLimit(&cpu_time_limit);
 	APT_SetAppCpuTimeLimit(30);
 
-	staticBuf = C2D_TextBufNew(4096);
-	dynamicBuf = C2D_TextBufNew(4096);
-	sizeBuf = C2D_TextBufNew(4096);
+	c2d_static_buf = C2D_TextBufNew(4096);
+	c2d_dynamic_buf = C2D_TextBufNew(4096);
+	c2d_size_buf = C2D_TextBufNew(4096);
+	font = C2D_FontLoad("romfs:/res/drawable/Roboto-Regular.bcfnt");
 
 	RENDER_TOP = C2D_CreateScreenTarget(GFX_TOP, GFX_LEFT);
 	RENDER_BOTTOM = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
