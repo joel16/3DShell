@@ -440,24 +440,24 @@ void Menu_ControlDeleteDialog(u32 input) {
 
 void Menu_DisplayDeleteDialog(void) {
 	float text_width = 0;
-	Draw_GetTextSize(0.45f, &text_width, NULL, "Do you want to continue?");
+	Draw_GetTextSize(0.42f, &text_width, NULL, "Do you want to continue?");
 
-	Draw_GetTextSize(0.45f, &delete_confirm_width, &delete_confirm_height, "YES");
-	Draw_GetTextSize(0.45f, &delete_cancel_width, &delete_cancel_height, "NO");
+	Draw_GetTextSize(0.42f, &delete_confirm_width, &delete_confirm_height, "YES");
+	Draw_GetTextSize(0.42f, &delete_cancel_width, &delete_cancel_height, "NO");
 
 	Draw_Image(config.dark_theme? dialog_dark : dialog, ((320 - (dialog.subtex->width)) / 2), ((240 - (dialog.subtex->height)) / 2));
 
-	Draw_Text(((320 - (dialog.subtex->width)) / 2) + 6, ((240 - (dialog.subtex->height)) / 2) + 6, 0.45f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "Confirm deletion");
+	Draw_Text(((320 - (dialog.subtex->width)) / 2) + 6, ((240 - (dialog.subtex->height)) / 2) + 6 - 3, 0.42f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "Confirm deletion");
 
-	Draw_Text(((320 - (text_width)) / 2), ((240 - (dialog.subtex->height)) / 2) + 40, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Do you wish to continue?");
+	Draw_Text(((320 - (text_width)) / 2), ((240 - (dialog.subtex->height)) / 2) + 40 - 3, 0.42f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Do you wish to continue?");
 
 	if (delete_dialog_selection == 0)
 		Draw_Rect((288 - delete_cancel_width) - 5, (159 - delete_cancel_height) - 5, delete_cancel_width + 10, delete_cancel_height + 10, config.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
 	else if (delete_dialog_selection == 1)
 		Draw_Rect((248 - (delete_confirm_width)) - 5, (159 - delete_confirm_height) - 5, delete_confirm_width + 10, delete_confirm_height + 10, config.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
 
-	Draw_Text(248 - (delete_confirm_width), (159 - delete_confirm_height), 0.45f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "YES");
-	Draw_Text(288 - delete_cancel_width, (159 - delete_cancel_height), 0.45f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "NO");
+	Draw_Text(248 - (delete_confirm_width), (159 - delete_confirm_height) - 3, 0.42f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "YES");
+	Draw_Text(288 - delete_cancel_width, (159 - delete_cancel_height) - 3, 0.42f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "NO");
 }
 
 void Menu_ControlProperties(u32 input) {
@@ -478,7 +478,7 @@ void Menu_DisplayProperties(void) {
 	strcpy(path + strlen(path), file->name);
 
 	Draw_Image(config.dark_theme? properties_dialog_dark : properties_dialog, 54, 30);
-	Draw_Text(61, 37, 0.45f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "Properties");
+	Draw_Text(61, 34, 0.42f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "Properties");
 
 	char utils_size[16];
 	u64 size = 0;
@@ -488,21 +488,21 @@ void Menu_DisplayProperties(void) {
 		Utils_GetSizeString(utils_size, size);
 	}
 
-	Draw_Textf(66, 60, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Name: %.20s", file->name);
-	Draw_Textf(66, 76, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Parent: %.20s", cwd);
+	Draw_Textf(66, 57, 0.42f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Name: %.20s", file->name);
+	Draw_Textf(66, 73, 0.42f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Parent: %.20s", cwd);
 
 	if (!file->isDir) {
-		Draw_Textf(66, 92, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Size: %s", utils_size);
-		Draw_Textf(66, 108, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Modified time: %s", FS_GetFileTimestamp(path));
+		Draw_Textf(66, 89, 0.42f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Size: %s", utils_size);
+		Draw_Textf(66, 105, 0.42f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Modified time: %s", FS_GetFileTimestamp(path));
 	}
 	else {
 		if (strncmp(file->name, "..", 2))
-			Draw_Textf(66, 92, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Modified time: %s", FS_GetFileTimestamp(path));
+			Draw_Textf(66, 89, 0.42f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Modified time: %s", FS_GetFileTimestamp(path));
 	}
 
-	Draw_GetTextSize(0.45f, &properties_ok_width, &properties_ok_height, "OK");
+	Draw_GetTextSize(0.42f, &properties_ok_width, &properties_ok_height, "OK");
 	Draw_Rect((253 - properties_ok_width) - 5, (218 - properties_ok_height) - 5, properties_ok_width + 10, properties_ok_height + 10, config.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
-	Draw_Text(253 - properties_ok_width, 218 - properties_ok_height, 0.45f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "OK");
+	Draw_Text(253 - properties_ok_width, 218 - properties_ok_height - 3, 0.42f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "OK");
 }
 
 static void FileOptions_ClearCopyStatus(void) {
@@ -774,9 +774,9 @@ void Menu_ControlFileOptions(u32 input) {
 
 void Menu_DisplayFileOptions(void) {
 	Draw_Image(config.dark_theme? options_dialog_dark : options_dialog, 54, 30);
-	Draw_Text(61, 37, 0.45f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "Actions");
+	Draw_Text(61, 34, 0.42f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "Actions");
 
-	Draw_GetTextSize(0.45f, &options_cancel_width, &options_cancel_height, "CANCEL");
+	Draw_GetTextSize(0.42f, &options_cancel_width, &options_cancel_height, "CANCEL");
 	
 	if (row == 0 && column == 0)
 		Draw_Rect(56, 69, 103, 36, config.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
@@ -797,21 +797,21 @@ void Menu_DisplayFileOptions(void) {
 		Draw_Rect((256 - options_cancel_width) - 5, (221 - options_cancel_height) - 5, options_cancel_width + 10, options_cancel_height + 10, 
 			config.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
 
-	Draw_Text(256 - options_cancel_width, 221 - options_cancel_height, 0.45f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "CANCEL");
+	Draw_Text(256 - options_cancel_width, 221 - options_cancel_height - 3, 0.42f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "CANCEL");
 
 	if (!options_more) {
-		Draw_Text(66, 80, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Properties");
-		Draw_Text(66, 116, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, copy_status? "Paste" : "Copy");
-		Draw_Text(66, 152, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Delete");
+		Draw_Text(66, 78, 0.42f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Properties");
+		Draw_Text(66, 114, 0.42f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, copy_status? "Paste" : "Copy");
+		Draw_Text(66, 150, 0.42f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Delete");
 		
-		Draw_Text(170, 80, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Refresh");
-		Draw_Text(170, 116, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, cut_status? "Paste" : "Move");
-		Draw_Text(170, 152, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "More...");
+		Draw_Text(170, 78, 0.42f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Refresh");
+		Draw_Text(170, 114, 0.42f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, cut_status? "Paste" : "Move");
+		Draw_Text(170, 150, 0.42f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "More...");
 	}
 	else {
-		Draw_Text(66, 80, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "New folder");
-		Draw_Text(66, 116, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Rename");
+		Draw_Text(66, 78, 0.42f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "New folder");
+		Draw_Text(66, 114, 0.42f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Rename");
 
-		Draw_Text(170, 80, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "New file");
+		Draw_Text(170, 78, 0.42f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "New file");
 	}
 }

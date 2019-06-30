@@ -102,8 +102,8 @@ static void Music_Play(char *path) {
 	length_time_width = 0;
 
 	Menu_ConvertSecondsToString(length_time, Audio_GetLengthSeconds());
-	length_time_width = Draw_GetTextWidth(0.45f, length_time);
-	title_height = Draw_GetTextHeight(0.5f, strupr(filename));
+	length_time_width = Draw_GetTextWidth(0.44f, length_time);
+	title_height = Draw_GetTextHeight(0.44f, strupr(filename));
 	selection = Music_GetCurrentIndex(path);
 }
 
@@ -159,13 +159,13 @@ void Menu_PlayMusic(char *path) {
 			Draw_Image(icon_lock, 2, 2);
 
 		if ((metadata.has_meta) && (metadata.title[0] != '\0') && (metadata.artist[0] != '\0')) {
-			Draw_Text(5, 22, 0.5f, WHITE, strupr(metadata.title));
-			Draw_Text(5, 38, 0.45f, WHITE, strupr(metadata.artist));
+			Draw_Text(5, 19, 0.44f, WHITE, strupr(metadata.title));
+			Draw_Text(5, 35, 0.44f, WHITE, strupr(metadata.artist));
 		}
 		else if ((metadata.has_meta) && (metadata.title[0] != '\0'))
-			Draw_Text(5, ((37 - title_height) / 2) + 18, 0.5f, WHITE, strupr(metadata.title));
+			Draw_Text(5, ((37 - title_height) / 2) + 18 - 3, 0.44f, WHITE, strupr(metadata.title));
 		else
-			Draw_Text(5, ((37 - title_height) / 2) + 18, 0.5f, WHITE, strupr(filename));
+			Draw_Text(5, ((37 - title_height) / 2) + 18 - 3, 0.44f, WHITE, strupr(filename));
 
 		StatusBar_DisplayTime();
 
@@ -176,13 +176,13 @@ void Menu_PlayMusic(char *path) {
 
 		if (metadata.has_meta) {
 			if (metadata.album[0] != '\0')
-				Draw_Textf(185, 64, 0.5f, WHITE, "%.30s", metadata.album);
+				Draw_Textf(185, 61, 0.44f, WHITE, "%.30s", metadata.album);
 
 			if (metadata.year[0] != '\0')
-				Draw_Textf(185, 84, 0.5f, WHITE, "%.30s", metadata.year);
+				Draw_Textf(185, 81, 0.44f, WHITE, "%.30s", metadata.year);
 			
 			if (metadata.genre[0] != '\0')
-				Draw_Textf(185, 104, 0.5f, WHITE, "%.30s", metadata.genre);
+				Draw_Textf(185, 101, 0.44f, WHITE, "%.30s", metadata.genre);
 		}
 
 		if (metadata.cover_image.tex)
@@ -191,8 +191,8 @@ void Menu_PlayMusic(char *path) {
 			Draw_Image(default_artwork, 0, 57); // Default album art
 
 		Menu_ConvertSecondsToString(position_time, Audio_GetPositionSeconds());
-		Draw_Text(185, 205, 0.45f, WHITE, position_time);
-		Draw_Text(392 - length_time_width, 205, 0.45f, WHITE, length_time);
+		Draw_Text(185, 202, 0.44f, WHITE, position_time);
+		Draw_Text(392 - length_time_width, 202, 0.44f, WHITE, length_time);
 
 		// Progress bar
 		if (Audio_GetPosition() != -1) {

@@ -24,8 +24,8 @@ void Menu_DisplayText(char *path) {
 	fclose(fp);
 
     float height = 0, title_height = 0;
-    Draw_GetTextSize(0.48f, NULL, &height, "QWERTY");
-    Draw_GetTextSize(0.48f, NULL, &title_height, cwd);
+    Draw_GetTextSize(0.4f, NULL, &height, "QWERTY");
+    Draw_GetTextSize(0.4f, NULL, &title_height, cwd);
 
     while(aptMainLoop()) {
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
@@ -37,7 +37,7 @@ void Menu_DisplayText(char *path) {
 		Draw_Rect(0, 18, 400, 34, config.dark_theme? MENU_BAR_DARK : MENU_BAR_LIGHT); // Menu bar
 
 		StatusBar_DisplayTime();
-		Draw_Text(10, 18 + ((34 - title_height) / 2), 0.48f, WHITE, Utils_Basename(path));
+		Draw_Text(10, 18 + ((34 - title_height) / 2) - 3, 0.4f, WHITE, Utils_Basename(path));
 
 		int printed = 0; // Print counter
 
@@ -46,7 +46,7 @@ void Menu_DisplayText(char *path) {
 				break;
 
 			if (selection < 10 || index > (selection - 10)) {
-				Draw_Textf(5, 56 + ((18 - height) / 2) + (18 * printed), 0.48f, config.dark_theme? WHITE : BLACK, "%d)  %s", index, line[index]);
+				Draw_Textf(5, 56 + ((18 - height) / 2) + (18 * printed) - 3, 0.4f, config.dark_theme? WHITE : BLACK, "%d)  %s", index, line[index]);
 				printed++;
 			}
 		}

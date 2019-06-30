@@ -7,16 +7,16 @@
 #include "textures.h"
 #include "touch.h"
 
-void Menu_DisplayError(char *msg, Result ret) {
+void Menu_DisplayError(const char *msg, Result ret) {
 	float msg_width = 0, result_width = 0, confirm_width = 0, confirm_height = 0;
 	
 	char *result = malloc(64);
 	if (ret != 0)
 		snprintf(result, 64, "Ret: 0x%lx\n", ret);
 
-	Draw_GetTextSize(0.45f, &msg_width, NULL, msg);
-	Draw_GetTextSize(0.45f, &result_width, NULL, result);
-	Draw_GetTextSize(0.45f, &confirm_width, &confirm_height, "OK");
+	Draw_GetTextSize(0.42f, &msg_width, NULL, msg);
+	Draw_GetTextSize(0.42f, &result_width, NULL, result);
+	Draw_GetTextSize(0.42f, &confirm_width, &confirm_height, "OK");
 
 	while(aptMainLoop()) {
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
@@ -27,15 +27,15 @@ void Menu_DisplayError(char *msg, Result ret) {
 
 		Draw_Image(config.dark_theme? dialog_dark : dialog, ((320 - (dialog.subtex->width)) / 2), ((240 - (dialog.subtex->height)) / 2));
 
-		Draw_Text(((320 - (dialog.subtex->width)) / 2) + 6, ((240 - (dialog.subtex->height)) / 2) + 6, 0.45f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "Error");
+		Draw_Text(((320 - (dialog.subtex->width)) / 2) + 6, ((240 - (dialog.subtex->height)) / 2) + 6 - 3, 0.42f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "Error");
 
-		Draw_Text(((320 - (msg_width)) / 2), ((240 - (dialog.subtex->height)) / 2) + 34, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, msg);
+		Draw_Text(((320 - (msg_width)) / 2), ((240 - (dialog.subtex->height)) / 2) + 34 - 3, 0.42f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, msg);
 		
 		if (ret != 0)
-			Draw_Text(((320 - (result_width)) / 2), ((240 - (dialog.subtex->height)) / 2) + 48, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, result);
+			Draw_Text(((320 - (result_width)) / 2), ((240 - (dialog.subtex->height)) / 2) + 48 - 3, 0.42f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, result);
 
 		Draw_Rect((288 - confirm_width) - 5, (159 - confirm_height) - 5, confirm_width + 10, confirm_height + 10, config.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
-		Draw_Text(288 - confirm_width, (159 - confirm_height), 0.45f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "OK");
+		Draw_Text(288 - confirm_width, (159 - confirm_height) - 3, 0.42f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "OK");
 
 		Draw_EndFrame();
 

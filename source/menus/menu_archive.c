@@ -154,10 +154,10 @@ Result Archive_ExtractFile(const char *path) {
 	int dialog_selection = 0;
 	float text_width1 = 0, text_width2 = 0, confirm_width = 0, confirm_height = 0, cancel_width = 0, cancel_height = 0;
 	
-	Draw_GetTextSize(0.45f, &text_width1, NULL, "This may take a few minutes.");
-	Draw_GetTextSize(0.45f, &text_width2, NULL, "Do you want to continue?");
-	Draw_GetTextSize(0.45f, &confirm_width, &confirm_height, "YES");
-	Draw_GetTextSize(0.45f, &cancel_width, &cancel_height, "NO");
+	Draw_GetTextSize(0.42f, &text_width1, NULL, "This may take a few minutes.");
+	Draw_GetTextSize(0.42f, &text_width2, NULL, "Do you want to continue?");
+	Draw_GetTextSize(0.42f, &confirm_width, &confirm_height, "YES");
+	Draw_GetTextSize(0.42f, &cancel_width, &cancel_height, "NO");
 
 	char extension[5] = {0};
 	strncpy(extension, &path[strlen(path) - 4], 4);
@@ -171,18 +171,18 @@ Result Archive_ExtractFile(const char *path) {
 
 		Draw_Image(config.dark_theme? dialog_dark : dialog, ((320 - (dialog.subtex->width)) / 2), ((240 - (dialog.subtex->height)) / 2));
 
-		Draw_Text(((320 - (dialog.subtex->width)) / 2) + 6, ((240 - (dialog.subtex->height)) / 2) + 6, 0.45f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "Extract file");
+		Draw_Text(((320 - (dialog.subtex->width)) / 2) + 6, ((240 - (dialog.subtex->height)) / 2) + 6 - 3, 0.42f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "Extract file");
 
-		Draw_Text(((320 - (text_width1)) / 2), ((240 - (dialog.subtex->height)) / 2) + 35, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "This may take a few minutes.");
-		Draw_Text(((320 - (text_width2)) / 2), ((240 - (dialog.subtex->height)) / 2) + 50, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Do you wish to continue?");
+		Draw_Text(((320 - (text_width1)) / 2), ((240 - (dialog.subtex->height)) / 2) + 35 - 4, 0.42f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "This may take a few minutes.");
+		Draw_Text(((320 - (text_width2)) / 2), ((240 - (dialog.subtex->height)) / 2) + 50 - 4, 0.42f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Do you wish to continue?");
 
 		if (dialog_selection == 0)
 			Draw_Rect((288 - cancel_width) - 5, (159 - cancel_height) - 5, cancel_width + 10, cancel_height + 10, config.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
 		else if (dialog_selection == 1)
 			Draw_Rect((248 - (confirm_width)) - 5, (159 - confirm_height) - 5, confirm_width + 10, confirm_height + 10, config.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
 
-		Draw_Text(248 - (confirm_width), (159 - confirm_height), 0.45f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "YES");
-		Draw_Text(288 - cancel_width, (159 - cancel_height), 0.45f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "NO");
+		Draw_Text(248 - (confirm_width), (159 - confirm_height) - 3, 0.42f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "YES");
+		Draw_Text(288 - cancel_width, (159 - cancel_height) - 3, 0.42f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "NO");
 
 		Draw_EndFrame();
 

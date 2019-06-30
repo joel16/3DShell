@@ -13,23 +13,23 @@ static float confirm_width = 0, confirm_height = 0;
 
 void Menu_DisplayAbout(void) {
 	float text_width1 = 0, text_width2 = 0, text_width3 = 0, text_width4 = 0;
-	Draw_GetTextSize(0.45f, &text_width1, NULL, "3D Shell vx.x.x - xxxxxxx");
-	Draw_GetTextSize(0.45f, &text_width2, NULL, "Author: Joel16");
-	Draw_GetTextSize(0.45f, &text_width3, NULL, "Assets: Preetisketch/CyanogenMod/LineageOS");
-	Draw_GetTextSize(0.45f, &text_width4, NULL, "Music player: deltabeard");
-	Draw_GetTextSize(0.45f, &confirm_width, &confirm_height, "OK");
+	Draw_GetTextSize(0.42f, &text_width1, NULL, "3D Shell vx.x.x - xxxxxxx");
+	Draw_GetTextSize(0.42f, &text_width2, NULL, "Author: Joel16");
+	Draw_GetTextSize(0.42f, &text_width3, NULL, "Assets: Preetisketch/CyanogenMod/LineageOS");
+	Draw_GetTextSize(0.42f, &text_width4, NULL, "Music player: deltabeard");
+	Draw_GetTextSize(0.42f, &confirm_width, &confirm_height, "OK");
 
 	Draw_Image(config.dark_theme? dialog_dark : dialog, ((320 - (dialog.subtex->width)) / 2), ((240 - (dialog.subtex->height)) / 2));
 
-	Draw_Text(((320 - (dialog.subtex->width)) / 2) + 6, ((240 - (dialog.subtex->height)) / 2) + 6, 0.45f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "About");
+	Draw_Text(((320 - (dialog.subtex->width)) / 2) + 6, ((240 - (dialog.subtex->height)) / 2) + 6 - 3, 0.42f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "About");
 
-	Draw_Textf(((320 - (text_width1)) / 2), ((240 - (dialog.subtex->height)) / 2) + 20, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "3D Shell v%d.%d.%d - %s", VERSION_MAJOR, VERSION_MINOR, VERSION_MICRO, GITVERSION);
-	Draw_Text(((320 - (text_width2)) / 2), ((240 - (dialog.subtex->height)) / 2) + 34, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Author: Joel16");
-	Draw_Text(((320 - (text_width3)) / 2), ((240 - (dialog.subtex->height)) / 2) + 48, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Assets: Preetisketch/CyanogenMod/LineageOS");
-	Draw_Text(((320 - (text_width4)) / 2), ((240 - (dialog.subtex->height)) / 2) + 62, 0.45f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Music player: deltabeard");
+	Draw_Textf(((320 - (text_width1)) / 2), ((240 - (dialog.subtex->height)) / 2) + 20 - 3, 0.42f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "3D Shell v%d.%d.%d - %s", VERSION_MAJOR, VERSION_MINOR, VERSION_MICRO, GITVERSION);
+	Draw_Text(((320 - (text_width2)) / 2), ((240 - (dialog.subtex->height)) / 2) + 34 - 3, 0.42f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Author: Joel16");
+	Draw_Text(((320 - (text_width3)) / 2), ((240 - (dialog.subtex->height)) / 2) + 48 - 3, 0.42f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Assets: Preetisketch/CyanogenMod/LineageOS");
+	Draw_Text(((320 - (text_width4)) / 2), ((240 - (dialog.subtex->height)) / 2) + 62 - 3, 0.42f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Music player: deltabeard");
 
 	Draw_Rect((288 - confirm_width) - 5, (159 - confirm_height) - 5, confirm_width + 10, confirm_height + 10, config.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
-	Draw_Text(288 - confirm_width, (159 - confirm_height), 0.45f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "OK");
+	Draw_Text(288 - confirm_width, (159 - confirm_height) - 3, 0.42f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "OK");
 }
 
 void Menu_ControlAbout(u32 input) {
@@ -48,18 +48,18 @@ void Menu_DisplaySortSettings(void) {
 	Menu_DrawMenuBar();
 
 	Draw_Rect(0, 20, 400, 35, config.dark_theme? MENU_BAR_DARK : STATUS_BAR_LIGHT); // Menu bar
-	Draw_Text(10, 30, 0.48f, WHITE, "Sorting options");
+	Draw_Text(10, 28, 0.44f, WHITE, "Sorting options");
 
 	Draw_Rect(0, 55 + (selection * 40), 320, 40, config.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
 	
-	Draw_Text(10, 60, 0.48f, config.dark_theme? WHITE : BLACK, "Alphabetical \uE01B");
-	Draw_Text(10, 75, 0.45f, config.dark_theme? WHITE : BLACK, "Sort alphabetically in ascending order.");
-	Draw_Text(10, 100, 0.48f, config.dark_theme? WHITE : BLACK, "Alphabetical \uE01C");
-	Draw_Text(10, 115, 0.45f, config.dark_theme? WHITE : BLACK, "Sort alphabetically in descending order.");
-	Draw_Text(10, 140, 0.48f, config.dark_theme? WHITE : BLACK, "Size \uE01B");
-	Draw_Text(10, 155, 0.45f, config.dark_theme? WHITE : BLACK, "Sort by size (largest first).");
-	Draw_Text(10, 180, 0.48f, config.dark_theme? WHITE : BLACK, "Size \uE01C");
-	Draw_Text(10, 195, 0.45f, config.dark_theme? WHITE : BLACK, "Sort by size (smallest first).");
+	Draw_Text(10, 58, 0.44f, config.dark_theme? WHITE : BLACK, "Alphabetical");
+	Draw_Text(10, 74, 0.42f, config.dark_theme? WHITE : BLACK, "Sort alphabetically in ascending order.");
+	Draw_Text(10, 98, 0.44f, config.dark_theme? WHITE : BLACK, "Alphabetical");
+	Draw_Text(10, 114, 0.42f, config.dark_theme? WHITE : BLACK, "Sort alphabetically in descending order.");
+	Draw_Text(10, 138, 0.44f, config.dark_theme? WHITE : BLACK, "Size");
+	Draw_Text(10, 154, 0.42f, config.dark_theme? WHITE : BLACK, "Sort by size (largest first).");
+	Draw_Text(10, 178, 0.44f, config.dark_theme? WHITE : BLACK, "Size");
+	Draw_Text(10, 194, 0.42f, config.dark_theme? WHITE : BLACK, "Sort by size (smallest first).");
 
 	Draw_Image(config.sort == 0? (config.dark_theme? icon_radio_dark_on : icon_radio_on) : (config.dark_theme? icon_radio_dark_off : icon_radio_off), 270, 60);
 	Draw_Image(config.sort == 1? (config.dark_theme? icon_radio_dark_on : icon_radio_on) : (config.dark_theme? icon_radio_dark_off : icon_radio_off), 270, 100);
@@ -134,18 +134,18 @@ void Menu_DisplaySettings(void) {
 	Menu_DrawMenuBar();
 
 	Draw_Rect(0, 20, 400, 35, config.dark_theme? MENU_BAR_DARK : STATUS_BAR_LIGHT); // Menu bar
-	Draw_Text(10, 30, 0.48f, WHITE, "Settings");
+	Draw_Text(10, 28, 0.44f, WHITE, "Settings");
 
 	Draw_Rect(0, 55 + (selection * 40), 320, 40, config.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
 
-	Draw_Text(10, 60, 0.48f, config.dark_theme? WHITE : BLACK, "Sort by");
-	Draw_Text(10, 75, 0.45f, config.dark_theme? WHITE : BLACK, "Select between various sorting options.");
-	Draw_Text(10, 100, 0.48f, config.dark_theme? WHITE : BLACK, "Dark theme");
-	Draw_Text(10, 115, 0.45f, config.dark_theme? WHITE : BLACK, "Enables dark theme mode.");
-	Draw_Text(10, 140, 0.48f, config.dark_theme? WHITE : BLACK, "Hidden files");
-	Draw_Text(10, 155, 0.45f, config.dark_theme? WHITE : BLACK, "Displays hidden files.");
-	Draw_Text(10, 180, 0.48f, config.dark_theme? WHITE : BLACK, "About");
-	Draw_Text(10, 195, 0.45f, config.dark_theme? WHITE : BLACK, "Details about application.");
+	Draw_Text(10, 58, 0.44f, config.dark_theme? WHITE : BLACK, "Sort by");
+	Draw_Text(10, 74, 0.42f, config.dark_theme? WHITE : BLACK, "Select between various sorting options.");
+	Draw_Text(10, 98, 0.44f, config.dark_theme? WHITE : BLACK, "Dark theme");
+	Draw_Text(10, 114, 0.42f, config.dark_theme? WHITE : BLACK, "Enables dark theme mode.");
+	Draw_Text(10, 138, 0.44f, config.dark_theme? WHITE : BLACK, "Hidden files");
+	Draw_Text(10, 154, 0.42f, config.dark_theme? WHITE : BLACK, "Displays hidden files.");
+	Draw_Text(10, 178, 0.44f, config.dark_theme? WHITE : BLACK, "About");
+	Draw_Text(10, 194, 0.42f, config.dark_theme? WHITE : BLACK, "Details about application.");
 
 	if (config.dark_theme)
 		Draw_Image(config.dark_theme? icon_toggle_dark_on : icon_toggle_on, 270, 97);

@@ -30,6 +30,7 @@ static void Term_Services(void) {
 	C2D_Fini();
 	C3D_Fini();
 	gfxExit();
+	cfguExit();
 	romfsExit();
 	ptmuExit();
 	mcuHwcExit();
@@ -44,6 +45,7 @@ static void Init_Services(void) {
 	mcuHwcInit();
 	ptmuInit();
 	romfsInit();
+	cfguInit();
 	gfxInitDefault();
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
 	C2D_Init(C2D_DEFAULT_MAX_OBJECTS);

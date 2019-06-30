@@ -89,12 +89,12 @@ static void StatusBar_GetBatteryStatus(int x, int y) {
 
 		snprintf(buf, 5, "%d%%", percent);
 		percent_width = Draw_GetTextWidth(0.45f, buf);
-		Draw_Text((float)(x - percent_width - 5), y, 0.45f, WHITE, buf);
+		Draw_Text((float)(x - percent_width - 5), y - 1, 0.4f, WHITE, buf);
 	}
 	else {
 		snprintf(buf, 5, "%d%%", percent);
 		percent_width = Draw_GetTextWidth(0.45f, buf);
-		Draw_Text((float)(x - percent_width - 5), y, 0.45f, WHITE, buf);
+		Draw_Text((float)(x - percent_width - 5), y - 1, 0.4f, WHITE, buf);
 		Draw_Image(battery_unknown, x, 1);
 	}
 }
@@ -118,10 +118,10 @@ static void StatusBar_GetWifiStatus(int x) {
 
 void StatusBar_DisplayTime(void) {
 	float width = 0, height = 0;
-	Draw_GetTextSize(0.45f, &width, &height, Clock_GetCurrentTime(true));
+	Draw_GetTextSize(0.4f, &width, &height, Clock_GetCurrentTime(true));
 
-	StatusBar_GetBatteryStatus((float)((390 - width) - (10 + 12)), (float)((18 - height) / 2));
-	StatusBar_GetWifiStatus((float)((390 - width) - (10 + 14) - (10 + 12) - (percent_width + 10)));
+	StatusBar_GetBatteryStatus((float)((395 - width) - (10 + 12)), (float)((18 - height) / 2));
+	StatusBar_GetWifiStatus((float)((395 - width) - (10 + 14) - (10 + 12) - (percent_width + 10)));
 
-	Draw_Text((float)(390 - width), (float)((18 - height) / 2), 0.45f, WHITE, Clock_GetCurrentTime(true));
+	Draw_Text((float)(395 - width), (float)((18 - height) / 2) - 2, 0.4f, WHITE, Clock_GetCurrentTime(true));
 }

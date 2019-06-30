@@ -18,7 +18,7 @@ void Menu_DisplayFTP(void) {
 
 	Result ret = 0;
 	char buf[137], hostname[128];
-	u32 wifiStatus = 0;
+	u32 wifi_status = 0;
 
 	int pBar = 0, xlim = 270;
 
@@ -38,21 +38,21 @@ void Menu_DisplayFTP(void) {
 		Draw_Rect(0, 0, 320, 20, config.dark_theme? STATUS_BAR_DARK : STATUS_BAR_LIGHT); // Status bar
 		Draw_Rect(0, 20, 320, 220, config.dark_theme? MENU_BAR_DARK : MENU_BAR_LIGHT); // Menu bar
 
-		ret = ACU_GetWifiStatus(&wifiStatus);
+		ret = ACU_GetWifiStatus(&wifi_status);
 			
 		Menu_DrawMenuBar();
 
-		if ((wifiStatus != 0) && R_SUCCEEDED(ret)) {
-			Draw_Text(((320 - Draw_GetTextWidth(0.48f, "FTP initialized")) / 2), 40, 0.48f, WHITE, "FTP initialized");
+		if ((wifi_status != 0) && R_SUCCEEDED(ret)) {
+			Draw_Text(((320 - Draw_GetTextWidth(0.42f, "FTP initialized")) / 2), 37, 0.42f, WHITE, "FTP initialized");
 			snprintf(buf, 137, "IP: %s:5000", R_FAILED(ret)? "Failed to get IP" : hostname);
 
 			if (strlen(ftp_accepted_connection) != 0)
-				Draw_Text(((320 - Draw_GetTextWidth(0.48f, ftp_accepted_connection)) / 2), 80, 0.48f, WHITE, ftp_accepted_connection);
+				Draw_Text(((320 - Draw_GetTextWidth(0.42f, ftp_accepted_connection)) / 2), 77, 0.42f, WHITE, ftp_accepted_connection);
 
-			Draw_Text(((320 - Draw_GetTextWidth(0.48f, "File browser cannot be accesed at this time.")) / 2), 100, 0.48f, WHITE, "File browser cannot be accesed at this time.");
+			Draw_Text(((320 - Draw_GetTextWidth(0.42f, "File browser cannot be accesed at this time.")) / 2), 97, 0.42f, WHITE, "File browser cannot be accesed at this time.");
 
 			if (strlen(ftp_file_transfer) != 0)
-				Draw_Text(((320 - Draw_GetTextWidth(0.45f, ftp_file_transfer)) / 2), 150, 0.45f, WHITE, ftp_file_transfer);
+				Draw_Text(((320 - Draw_GetTextWidth(0.42f, ftp_file_transfer)) / 2), 147, 0.42f, WHITE, ftp_file_transfer);
 
 			if (isTransfering) {
 				Draw_Rect(50, 140, 220, 3, config.dark_theme? STATUS_BAR_DARK : STATUS_BAR_LIGHT);
@@ -68,12 +68,12 @@ void Menu_DisplayFTP(void) {
 			}
 		}
 		else {
-			Draw_Text(((320 - Draw_GetTextWidth(0.48f, "Failed to initialize FTP.")) / 2), 40, 0.48f, WHITE, "Failed to initialize FTP.");
+			Draw_Text(((320 - Draw_GetTextWidth(0.42f, "Failed to initialize FTP.")) / 2), 37, 0.42f, WHITE, "Failed to initialize FTP.");
 			snprintf(buf, 18, "WiFi not enabled.");
 		}
 
-		Draw_Text(((320 - Draw_GetTextWidth(0.48f, buf)) / 2), 60, 0.48f, WHITE, buf);
-		Draw_Text(((320 - Draw_GetTextWidth(0.48f, "Tap the FTP icon to disable the FTP connection.")) / 2), 120, 0.48f, WHITE, "Tap the FTP icon to disable the FTP connection.");
+		Draw_Text(((320 - Draw_GetTextWidth(0.42f, buf)) / 2), 57, 0.42f, WHITE, buf);
+		Draw_Text(((320 - Draw_GetTextWidth(0.42f, "Tap the FTP icon to disable the FTP connection.")) / 2), 117, 0.42f, WHITE, "Tap the FTP icon to disable the FTP connection.");
 
 		Draw_EndFrame();
 
