@@ -3,7 +3,7 @@
 #include "dr_wav.h"
 
 static drwav wav;
-static drwav_uint64 samples_read = 0;
+static drwav_uint64 frames_read = 0;
 
 int WAV_Init(const char *path) {
 	if (!drwav_init_file(&wav, path))
@@ -21,21 +21,32 @@ u8 WAV_GetChannels(void) {
 }
 
 void WAV_Decode(void *buf, unsigned int length, void *userdata) {
-	samples_read += drwav_read_pcm_frames_s16(&wav, (drwav_uint64)length, (drwav_int16 *)buf);
+	frames_read += drwav_read_pcm_frames_s16(&wav, (drwav_uint64)length, (drwav_int16 *)buf);
 
-	if (samples_read >= wav.totalPCMFrameCount)
+	if (frames_read >= wav.totalPCMFrameCount)
 		playing = false;
 }
 
 u64 WAV_GetPosition(void) {
-	return samples_read;
+	return frames_read;
 }
 
 u64 WAV_GetLength(void) {
 	return wav.totalPCMFrameCount;
 }
 
+u64 WAV_Seek(u64 index) {
+	drwav_uint64 seek_frame = (wav.totalPCMFrameCount * (index / 640.0));
+	
+	if (drwav_seek_to_pcm_frame(&wav, seek_frame) == DRWAV_TRUE) {
+		frames_read = seek_frame;
+		return frames_read;
+	}
+	
+	return -1;
+}
+
 void WAV_Term(void) {
-	samples_read = 0;
+	frames_read = 0;
 	drwav_uninit(&wav);
 }
