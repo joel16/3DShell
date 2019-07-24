@@ -11,10 +11,6 @@
 #include "wav.h"
 #include "xm.h"
 
-bool playing = true;
-Audio_Metadata metadata = {0};
-static Audio_Metadata empty = {0};
-
 enum Audio_FileType {
 	FILE_TYPE_NONE = 0,
 	FILE_TYPE_FLAC = 1,
@@ -25,107 +21,29 @@ enum Audio_FileType {
 	FILE_TYPE_XM = 6
 };
 
+typedef struct {
+	int (* init)(const char *path);
+	u32 (* rate)(void);
+	u8 (* channels)(void);
+	void (* decode)(void *buf, unsigned int length, void *userdata);
+	u64 (* position)(void);
+	u64 (* length)(void);
+	u64 (* seek)(u64 index);
+	void (* term)(void);
+	u32 nsamples;
+} Audio_Decoder;
+
+bool playing = true;
+Audio_Metadata metadata = {0};
+static Audio_Metadata empty_metadata = {0};
+static Audio_Decoder decoder = {0}, empty_decoder = {0};
 static enum Audio_FileType file_type = FILE_TYPE_NONE;
 
-static u32 Audio_GetSampleRate(void) {
-	u32 sample_rate = 0;
-
-	switch(file_type) {
-		case FILE_TYPE_FLAC:
-			sample_rate = FLAC_GetSampleRate();
-			break;
-
-		case FILE_TYPE_MP3:
-			sample_rate = MP3_GetSampleRate();
-			break;
-
-		case FILE_TYPE_OGG:
-			sample_rate = OGG_GetSampleRate();
-			break;
-
-		case FILE_TYPE_OPUS:
-			sample_rate = OPUS_GetSampleRate();
-			break;
-
-		case FILE_TYPE_WAV:
-			sample_rate = WAV_GetSampleRate();
-			break;
-
-		case FILE_TYPE_XM:
-			sample_rate = XM_GetSampleRate();
-			break;
-
-		default:
-			break;
-	}
-
-	return sample_rate;
-}
-
-static u8 Audio_GetChannels(void) {
-	u8 channels = 0;
-
-	switch(file_type) {
-		case FILE_TYPE_FLAC:
-			channels = FLAC_GetChannels();
-			break;
-
-		case FILE_TYPE_MP3:
-			channels = MP3_GetChannels();
-			break;
-
-		case FILE_TYPE_OGG:
-			channels = OGG_GetChannels();
-			break;
-
-		case FILE_TYPE_OPUS:
-			channels = OPUS_GetChannels();
-			break;
-
-		case FILE_TYPE_WAV:
-			channels = WAV_GetChannels();
-			break;
-
-		case FILE_TYPE_XM:
-			channels = XM_GetChannels();
-			break;
-
-		default:
-			break;
-	}
-
-	return channels;
-}
-
 void Audio_Callback(void *userdata, void *stream, int length) {
-	switch(file_type) {
-		case FILE_TYPE_FLAC:
-			FLAC_Decode(stream, length / (Audio_GetChannels() * sizeof(s16)), userdata);
-			break;
-
-		case FILE_TYPE_MP3:
-			MP3_Decode(stream, length / (Audio_GetChannels() * sizeof(s16)), userdata);
-			break;
-
-		case FILE_TYPE_OGG:
-			OGG_Decode(stream, length / (Audio_GetChannels() * sizeof(s16)), userdata);
-			break;
-
-		case FILE_TYPE_OPUS:
-			OPUS_Decode(stream, length / (Audio_GetChannels() * sizeof(s16)), userdata);
-			break;
-
-		case FILE_TYPE_WAV:
-			WAV_Decode(stream, length / (Audio_GetChannels() * sizeof(s16)), userdata);
-			break;
-
-		case FILE_TYPE_XM:
-			XM_Decode(stream, length / (Audio_GetChannels() * sizeof(s16)), userdata);
-			break;
-
-		default:
-			break;
-	}
+	if (playing == false || ndspChnIsPaused(0))
+		memset(stream, 0, length / ((* decoder.channels)() * sizeof(s16)));
+	else
+		(* decoder.decode)(stream, length / ((* decoder.channels)() * sizeof(s16)), userdata);
 }
 
 static const char *Audio_GetFileExt(const char *filename) {
@@ -154,44 +72,85 @@ void Audio_Init(const char *path) {
 		|| (!strncasecmp(Audio_GetFileExt(path), "s3m", 3)) || (!strncasecmp(Audio_GetFileExt(path), "xm", 2)))
 		file_type = FILE_TYPE_XM;
 
-	u32 samples = 0;
-
 	switch(file_type) {
 		case FILE_TYPE_FLAC:
-			FLAC_Init(path);
-			samples = 1024;
+			decoder.init = FLAC_Init;
+			decoder.rate = FLAC_GetSampleRate;
+			decoder.channels = FLAC_GetChannels;
+			decoder.decode = FLAC_Decode;
+			decoder.position = FLAC_GetPosition;
+			decoder.length = FLAC_GetLength;
+			decoder.seek = FLAC_Seek;
+			decoder.term = FLAC_Term;
+			decoder.nsamples = 1024;
 			break;
 
 		case FILE_TYPE_MP3:
-			MP3_Init(path);
-			samples = 4096;
+			decoder.init = MP3_Init;
+			decoder.rate = MP3_GetSampleRate;
+			decoder.channels = MP3_GetChannels;
+			decoder.decode = MP3_Decode;
+			decoder.position = MP3_GetPosition;
+			decoder.length = MP3_GetLength;
+			decoder.seek = MP3_Seek;
+			decoder.term = MP3_Term;
+			decoder.nsamples = 4096;
 			break;
 
 		case FILE_TYPE_OGG:
-			OGG_Init(path);
-			samples = 4096;
+			decoder.init = OGG_Init;
+			decoder.rate = OGG_GetSampleRate;
+			decoder.channels = OGG_GetChannels;
+			decoder.decode = OGG_Decode;
+			decoder.position = OGG_GetPosition;
+			decoder.length = OGG_GetLength;
+			decoder.seek = OGG_Seek;
+			decoder.term = OGG_Term;
+			decoder.nsamples = 4096;
 			break;
 
 		case FILE_TYPE_OPUS:
-			OPUS_Init(path);
-			samples = 960;
+			decoder.init = OPUS_Init;
+			decoder.rate = OPUS_GetSampleRate;
+			decoder.channels = OPUS_GetChannels;
+			decoder.decode = OPUS_Decode;
+			decoder.position = OPUS_GetPosition;
+			decoder.length = OPUS_GetLength;
+			decoder.seek = OPUS_Seek;
+			decoder.term = OPUS_Term;
+			decoder.nsamples = 960;
 			break;
 
 		case FILE_TYPE_WAV:
-			WAV_Init(path);
-			samples = 4096;
+			decoder.init = WAV_Init;
+			decoder.rate = WAV_GetSampleRate;
+			decoder.channels = WAV_GetChannels;
+			decoder.decode = WAV_Decode;
+			decoder.position = WAV_GetPosition;
+			decoder.length = WAV_GetLength;
+			decoder.seek = WAV_Seek;
+			decoder.term = WAV_Term;
+			decoder.nsamples = 4096;
 			break;
 
 		case FILE_TYPE_XM:
-			XM_Init(path);
-			samples = 4096;
+			decoder.init = XM_Init;
+			decoder.rate = XM_GetSampleRate;
+			decoder.channels = XM_GetChannels;
+			decoder.decode = XM_Decode;
+			decoder.position = XM_GetPosition;
+			decoder.length = XM_GetLength;
+			decoder.seek = XM_Seek;
+			decoder.term = XM_Term;
+			decoder.nsamples = 4096;
 			break;
 
 		default:
 			break;
 	}
 
-	_3dsAudioInit(Audio_GetChannels(), Audio_GetSampleRate(), samples);
+	(* decoder.init)(path);
+	_3dsAudioInit((* decoder.channels)(), (* decoder.rate)(), decoder.nsamples);
 	_3dsAudioCreateThread();
 }
 
@@ -208,117 +167,29 @@ void Audio_Stop(void) {
 }
 
 u64 Audio_GetPosition(void) {
-	u64 position = -1;
-
-	switch(file_type) {
-		case FILE_TYPE_FLAC:
-			position = FLAC_GetPosition();
-			break;
-
-		case FILE_TYPE_MP3:
-			position = MP3_GetPosition();
-			break;
-
-		case FILE_TYPE_OGG:
-			position = OGG_GetPosition();
-			break;
-
-		case FILE_TYPE_OPUS:
-			position = OPUS_GetPosition();
-			break;
-
-		case FILE_TYPE_WAV:
-			position = WAV_GetPosition();
-			break;
-
-		case FILE_TYPE_XM:
-			position = XM_GetPosition();
-			break;
-
-		default:
-			break;
-	}
-
-	return position;
+	return (* decoder.position)();
 }
 
 u64 Audio_GetLength(void) {
-	u64 length = 0;
-
-	switch(file_type) {
-		case FILE_TYPE_FLAC:
-			length = FLAC_GetLength();
-			break;
-
-		case FILE_TYPE_MP3:
-			length = MP3_GetLength();
-			break;
-
-		case FILE_TYPE_OGG:
-			length = OGG_GetLength();
-			break;
-
-		case FILE_TYPE_OPUS:
-			length = OPUS_GetLength();
-			break;
-
-		case FILE_TYPE_WAV:
-			length = WAV_GetLength();
-			break;
-
-		case FILE_TYPE_XM:
-			length = XM_GetLength();
-			break;
-
-		default:
-			break;
-	}
-
-	return length;
+	return (* decoder.length)();
 }
 
 u64 Audio_GetPositionSeconds(void) {
-	return (Audio_GetPosition()/Audio_GetSampleRate());
+	return (Audio_GetPosition() / (* decoder.rate)());
 }
 
 u64 Audio_GetLengthSeconds(void) {
-	return (Audio_GetLength()/Audio_GetSampleRate());
+	return (Audio_GetLength() / (* decoder.rate)());
 }
 
 void Audio_Term(void) {
-	switch(file_type) {
-		case FILE_TYPE_FLAC:
-			FLAC_Term();
-			break;
-
-		case FILE_TYPE_MP3:
-			MP3_Term();
-			break;
-
-		case FILE_TYPE_OGG:
-			OGG_Term();
-			break;
-
-		case FILE_TYPE_OPUS:
-			OPUS_Term();
-			break;
-
-		case FILE_TYPE_WAV:
-			WAV_Term();
-			break;
-
-		case FILE_TYPE_XM:
-			XM_Term();
-			break;
-
-		default:
-			break;
-	}
-
 	playing = true;
 
-	// Clear metadata struct
-	metadata = empty;
 	_3dsAudioExitThread();
 	_3dsAudioEnd();
+	(* decoder.term)();
+
+	// Clear metadata struct
+	metadata = empty_metadata;
+	decoder = empty_decoder;
 }
