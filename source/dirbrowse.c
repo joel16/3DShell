@@ -239,7 +239,7 @@ static Result Dirbrowse_SaveLastDirectory(void) {
 	Result ret = 0;
 
 	if (!(BROWSE_STATE == BROWSE_STATE_NAND)) {
-		if (R_FAILED(ret = FS_Write(archive, "/3ds/3DShell/lastdir.txt", cwd))) {
+		if (R_FAILED(ret = FS_Write(archive, "/3ds/3DShell/lastdir.txt", cwd, strlen(cwd)))) {
 			Menu_DisplayError("Failed to save last directory:", ret);
 			return ret;
 		}

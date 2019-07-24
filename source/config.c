@@ -21,9 +21,9 @@ Result Config_Save(config_t config) {
 	Result ret = 0;
 	
 	char *buf = malloc(64);
-	snprintf(buf, 64, config_file, CONFIG_VERSION, config.dark_theme, config.hidden_files, config.sort);
+	int length = snprintf(buf, 64, config_file, CONFIG_VERSION, config.dark_theme, config.hidden_files, config.sort);
 	
-	if (R_FAILED(ret = FS_Write(archive, "/3ds/3DShell/config.cfg", buf))) {
+	if (R_FAILED(ret = FS_Write(archive, "/3ds/3DShell/config.cfg", buf, length))) {
 		free(buf);
 		return ret;
 	}
@@ -72,7 +72,7 @@ Result Config_GetLastDirectory(void) {
 	Result ret = 0;
 	
 	if (!FS_FileExists(archive, "/3ds/3DShell/lastdir.txt")) {
-		FS_Write(archive, "/3ds/3DShell/lastdir.txt", START_PATH);
+		FS_Write(archive, "/3ds/3DShell/lastdir.txt", START_PATH, strlen(START_PATH));
 		strcpy(cwd, START_PATH); // Set Start Path to "sdmc:/" if lastDir.txt hasn't been created.
 	}
 	else {

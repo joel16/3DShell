@@ -12,9 +12,6 @@ static int num = 0;
 
 static Result Screenshot_GenerateScreenshot(const char *path) {
 	int x = 0, y = 0;
-	Handle handle;
-	u32 bytesWritten = 0;
-	u64 offset = 0;
 	size_t size = 0x36;
 	Result ret = 0;
 
@@ -22,21 +19,9 @@ static Result Screenshot_GenerateScreenshot(const char *path) {
 	u8 *gfxBottom = gfxGetFramebuffer(GFX_BOTTOM, GFX_BOTTOM, NULL, NULL);
 	u8 *gfxTopLeft = gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL);
 
-	// Open file for writing screenshot
-	if (R_FAILED(ret = FS_OpenFile(&handle, archive, path, (FS_OPEN_CREATE | FS_OPEN_WRITE), 0))) {
-		Menu_DisplayError("FS_Open failed:", ret);
-		return ret;
-	}
-
-	u8 *buf = (u8*)malloc(size + 576000);
+	u8 *buf = malloc(size + 576000);
 	memset(buf, 0, size + 576000);
 	buf[size + 576000] = 0;
-
-	if (R_FAILED(ret = FSFILE_SetSize(handle, (u16)(size + 576000)))) {
-		Menu_DisplayError("FSFILE_SetSize failed:", ret);
-		free(buf);
-		return ret;
-	}
 
 	*(u16*)&buf[0x0] = 0x4D42;
 	*(u32*)&buf[0x2] = size + 576000;
@@ -88,16 +73,9 @@ static Result Screenshot_GenerateScreenshot(const char *path) {
 		}
 	}
 
-	if (R_FAILED(ret = FSFILE_Write(handle, &bytesWritten, offset, (u32 *)buf, size + 576000, 0x10001))) {
-		Menu_DisplayError("FSFILE_Write failed:", ret);
+	if (R_FAILED(ret = FS_Write(archive, path, (u32 *)buf, size + 576000))) {
+		Menu_DisplayError("FS_Write screenshot failed:", ret);
 		free(buf);
-		return ret;
-	}
-
-	if (R_FAILED(ret = FSFILE_Close(handle))) {
-		Menu_DisplayError("FSFILE_Close failed:", ret);
-		free(buf);
-		return ret;
 	}
 
 	free(buf);

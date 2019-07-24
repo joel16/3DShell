@@ -60,13 +60,13 @@ Result FS_MakeDir(FS_Archive archive, const char *path) {
 	return 0;
 }
 
-Result FS_CreateFile(FS_Archive archive, const char *path) {
+Result FS_CreateFile(FS_Archive archive, const char *path, u64 size) {
 	Result ret = 0;
 	
 	u16 path_u16[strlen(path) + 1];
 	Utils_U8_To_U16(path_u16, (const u8 *)path, strlen(path) + 1);
 
-	if (R_FAILED(ret = FSUSER_CreateFile(archive, fsMakePath(PATH_UTF16, path_u16), 0, 0)))
+	if (R_FAILED(ret = FSUSER_CreateFile(archive, fsMakePath(PATH_UTF16, path_u16), 0, size)))
 		return ret;
 	
 	return 0;
@@ -260,31 +260,24 @@ Result FS_Read(FS_Archive archive, const char *path, u64 size, void *buf) {
 	return 0;
 }
 
-Result FS_Write(FS_Archive archive, const char *path, const void *buf) {
+Result FS_Write(FS_Archive archive, const char *path, const void *buf, u32 size) {
 	Result ret = 0;
 	Handle handle;
-	
-	u32 len = strlen(buf);
-	u64 size = 0;
 	u32 bytes_written = 0;
 
 	if (FS_FileExists(archive, path))
 		FS_RemoveFile(archive, path);
+	
+	u16 path_u16[strlen(path) + 1];
+	Utils_U8_To_U16(path_u16, (const u8 *)path, strlen(path) + 1);
 
-	if (R_FAILED(ret = FS_OpenFile(&handle, archive, path, (FS_OPEN_WRITE | FS_OPEN_CREATE), 0)))
+	if (R_FAILED(ret = FSUSER_CreateFile(archive, fsMakePath(PATH_UTF16, path_u16), 0, size)))
 		return ret;
 
-	if (R_FAILED(ret = FSFILE_GetSize(handle, &size))) {
-		FSFILE_Close(handle);
+	if (R_FAILED(ret = FSUSER_OpenFile(&handle, archive, fsMakePath(PATH_UTF16, path_u16), FS_OPEN_WRITE, 0)))
 		return ret;
-	}
-
-	if (R_FAILED(ret = FSFILE_SetSize(handle, size + len))) {
-		FSFILE_Close(handle);
-		return ret;
-	}
-
-	if (R_FAILED(ret = FSFILE_Write(handle, &bytes_written, size, buf, len, FS_WRITE_FLUSH))) {
+	
+	if (R_FAILED(ret = FSFILE_Write(handle, &bytes_written, 0, buf, size, FS_WRITE_FLUSH))) {
 		FSFILE_Close(handle);
 		return ret;
 	}

@@ -86,7 +86,7 @@ static Result FileOptions_CreateFile(void) {
 	strcat(path, buf);
 	free(buf);
 
-	if (R_FAILED(ret = FS_CreateFile(archive, path))) {
+	if (R_FAILED(ret = FS_CreateFile(archive, path, 0))) {
 		Menu_DisplayError("FS_CreateFile failed:", ret);
 		return ret;
 	}
