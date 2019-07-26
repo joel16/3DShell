@@ -189,17 +189,7 @@ void Menu_PlayMusic(char *path) {
 			Draw_ImageScale(metadata.cover_image, 0, 57, (175.0f / metadata.cover_image.subtex->width), (175.0f / metadata.cover_image.subtex->height));
 		else
 			Draw_Image(default_artwork, 0, 57); // Default album art
-
-		Menu_ConvertSecondsToString(position_time, Audio_GetPositionSeconds());
-		Draw_Text(185, 202, 0.44f, WHITE, position_time);
-		Draw_Text(392 - length_time_width, 202, 0.44f, WHITE, length_time);
-
-		// Progress bar
-		if (Audio_GetPosition() != -1) {
-			Draw_Rect(185, 220, 207, 2, C2D_Color32(97, 97, 97, 150));
-			Draw_Rect(185, 220, (((double)Audio_GetPosition()/(double)Audio_GetLength()) * 207.0), 2, WHITE);
-		}
-
+		
 		C2D_SceneBegin(RENDER_BOTTOM);
 
 		Draw_Image(ic_music_bg_bottom, 0, 0);
@@ -214,6 +204,16 @@ void Menu_PlayMusic(char *path) {
 
 		Draw_Image(state == MUSIC_STATE_SHUFFLE? btn_shuffle_overlay : btn_shuffle, ((320 - btn_shuffle.subtex->width) / 2) - 65, ((240 - btn_shuffle.subtex->height) / 2) + 35);
 		Draw_Image(state == MUSIC_STATE_REPEAT? btn_repeat_overlay : btn_repeat, ((320 - btn_repeat.subtex->width) / 2) + 65, ((240 - btn_repeat.subtex->height) / 2) + 35);
+
+		Menu_ConvertSecondsToString(position_time, Audio_GetPositionSeconds());
+		Draw_Text(20, 202, 0.44f, WHITE, position_time);
+		Draw_Text(300 - length_time_width, 202, 0.44f, WHITE, length_time);
+
+		// Progress bar
+		if (Audio_GetPosition() != -1) {
+			Draw_Rect(20, 220, 280, 2, C2D_Color32(97, 97, 97, 150));
+			Draw_Rect(20, 220, (((double)Audio_GetPosition()/(double)Audio_GetLength()) * 280.0), 2, WHITE);
+		}
 		
 		Draw_EndFrame();
 
@@ -256,6 +256,17 @@ void Menu_PlayMusic(char *path) {
 			}
 			if (((kHeld & KEY_L) && (kDown & KEY_R)) || ((kHeld & KEY_R) && (kDown & KEY_L)))
 				Screenshot_Capture();
+		}
+
+		if ((kHeld & KEY_TOUCH) && (Touch_GetX() >= 20 && Touch_GetX() <= 300 && Touch_GetY() >= 200 && Touch_GetY() <= 240)) {
+			if (!Audio_IsPaused())
+				Audio_Pause();
+
+			Audio_Seek(Touch_GetX() - 20);
+
+			// Unpause.
+			if (Audio_IsPaused())
+				Audio_Pause();
 		}
 
 		if (kDown & KEY_B) {

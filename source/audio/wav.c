@@ -36,7 +36,7 @@ u64 WAV_GetLength(void) {
 }
 
 u64 WAV_Seek(u64 index) {
-	drwav_uint64 seek_frame = (wav.totalPCMFrameCount * (index / 640.0));
+	drwav_uint64 seek_frame = (wav.totalPCMFrameCount * (index / 280.0));
 	
 	if (drwav_seek_to_pcm_frame(&wav, seek_frame) == DRWAV_TRUE) {
 		frames_read = seek_frame;

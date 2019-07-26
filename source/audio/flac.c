@@ -96,7 +96,7 @@ u64 FLAC_GetLength(void) {
 }
 
 u64 FLAC_Seek(u64 index) {
-	drflac_uint64 seek_frame = (flac->totalSampleCount * (index / 640.0));
+	drflac_uint64 seek_frame = (flac->totalSampleCount * (index / 280.0));
 	
 	if (drflac_seek_to_sample(flac, seek_frame) == DRFLAC_TRUE) {
 		frames_read = seek_frame;

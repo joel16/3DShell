@@ -182,6 +182,10 @@ u64 Audio_GetLengthSeconds(void) {
 	return (Audio_GetLength() / (* decoder.rate)());
 }
 
+u64 Audio_Seek(u64 index) {
+	return (* decoder.seek)(index);
+}
+
 void Audio_Term(void) {
 	playing = true;
 

@@ -51,7 +51,7 @@ u64 XM_GetLength(void) {
 }
 
 u64 XM_Seek(u64 index) {
-    int seek_sample = (total_samples * (index / 640.0));
+    int seek_sample = (total_samples * (index / 280.0));
     
     if (xmp_seek_time(xmp, seek_sample/44.1) >= 0) {
         samples_read = seek_sample;

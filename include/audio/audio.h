@@ -28,6 +28,7 @@ u64 Audio_GetPosition(void);
 u64 Audio_GetLength(void);
 u64 Audio_GetPositionSeconds(void);
 u64 Audio_GetLengthSeconds(void);
+u64 Audio_Seek(u64 index);
 void Audio_Term(void);
 
 #endif

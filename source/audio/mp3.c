@@ -201,7 +201,7 @@ u64 MP3_GetLength(void) {
 }
 
 u64 MP3_Seek(u64 index) {
-	off_t seek_frame = (total_samples * (index / 640.0));
+	off_t seek_frame = (total_samples * (index / 280.0));
 	
 	if (mpg123_seek(mp3, seek_frame, SEEK_SET) >= 0) {
 		frames_read = seek_frame;
