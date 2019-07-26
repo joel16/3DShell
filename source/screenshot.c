@@ -16,10 +16,11 @@ static Result Screenshot_GenerateScreenshot(const char *path) {
 	Result ret = 0;
 
 	// Get top/bottom framebuffers
-	u8 *gfxBottom = gfxGetFramebuffer(GFX_BOTTOM, GFX_BOTTOM, NULL, NULL);
-	u8 *gfxTopLeft = gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL);
+	u8 *top_framebuf = gfxGetFramebuffer(GFX_BOTTOM, GFX_BOTTOM, NULL, NULL);
+	u8 *bottom_framebuf = gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL);
 
-	u8 *buf = malloc(size + 576000);
+	u8 *buf = NULL;
+	buf = linearAlloc(size + 576000);
 	memset(buf, 0, size + 576000);
 	buf[size + 576000] = 0;
 
@@ -33,7 +34,7 @@ static Result Screenshot_GenerateScreenshot(const char *path) {
 	*(u32*)&buf[0x22] = 576000;
 
 	// Generate top left
-	u8 *framebuf = gfxTopLeft;
+	u8 *framebuf = bottom_framebuf;
 
 	for (y = 0; y < 240; y++) {
 		for (x = 0; x < 400; x++) {
@@ -46,7 +47,7 @@ static Result Screenshot_GenerateScreenshot(const char *path) {
 	}
 
 	// Generate bottom right
-	framebuf = gfxBottom;
+	framebuf = top_framebuf;
 
 	for (y = 0; y < 240; y++) {
 		for (x = 0; x < 320; x++) {
@@ -78,7 +79,7 @@ static Result Screenshot_GenerateScreenshot(const char *path) {
 		free(buf);
 	}
 
-	free(buf);
+	linearFree(buf);
 	return 0;
 }
 

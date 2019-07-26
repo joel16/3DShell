@@ -49,8 +49,10 @@ void _3dsAudioEnd(void) {
 	ndspChnWaveBufClear(0);
 
 	for (int i = 0; i < 2; i++) {
-		if (audio_buffer[i])
+		if (audio_buffer[i]) {
 			linearFree(audio_buffer[i]);
+			audio_buffer[i] = NULL;
+		}
 	}
 
 	ndspExit();
