@@ -132,6 +132,10 @@ int MP3_Init(const char *path) {
 	if (error != MPG123_OK)
 		return error;
 
+	error = mpg123_param(mp3, MPG123_FLAGS, MPG123_FUZZY | MPG123_SEEKBUFFER | MPG123_GAPLESS, 0.0);
+	if (error != MPG123_OK)
+		return error;
+
 	error = mpg123_param(mp3, MPG123_ADD_FLAGS, MPG123_PICTURE, 0.0);
 	if (error != MPG123_OK)
 		return error;
