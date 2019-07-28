@@ -3,11 +3,11 @@
 #include "C2D_helper.h"
 #include "common.h"
 #include "config.h"
+#include "dialog.h"
 #include "dirbrowse.h"
 #include "fs.h"
 #include "keyboard.h"
 #include "menu_error.h"
-#include "progress_bar.h"
 #include "textures.h"
 #include "touch.h"
 #include "utils.h"
@@ -209,7 +209,7 @@ static int FileOptions_CopyFile(char *src, char *dst, bool display_animation) {
 		offset += bytes_read;
 
 		if (display_animation)
-			ProgressBar_DisplayProgress(copymode == 1? "Moving" : "Copying", Utils_Basename(src), offset, size);
+			Dialog_DisplayProgress(copymode == 1? "Moving" : "Copying", Utils_Basename(src), offset, size);
 	}
 	while(offset < size);
 
@@ -269,7 +269,7 @@ static Result FileOptions_CopyDir(char *src, char *dst) {
 					free(outbuffer);
 				}
 
-				ProgressBar_DisplayProgress(copymode == 1? "Moving" : "Copying", Utils_Basename(name), i, entryCount);
+				Dialog_DisplayProgress(copymode == 1? "Moving" : "Copying", Utils_Basename(name), i, entryCount);
 			}
 		}
 		else {
@@ -439,25 +439,9 @@ void Menu_ControlDeleteDialog(u32 input) {
 }
 
 void Menu_DisplayDeleteDialog(void) {
-	float text_width = 0;
-	Draw_GetTextSize(0.42f, &text_width, NULL, "Do you want to continue?");
-
 	Draw_GetTextSize(0.42f, &delete_confirm_width, &delete_confirm_height, "YES");
 	Draw_GetTextSize(0.42f, &delete_cancel_width, &delete_cancel_height, "NO");
-
-	Draw_Image(config.dark_theme? dialog_dark : dialog, ((320 - (dialog.subtex->width)) / 2), ((240 - (dialog.subtex->height)) / 2));
-
-	Draw_Text(((320 - (dialog.subtex->width)) / 2) + 6, ((240 - (dialog.subtex->height)) / 2) + 6 - 3, 0.42f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "Confirm deletion");
-
-	Draw_Text(((320 - (text_width)) / 2), ((240 - (dialog.subtex->height)) / 2) + 40 - 3, 0.42f, config.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Do you wish to continue?");
-
-	if (delete_dialog_selection == 0)
-		Draw_Rect((288 - delete_cancel_width) - 5, (159 - delete_cancel_height) - 5, delete_cancel_width + 10, delete_cancel_height + 10, config.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
-	else if (delete_dialog_selection == 1)
-		Draw_Rect((248 - (delete_confirm_width)) - 5, (159 - delete_confirm_height) - 5, delete_confirm_width + 10, delete_confirm_height + 10, config.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
-
-	Draw_Text(248 - (delete_confirm_width), (159 - delete_confirm_height) - 3, 0.42f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "YES");
-	Draw_Text(288 - delete_cancel_width, (159 - delete_cancel_height) - 3, 0.42f, config.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "NO");
+	Dialog_DisplayPrompt("Confirm deletion", "Do you wish to continue?", NULL, &delete_dialog_selection, true);
 }
 
 void Menu_ControlProperties(u32 input) {

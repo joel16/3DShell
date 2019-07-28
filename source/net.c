@@ -3,7 +3,6 @@
 #include <string.h>
 
 #include "fs.h"
-#include "progress_bar.h"
 #include "net.h"
 #include "utils.h"
 

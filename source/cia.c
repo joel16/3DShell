@@ -2,9 +2,9 @@
 #include <string.h>
 
 #include "cia.h"
+#include "dialog.h"
 #include "fs.h"
 #include "menu_error.h"
-#include "progress_bar.h"
 #include "utils.h"
 
 static Result CIA_LaunchTitle(u64 titleId, FS_MediaType mediaType) {
@@ -80,7 +80,7 @@ Result CIA_InstallTitle(const char *path, FS_MediaType media, bool update) {
 		}
 
 		offset += bytes_read;
-		ProgressBar_DisplayProgress("Installing", Utils_Basename(path), offset, size);
+		Dialog_DisplayProgress("Installing", Utils_Basename(path), offset, size);
 	} while(offset < size);
 
 	if (bytes_read != bytes_written) {
