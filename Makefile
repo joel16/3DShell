@@ -142,25 +142,25 @@ endif
 #---------------------------------------------------------------------------------
 
 
-export OFILES_SOURCES 	:=	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
+export OFILES_SOURCES := $(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
 
-export OFILES_BIN	:=	$(addsuffix .o,$(BINFILES)) \
-			$(PICAFILES:.v.pica=.shbin.o) $(SHLISTFILES:.shlist=.shbin.o) \
-			$(addsuffix .o,$(T3XFILES))
+export OFILES_BIN     := $(addsuffix .o,$(BINFILES)) \
+                         $(PICAFILES:.v.pica=.shbin.o) $(SHLISTFILES:.shlist=.shbin.o) \
+			 $(addsuffix .o,$(T3XFILES))
 
-export OFILES := $(OFILES_BIN) $(OFILES_SOURCES)
+export OFILES         := $(OFILES_BIN) $(OFILES_SOURCES)
 
-export HFILES	:=	$(PICAFILES:.v.pica=_shbin.h) $(SHLISTFILES:.shlist=_shbin.h) \
-			$(addsuffix .h,$(subst .,_,$(BINFILES))) \
-			$(GFXFILES:.t3s=.h)
+export HFILES         := $(PICAFILES:.v.pica=_shbin.h) $(SHLISTFILES:.shlist=_shbin.h) \
+                         $(addsuffix .h,$(subst .,_,$(BINFILES))) \
+			 $(GFXFILES:.t3s=.h)
 
-export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
-			$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
-			-I$(CURDIR)/$(BUILD)
+export INCLUDE        := $(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
+                         $(foreach dir,$(LIBDIRS),-I$(dir)/include) \
+			 -I$(CURDIR)/$(BUILD)
 
-export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
+export LIBPATHS       := $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 
-export _3DSXDEPS:=	$(if $(NO_SMDH),,$(OUTPUT).smdh)
+export _3DSXDEPS      := $(if $(NO_SMDH),,$(OUTPUT).smdh)
 
 ifeq ($(strip $(ICON)),)
 	icons := $(wildcard *.png)
@@ -256,11 +256,11 @@ else
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
-$(OUTPUT).3dsx	:	$(OUTPUT).elf $(_3DSXDEPS)
+$(OUTPUT).3dsx    : $(OUTPUT).elf $(_3DSXDEPS)
 
 $(OFILES_SOURCES) : $(HFILES)
 
-$(OUTPUT).elf	:	$(OFILES)
+$(OUTPUT).elf     : $(OFILES)
 
 #---------------------------------------------------------------------------------
 # you need a rule like this for each extension you use as binary data
