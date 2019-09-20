@@ -5,14 +5,8 @@ sudo: true
 before_install:
   - wget https://github.com/devkitPro/pacman/releases/download/devkitpro-pacman-1.0.1/devkitpro-pacman.deb
   - sudo dpkg -i devkitpro-pacman.deb
-
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - gcc-6
-      - g++-6
+  
+dist: bionic
 
 install:
   - sudo dkp-pacman -Syu 3ds-dev --noconfirm --needed
