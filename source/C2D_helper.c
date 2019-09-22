@@ -12,7 +12,6 @@
 #include "libnsgif.h"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
 #define STBI_NO_STDIO
 #define STBI_NO_GIF
 #define STBI_NO_HDR
@@ -23,6 +22,7 @@
 #define STBI_ONLY_PNG
 #define STBI_ONLY_PNM
 #define STBI_ONLY_TGA
+#include "stb_image.h"
 
 #define BYTES_PER_PIXEL 4
 #define TRANSPARENT_COLOR 0xFFFFFFFF
