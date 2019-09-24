@@ -31,32 +31,32 @@ include $(DEVKITARM)/3ds_rules
 #     - icon.png
 #     - <libctru folder>/default_icon.png
 #---------------------------------------------------------------------------------
-TARGET		:= $(notdir $(CURDIR))
-BUILD		:= build
-SOURCES     := libs/source source source/audio source/ftp source/menus
-DATA        := data
-INCLUDES    := include include/audio include/ftp include/menus libs/include
-GRAPHICS	:= res/drawable
-ROMFS		:= romfs
-GFXBUILD	:= $(ROMFS)/res/drawable
+TARGET          := $(notdir $(CURDIR))
+BUILD           := build
+SOURCES         := libs/source source source/audio source/ftp source/menus
+DATA            := data
+INCLUDES        := include include/audio include/ftp include/menus libs/include
+GRAPHICS        := res/drawable
+ROMFS           := romfs
+GFXBUILD        := $(ROMFS)/res/drawable
 
-APP_TITLE           :=	3DShell
-APP_DESCRIPTION     :=	Multi-purpose file manager
-APP_AUTHOR          :=	Joel16
-VERSION_MAJOR       :=  4
-VERSION_MINOR       :=  3
-VERSION_MICRO       :=  1
-GITVERSION          :=  $(shell git log -1 --pretty='%h')
-ICON                :=	res/ic_launcher_filemanager.png
+APP_TITLE       := 3DShell
+APP_DESCRIPTION := Multi-purpose file manager
+APP_AUTHOR      := Joel16
+VERSION_MAJOR   := 4
+VERSION_MINOR   := 3
+VERSION_MICRO   := 1
+GITVERSION      := $(shell git log -1 --pretty='%h')
+ICON            := res/ic_launcher_filemanager.png
 
 # CIA
-BANNER_AUDIO        :=	res/banner.wav
-BANNER_IMAGE        :=	res/banner.png
-RSF_PATH            :=	res/app.rsf
-LOGO                :=	res/logo.lz11
-UNIQUE_ID           :=	0x16200
-PRODUCT_CODE        :=	CTR-3D-SHEL
-ICON_FLAGS          :=	nosavebackups,visible
+BANNER_AUDIO    := res/banner.wav
+BANNER_IMAGE    := res/banner.png
+RSF_PATH        := res/app.rsf
+LOGO            := res/logo.lz11
+UNIQUE_ID       := 0x16200
+PRODUCT_CODE    := CTR-3D-SHEL
+ICON_FLAGS      := nosavebackups,visible
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -64,12 +64,12 @@ ICON_FLAGS          :=	nosavebackups,visible
 ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard
 
 CFLAGS	:=	-g -Wall -O3 -mword-relocations \
-			-fomit-frame-pointer -ffast-math \
-			-I$(DEVKITPRO)/portlibs/3ds/include/opus \
-			-DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO) \
+		-fomit-frame-pointer -ffast-math \
+		-I$(DEVKITPRO)/portlibs/3ds/include/opus \
+		-DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO) \
 	        -DAPP_TITLE="\"$(APP_TITLE)\"" \
 	        -DGITVERSION="\"${GITVERSION}\"" \
-            $(ARCH)
+		$(ARCH)
 
 CFLAGS	+=	$(INCLUDE) -DARM11 -D_3DS
 
@@ -78,9 +78,9 @@ CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:=  -lcurl -lmbedtls -lmbedx509 -lmbedcrypto -larchive -lbz2 -llzma -lz \
-            -lxmp-lite -lmpg123 -lvorbisidec -lopusfile -lopus -lFLAC -logg \
-            -lcitro2d -lcitro3d -lctru -lm
+LIBS	:=      -lcurl -lmbedtls -lmbedx509 -lmbedcrypto -larchive -lbz2 -llzma -lz \
+                -lxmp -lmpg123 -lvorbisidec -lopusfile -lopus -lFLAC -logg \
+		-lcitro2d -lcitro3d -lctru -lm
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
@@ -136,31 +136,31 @@ else
 #---------------------------------------------------------------------------------
 export ROMFS_T3XFILES	:=	$(patsubst %.t3s, $(GFXBUILD)/%.t3x, $(GFXFILES))
 export ROMFS_FONTFILES	:=	$(patsubst %.ttf, $(GFXBUILD)/%.bcfnt, $(FONTFILES))
-export T3XHFILES		:=	$(patsubst %.t3s, $(BUILD)/%.h, $(GFXFILES))
+export T3XHFILES	:=	$(patsubst %.t3s, $(BUILD)/%.h, $(GFXFILES))
 #---------------------------------------------------------------------------------
 endif
 #---------------------------------------------------------------------------------
 
 
-export OFILES_SOURCES 	:=	$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
+export OFILES_SOURCES := $(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
 
-export OFILES_BIN	:=	$(addsuffix .o,$(BINFILES)) \
-			$(PICAFILES:.v.pica=.shbin.o) $(SHLISTFILES:.shlist=.shbin.o) \
-			$(addsuffix .o,$(T3XFILES))
+export OFILES_BIN     := $(addsuffix .o,$(BINFILES)) \
+                         $(PICAFILES:.v.pica=.shbin.o) $(SHLISTFILES:.shlist=.shbin.o) \
+			 $(addsuffix .o,$(T3XFILES))
 
-export OFILES := $(OFILES_BIN) $(OFILES_SOURCES)
+export OFILES         := $(OFILES_BIN) $(OFILES_SOURCES)
 
-export HFILES	:=	$(PICAFILES:.v.pica=_shbin.h) $(SHLISTFILES:.shlist=_shbin.h) \
-			$(addsuffix .h,$(subst .,_,$(BINFILES))) \
-			$(GFXFILES:.t3s=.h)
+export HFILES         := $(PICAFILES:.v.pica=_shbin.h) $(SHLISTFILES:.shlist=_shbin.h) \
+                         $(addsuffix .h,$(subst .,_,$(BINFILES))) \
+			 $(GFXFILES:.t3s=.h)
 
-export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
-			$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
-			-I$(CURDIR)/$(BUILD)
+export INCLUDE        := $(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
+                         $(foreach dir,$(LIBDIRS),-I$(dir)/include) \
+			 -I$(CURDIR)/$(BUILD)
 
-export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
+export LIBPATHS       := $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 
-export _3DSXDEPS	:=	$(if $(NO_SMDH),,$(OUTPUT).smdh)
+export _3DSXDEPS      := $(if $(NO_SMDH),,$(OUTPUT).smdh)
 
 ifeq ($(strip $(ICON)),)
 	icons := $(wildcard *.png)
@@ -256,11 +256,11 @@ else
 #---------------------------------------------------------------------------------
 # main targets
 #---------------------------------------------------------------------------------
-$(OUTPUT).3dsx	:	$(OUTPUT).elf $(_3DSXDEPS)
+$(OUTPUT).3dsx    : $(OUTPUT).elf $(_3DSXDEPS)
 
 $(OFILES_SOURCES) : $(HFILES)
 
-$(OUTPUT).elf	:	$(OFILES)
+$(OUTPUT).elf     : $(OFILES)
 
 #---------------------------------------------------------------------------------
 # you need a rule like this for each extension you use as binary data
