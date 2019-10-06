@@ -6,7 +6,7 @@ static drwav wav;
 static drwav_uint64 frames_read = 0;
 
 int WAV_Init(const char *path) {
-	if (!drwav_init_file(&wav, path))
+	if (!drwav_init_file(&wav, path, NULL))
 		return -1;
 
 	return 0;
