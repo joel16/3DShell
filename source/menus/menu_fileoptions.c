@@ -134,9 +134,10 @@ static Result FileOptions_Rename(void) {
 	return 0;
 }
 
-static int FileOptions_DeleteFile(void) {
-	File *file = Dirbrowse_GetFileIndex(position);
+static int FileOptions_Delete(File *file) {
+	Result ret = 0;
 
+	file = Dirbrowse_GetFileIndex(position);
 	if (file == NULL)
 		return -1;
 	
@@ -146,8 +147,6 @@ static int FileOptions_DeleteFile(void) {
 	char path[512];
 	strcpy(path, cwd);
 	strcpy(path + strlen(path), file->name);
-
-	Result ret = 0;
 
 	if (file->isDir) { // Delete folder
 		if (R_FAILED(ret = FS_RemoveDirRecursive(archive, path))) {
@@ -378,6 +377,8 @@ static Result FileOptions_Paste(void) {
 static void HandleDelete(void) {
 	if ((multi_select_index > 0) && (strlen(multi_select_dir) != 0)) {
 		for (int i = 0; i < multi_select_index; i++) {
+			Dialog_DisplayProgress("Delete", "Deleting multiple files...", i, multi_select_index);
+			
 			if (strlen(multi_select_paths[i]) != 0) {
 				if (strncmp(multi_select_paths[i], "..", 2) != 0) {
 					if (FS_DirExists(archive, multi_select_paths[i]))
@@ -390,8 +391,13 @@ static void HandleDelete(void) {
 
 		FileOptions_ResetClipboard();
 	}
-	else if (FileOptions_DeleteFile() != 0)
-		return;
+	else {
+		File *file = Dirbrowse_GetFileIndex(position);
+		Dialog_DisplayMessage("Delete", "Deleting...", file->name, true);
+
+		if (R_FAILED(FileOptions_Delete(file)))
+			return;
+	}
 
 	Dirbrowse_PopulateFiles(true);
 	MENU_STATE = MENU_STATE_HOME;
