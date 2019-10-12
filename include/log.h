@@ -1,8 +1,10 @@
 #ifndef _3DSHELL_LOG_H
 #define _3DSHELL_LOG_H
 
-#define DEBUG(...) log_func(__VA_ARGS__)
+#include <3ds.h>
 
-void log_func(const char *s, ...);
+Result Log_OpenFileHande(void);
+Result Log_CloseFileHandle(void);
+Result Log_Print(const char *s, ...);
 
 #endif

@@ -3,6 +3,7 @@
 #include "common.h"
 #include "config.h"
 #include "fs.h"
+#include "log.h"
 #include "menu_main.h"
 #include "C2D_helper.h"
 #include "textures.h"
@@ -10,7 +11,17 @@
 
 static u32 cpu_time_limit = 0;
 
+static bool Utils_IsN3DS(void) {
+	bool isNew3DS = false;
+
+	if (R_SUCCEEDED(APT_CheckNew3DS(&isNew3DS)))
+		return isNew3DS;
+
+	return false;
+}
+
 static void Term_Services(void) {
+	Log_CloseFileHandle();
 	Textures_Free();
 
 	if (Utils_IsN3DS())
@@ -74,6 +85,7 @@ static void Init_Services(void) {
 	Textures_Load();
 	Config_Load();
 	Config_GetLastDirectory();
+	Log_OpenFileHande();
 }
 
 int main(void) {
