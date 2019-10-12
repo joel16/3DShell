@@ -8,8 +8,6 @@
 #include "menu_error.h"
 #include "screenshot.h"
 
-static int num = 0;
-
 static Result Screenshot_GenerateScreenshot(const char *path) {
 	int x = 0, y = 0;
 	size_t size = 0x36;
@@ -74,7 +72,7 @@ static Result Screenshot_GenerateScreenshot(const char *path) {
 		}
 	}
 
-	if (R_FAILED(ret = FS_Write(archive, path, (u32 *)buf, size + 576000))) {
+	if (R_FAILED(ret = FS_Write(sdmc_archive, path, (u32 *)buf, size + 576000))) {
 		Menu_DisplayError("FS_Write screenshot failed:", ret);
 		free(buf);
 	}
@@ -83,33 +81,29 @@ static Result Screenshot_GenerateScreenshot(const char *path) {
 	return 0;
 }
 
-static void Screenshot_GenerateFilename(int number, char *fileName, const char *ext) {
-	time_t unixTime = time(NULL);
-	struct tm* timeStruct = gmtime((const time_t *)&unixTime);
-	int num = number;
-	int day = timeStruct->tm_mday;
-	int month = timeStruct->tm_mon + 1;
-	int year = timeStruct->tm_year + 1900;
-
-	if (!(BROWSE_STATE == BROWSE_STATE_NAND)) {
-		if (!(FS_DirExists(archive, "/screenshots/")))
-			FS_MakeDir(archive, "/screenshots");
-
-		sprintf(fileName, "/screenshots/Screenshot_%02d%02d%02d-%i%s", year, month, day, num, ext);
-	}
+static void Screenshot_GenerateFilename(int count, char *file_name) {
+	time_t t = time(0);
+	int day = localtime(&t)->tm_mday;
+	int month = localtime(&t)->tm_mon + 1;
+	int year = localtime(&t)->tm_year + 1900;
+	
+	if (!(FS_DirExists(sdmc_archive, "/screenshots/")))
+		FS_MakeDir(sdmc_archive, "/screenshots");
+		
+	sprintf(file_name, "/screenshots/Screenshot_%02d%02d%02d-%i.bmp", year, month, day, count);
 }
 
 void Screenshot_Capture(void) {
-	static char filename[256];
+	int num = 0;
+	static char file_name[256];
+	sprintf(file_name, "%s", "screenshot");
+	Screenshot_GenerateFilename(num, file_name);
 
-	sprintf(filename, "%s", "screenshot");
-	Screenshot_GenerateFilename(num, filename, ".bmp");
-
-	while (FS_FileExists(archive, filename)) {
+	while (FS_FileExists(sdmc_archive, file_name)) {
 		num++;
-		Screenshot_GenerateFilename(num, filename, ".bmp");
+		Screenshot_GenerateFilename(num, file_name);
 	}
 
-	Screenshot_GenerateScreenshot(filename);
+	Screenshot_GenerateScreenshot(file_name);
 	num++;
 }
