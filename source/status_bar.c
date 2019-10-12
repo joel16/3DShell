@@ -6,35 +6,18 @@
 #include "status_bar.h"
 #include "textures.h"
 
-static float percent_width = 0.0f;
-
-static char *Clock_GetCurrentTime(bool _12hour) {
+static char *Clock_GetCurrentTime(void) {
+	time_t t = time(0);
+	int hour = localtime(&t)->tm_hour % 12;
+	int min = localtime(&t)->tm_min;
+	int AmPm = localtime(&t)->tm_hour / 12;
+	
 	static char buffer[27];
-
-	time_t unix_time = time(0);
-	struct tm* time_struct = gmtime((const time_t*)&unix_time);
-	int hours = time_struct->tm_hour;
-	int minutes = time_struct->tm_min;
-	int amOrPm = 0;
-
-	if (_12hour) {
-		if (hours < 12)
-			amOrPm = 1;
-		if (hours == 0)
-			hours = 12;
-		else if (hours > 12)
-			hours = hours - 12;
-
-		if ((hours >= 1) && (hours < 10))
-			snprintf(buffer, 27, "%2i:%02i %s", hours, minutes, amOrPm ? "AM" : "PM");
-		else
-			snprintf(buffer, 27, "%2i:%02i %s", hours, minutes, amOrPm ? "AM" : "PM");
-	}
-
+	snprintf(buffer, 27, "%2i:%02i %s", (hour == 0) ? 12 : hour, min, AmPm ? "AM" : "PM");
 	return buffer;
 }
 
-static void StatusBar_GetBatteryStatus(int x, int y) {
+static void StatusBar_GetBatteryStatus(int x, int y, float *percent_width) {
 	u8 percent = 0, state = 0;
 	char buf[5];
 
@@ -88,13 +71,13 @@ static void StatusBar_GetBatteryStatus(int x, int y) {
 		}
 
 		snprintf(buf, 5, "%d%%", percent);
-		percent_width = Draw_GetTextWidth(0.45f, buf);
-		Draw_Text((float)(x - percent_width - 5), y - 1, 0.4f, WHITE, buf);
+		*percent_width = Draw_GetTextWidth(0.45f, buf);
+		Draw_Text((float)(x - *percent_width - 5), y - 1, 0.4f, WHITE, buf);
 	}
 	else {
 		snprintf(buf, 5, "%d%%", percent);
-		percent_width = Draw_GetTextWidth(0.45f, buf);
-		Draw_Text((float)(x - percent_width - 5), y - 1, 0.4f, WHITE, buf);
+		*percent_width = Draw_GetTextWidth(0.45f, buf);
+		Draw_Text((float)(x - *percent_width - 5), y - 1, 0.4f, WHITE, buf);
 		Draw_Image(battery_unknown, x, 1);
 	}
 }
@@ -117,11 +100,11 @@ static void StatusBar_GetWifiStatus(int x) {
 }
 
 void StatusBar_DisplayTime(void) {
-	float width = 0, height = 0;
-	Draw_GetTextSize(0.4f, &width, &height, Clock_GetCurrentTime(true));
+	float width = 0, height = 0, percent_width = 0;
+	Draw_GetTextSize(0.4f, &width, &height, Clock_GetCurrentTime());
 
-	StatusBar_GetBatteryStatus((float)((395 - width) - (10 + 12)), (float)((18 - height) / 2));
+	StatusBar_GetBatteryStatus((float)((395 - width) - (10 + 12)), (float)((18 - height) / 2), &percent_width);
 	StatusBar_GetWifiStatus((float)((395 - width) - (10 + 14) - (10 + 12) - (percent_width + 10)));
 
-	Draw_Text((float)(395 - width), (float)((18 - height) / 2) - 2, 0.4f, WHITE, Clock_GetCurrentTime(true));
+	Draw_Text((float)(395 - width), (float)((18 - height) / 2) - 2, 0.4f, WHITE, Clock_GetCurrentTime());
 }

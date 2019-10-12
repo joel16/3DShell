@@ -237,12 +237,10 @@ void Dirbrowse_DisplayFiles(void) {
 
 static Result Dirbrowse_SaveLastDirectory(void) {
 	Result ret = 0;
-
-	if (!(BROWSE_STATE == BROWSE_STATE_NAND)) {
-		if (R_FAILED(ret = FS_Write(archive, "/3ds/3DShell/lastdir.txt", cwd, strlen(cwd)))) {
-			Menu_DisplayError("Failed to save last directory:", ret);
-			return ret;
-		}
+	
+	if (R_FAILED(ret = FS_Write(sdmc_archive, "/3ds/3DShell/lastdir.txt", cwd, strlen(cwd)))) {
+		Menu_DisplayError("Failed to save last directory:", ret);
+		return ret;
 	}
 	
 	return 0;
