@@ -13,7 +13,7 @@ static char *Clock_GetCurrentTime(void) {
 	int AmPm = localtime(&t)->tm_hour / 12;
 	
 	static char buffer[27];
-	snprintf(buffer, 27, "%2i:%02i %s", (hour == 0) ? 12 : hour, min, AmPm ? "AM" : "PM");
+	snprintf(buffer, 27, "%2i:%02i %s", (hour == 0)? 12 : hour, min, AmPm? "AM" : "PM");
 	return buffer;
 }
 
@@ -27,48 +27,20 @@ static void StatusBar_GetBatteryStatus(int x, int y, float *percent_width) {
 	if (R_SUCCEEDED(MCUHWC_GetBatteryLevel(&percent))) {
 		if (percent < 20)
 			Draw_Image(battery_low, x, 1);
-		else if ((percent >= 20) && (percent < 30)) {
-			if (state == 1)
-				Draw_Image(battery_20_charging, x, 1);
-			else
-				Draw_Image(battery_20, x, 1);
-		}
-		else if ((percent >= 30) && (percent < 50)) {
-			if (state == 1)
-				Draw_Image(battery_50_charging, x, 1);
-			else
-				Draw_Image(battery_50, x, 1);
-		}
-		else if ((percent >= 50) && (percent < 60)) {
-			if (state == 1)
-				Draw_Image(battery_50_charging, x, 1);
-			else
-				Draw_Image(battery_50, x, 1);
-		}
-		else if ((percent >= 60) && (percent < 80)) {
-			if (state == 1)
-				Draw_Image(battery_60_charging, x, 1);
-			else
-				Draw_Image(battery_60, x, 1);
-		}
-		else if ((percent >= 80) && (percent < 90)) {
-			if (state == 1)
-				Draw_Image(battery_80_charging, x, 1);
-			else
-				Draw_Image(battery_80, x, 1);
-		}
-		else if ((percent >= 90) && (percent < 100)) {
-			if (state == 1)
-				Draw_Image(battery_90_charging, x, 1);
-			else
-				Draw_Image(battery_90, x, 1);
-		}
-		else if (percent == 100) {
-			if (state == 1)
-				Draw_Image(battery_full_charging, x, 1);
-			else
-				Draw_Image(battery_full, x, 1);
-		}
+		else if ((percent >= 20) && (percent < 30))
+			Draw_Image(state == 1? battery_20_charging : battery_20, x, 1);
+		else if ((percent >= 30) && (percent < 50))
+			Draw_Image(state == 1? battery_50_charging : battery_50, x, 1);
+		else if ((percent >= 50) && (percent < 60))
+			Draw_Image(state == 1? battery_50_charging : battery_50, x, 1);
+		else if ((percent >= 60) && (percent < 80))
+			Draw_Image(state == 1? battery_60_charging : battery_60, x, 1);
+		else if ((percent >= 80) && (percent < 90))
+			Draw_Image(state == 1? battery_80_charging : battery_80, x, 1);
+		else if ((percent >= 90) && (percent < 100))
+			Draw_Image(state == 1? battery_90_charging : battery_90, x, 1);
+		else if (percent == 100)
+			Draw_Image(state == 1? battery_full_charging : battery_full, x, 1);
 
 		snprintf(buf, 5, "%d%%", percent);
 		*percent_width = Draw_GetTextWidth(0.45f, buf);
