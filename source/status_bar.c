@@ -13,7 +13,7 @@ static char *Clock_GetCurrentTime(void) {
 	int AmPm = localtime(&t)->tm_hour / 12;
 	
 	static char buffer[27];
-	snprintf(buffer, 27, "%2i:%02i %s", (hour == 0)? 12 : hour, min, AmPm? "AM" : "PM");
+	snprintf(buffer, 27, "%2i:%02i %s", (hour == 0)? 12 : hour, min, AmPm? "PM" : "AM");
 	return buffer;
 }
 
