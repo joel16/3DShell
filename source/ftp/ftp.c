@@ -268,6 +268,10 @@ static int                sock_buffersize = SOCK_BUFFERSIZE;
 /*! server start time */
 static time_t             start_time = 0;
 
+// 3DShell vars
+bool isTransfering;
+char ftp_accepted_connection[50], ftp_file_transfer[100];
+
 /*! Allocate a new data port
  *
  *  @returns next data port
@@ -2282,9 +2286,9 @@ list_transfer(ftp_session_t *session)
       /* the sdmc directory entry already has the type and size, so no need to do a slow stat */
       u32 magic = *(u32*)session->dp->dirData->dirStruct;
 
-      if(magic == SDMC_DIRITER_MAGIC)
+      if(magic == ARCHIVE_DIRITER_MAGIC)
       {
-        sdmc_dir_t        *dir   = (sdmc_dir_t*)session->dp->dirData->dirStruct;
+        archive_dir_t        *dir   = (archive_dir_t*)session->dp->dirData->dirStruct;
         FS_DirectoryEntry *entry = &dir->entry_data[dir->index];
 
         if(entry->attributes & FS_ATTRIBUTE_DIRECTORY)
@@ -2313,8 +2317,8 @@ list_transfer(ftp_session_t *session)
         else if(getmtime)
         {
           uint64_t mtime = 0;
-          if((rc = sdmc_getmtime(session->buffer, &mtime)) != 0)
-            console_print(RED "sdmc_getmtime '%s': 0x%x\n" RESET, session->buffer, rc);
+          if((rc = archive_getmtime(session->buffer, &mtime)) != 0)
+            console_print(RED "archive_getmtime '%s': 0x%x\n" RESET, session->buffer, rc);
           else
             st.st_mtime = mtime;
         }
@@ -3059,7 +3063,7 @@ FTP_DECLARE(MDTM)
   }
 
 #ifdef _3DS
-  rc = sdmc_getmtime(session->buffer, &mtime);
+  rc = archive_getmtime(session->buffer, &mtime);
   if(rc != 0)
   {
     ftp_send_response(session, 550, "Error getting mtime\r\n");

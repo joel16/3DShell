@@ -301,7 +301,7 @@ char *FS_GetFileTimestamp(const char *path) {
 	static char timeStr[60];
 	u64 mtime = 0;
 
-	if (R_SUCCEEDED(sdmc_getmtime(path, &mtime))) {
+	if (R_SUCCEEDED(archive_getmtime(path, &mtime))) {
 		time_t mt = mtime;
 		struct tm *timeStruct = gmtime(&mt);
 
