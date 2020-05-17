@@ -85,7 +85,7 @@ int Archive_ExtractArchive(const char *path) {
 	char *dest_path = malloc(256);
 	char *dirname_without_ext = Archive_RemoveFileExt((char *)path);
 
-	snprintf(dest_path, 512, "%s/", dirname_without_ext);
+	snprintf(dest_path, 256, "%s/", dirname_without_ext);
 	FS_MakeDir(archive, dest_path);
 
 	int count = 0;

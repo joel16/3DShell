@@ -56,8 +56,10 @@ static Result FileOptions_CreateFolder(void) {
 	char *buf = malloc(256);
 	strcpy(buf, Keyboard_GetText("New folder", "Enter name"));
 
-	if (strncmp(buf, "", 1) == 0)
+	if (strncmp(buf, "", 1) == 0) {
+		free(buf);
 		return -1;
+	}
 
 	char path[512];
 	strcpy(path, cwd);
@@ -78,8 +80,10 @@ static Result FileOptions_CreateFile(void) {
 	char *buf = malloc(256);
 	strcpy(buf, Keyboard_GetText("New file.txt", "Enter name"));
 
-	if (strncmp(buf, "", 1) == 0)
+	if (strncmp(buf, "", 1) == 0) {
+		free(buf);
 		return -1;
+	}
 
 	char path[512];
 	strcpy(path, cwd);
@@ -273,6 +277,7 @@ static Result FileOptions_CopyDir(char *src, char *dst) {
 		}
 		else {
 			Menu_DisplayError("FSDIR_Read failed:", ret);
+			free(entries);
 			return ret;
 		}
 
