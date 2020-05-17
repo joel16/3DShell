@@ -5,7 +5,7 @@
 
 static C2D_SpriteSheet spritesheet;
 
-C2D_Image icon_app, icon_archive, icon_audio, icon_dir, icon_file, icon_image, icon_text, icon_dir_dark, \
+C2D_Image icon_app, icon_archive, icon_dir, icon_file, icon_image, icon_text, icon_dir_dark, \
 	icon_check, icon_uncheck, icon_check_dark, icon_uncheck_dark, icon_radio_off, icon_radio_on, \
 	icon_radio_dark_off, icon_radio_dark_on, icon_toggle_on, icon_toggle_dark_on, icon_toggle_off, \
 	dialog, options_dialog, properties_dialog, dialog_dark, options_dialog_dark, properties_dialog_dark, \
@@ -26,7 +26,6 @@ void Textures_Load(void) {
 
 	icon_app = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_type_executable_idx);
 	icon_archive = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_type_compress_idx);
-	icon_audio = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_type_audio_idx);
 	icon_dir = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_folder_idx);
 	icon_dir_dark = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_folder_dark_idx);
 	icon_file = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_default_idx);
