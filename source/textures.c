@@ -13,8 +13,6 @@ C2D_Image icon_app, icon_archive, icon_dir, icon_file, icon_image, icon_text, ic
 	icon_settings, icon_settings_dark, icon_settings_overlay, icon_ftp, icon_ftp_dark, icon_ftp_overlay, \
 	icon_sd, icon_sd_dark, icon_sd_overlay, icon_secure, icon_secure_dark, icon_secure_overlay, icon_search, \
 	icon_updates, icon_updates_dark, icon_updates_overlay, \
-	default_artwork, default_artwork_blur, ic_music_bg_bottom, btn_play, btn_pause, btn_rewind, btn_forward, \
-	btn_repeat, btn_shuffle, btn_repeat_overlay, btn_shuffle_overlay, icon_lock, \
 	icon_nav_drawer, icon_actions, icon_back, \
 	icon_wifi_0, icon_wifi_1, icon_wifi_2, icon_wifi_3, \
 	battery_20, battery_20_charging, battery_30, battery_30_charging, battery_50, battery_50_charging, \
@@ -70,18 +68,6 @@ void Textures_Load(void) {
 	icon_updates = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_material_light_tab_idx);
 	icon_updates_dark = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_material_light_tab_dark_idx);
 	icon_updates_overlay = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_material_light_tab_overlay_idx);
-	default_artwork_blur = C2D_SpriteSheetGetImage(spritesheet, sprites_default_artwork_blur_idx);
-	default_artwork = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_album_lg_idx);
-	ic_music_bg_bottom = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_music_bg_bottom_idx);
-	btn_play = C2D_SpriteSheetGetImage(spritesheet, sprites_btn_playback_play_idx);
-	btn_pause = C2D_SpriteSheetGetImage(spritesheet, sprites_btn_playback_pause_idx);
-	btn_rewind = C2D_SpriteSheetGetImage(spritesheet, sprites_btn_playback_rewind_idx);
-	btn_forward = C2D_SpriteSheetGetImage(spritesheet, sprites_btn_playback_forward_idx);
-	btn_repeat = C2D_SpriteSheetGetImage(spritesheet, sprites_btn_playback_repeat_idx);
-	btn_shuffle = C2D_SpriteSheetGetImage(spritesheet, sprites_btn_playback_shuffle_idx);
-	btn_repeat_overlay = C2D_SpriteSheetGetImage(spritesheet, sprites_btn_playback_repeat_overlay_idx);
-	btn_shuffle_overlay = C2D_SpriteSheetGetImage(spritesheet, sprites_btn_playback_shuffle_overlay_idx);
-	icon_lock = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_material_dialog_fs_locked_idx);
 	icon_nav_drawer = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_material_light_navigation_drawer_idx);
 	icon_actions = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_material_light_contextual_action_idx);
 	icon_back = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_arrow_back_normal_idx);
