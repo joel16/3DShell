@@ -26,7 +26,6 @@ Current features:
 - Fast scroll - Use analog stick.
 - File timestamps.
 - Browsing CTRNAND and copying data to/from CTRNAND.
-- Audio playback support for the following formats -> IT, OGG, MOD, MP3, S3M, WAV and XM.
 - Dir list Sorting (alphabetical - ascending, alphabetical - descending, size - largest to smallest, and size - smallest to largest).
 - Online updater (nightly/releases)
 
@@ -37,11 +36,6 @@ Building from source:
 2. Install the following dependecies from [devkitPro's pacman](https://devkitpro.org/viewtopic.php?f=13&t=8702):
 * `sudo dkp-pacman -Syu 3ds-dev --noconfirm --needed`
 * `sudo dkp-pacman -Syu 3ds-curl --noconfirm --force`
-* `sudo dkp-pacman -Syu 3ds-libogg --noconfirm`
-* `sudo dkp-pacman -Syu 3ds-libvorbisidec --noconfirm`
-* `sudo dkp-pacman -Syu 3ds-mpg123 --noconfirm`
-* `sudo dkp-pacman -Syu 3ds-opusfile --noconfirm`
-* `sudo dkp-pacman -Syu 3ds-flac --noconfirm`
 * `sudo dkp-pacman -Syu 3ds-libarchive --noconfirm`
 
 3. Clone the 3DShell repository:
@@ -59,7 +53,7 @@ make
 
 Credits:
 --------------------------------------------------------------------------------
-- deltabeard/MaK11-12 for the inital ctrmus code port.
+- deltabeard/MaK11-12 for the inital ctrmus code port which was used in previous versions.
 - mtheall for ftpd.
 - preetisketch for the banner.
 - FrozenFire for the boot logo.
