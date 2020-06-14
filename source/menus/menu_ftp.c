@@ -33,7 +33,7 @@ void Menu_DisplayFTP(void) {
 	char buf[137], buf2[512];
 	u32 wifiStatus = 0;
 
-	int position = 0, progress = 0, xlim = 270;
+	int position = 0, xlim = 270, heigth = 0;
 
 	//ret = gethostname(hostname, sizeof(hostname));
 
@@ -56,76 +56,74 @@ void Menu_DisplayFTP(void) {
 		Menu_DrawMenuBar();
 
 		if ((wifiStatus != 0) && R_SUCCEEDED(ret)) {
-			Draw_Text(((320 - Draw_GetTextWidth(0.48f, "FTP initialized")) / 2), 40, 0.48f, WHITE, "FTP initialized");
-			//snprintf(buf, 137, "IP: %s:5000", R_FAILED(ret)? "Failed to get IP" : hostname);
-                        snprintf(buf, 137, "%s", bftps_name());
+            Draw_Text(((320 - Draw_GetTextWidth(0.42f, "FTP initialized")) / 2), 37, 0.42f, WHITE, "FTP initialized");
+            //snprintf(buf, 137, "IP: %s:5000", R_FAILED(ret)? "Failed to get IP" : hostname);
+            snprintf(buf, 137, "%s", bftps_name());
 
-			/* for now I still don't have a list of conected clients
-                        if (strlen(ftp_accepted_connection) != 0)
-				Draw_Text(((320 - Draw_GetTextWidth(0.48f, ftp_accepted_connection)) / 2), 80, 0.48f, WHITE, ftp_accepted_connection);
-                        */
+            /* for now I still don't have a list of conected clients, is this really necessary?
+            if (strlen(ftp_accepted_connection) != 0)
+                    Draw_Text(((320 - Draw_GetTextWidth(0.42f, ftp_accepted_connection)) / 2), 77, 0.42f, WHITE, ftp_accepted_connection);
+             */
 
-			Draw_Text(((320 - Draw_GetTextWidth(0.48f, "File browser cannot be accessed at this time.")) / 2), 100, 0.48f, WHITE, "File browser cannot be accesed at this time.");
+            Draw_Text(((320 - Draw_GetTextWidth(0.42f, "File browser cannot be accessed at this time.")) / 2), 97, 0.42f, WHITE, "File browser cannot be accesed at this time.");
 
-                        const bftps_file_transfer_t* transfersInfo = bftps_file_transfer_retrieve();
-                        if (transfersInfo) {
-                            const bftps_file_transfer_t* file = transfersInfo;
-                           // while (file) { for now only show the first file on the list
-                                if (file->mode == FILE_SENDING) {
-                                    float fraction = ((float) file->filePosition / (float) file->fileSize);
-                                    snprintf(buf2, 512, "Sending %.2f%%", fraction * (float) 100);
-                                    //file name should have an elipsis when is to longer
-                                    Draw_Text(((320 - Draw_GetTextWidth(0.45f, buf2)) / 2), 150, 0.45f, WHITE, buf2);
-                                    Draw_Text(((320 - Draw_GetTextWidth(0.35f, my_basename(file->name))) / 2), 170, 0.35f, WHITE, my_basename(file->name));
-                                    position = 0;
-                                    progress = 40+round(fraction * (float)(xlim-40));
-                                }                                   
-                                else {
-                                    snprintf(buf2, 512, "Receiving %.2fMB", 
-                                            ((float) file->filePosition / ((float) 1024 * (float) 1024)));
-                                    //file name should have an elipsis when is to longer
-                                    Draw_Text(((320 - Draw_GetTextWidth(0.45f, buf2)) / 2), 150, 0.45f, WHITE, buf2);
-                                    Draw_Text(((320 - Draw_GetTextWidth(0.35f, my_basename(file->name))) / 2), 170, 0.35f, WHITE, my_basename(file->name));                                    
-                                    progress = 40;
-                                    position += 4;			
-                                    if (position >= xlim)
-					position = 34;
-                                }
-                                    //aux = aux->next;
-                            //}
-                            bftps_file_transfer_cleanup(transfersInfo); 
-                            
-                            Draw_Rect(50, 140, 220, 3, config.dark_theme? STATUS_BAR_DARK : STATUS_BAR_LIGHT);
-                            Draw_Rect(position, 140, progress, 3, WHITE);
-                            
-                            // Boundary stuff
-                            Draw_Rect(0, 140, 50, 3, config.dark_theme? MENU_BAR_DARK : MENU_BAR_LIGHT);
-                            Draw_Rect(270, 140, 50, 3, config.dark_theme? MENU_BAR_DARK : MENU_BAR_LIGHT); 
-                            
-                        }  
+            const bftps_file_transfer_t* transfersInfo = bftps_file_transfer_retrieve();
+            if (transfersInfo) {
+                const bftps_file_transfer_t* file = transfersInfo;
+                heigth = 0;
+                while (file) { // should be limited to the amount of information that can be shown (for now working on two simultaneous)
+                    if (file->mode == FILE_SENDING) {
+                        float fraction = ((float) file->filePosition / (float) file->fileSize);
+                        snprintf(buf2, 512, "Sending: %.2f%%", fraction * (float) 100);
+                        //file name should have an elipsis when is to longer
+                        Draw_Text(((320 - Draw_GetTextWidth(0.45f, buf2)) / 2), 150 + heigth, 0.45f, WHITE, buf2);
+                        Draw_Text(((320 - Draw_GetTextWidth(0.35f, my_basename(file->name))) / 2), 170 + heigth, 0.35f, WHITE, my_basename(file->name));
+                        int progress = round(fraction * (float) (xlim - 50));
+                        Draw_Rect(50, 140 + heigth, 220, 3, config.dark_theme ? STATUS_BAR_DARK : STATUS_BAR_LIGHT);
+                        Draw_Rect(50, 140 + heigth, progress, 3, WHITE);
+                    } else {
+                        snprintf(buf2, 512, "Receiving: %.2fMB",
+                                ((float) file->filePosition / ((float) 1024 * (float) 1024)));
+                        //file name should have an elipsis when is to longer
+                        Draw_Text(((320 - Draw_GetTextWidth(0.45f, buf2)) / 2), 150 + heigth, 0.45f, WHITE, buf2);
+                        Draw_Text(((320 - Draw_GetTextWidth(0.35f, my_basename(file->name))) / 2), 170 + heigth, 0.35f, WHITE, my_basename(file->name));
                         
-                        /*
-			if (strlen(ftp_file_transfer) != 0)
-				Draw_Text(((320 - Draw_GetTextWidth(0.42f, ftp_file_transfer)) / 2), 147, 0.42f, WHITE, ftp_file_transfer);
+                        position += 4;
+                        if (position >= xlim)
+                            position = 34;
+                        Draw_Rect(50, 140 + heigth, 220, 3, config.dark_theme ? STATUS_BAR_DARK : STATUS_BAR_LIGHT);
+                        Draw_Rect(position, 140 + heigth, 40, 3, WHITE);   
+                        // Boundary stuff
+                        Draw_Rect(0, 140 + heigth, 50, 3, config.dark_theme ? MENU_BAR_DARK : MENU_BAR_LIGHT);
+                        Draw_Rect(270, 140 + heigth, 50, 3, config.dark_theme ? MENU_BAR_DARK : MENU_BAR_LIGHT); 
+                    }
+                    heigth += 50;
+                    file = file->next;
+                }                
+                bftps_file_transfer_cleanup(transfersInfo);                 
+            }
 
-			if (isTransfering) {
-				Draw_Rect(50, 140, 220, 3, config.dark_theme? STATUS_BAR_DARK : STATUS_BAR_LIGHT);
-				Draw_Rect(pBar, 140, 40, 3, WHITE);
+            /*
+            if (strlen(ftp_file_transfer) != 0)
+                    Draw_Text(((320 - Draw_GetTextWidth(0.42f, ftp_file_transfer)) / 2), 147, 0.42f, WHITE, ftp_file_transfer);
 
-				// Boundary stuff
-				Draw_Rect(0, 140, 50, 3, config.dark_theme? MENU_BAR_DARK : MENU_BAR_LIGHT);
-				Draw_Rect(270, 140, 50, 3, config.dark_theme? MENU_BAR_DARK : MENU_BAR_LIGHT); 
-				pBar += 4;
+            if (isTransfering) {
+                    Draw_Rect(50, 140, 220, 3, config.dark_theme? STATUS_BAR_DARK : STATUS_BAR_LIGHT);
+                    Draw_Rect(pBar, 140, 40, 3, WHITE);
+
+                    // Boundary stuff
+                    Draw_Rect(0, 140, 50, 3, config.dark_theme? MENU_BAR_DARK : MENU_BAR_LIGHT);
+                    Draw_Rect(270, 140, 50, 3, config.dark_theme? MENU_BAR_DARK : MENU_BAR_LIGHT); 
+                    pBar += 4;
 			
-				if (pBar >= xlim)
-					pBar = 34;
-			}
-                        */
-		}
-		else {
-			Draw_Text(((320 - Draw_GetTextWidth(0.42f, "Failed to initialize FTP.")) / 2), 37, 0.42f, WHITE, "Failed to initialize FTP.");
-			snprintf(buf, 18, "WiFi not enabled.");
-		}
+                    if (pBar >= xlim)
+                            pBar = 34;
+            }
+             */
+        } else {
+            Draw_Text(((320 - Draw_GetTextWidth(0.42f, "Failed to initialize FTP.")) / 2), 37, 0.42f, WHITE, "Failed to initialize FTP.");
+            snprintf(buf, 18, "WiFi not enabled.");
+        }
 
 		Draw_Text(((320 - Draw_GetTextWidth(0.42f, buf)) / 2), 57, 0.42f, WHITE, buf);
 		Draw_Text(((320 - Draw_GetTextWidth(0.42f, "Tap the FTP icon to disable the FTP connection.")) / 2), 117, 0.42f, WHITE, "Tap the FTP icon to disable the FTP connection.");
