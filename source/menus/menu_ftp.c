@@ -51,7 +51,7 @@ void Menu_DisplayFTP(void) {
 		Draw_Rect(0, 0, 320, 20, config.dark_theme? STATUS_BAR_DARK : STATUS_BAR_LIGHT); // Status bar
 		Draw_Rect(0, 20, 320, 220, config.dark_theme? MENU_BAR_DARK : MENU_BAR_LIGHT); // Menu bar
 
-		ret = ACU_GetWifiStatus(&wifi_status);
+		ret = ACU_GetWifiStatus(&wifiStatus);
 			
 		Menu_DrawMenuBar();
 
