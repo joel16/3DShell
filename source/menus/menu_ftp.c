@@ -49,7 +49,7 @@ void Menu_DisplayFTP(void) {
 			if (strlen(ftp_accepted_connection) != 0)
 				Draw_Text(((320 - Draw_GetTextWidth(0.42f, ftp_accepted_connection)) / 2), 77, 0.42f, WHITE, ftp_accepted_connection);
 
-			Draw_Text(((320 - Draw_GetTextWidth(0.42f, "File browser cannot be accesed at this time.")) / 2), 97, 0.42f, WHITE, "File browser cannot be accesed at this time.");
+			Draw_Text(((320 - Draw_GetTextWidth(0.42f, "File browser cannot be accessed at this time.")) / 2), 97, 0.42f, WHITE, "File browser cannot be accessed at this time.");
 
 			if (strlen(ftp_file_transfer) != 0)
 				Draw_Text(((320 - Draw_GetTextWidth(0.42f, ftp_file_transfer)) / 2), 147, 0.42f, WHITE, ftp_file_transfer);
