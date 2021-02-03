@@ -134,6 +134,7 @@ namespace GUI {
                                 }
                             }
                             
+                            GUI::RecalcStorageSize(item);
                             copy = !copy;
                             item->state = MENU_STATE_FILEBROWSER;
                         }

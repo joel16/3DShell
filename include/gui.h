@@ -31,6 +31,7 @@ typedef struct {
 
 namespace GUI {
     void ResetCheckbox(MenuItem *item);
+    void RecalcStorageSize(MenuItem *item);
     Result Loop(void);
 
     // Windows

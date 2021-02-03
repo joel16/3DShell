@@ -20,6 +20,11 @@ namespace GUI {
         item->checked_count = 0;
     };
 
+    void RecalcStorageSize(MenuItem *item) {
+        item->total_storage = FS::GetTotalStorage(archive == sdmc_archive? SYSTEM_MEDIATYPE_SD : SYSTEM_MEDIATYPE_CTR_NAND);
+        item->used_storage = FS::GetUsedStorage(archive == sdmc_archive? SYSTEM_MEDIATYPE_SD : SYSTEM_MEDIATYPE_CTR_NAND);
+    }
+
     static void DisplayStatusBar(void) {
         const std::time_t time = std::time(nullptr);
         const std::tm calendar_time = *std::localtime(std::addressof(time));
@@ -69,6 +74,7 @@ namespace GUI {
 			return ret;
             
         GUI::ResetCheckbox(&item);
+        GUI::RecalcStorageSize(&item);
 
         while(aptMainLoop()) {
             C3D_FrameBegin(C3D_FRAME_SYNCDRAW);

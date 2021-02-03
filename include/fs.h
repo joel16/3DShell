@@ -20,6 +20,8 @@ namespace FS {
     bool FileExists(FS_Archive archive, const std::string &path);
     bool DirExists(FS_Archive archive, const std::string &path);
     std::string GetFileExt(const std::string &filename);
+    u64 GetTotalStorage(FS_SystemMediaType mediatype);
+    u64 GetUsedStorage(FS_SystemMediaType mediatype);
     FileType GetFileType(const std::string &filename);
     Result GetDirList(const std::string &path, std::vector<FS_DirectoryEntry> &entries);
     Result ChangeDirNext(const std::string &path, std::vector<FS_DirectoryEntry> &entries);

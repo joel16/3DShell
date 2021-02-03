@@ -63,7 +63,8 @@ namespace GUI {
                     FS::GetDirList(cfg.cwd, item->entries);
                     GUI::ResetCheckbox(item);
                 }
-                
+
+                GUI::RecalcStorageSize(item);
                 Log::Open();
                 selection = 0;
                 item->state = MENU_STATE_OPTIONS;

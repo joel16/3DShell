@@ -85,6 +85,43 @@ namespace FS {
         return FileTypeNone;
     }
     
+    static u64 GetFreeStorage(FS_SystemMediaType mediatype) {
+        Result ret = 0;
+        FS_ArchiveResource resource = { 0 };
+        
+        if (R_FAILED(ret = FSUSER_GetArchiveResource(&resource, mediatype))) {
+            Log::Error("FSUSER_GetArchiveResource(GetFreeStorage) failed: 0x%x\n", ret);
+            return ret;
+        }
+            
+        return (static_cast<u64>(resource.freeClusters) * static_cast<u64>(resource.clusterSize));
+    }
+    
+    u64 GetTotalStorage(FS_SystemMediaType mediatype) {
+        Result ret = 0;
+        FS_ArchiveResource resource = { 0 };
+        
+        if (R_FAILED(ret = FSUSER_GetArchiveResource(&resource, mediatype))) {
+            Log::Error("FSUSER_GetArchiveResource(GetTotalStorage) failed: 0x%x\n", ret);
+            return ret;
+        }
+        
+        return (static_cast<u64>(resource.totalClusters) * static_cast<u64>(resource.clusterSize));
+    }
+    
+    u64 GetUsedStorage(FS_SystemMediaType mediatype) {
+        Result ret = 0;
+        FS_ArchiveResource resource = { 0 };
+        
+        if (R_FAILED(ret = FSUSER_GetArchiveResource(&resource, mediatype))) {
+            Log::Error("FSUSER_GetArchiveResource(GetUsedStorage) failed: 0x%x\n", ret);
+            return ret;
+        }
+            
+        return ((static_cast<u64>(resource.totalClusters) * static_cast<u64>(resource.clusterSize)) - 
+            (static_cast<u64>(resource.freeClusters) * static_cast<u64>(resource.clusterSize)));
+    }
+    
     static bool Sort(const FS_DirectoryEntry &entryA, const FS_DirectoryEntry &entryB) {
         if ((entryA.attributes & FS_ATTRIBUTE_DIRECTORY) && !(entryB.attributes & FS_ATTRIBUTE_DIRECTORY))
             return true;
@@ -247,6 +284,13 @@ namespace FS {
             Log::Error("FSFILE_GetSize(%s) failed: 0x%x\n", src_path.c_str(), ret);
             FSFILE_Close(src_handle);
             return ret;
+        }
+
+        // Make sure we have enough storage to carry out this operation
+        if (FS::GetFreeStorage(src_archive == sdmc_archive? SYSTEM_MEDIATYPE_SD : SYSTEM_MEDIATYPE_CTR_NAND) < size) {
+            Log::Error("Not enough storage is available to process this command 0x%x\n", src_path.c_str(), ret);
+            FSFILE_Close(src_handle);
+            return -1;
         }
         
         // This may fail or not, but we don't care -> create the file if it doesn't exist, otherwise continue.

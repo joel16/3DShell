@@ -22,7 +22,12 @@ namespace GUI {
     void DisplayFileBrowser(MenuItem *item) {
         float filename_height = 0.0f;
         C2D::GetTextSize(0.45f, nullptr, &filename_height, cfg.cwd.c_str());
-        C2D::Text(35, 15 + ((25 - filename_height) / 2), 0.45f, WHITE, cfg.cwd.c_str());
+        C2D::Text(5, 15 + ((25 - filename_height) / 2), 0.45f, WHITE, cfg.cwd.c_str());
+
+        // Storage bar
+        C2D::Rect(5, 28 + ((25 - filename_height) / 2), 390, 2, cfg.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
+        float fill = (static_cast<double>(item->used_storage)/static_cast<double>(item->total_storage)) * 390.0;
+        C2D::Rect(5, 28 + ((25 - filename_height) / 2), fill, 2, cfg.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR);
 
         if (item->entries.empty()) {
             C2D::GetTextSize(0.50f, &empty_dir_width, &empty_dir_height, empty_dir.c_str());
