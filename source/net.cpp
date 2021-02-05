@@ -4,6 +4,7 @@
 #include <cstring>
 #include <curl/curl.h>
 #include <jansson.h>
+#include <regex>
 
 #include "fs.h"
 #include "log.h"
@@ -40,12 +41,12 @@ namespace Net {
         Result ret = 0;
         u32 status = 0;
 
-        if (R_FAILED(ret = ACU_GetWifiStatus(&status))) {
-            Log::Error("ACU_GetWifiStatus() failed: 0x%x\n", ret);
+        if (R_FAILED(ret = ACU_GetStatus(&status))) {
+            Log::Error("ACU_GetStatus() failed: 0x%x\n", ret);
             return false;
         }
 
-        return ((status == 1) || (status == 2));
+        return (status == 3);
     }
     
     bool GetAvailableUpdate(const std::string &tag) {
@@ -55,8 +56,9 @@ namespace Net {
         int current_ver = ((VERSION_MAJOR * 100) + (VERSION_MINOR * 10) + VERSION_MICRO);
         
         std::string tag_name = tag;
-        tag_name.erase(std::remove_if(tag_name.begin(), tag_name.end(), [](char c) { return c == '.'; }), tag_name.end());
-        int available_ver = std::stoi(tag_name);
+        tag_name.erase(std::remove_if(tag_name.begin(), tag_name.end(), [](char c) { return c == '.'; }), tag_name.end()); // Remove decimal points
+        tag_name = std::regex_replace(tag_name, std::regex(R"([\D])"), ""); // Remove any non numeric characters using regex
+        int available_ver = std::stoi(tag_name); // Check if current version is lower than available version
         return (available_ver > current_ver);
     }
     

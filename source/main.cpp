@@ -6,6 +6,9 @@
 #include "gui.h"
 #include "log.h"
 #include "textures.h"
+#include "utils.h"
+
+std::string __application_path__;
 
 namespace Services {
     Result Init(void) {
@@ -83,6 +86,9 @@ namespace Services {
 }
 
 int main(int argc, char* argv[]) {
+    __application_path__ = argv[0];
+    __application_path__.erase(0, 5);
+
     Services::Init();
     GUI::Loop();
     Services::Exit();

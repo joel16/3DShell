@@ -20,7 +20,7 @@ namespace GUI {
     static int selection = 0;
     static const int sel_dist = 40;
     static std::string tag_name = std::string();
-    static bool network_status;
+    static bool network_status = false, update_available = false, update_popup = false;
 
     static void DisplaySortSettings(void) {
         C2D::Text(10, 28, 0.44f, WHITE, "Sorting Options");
@@ -66,33 +66,37 @@ namespace GUI {
         C2D::Text(10, 98, 0.44f, cfg.dark_theme? WHITE : BLACK, "About");
         C2D::Textf(10, 114, 0.42f, cfg.dark_theme? WHITE : BLACK, "3DShell v%d.%d.%d", VERSION_MAJOR, VERSION_MINOR, VERSION_MICRO);
         C2D::Text(10, 138, 0.44f, cfg.dark_theme? WHITE : BLACK, "Author: Joel16");
-        C2D::Text(10, 154, 0.42f, cfg.dark_theme? WHITE : BLACK, "Assets: Preetisketch/CyanogenMod/LineageOS and material.io");
+        C2D::Text(10, 154, 0.42f, cfg.dark_theme? WHITE : BLACK, "Assets: Preetisketch/CyanogenMod/LineageOS");
+
+        if (update_popup)
+            GUI::DisplayUpdateOptions(&network_status, &update_available, tag_name);
     }
 
-    static void ControlUpdateSettings(u32 *kDown) {
-        if (*kDown & KEY_DUP)
-            selection--;
-        else if (*kDown & KEY_DDOWN)
-            selection++;
-        else if (*kDown & KEY_A) {
-            if (selection == 0) {
-                Net::Init();
-                network_status =  Net::GetNetworkStatus();
-                //if (network_status) {
+    static void ControlUpdateSettings(MenuItem *item, u32 *kDown) {
+        if (update_popup)
+            GUI::ControlUpdateOptions(item, kDown, &update_popup, &network_status, &update_available, tag_name);
+        else {
+            if (*kDown & KEY_DUP)
+                selection--;
+            else if (*kDown & KEY_DDOWN)
+                selection++;
+            else if (*kDown & KEY_A) {
+                if (selection == 0) {
+                    Net::Init();
+                    network_status =  Net::GetNetworkStatus();
                     tag_name = Net::GetLatestReleaseJSON();
-                    //if (Net::GetAvailableUpdate(tag_name)) {
-                        Net::GetLatestRelease3dsx(tag_name);
-                    //}
-                //}
-                Net::Exit();
+                    update_available = Net::GetAvailableUpdate(tag_name);
+                    update_popup = true;
+                    Net::Exit();
+                }
             }
+            else if (*kDown & KEY_B) {
+                selection = 0;
+                settings_state = GENERAL_SETTINGS;
+            }
+            
+            Utils::SetBounds(&selection, 0, 2);
         }
-        else if (*kDown & KEY_B) {
-            selection = 0;
-            settings_state = GENERAL_SETTINGS;
-        }
-
-        Utils::SetBounds(&selection, 0, 2);
     }
 
     static void DisplayGeneralSettings(void) {
@@ -182,7 +186,7 @@ namespace GUI {
                 break;
             
             case UPDATE_SETTINGS:
-                ControlUpdateSettings(kDown);
+                ControlUpdateSettings(item, kDown);
                 break;
         }
     }

@@ -13,7 +13,8 @@ enum MENU_STATES {
     MENU_STATE_SETTINGS,
     MENU_STATE_IMAGEVIEWER,
     MENU_STATE_ARCHIVEEXTRACT,
-    MENU_STATE_TEXTREADER
+    MENU_STATE_TEXTREADER,
+    MENU_STATE_UPDATE
 };
 
 typedef struct {
@@ -45,6 +46,8 @@ namespace GUI {
     void ControlImageViewer(MenuItem *item, u32 *kDown);
     void DisplayDeleteOptions(MenuItem *item);
     void ControlDeleteOptions(MenuItem *item, u32 *kDown);
+    void DisplayUpdateOptions(bool *connection_status, bool *available, const std::string &tag);
+    void ControlUpdateOptions(MenuItem *item, u32 *kDown, bool *state, bool *connection_status, bool *available, const std::string &tag);
 }
 
 #endif

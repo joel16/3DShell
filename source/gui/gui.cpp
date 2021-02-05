@@ -9,6 +9,9 @@
 #include "fs.h"
 #include "gui.h"
 #include "textures.h"
+#include "utils.h"
+
+jmp_buf exit_jmp;
 
 namespace GUI {
     void ResetCheckbox(MenuItem *item) {
@@ -142,7 +145,7 @@ namespace GUI {
                     break;
             }
 
-            if (kDown & KEY_START)
+            if ((kDown & KEY_START) || (setjmp(exit_jmp)))
                 break;
         }
 
