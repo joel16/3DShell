@@ -8,6 +8,7 @@
 #include "config.h"
 #include "fs.h"
 #include "gui.h"
+#include "osk.h"
 #include "textures.h"
 #include "touch.h"
 #include "utils.h"
@@ -94,6 +95,37 @@ namespace GUI {
             item->state = MENU_STATE_OPTIONS;
         else if ((*kDown & KEY_TOUCH) && (Touch::Rect(48, 0, 72, 20)))
             item->state = MENU_STATE_SETTINGS;
+        else if ((*kDown & KEY_TOUCH) && (Touch::Rect(247, 0, 272, 20))) {
+            if (archive != sdmc_archive) {
+                archive = sdmc_archive;
+                cfg.cwd = "/";
+                item->selected = 0;
+                FS::GetDirList(cfg.cwd, item->entries);
+                GUI::ResetCheckbox(item);
+                GUI::RecalcStorageSize(item);
+            }
+        }
+        else if ((*kDown & KEY_TOUCH) && (Touch::Rect(273, 0, 292, 20))) {
+            if (archive != nand_archive) {
+                archive = nand_archive;
+                cfg.cwd = "/";
+                item->selected = 0;
+                FS::GetDirList(cfg.cwd, item->entries);
+                GUI::ResetCheckbox(item);
+                GUI::RecalcStorageSize(item);
+            }
+        }
+        else if ((*kDown & KEY_TOUCH) && (Touch::Rect(293, 0, 320, 20))) {
+            std::string path = OSK::GetText("/", "Enter file path");
+            path.append((path.back() != '/')? "/" : "");
+            if (FS::DirExists(archive, path)) {
+                cfg.cwd = path;
+                item->selected = 0;
+                FS::GetDirList(cfg.cwd, item->entries);
+                GUI::ResetCheckbox(item);
+                GUI::RecalcStorageSize(item);
+            }
+        }
     }
 
     Result Loop(void) {

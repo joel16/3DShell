@@ -203,7 +203,10 @@ namespace FS {
             
         entries.clear();
         cfg.cwd = path;
-        Config::Save(cfg);
+
+        if (archive == sdmc_archive)
+            Config::Save(cfg);
+        
         entries = new_entries;
         return 0;
     }
