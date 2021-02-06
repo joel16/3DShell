@@ -9,6 +9,7 @@
 #include "fs.h"
 #include "gui.h"
 #include "textures.h"
+#include "touch.h"
 #include "utils.h"
 
 jmp_buf exit_jmp;
@@ -84,6 +85,15 @@ namespace GUI {
         C2D::Image(archive == sdmc_archive? icon_sd_overlay : (cfg.dark_theme? icon_sd_dark : icon_sd), 250, 0);
         C2D::Image(archive == nand_archive? icon_secure_overlay : (cfg.dark_theme? icon_secure_dark : icon_secure), 275, 0);
         C2D::Image(icon_search, 300, 0);
+    }
+
+    static void ControlTouchButtons(MenuItem *item, u32 *kDown) {
+        if ((*kDown & KEY_TOUCH) && (Touch::Rect(0, 0, 22, 20)))
+            item->state = MENU_STATE_FILEBROWSER;
+        else if ((*kDown & KEY_TOUCH) && (Touch::Rect(23, 0, 47, 20)))
+            item->state = MENU_STATE_OPTIONS;
+        else if ((*kDown & KEY_TOUCH) && (Touch::Rect(48, 0, 72, 20)))
+            item->state = MENU_STATE_SETTINGS;
     }
 
     Result Loop(void) {
@@ -164,6 +174,9 @@ namespace GUI {
                 default:
                     break;
             }
+
+            Touch::Update();
+            GUI::ControlTouchButtons(&item, &kDown);
 
             if ((kDown & KEY_START) || (setjmp(exit_jmp)))
                 break;

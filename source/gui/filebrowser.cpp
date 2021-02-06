@@ -136,7 +136,5 @@ namespace GUI {
         }
         else if (*kDown & KEY_X)
             item->state = MENU_STATE_OPTIONS;
-        else if (*kDown & KEY_SELECT)
-            item->state = MENU_STATE_SETTINGS;
     }
 }
