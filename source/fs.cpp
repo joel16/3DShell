@@ -6,6 +6,7 @@
 
 #include "config.h"
 #include "fs.h"
+#include "gui.h"
 #include "log.h"
 
 FS_Archive archive, sdmc_archive, nand_archive;
@@ -306,7 +307,7 @@ namespace FS {
         const u64 buf_size = 0x10000;
         u64 offset = 0;
         u8 *buf = new u8[buf_size];
-        //std::string filename = std::filesystem::path(src_path).filename();
+        std::string filename = std::filesystem::path(std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(src_path.data())).filename();
         
         do {
             std::memset(buf, 0, buf_size);
@@ -328,7 +329,7 @@ namespace FS {
             }
             
             offset += bytes_read;
-            //Popups::ProgressPopup(static_cast<float>(offset), static_cast<float>(size), strings[cfg.lang][Lang::OptionsCopying], filename.c_str());
+            GUI::ProgressBar("Copying", filename.c_str(), static_cast<float>(offset), static_cast<float>(size));
         } while(offset < size);
         
         delete[] buf;

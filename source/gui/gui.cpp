@@ -28,6 +28,26 @@ namespace GUI {
         item->used_storage = FS::GetUsedStorage(archive == sdmc_archive? SYSTEM_MEDIATYPE_SD : SYSTEM_MEDIATYPE_CTR_NAND);
     }
 
+    void ProgressBar(const std::string &title, const std::string &message, u64 offset, u64 size) {
+        C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
+        C2D_TargetClear(bottom_screen, cfg.dark_theme? BLACK_BG : WHITE);
+        C2D_SceneBegin(bottom_screen);
+        C2D::Rect(0, 0, 320, 20, cfg.dark_theme? STATUS_BAR_DARK : MENU_BAR_LIGHT);
+
+        C2D::Image(cfg.dark_theme? dialog_dark : dialog, ((320 - (dialog.subtex->width)) / 2), ((240 - (dialog.subtex->height)) / 2));
+        C2D::Text(((320 - (dialog.subtex->width)) / 2) + 6, ((240 - (dialog.subtex->height)) / 2) + 6 - 3, 0.42f, cfg.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, title.c_str());
+
+        float text_width = 0.0f;
+        C2D::GetTextSize(0.42f, &text_width, nullptr, message.c_str());
+        C2D::Text(((320 - (text_width)) / 2), ((240 - (dialog.subtex->height)) / 2) + 40 - 3, 0.42f, cfg.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, message.c_str());
+
+        C2D::Rect(((320 - (dialog.subtex->width)) / 2) + 20, ((240 - (dialog.subtex->height)) / 2) + 65, 240, 4, cfg.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
+        C2D::Rect(((320 - (dialog.subtex->width)) / 2) + 20, ((240 - (dialog.subtex->height)) / 2) + 65, (static_cast<double>(offset) / static_cast<double>(size)) * 240.0, 
+            4, cfg.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR);
+
+        C2D::Render();
+    }
+
     static void DisplayStatusBar(void) {
         const std::time_t time = std::time(nullptr);
         const std::tm calendar_time = *std::localtime(std::addressof(time));

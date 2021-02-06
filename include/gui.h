@@ -33,6 +33,7 @@ typedef struct {
 namespace GUI {
     void ResetCheckbox(MenuItem *item);
     void RecalcStorageSize(MenuItem *item);
+    void ProgressBar(const std::string &title, const std::string &message, u64 offset, u64 size);
     Result Loop(void);
 
     // Windows
