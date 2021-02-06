@@ -67,7 +67,8 @@ namespace GUI {
                 GUI::RecalcStorageSize(item);
                 Log::Open();
                 selection = 0;
-                item->state = MENU_STATE_OPTIONS;
+                item->selected = 0;
+                item->state = MENU_STATE_FILEBROWSER;
             }
             else
                 item->state = MENU_STATE_OPTIONS;
