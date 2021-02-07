@@ -334,7 +334,7 @@ namespace Textures {
         return ImageTypeOther;
     }
 
-    bool LoadImageFile(const std::string &path, std::vector<C2D_Image> &textures) {
+    bool LoadImageFile(const std::string &path, C2D_Image *texture) {
         bool ret = false;
         u8 *data = nullptr;
         u64 size = 0;
@@ -345,24 +345,23 @@ namespace Textures {
         }
         
         // Resize to 1 initially. If the file is a GIF it will be resized accordingly.
-        textures.resize(1);
         ImageType type = GetImageType(path);
         
         switch(type) {
             case ImageTypeBMP:
-                ret = Textures::LoadImageBMP(&data, &size, &textures[0]);
+                ret = Textures::LoadImageBMP(&data, &size, texture);
                 break;
 
             case ImageTypeGIF:
-                ret = Textures::LoadImageGIF(&data, &size, &textures[0]);
+                ret = Textures::LoadImageGIF(&data, &size, texture);
                 break;
             
             case ImageTypeJPEG:
-                ret = Textures::LoadImageJPEG(&data, &size, &textures[0]);
+                ret = Textures::LoadImageJPEG(&data, &size, texture);
                 break;
                 
             case ImageTypePNG:
-                ret = Textures::LoadImagePNG(&data, &size, &textures[0]);
+                ret = Textures::LoadImagePNG(&data, &size, texture);
                 break;
                 
             default:

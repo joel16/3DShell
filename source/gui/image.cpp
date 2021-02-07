@@ -14,7 +14,6 @@ namespace GUI {
         if (*kDown & KEY_B) {
             delete[] item->texture.tex;
             delete[] item->texture.subtex;
-            item->textures.clear();
             item->state = MENU_STATE_FILEBROWSER;
         }
     }
