@@ -107,7 +107,7 @@ namespace GUI {
                 
                 switch(file_type) {
                     case FileTypeImage:
-                        if (Textures::LoadImageFile(path, item->textures))
+                        if (Textures::LoadImageFile(path, &item->texture))
                             item->state = MENU_STATE_IMAGEVIEWER;
                         break;
 

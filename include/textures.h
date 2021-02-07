@@ -19,7 +19,7 @@ extern C2D_Image file_icons[NUM_ICONS], icon_dir, icon_dir_dark, wifi_icons[4], 
 namespace Textures {
 	void Init(void);
 	void Exit(void);
-	bool LoadImageFile(const std::string &path, std::vector<C2D_Image> &textures);
+	bool LoadImageFile(const std::string &path, C2D_Image *texture);
 }
 
 #endif

@@ -33,9 +33,9 @@ include $(DEVKITARM)/3ds_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
-SOURCES		:=	source source/gui
+SOURCES		:=	source source/gui libs/libnsbmp/src libs/libnsgif/src
 DATA		:=	data
-INCLUDES	:=	include
+INCLUDES	:=	include libs/libnsbmp/include libs/libnsgif/include
 GRAPHICS	:=	res/drawable
 ROMFS		:=	romfs
 GFXBUILD	:=	$(ROMFS)/res/drawable

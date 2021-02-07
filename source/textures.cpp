@@ -1,15 +1,24 @@
+#include <cassert>
 #include <cstring>
 
-// PNG
-#include <png.h>
+// BMP
+#include <libnsbmp.h>
+
+// GIF
+#include <libnsgif.h>
 
 // JPEG
 #include <turbojpeg.h>
+
+// PNG
+#include <png.h>
 
 #include "fs.h"
 #include "log.h"
 #include "sprites.h"
 #include "textures.h"
+
+#define MAX_IMAGE_BYTES (48 * 1024 * 1024)
 
 C2D_Image file_icons[NUM_ICONS], icon_dir, icon_dir_dark, wifi_icons[4], \
     battery_icons[6], battery_icons_charging[6], icon_check, icon_uncheck, icon_check_dark, icon_uncheck_dark, \
@@ -19,6 +28,66 @@ C2D_Image file_icons[NUM_ICONS], icon_dir, icon_dir_dark, wifi_icons[4], \
     icon_settings, icon_settings_dark, icon_settings_overlay, icon_ftp, icon_ftp_dark, icon_ftp_overlay, \
     icon_sd, icon_sd_dark, icon_sd_overlay, icon_secure, icon_secure_dark, icon_secure_overlay, icon_search, \
     icon_nav_drawer, icon_actions, icon_back;
+
+static const u32 BYTES_PER_PIXEL = 4;
+
+namespace BMP {
+    static void *bitmap_create(int width, int height, [[maybe_unused]] unsigned int state) {
+        /* ensure a stupidly large (>50Megs or so) bitmap is not created */
+        if ((static_cast<long long>(width) * static_cast<long long>(height)) > (MAX_IMAGE_BYTES/BYTES_PER_PIXEL))
+            return nullptr;
+        
+        return std::calloc(width * height, BYTES_PER_PIXEL);
+    }
+    
+    static unsigned char *bitmap_get_buffer(void *bitmap) {
+        assert(bitmap);
+        return static_cast<unsigned char *>(bitmap);
+    }
+    
+    static size_t bitmap_get_bpp([[maybe_unused]] void *bitmap) {
+        return BYTES_PER_PIXEL;
+    }
+    
+    static void bitmap_destroy(void *bitmap) {
+        assert(bitmap);
+        std::free(bitmap);
+    }
+}
+
+namespace GIF {
+    static void *bitmap_create(int width, int height) {
+        /* ensure a stupidly large bitmap is not created */
+        if ((static_cast<long long>(width) * static_cast<long long>(height)) > (MAX_IMAGE_BYTES/BYTES_PER_PIXEL))
+            return nullptr;
+        
+        return std::calloc(width * height, BYTES_PER_PIXEL);
+    }
+    
+    static void bitmap_set_opaque([[maybe_unused]] void *bitmap, [[maybe_unused]] bool opaque) {
+        assert(bitmap);
+    }
+    
+    static bool bitmap_test_opaque([[maybe_unused]] void *bitmap) {
+        assert(bitmap);
+        return false;
+    }
+    
+    static unsigned char *bitmap_get_buffer(void *bitmap) {
+        assert(bitmap);
+        return static_cast<unsigned char *>(bitmap);
+    }
+    
+    static void bitmap_destroy(void *bitmap) {
+        assert(bitmap);
+        std::free(bitmap);
+    }
+    
+    static void bitmap_modified([[maybe_unused]] void *bitmap) {
+        assert(bitmap);
+        return;
+    }
+}
 
 namespace Textures {
     typedef enum ImageType {
@@ -31,7 +100,6 @@ namespace Textures {
     } ImageType;
 
     static C2D_SpriteSheet spritesheet;
-    static const u32 BYTES_PER_PIXEL = 4;
     static const u32 TRANSPARENT_COLOR = 0xFFFFFFFF;
 
     static Result ReadFile(const std::string &path, u8 **buffer, u64 *size) {
@@ -137,8 +205,92 @@ namespace Textures {
 
         return false;
     }
+    
+    static bool LoadImageBMP(u8 **data, u64 *size, C2D_Image *texture) {
+        bmp_bitmap_callback_vt bitmap_callbacks = {
+            BMP::bitmap_create,
+            BMP::bitmap_destroy,
+            BMP::bitmap_get_buffer,
+            BMP::bitmap_get_bpp
+        };
+        
+        bmp_result code = BMP_OK;
+        bmp_image bmp;
+        bmp_create(&bmp, &bitmap_callbacks);
+        
+        code = bmp_analyse(&bmp, *size, *data);
+        if (code != BMP_OK) {
+            bmp_finalise(&bmp);
+            return false;
+        }
+        
+        code = bmp_decode(&bmp);
+        if (code != BMP_OK) {
+            if ((code != BMP_INSUFFICIENT_DATA) && (code != BMP_DATA_ERROR)) {
+                bmp_finalise(&bmp);
+                return false;
+            }
+            
+            /* skip if the decoded image would be ridiculously large */
+            if ((bmp.width * bmp.height) > 200000) {
+                bmp_finalise(&bmp);
+                return false;
+            }
+        }
 
-    bool LoadImagePNG(u8 **data, u64 *size, C2D_Image *texture) {
+        bool ret = Textures::C3DTexToC2DImage(texture, static_cast<u32>(bmp.width), static_cast<u32>(bmp.height), static_cast<u8 *>(bmp.bitmap));
+        bmp_finalise(&bmp);
+        return ret;
+    }
+    
+    static bool LoadImageGIF(u8 **data, u64 *size, C2D_Image *texture) {
+        gif_bitmap_callback_vt bitmap_callbacks = {
+            GIF::bitmap_create,
+            GIF::bitmap_destroy,
+            GIF::bitmap_get_buffer,
+            GIF::bitmap_set_opaque,
+            GIF::bitmap_test_opaque,
+            GIF::bitmap_modified
+        };
+        
+        bool ret = false;
+        gif_animation gif;
+        gif_result code = GIF_OK;
+        gif_create(&gif, &bitmap_callbacks);
+        
+        do {
+            code = gif_initialise(&gif, *size, *data);
+            if (code != GIF_OK && code != GIF_WORKING) {
+                Log::Error("gif_initialise failed: %d\n", code);
+                gif_finalise(&gif);
+                return ret;
+            }
+        } while (code != GIF_OK);
+        
+        code = gif_decode_frame(&gif, 0);
+        if (code != GIF_OK) {
+            Log::Error("gif_decode_frame failed: %d\n", code);
+            return false;
+        }
+        
+        ret = Textures::C3DTexToC2DImage(texture, static_cast<u32>(gif.width), static_cast<u32>(gif.height), static_cast<u8 *>(gif.frame_image));
+        gif_finalise(&gif);
+        return ret;
+    }
+
+    static bool LoadImageJPEG(u8 **data, u64 *size, C2D_Image *texture) {
+        tjhandle jpeg = tjInitDecompress();
+        int width = 0, height = 0, jpegsubsamp = 0;
+        tjDecompressHeader2(jpeg, *data, *size, &width, &height, &jpegsubsamp);
+        u8 *buffer = new u8[width * height * BYTES_PER_PIXEL];
+        tjDecompress2(jpeg, *data, *size, buffer, width, 0, height, TJPF_RGBA, TJFLAG_FASTDCT);
+        bool ret = Textures::C3DTexToC2DImage(texture, static_cast<u32>(width), static_cast<u32>(height), buffer);
+        tjDestroy(jpeg);
+        delete[] buffer;
+        return ret;
+    }
+
+    static bool LoadImagePNG(u8 **data, u64 *size, C2D_Image *texture) {
         bool ret = false;
         png_image image;
         std::memset(&image, 0, (sizeof image));
@@ -162,18 +314,6 @@ namespace Textures {
             }
         }
         
-        return ret;
-    }
-    
-    static bool LoadImageJPEG(u8 **data, u64 *size, C2D_Image *texture) {
-        tjhandle jpeg = tjInitDecompress();
-        int width = 0, height = 0, jpegsubsamp = 0;
-        tjDecompressHeader2(jpeg, *data, *size, &width, &height, &jpegsubsamp);
-        u8 *buffer = new u8[width * height * BYTES_PER_PIXEL];
-        tjDecompress2(jpeg, *data, *size, buffer, width, 0, height, TJPF_RGBA, TJFLAG_FASTDCT);
-        bool ret = Textures::C3DTexToC2DImage(texture, static_cast<u32>(width), static_cast<u32>(height), buffer);
-        tjDestroy(jpeg);
-        delete[] buffer;
         return ret;
     }
     
@@ -209,6 +349,14 @@ namespace Textures {
         ImageType type = GetImageType(path);
         
         switch(type) {
+            case ImageTypeBMP:
+                ret = Textures::LoadImageBMP(&data, &size, &textures[0]);
+                break;
+
+            case ImageTypeGIF:
+                ret = Textures::LoadImageGIF(&data, &size, &textures[0]);
+                break;
+            
             case ImageTypeJPEG:
                 ret = Textures::LoadImageJPEG(&data, &size, &textures[0]);
                 break;

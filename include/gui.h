@@ -25,9 +25,9 @@ typedef struct {
     std::vector<bool> checked_copy;
     std::string checked_cwd;
     int checked_count = 0;
-    s64 used_storage = 0;
-    s64 total_storage = 0;
-    std::vector<C2D_Image> textures;
+    u64 used_storage = 0;
+    u64 total_storage = 0;
+    C2D_Image texture;
 } MenuItem;
 
 namespace GUI {

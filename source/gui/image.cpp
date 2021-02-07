@@ -7,16 +7,13 @@
 namespace GUI {
     void DisplayImageViewer(MenuItem *item) {
         C2D_TargetClear(top_screen, BLACK_BG);
-        C2D::Image(item->textures[0], ((400 - item->textures[0].subtex->width) / 2), ((240 - item->textures[0].subtex->height) / 2));
+        C2D::Image(item->texture, ((400 - item->texture.subtex->width) / 2), ((240 - item->texture.subtex->height) / 2));
     }
 
     void ControlImageViewer(MenuItem *item, u32 *kDown) {
         if (*kDown & KEY_B) {
-            for (u32 i = 0; i < item->textures.size(); i++) {
-                delete[] item->textures[i].tex;
-                delete[] item->textures[i].subtex;
-            }
-
+            delete[] item->texture.tex;
+            delete[] item->texture.subtex;
             item->textures.clear();
             item->state = MENU_STATE_FILEBROWSER;
         }
