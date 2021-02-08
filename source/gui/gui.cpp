@@ -140,7 +140,7 @@ namespace GUI {
             
         GUI::ResetCheckbox(&item);
         GUI::RecalcStorageSize(&item);
-        
+
         while(aptMainLoop()) {
             C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
             C2D_TargetClear(top_screen, cfg.dark_theme? BLACK_BG : WHITE);
@@ -154,7 +154,7 @@ namespace GUI {
             GUI::DisplayFileBrowser(&item);
 
             if (item.state == MENU_STATE_IMAGEVIEWER)
-                GUI::DisplayImageViewer(&item);
+                GUI::DisplayImageViewerTop(&item);
 
             C2D_SceneBegin(bottom_screen);
             C2D::Rect(0, 0, 320, 20, cfg.dark_theme? STATUS_BAR_DARK : MENU_BAR_LIGHT);
@@ -164,6 +164,10 @@ namespace GUI {
                 case MENU_STATE_OPTIONS:
                     GUI::DisplayFileOptions(&item);
                     break;
+
+                case MENU_STATE_PROPERTIES:
+                    GUI::DisplayProperties(&item);
+                    break;
                 
                 case MENU_STATE_DELETE:
                     GUI::DisplayDeleteOptions(&item);
@@ -171,6 +175,10 @@ namespace GUI {
                 
                 case MENU_STATE_SETTINGS:
                     GUI::DisplaySettings(&item);
+                    break;
+
+                case MENU_STATE_IMAGEVIEWER:
+                    DisplayImageViewerBottom(&item);
                     break;
 
                 default:
@@ -190,6 +198,10 @@ namespace GUI {
 
                 case MENU_STATE_OPTIONS:
                     GUI::ControlFileOptions(&item, &kDown);
+                    break;
+
+                case MENU_STATE_PROPERTIES:
+                    GUI::ControlProperties(&item, &kDown);
                     break;
 
                 case MENU_STATE_DELETE:

@@ -41,9 +41,12 @@ namespace GUI {
     void ControlFileBrowser(MenuItem *item, u32 *kDown, u32 *kHeld);
     void DisplayFileOptions(MenuItem *item);
     void ControlFileOptions(MenuItem *item, u32 *kDown);
+    void DisplayProperties(MenuItem *item);
+    void ControlProperties(MenuItem *item, u32 *kDown);
     void DisplaySettings(MenuItem *item);
     void ControlSettings(MenuItem *item, u32 *kDown);
-    void DisplayImageViewer(MenuItem *item);
+    void DisplayImageViewerTop(MenuItem *item);
+    void DisplayImageViewerBottom(MenuItem *item);
     void ControlImageViewer(MenuItem *item, u32 *kDown);
     void DisplayDeleteOptions(MenuItem *item);
     void ControlDeleteOptions(MenuItem *item, u32 *kDown);

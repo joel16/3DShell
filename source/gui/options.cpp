@@ -113,7 +113,9 @@ namespace GUI {
 
             if (row == 0) {
                 if (!options_more) {
-                    if (column == 1) {
+                    if (column == 0)
+                        item->state = MENU_STATE_PROPERTIES;
+                    else if (column == 1) {
                         // Copy
                         if (!copy) {
                             if ((item->checked_count >= 1) && (item->checked_cwd.compare(cfg.cwd) != 0))
