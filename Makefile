@@ -43,6 +43,7 @@ GFXBUILD	:=	$(ROMFS)/res/drawable
 APP_TITLE	:=	3DShell
 APP_DESCRIPTION	:=	Multi-purpose file manager
 APP_AUTHOR	:=	Joel16
+ICON		:=	res/ic_launcher_filemanager.png
 VERSION_MAJOR	:=	5
 VERSION_MINOR	:=	0
 VERSION_MICRO	:=	0

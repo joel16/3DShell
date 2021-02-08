@@ -54,12 +54,12 @@ namespace GUI {
         const std::time_t time = std::time(nullptr);
         const std::tm calendar_time = *std::localtime(std::addressof(time));
 
-        std::string time_string = std::to_string((calendar_time.tm_hour % 12) == 0? 12 : (calendar_time.tm_hour % 12)) + ":" + std::to_string(calendar_time.tm_min);
-        time_string.append((calendar_time.tm_hour / 12)? "PM" : "AM");
+        static char time_string[30];
+        std::snprintf(time_string, 30, "%2i:%02i %s", (calendar_time.tm_hour % 12) == 0? 12 : (calendar_time.tm_hour % 12), calendar_time.tm_min, (calendar_time.tm_hour / 12)? "PM" : "AM");
         
         float text_height = 0.f;
-        C2D::GetTextSize(0.45f, nullptr, &text_height, time_string.c_str());
-        C2D::Text(5, ((15 - text_height) / 2), 0.45f, WHITE, time_string.c_str());
+        C2D::GetTextSize(0.45f, nullptr, &text_height, time_string);
+        C2D::Text(5, ((15 - text_height) / 2), 0.45f, WHITE, time_string);
 
         u8 level = 0;
         PTMU_GetBatteryLevel(&level);
