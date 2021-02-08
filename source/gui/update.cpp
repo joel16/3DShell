@@ -18,7 +18,7 @@ namespace GUI {
     static const std::string prompt = "Do you wish to download and install vX.X.X?";
     static const std::string success = "Update installed. Please re-run the application";
     static const std::string no_updates = "You are already on the latest version";
-    static float cancel_height = 0.0f, cancel_width = 0.0f, confirm_height = 0.0f, confirm_width = 0.0f, text_width = 0.0f;
+    static float cancel_height = 0.f, cancel_width = 0.f, confirm_height = 0.f, confirm_width = 0.f, text_width = 0.f;
     static bool done = false;
 
     void DisplayUpdateOptions(bool *connection_status, bool *available, const std::string &tag) {

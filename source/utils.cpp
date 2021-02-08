@@ -5,8 +5,8 @@ namespace Utils {
         int i = 0;
         const char *units[] = {"B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
         
-        while (size >= 1024.0f) {
-            size /= 1024.0f;
+        while (size >= 1024.f) {
+            size /= 1024.f;
             i++;
         }
         

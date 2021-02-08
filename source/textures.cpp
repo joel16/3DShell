@@ -173,8 +173,8 @@ namespace Textures {
         u32 w_pow2 = Textures::GetNextPowerOf2(subtex->width);
         u32 h_pow2 = Textures::GetNextPowerOf2(subtex->height);
 
-        subtex->left = 0.0f;
-        subtex->top = 1.0f;
+        subtex->left = 0.f;
+        subtex->top = 1.f;
         subtex->right = (subtex->width /static_cast<float>(w_pow2));
         subtex->bottom = (1.0 - (subtex->height / static_cast<float>(h_pow2)));
 

@@ -38,7 +38,7 @@ namespace GUI {
 
     // Windows
     void DisplayFileBrowser(MenuItem *item);
-    void ControlFileBrowser(MenuItem *item, u32 *kDown);
+    void ControlFileBrowser(MenuItem *item, u32 *kDown, u32 *kHeld);
     void DisplayFileOptions(MenuItem *item);
     void ControlFileOptions(MenuItem *item, u32 *kDown);
     void DisplaySettings(MenuItem *item);

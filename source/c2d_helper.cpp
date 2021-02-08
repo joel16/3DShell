@@ -39,7 +39,7 @@ namespace C2D {
     }
     
     bool Image(C2D_Image image, float x, float y) {
-        return C2D_DrawImageAt(image, x, y, 0.5f, nullptr, 1.0f, 1.0f);
+        return C2D_DrawImageAt(image, x, y, 0.5f, nullptr, 1.f, 1.f);
     }
     
     bool ImageScale(C2D_Image image, float x, float y, float scale_x, float scale_y) {

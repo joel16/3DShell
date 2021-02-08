@@ -12,7 +12,7 @@
 
 namespace GUI {
     static int row = 0, column = 0;
-    static float cancel_width = 0.0f, cancel_height = 0.0f;
+    static float cancel_width = 0.f, cancel_height = 0.f;
     static bool copy = false, move = false, options_more = false;
 
     static void ResetSelector(void) {

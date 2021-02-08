@@ -15,12 +15,13 @@ namespace GUI {
     static const int start_y = 40;
     static const u32 max_entries = 10;
     static int start = 0;
+    static u64 timestamp = 0;
 
     static std::string empty_dir = "This is an empty directory";
-    static float empty_dir_width = 0.0f, empty_dir_height = 0.0f;
+    static float empty_dir_width = 0.f, empty_dir_height = 0.f;
 
     void DisplayFileBrowser(MenuItem *item) {
-        float filename_height = 0.0f;
+        float filename_height = 0.f;
         C2D::GetTextSize(0.45f, nullptr, &filename_height, cfg.cwd.c_str());
         C2D::Text(5, 15 + ((25 - filename_height) / 2), 0.45f, WHITE, cfg.cwd.c_str());
 
@@ -30,8 +31,8 @@ namespace GUI {
         C2D::Rect(5, 28 + ((25 - filename_height) / 2), fill, 2, cfg.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR);
 
         if (item->entries.empty()) {
-            C2D::GetTextSize(0.50f, &empty_dir_width, &empty_dir_height, empty_dir.c_str());
-            C2D::Text(((400 - empty_dir_width) / 2), ((240 - empty_dir_height) / 2), 0.50f, cfg.dark_theme? WHITE : BLACK, empty_dir.c_str());
+            C2D::GetTextSize(0.5f, &empty_dir_width, &empty_dir_height, empty_dir.c_str());
+            C2D::Text(((400 - empty_dir_width) / 2), ((240 - empty_dir_height) / 2), 0.5f, cfg.dark_theme? WHITE : BLACK, empty_dir.c_str());
         }
 
         for (u32 i = start; i < item->entries.size(); i++) {
@@ -56,11 +57,11 @@ namespace GUI {
         }
     }
 
-    void ControlFileBrowser(MenuItem *item, u32 *kDown) {
+    void ControlFileBrowser(MenuItem *item, u32 *kDown, u32 *kHeld) {
         u32 size = (item->entries.size() - 1);
         Utils::SetBounds(&item->selected, 0, size);
 
-        if (*kDown & KEY_DUP) {
+        if ((*kDown & KEY_UP) || ((*kHeld & KEY_UP) && osGetTime() >= timestamp)) {
             item->selected--;
             if (item->selected < 0)
                 item->selected = size;
@@ -71,8 +72,10 @@ namespace GUI {
                 start--;
             else if ((static_cast<u32>(item->selected) == size) && (size > (max_entries - 1)))
                 start = size - (max_entries - 1);
+
+            timestamp = osGetTime() + ((*kDown & KEY_UP) ? 500 : 100);
         }
-        else if (*kDown & KEY_DDOWN) {
+        else if ((*kDown & KEY_DOWN) || ((*kHeld & KEY_DOWN) && osGetTime() >= timestamp)) {
             item->selected++;
             if(static_cast<u32>(item->selected) > size)
                 item->selected = 0;
@@ -81,9 +84,20 @@ namespace GUI {
                 start++;
             if (item->selected == 0)
                 start = 0;
+
+            timestamp = osGetTime() + ((*kDown & KEY_DOWN) ? 500 : 100);
         }
 
-        else if (*kDown & KEY_A) {
+        if (*kDown & KEY_DLEFT) {
+            item->selected = 0;
+            start = 0;
+        }
+        else if (*kDown & KEY_DRIGHT) {
+            item->selected = item->entries.size() - 1;
+            start = size - (max_entries - 1);
+        }
+
+        if (*kDown & KEY_A) {
             const std::u16string entry_name_utf16 = reinterpret_cast<const char16_t *>(item->entries[item->selected].name);
             const std::string filename = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(entry_name_utf16.data());
 

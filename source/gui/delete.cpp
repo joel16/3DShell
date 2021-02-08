@@ -13,7 +13,7 @@
 namespace GUI {
     static int selection = 0;
     static const std::string prompt = "Do you wish to continue?";
-    static float cancel_height = 0.0f, cancel_width = 0.0f, confirm_height = 0.0f, confirm_width = 0.0f, prompt_width = 0.0f;
+    static float cancel_height = 0.f, cancel_width = 0.f, confirm_height = 0.f, confirm_width = 0.f, prompt_width = 0.f;
 
     void DisplayDeleteOptions(MenuItem *item) {
         C2D::Image(cfg.dark_theme? dialog_dark : dialog, ((320 - (dialog.subtex->width)) / 2), ((240 - (dialog.subtex->height)) / 2));

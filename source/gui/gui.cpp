@@ -39,7 +39,7 @@ namespace GUI {
         C2D::Image(cfg.dark_theme? dialog_dark : dialog, ((320 - (dialog.subtex->width)) / 2), ((240 - (dialog.subtex->height)) / 2));
         C2D::Text(((320 - (dialog.subtex->width)) / 2) + 6, ((240 - (dialog.subtex->height)) / 2) + 6 - 3, 0.42f, cfg.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, title.c_str());
 
-        float text_width = 0.0f;
+        float text_width = 0.f;
         C2D::GetTextSize(0.42f, &text_width, nullptr, message.c_str());
         C2D::Text(((320 - (text_width)) / 2), ((240 - (dialog.subtex->height)) / 2) + 40 - 3, 0.42f, cfg.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, message.c_str());
 
@@ -57,7 +57,7 @@ namespace GUI {
         std::string time_string = std::to_string((calendar_time.tm_hour % 12) == 0? 12 : (calendar_time.tm_hour % 12)) + ":" + std::to_string(calendar_time.tm_min);
         time_string.append((calendar_time.tm_hour / 12)? "PM" : "AM");
         
-        float text_height = 0.0f;
+        float text_height = 0.f;
         C2D::GetTextSize(0.45f, nullptr, &text_height, time_string.c_str());
         C2D::Text(5, ((15 - text_height) / 2), 0.45f, WHITE, time_string.c_str());
 
@@ -69,7 +69,7 @@ namespace GUI {
 
         std::string percent_string = std::to_string(percent) + "%";
 
-        float percent_width = 0.0f;
+        float percent_width = 0.f;
         C2D::GetTextSize(0.45f, &percent_width, nullptr, percent_string.c_str());
         C2D::Text(395 - percent_width, ((15 - text_height) / 2), 0.45f, WHITE, percent_string.c_str());
 
@@ -140,7 +140,7 @@ namespace GUI {
             
         GUI::ResetCheckbox(&item);
         GUI::RecalcStorageSize(&item);
-
+        
         while(aptMainLoop()) {
             C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
             C2D_TargetClear(top_screen, cfg.dark_theme? BLACK_BG : WHITE);
@@ -181,10 +181,11 @@ namespace GUI {
 
             hidScanInput();
             u32 kDown = hidKeysDown();
+            u32 kHeld = hidKeysHeld();
 
             switch (item.state) {
                 case MENU_STATE_FILEBROWSER:
-                    GUI::ControlFileBrowser(&item, &kDown);
+                    GUI::ControlFileBrowser(&item, &kDown, &kHeld);
                     break;
 
                 case MENU_STATE_OPTIONS:
