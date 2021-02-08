@@ -37,6 +37,9 @@ namespace Log {
     }
 
     void Error(const char *data, ...) {
+        if (!cfg.dev_options)
+            return;
+        
         char buf[256];
         va_list args;
         va_start(args, data);
