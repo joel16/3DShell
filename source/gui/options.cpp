@@ -214,6 +214,14 @@ namespace GUI {
                     }
                 }
             }
+            if (column == 3) {
+                options_more = false;
+                copy = false;
+                move = false;
+                row = 0;
+                column = 0;
+                item->state = MENU_STATE_FILEBROWSER;
+            }
         }
         if (*kDown & KEY_B) {
             GUI::ResetSelector();
