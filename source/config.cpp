@@ -96,14 +96,14 @@ namespace Config {
         }
         
         FSFILE_Close(file);
-        
+
         json_t *root;
         json_error_t error;
-        root = json_loads(buf, 0, &error);
+        root = json_loads(buf, JSON_DISABLE_EOF_CHECK, &error);
         delete[] buf;
         
         if (!root)
-            return -1;
+            Log::Error("Failed to decode config.json!\n");
         
         json_t *config_ver = json_object_get(root, "config_ver");
         config_version_holder = json_integer_value(config_ver);
@@ -119,7 +119,7 @@ namespace Config {
         
         json_t *last_dir = json_object_get(root, "last_dir");
         cfg.cwd = json_string_value(last_dir);
-        
+
         if (!FS::DirExists(sdmc_archive, cfg.cwd))
             cfg.cwd = "/";
             
