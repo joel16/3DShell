@@ -12,6 +12,10 @@ namespace Log {
         Result ret = 0;
         std::string path = "/3ds/3DShell/debug.log";
 
+        // Delete existing logs on start up.
+        if (FS::FileExists(sdmc_archive, path))
+            FSUSER_DeleteFile(sdmc_archive, fsMakePath(PATH_ASCII, path.c_str()));
+
         if (!FS::FileExists(sdmc_archive, path)) {
             if (R_FAILED(ret = FSUSER_CreateFile(archive, fsMakePath(PATH_ASCII, path.c_str()), 0, 0)))
                 return ret;
@@ -33,9 +37,6 @@ namespace Log {
     }
 
     void Error(const char *data, ...) {
-        if (!cfg.dev_options)
-            return;
-        
         char buf[256];
         va_list args;
         va_start(args, data);
