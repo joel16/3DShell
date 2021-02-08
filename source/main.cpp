@@ -36,10 +36,10 @@ namespace Services {
             return ret;
         }
 
-        /*if (R_FAILED(ret = mcuHwcInit())) {
+        if (R_FAILED(ret = mcuHwcInit())) {
             Log::Error("mcuHwcInit failed: 0x%x\n", ret);
             return ret;
-        }*/
+        }
 
         if (R_FAILED(ret = ptmuInit())) {
             Log::Error("ptmuInit failed: 0x%x\n", ret);
