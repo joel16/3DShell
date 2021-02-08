@@ -43,8 +43,8 @@ GFXBUILD	:=	$(ROMFS)/res/drawable
 APP_TITLE	:=	3DShell
 APP_DESCRIPTION	:=	Multi-purpose file manager
 APP_AUTHOR	:=	Joel16
-VERSION_MAJOR	:=	4
-VERSION_MINOR	:=	3
+VERSION_MAJOR	:=	5
+VERSION_MINOR	:=	0
 VERSION_MICRO	:=	0
 
 #---------------------------------------------------------------------------------
