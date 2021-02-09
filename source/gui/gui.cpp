@@ -106,7 +106,7 @@ namespace GUI {
             }
         }
         else if ((*kDown & KEY_TOUCH) && (Touch::Rect(273, 0, 292, 20))) {
-            if (archive != nand_archive) {
+            if ((archive != nand_archive) && (cfg.dev_options)) {
                 archive = nand_archive;
                 cfg.cwd = "/";
                 item->selected = 0;
