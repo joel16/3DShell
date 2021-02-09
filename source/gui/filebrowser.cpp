@@ -94,7 +94,8 @@ namespace GUI {
         }
         else if (*kDown & KEY_DRIGHT) {
             item->selected = item->entries.size() - 1;
-            start = size - (max_entries - 1);
+            if ((item->entries.size() - 1) > max_entries)
+                start = size - (max_entries - 1);
         }
 
         if (*kDown & KEY_A) {
