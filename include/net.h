@@ -9,7 +9,7 @@ namespace Net {
     bool GetNetworkStatus(void);
     bool GetAvailableUpdate(const std::string &tag);
     std::string GetLatestReleaseJSON(void);
-    void GetLatestRelease3dsx(const std::string &tag);
+    void GetLatestRelease(const std::string &tag);
 }
 
 #endif

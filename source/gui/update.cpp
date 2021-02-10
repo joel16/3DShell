@@ -2,6 +2,7 @@
 #include <locale>
 
 #include "c2d_helper.h"
+#include "cia.h"
 #include "colours.h"
 #include "config.h"
 #include "fs.h"
@@ -69,16 +70,20 @@ namespace GUI {
         if (*kDown & KEY_A) {
             if (selection == 1) {
                 Net::Init();
-                Net::GetLatestRelease3dsx(tag);
-                
-                Result ret = 0;
-                if (R_FAILED(ret = FSUSER_DeleteFile(sdmc_archive, fsMakePath(PATH_ASCII, __application_path__.c_str()))))
-                    Log::Error("FSUSER_DeleteFile(%s) failed: 0x%x\n", __application_path__, ret);
-                    
-                if (R_FAILED(ret = FSUSER_RenameFile(sdmc_archive, fsMakePath(PATH_ASCII, "/3ds/3DShell/3DShell_UPDATE.3dsx"), sdmc_archive, fsMakePath(PATH_ASCII, __application_path__.c_str()))))
-                    Log::Error("FSUSER_RenameFile(update) failed: 0x%x\n", ret);
-                    
+                Net::GetLatestRelease(tag);
                 Net::Exit();
+
+                if (envIsHomebrew()) {
+                    Result ret = 0;
+                    if (R_FAILED(ret = FSUSER_DeleteFile(sdmc_archive, fsMakePath(PATH_ASCII, __application_path__.c_str()))))
+                        Log::Error("FSUSER_DeleteFile(%s) failed: 0x%x\n", __application_path__, ret);
+                    
+                    if (R_FAILED(ret = FSUSER_RenameFile(sdmc_archive, fsMakePath(PATH_ASCII, "/3ds/3DShell/3DShell_UPDATE.3dsx"), sdmc_archive, fsMakePath(PATH_ASCII, __application_path__.c_str()))))
+                        Log::Error("FSUSER_RenameFile(update) failed: 0x%x\n", ret);
+                }
+                else
+                    CIA::InstallUpdate();
+
                 done = true;
             }
             else if (!done) {

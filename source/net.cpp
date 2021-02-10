@@ -108,10 +108,11 @@ namespace Net {
         return (size * nmemb);
     }
     
-    void GetLatestRelease3dsx(const std::string &tag) {
+    void GetLatestRelease(const std::string &tag) {
         Result ret = 0;
         Handle file;
-        std::string path = "/3ds/3DShell/3DShell_UPDATE.3dsx";
+        bool is_3dsx = envIsHomebrew();
+        const std::string path = (is_3dsx? "/3ds/3DShell/3DShell_UPDATE.3dsx" : "/3ds/3DShell/3DShell_UPDATE.cia");
         
         if (!FS::FileExists(sdmc_archive, path))
             FSUSER_CreateFile(sdmc_archive, fsMakePath(PATH_ASCII, path.c_str()), 0, 0);
@@ -123,7 +124,7 @@ namespace Net {
         
         CURL *handle = curl_easy_init();
         if (handle) {
-            std::string URL = "https://github.com/joel16/3DShell/releases/download/" + tag + "/3DShell.3dsx";
+            std::string URL = "https://github.com/joel16/3DShell/releases/download/" + tag + (is_3dsx? "/3DShell.3dsx" : "/3DShell.cia");
             curl_easy_setopt(handle, CURLOPT_URL, URL.c_str());
             curl_easy_setopt(handle, CURLOPT_USERAGENT, "3DShell");
             curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, 0L);
