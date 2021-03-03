@@ -19,4 +19,14 @@ namespace Utils {
         else if (*set < min)
             *set = max;
     }
+    
+    void SetMax(int *set, int value, int max) {
+        if (*set > max)
+            *set = value;
+    }
+    
+    void SetMin(int *set, int value, int min) {
+        if (*set < min)
+            *set = value;
+    }
 }

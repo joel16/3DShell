@@ -141,7 +141,13 @@ namespace GUI {
         GUI::ResetCheckbox(&item);
         GUI::RecalcStorageSize(&item);
 
+        u64 last_time = osGetTime(), current_time = 0;
+
         while(aptMainLoop()) {
+            current_time = osGetTime();
+            u64 delta_time = current_time - last_time;
+            last_time = current_time;
+
             C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
             C2D_TargetClear(top_screen, cfg.dark_theme? BLACK_BG : WHITE);
             C2D_TargetClear(bottom_screen, cfg.dark_theme? MENU_BAR_DARK : STATUS_BAR_LIGHT);
@@ -213,7 +219,7 @@ namespace GUI {
                     break;
 
                 case MENU_STATE_IMAGEVIEWER:
-                    GUI::ControlImageViewer(&item, &kDown);
+                    GUI::ControlImageViewer(&item, &kDown, &kHeld, &delta_time);
                     break;
 
                 default:

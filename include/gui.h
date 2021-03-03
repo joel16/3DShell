@@ -47,7 +47,7 @@ namespace GUI {
     void ControlSettings(MenuItem *item, u32 *kDown);
     void DisplayImageViewerTop(MenuItem *item);
     void DisplayImageViewerBottom(MenuItem *item);
-    void ControlImageViewer(MenuItem *item, u32 *kDown);
+    void ControlImageViewer(MenuItem *item, u32 *kDown, u32 *kHeld, u64 *delta_time);
     void DisplayDeleteOptions(MenuItem *item);
     void ControlDeleteOptions(MenuItem *item, u32 *kDown);
     void DisplayUpdateOptions(bool *connection_status, bool *available, const std::string &tag);
