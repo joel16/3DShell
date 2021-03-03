@@ -139,6 +139,7 @@ namespace GUI {
                     
                 item->checked.resize(item->entries.size());
                 item->selected = 0;
+                start = 0;
             }
         }
         else if (*kDown & KEY_Y) {
