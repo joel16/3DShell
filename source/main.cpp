@@ -86,8 +86,10 @@ namespace Services {
 }
 
 int main(int argc, char* argv[]) {
-    __application_path__ = argv[0];
-    __application_path__.erase(0, 5);
+    if (envIsHomebrew())  {
+        __application_path__ = argv[0];
+        __application_path__.erase(0, 5);
+    }
 
     Services::Init();
     GUI::Loop();
