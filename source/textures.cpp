@@ -148,6 +148,9 @@ namespace Textures {
     }
 
     static bool C3DTexToC2DImage(C2D_Image *texture, u32 width, u32 height, u8 *buf) {
+        if (width >= 1024 || height >= 1024)
+            return false;
+        
         C3D_Tex *tex = new C3D_Tex[sizeof(C3D_Tex)];
         Tex3DS_SubTexture *subtex = new Tex3DS_SubTexture[sizeof(Tex3DS_SubTexture)];
         subtex->width = static_cast<u16>(width);
@@ -181,15 +184,13 @@ namespace Textures {
         C3D_TexInit(tex, static_cast<u16>(w_pow2), static_cast<u16>(h_pow2), GPU_RGBA8);
         C3D_TexSetFilter(tex, GPU_NEAREST, GPU_NEAREST);
         
-        u32 size = static_cast<u32>(subtex->width * subtex->height * BYTES_PER_PIXEL);
-        u32 pixel_size = (size / subtex->width / subtex->height);
         std::memset(tex->data, 0, tex->size);
         
         for (u32 x = 0; x < subtex->width; x++) {
             for (u32 y = 0; y < subtex->height; y++) {
-                u32 dst_pos = ((((y >> 3) * (w_pow2 >> 3) + (x >> 3)) << 6) + ((x & 1) | ((y & 1) << 1) | ((x & 2) << 1) | ((y & 2) << 2) | ((x & 4) << 2) | ((y & 4) << 3))) * pixel_size;
-                u32 src_pos = (y * subtex->width + x) * pixel_size;
-                std::memcpy(&(static_cast<u8 *>(tex->data))[dst_pos], &(static_cast<u8 *>(buf))[src_pos], pixel_size);
+                u32 dst_pos = ((((y >> 3) * (w_pow2 >> 3) + (x >> 3)) << 6) + ((x & 1) | ((y & 1) << 1) | ((x & 2) << 1) | ((y & 2) << 2) | ((x & 4) << 2) | ((y & 4) << 3))) * BYTES_PER_PIXEL;
+                u32 src_pos = (y * subtex->width + x) * BYTES_PER_PIXEL;
+                std::memcpy(&(static_cast<u8 *>(tex->data))[dst_pos], &(static_cast<u8 *>(buf))[src_pos], BYTES_PER_PIXEL);
             }
         }
         
