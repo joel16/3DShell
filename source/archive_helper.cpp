@@ -106,6 +106,7 @@ namespace ArchiveHelper {
                 
                 do {
                     if (Utils::IsCancelButtonPressed()) {
+                        FSFILE_SetSize(dest_handle, offset);
                         archive_read_close(arch);
                         archive_read_free(arch);
                         archive_write_close(ext);

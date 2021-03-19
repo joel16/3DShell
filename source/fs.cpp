@@ -8,6 +8,7 @@
 #include "fs.h"
 #include "gui.h"
 #include "log.h"
+#include "utils.h"
 
 FS_Archive archive, sdmc_archive, nand_archive;
 
@@ -315,6 +316,14 @@ namespace FS {
         std::string filename = std::filesystem::path(std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(src_path.data())).filename();
         
         do {
+            if (Utils::IsCancelButtonPressed()) {
+                FSFILE_SetSize(dest_handle, offset);
+                delete[] buf;
+                FSFILE_Close(src_handle);
+                FSFILE_Close(dest_handle);
+                return 0;
+            }
+            
             std::memset(buf, 0, buf_size);
             
             if (R_FAILED(ret = FSFILE_Read(src_handle, &bytes_read, offset, buf, buf_size))) {
