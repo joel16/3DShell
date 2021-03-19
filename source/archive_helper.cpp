@@ -8,6 +8,7 @@
 #include "fs.h"
 #include "gui.h"
 #include "log.h"
+#include "utils.h"
 
 namespace ArchiveHelper {
     u64 CountFiles(const std::string &path) {
@@ -47,6 +48,8 @@ namespace ArchiveHelper {
         if ((ret = archive_read_open_filename(arch, path.c_str(), 0x3000)) != ARCHIVE_OK) {
             archive_read_close(arch);
             archive_read_free(arch);
+            archive_write_close(ext);
+            archive_write_free(ext);
             Log::Error("archive_read_open_filename(%s) failed: %s\n", path.c_str(), archive_error_string(arch));
             return ret;
         }
@@ -59,6 +62,14 @@ namespace ArchiveHelper {
 
         struct archive_entry *entry = nullptr;
         while((ret = archive_read_next_header(arch, &entry)) == ARCHIVE_OK) {
+            if (Utils::IsCancelButtonPressed()) {
+                archive_read_close(arch);
+                archive_read_free(arch);
+                archive_write_close(ext);
+                archive_write_free(ext);
+                return 0;
+            }
+
             if (ret == ARCHIVE_EOF)
                 break;
             if (ret < ARCHIVE_OK)
@@ -83,6 +94,8 @@ namespace ArchiveHelper {
                     Log::Error("FSUSER_OpenFile(%s) failed: 0x%x\n", dest_path.c_str(), ret);
                     archive_read_close(arch);
                     archive_read_free(arch);
+                    archive_write_close(ext);
+                    archive_write_free(ext);
                     return ret;
                 }
                 
@@ -92,11 +105,25 @@ namespace ArchiveHelper {
                 u8 *buf = new u8[buf_size];
                 
                 do {
+                    if (Utils::IsCancelButtonPressed()) {
+                        archive_read_close(arch);
+                        archive_read_free(arch);
+                        archive_write_close(ext);
+                        archive_write_free(ext);
+                        delete[] buf;
+                        FSFILE_Close(dest_handle);
+                        return 0;
+                    }
+
                     std::memset(buf, 0, buf_size);
                     u32 bytes_read = archive_read_data(arch, buf, buf_size);
                     
                     if (R_FAILED(ret = FSFILE_Write(dest_handle, &bytes_written, offset, buf, bytes_read, FS_WRITE_FLUSH))) {
                         Log::Error("FSFILE_Write(%s) failed: 0x%x\n", dest_path.c_str(), ret);
+                        archive_read_close(arch);
+                        archive_read_free(arch);
+                        archive_write_close(ext);
+                        archive_write_free(ext);
                         delete[] buf;
                         FSFILE_Close(dest_handle);
                         return ret;
@@ -115,6 +142,8 @@ namespace ArchiveHelper {
         
         archive_read_close(arch);
         archive_read_free(arch);
+        archive_write_close(ext);
+        archive_write_free(ext);
         return 0;
     }
 }

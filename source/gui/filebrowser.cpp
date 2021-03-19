@@ -128,8 +128,11 @@ namespace GUI {
                         break;
 
                     case FileTypeZip:
-                        if (R_SUCCEEDED(ArchiveHelper::Extract(path)))
+                        if (R_SUCCEEDED(ArchiveHelper::Extract(path))) {
                             FS::GetDirList(cfg.cwd, item->entries);
+                            GUI::ResetCheckbox(item);
+                        }
+
                         break;
                     
                     default:

@@ -12,6 +12,7 @@ namespace Utils {
     void SetBounds(int *set, int min, int max);
     void SetMax(int *set, int value, int max);
     void SetMin(int *set, int value, int min);
+    bool IsCancelButtonPressed(void);
 }
 
 #endif

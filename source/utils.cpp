@@ -1,3 +1,4 @@
+#include <3ds.h>
 #include <cstdio>
 
 namespace Utils {
@@ -28,5 +29,14 @@ namespace Utils {
     void SetMin(int *set, int value, int min) {
         if (*set < min)
             *set = value;
+    }
+
+    bool IsCancelButtonPressed(void) {
+        hidScanInput();
+
+        if (hidKeysDown() & KEY_B)
+            return true;
+        
+        return false;
     }
 }
