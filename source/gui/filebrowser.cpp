@@ -2,6 +2,7 @@
 #include <codecvt>
 #include <locale>
 
+#include "archive_helper.h"
 #include "c2d_helper.h"
 #include "colours.h"
 #include "config.h"
@@ -126,6 +127,11 @@ namespace GUI {
                             item->state = MENU_STATE_IMAGEVIEWER;
                         break;
 
+                    case FileTypeZip:
+                        if (R_SUCCEEDED(ArchiveHelper::Extract(path)))
+                            FS::GetDirList(cfg.cwd, item->entries);
+                        break;
+                    
                     default:
                         break;
                 }

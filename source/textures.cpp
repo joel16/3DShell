@@ -380,6 +380,7 @@ namespace Textures {
         file_icons[1] = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_type_compress_idx);
         file_icons[2] = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_type_image_idx);
         file_icons[3] = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_type_text_idx);
+        file_icons[4] = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_type_compress_idx);
         icon_dir = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_folder_idx);
         icon_dir_dark = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_folder_dark_idx);
         icon_check = C2D_SpriteSheetGetImage(spritesheet, sprites_btn_material_light_check_on_normal_idx);

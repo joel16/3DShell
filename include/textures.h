@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-constexpr int NUM_ICONS = 4;
+constexpr int NUM_ICONS = 5;
 
 extern C2D_Image file_icons[NUM_ICONS], icon_dir, icon_dir_dark, wifi_icons[4], \
 	battery_icons[6], battery_icons_charging[6], icon_check, icon_uncheck, icon_check_dark, icon_uncheck_dark, \
