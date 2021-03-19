@@ -129,8 +129,10 @@ namespace FS {
         else if (!(entryA.attributes & FS_ATTRIBUTE_DIRECTORY) && (entryB.attributes & FS_ATTRIBUTE_DIRECTORY))
             return false;
         else {
-            const std::u16string entryA_name = reinterpret_cast<const char16_t *>(entryA.name);
-            const std::u16string entryB_name = reinterpret_cast<const char16_t *>(entryB.name);
+            std::u16string entryA_name = reinterpret_cast<const char16_t *>(entryA.name);
+            std::u16string entryB_name = reinterpret_cast<const char16_t *>(entryB.name);
+            std::transform(entryA_name.begin(), entryA_name.end(), entryA_name.begin(), [](unsigned char c){ return std::tolower(c); });
+            std::transform(entryB_name.begin(), entryB_name.end(), entryB_name.begin(), [](unsigned char c){ return std::tolower(c); });
 
             switch(cfg.sort) {
                 case 0: // Sort alphabetically (ascending - A to Z)
