@@ -78,7 +78,7 @@ namespace GUI {
     }
 
     static void DisplayTouchButtons(MenuItem *item) {
-        C2D::Image(item->state == MENU_STATE_FILEBROWSER? icon_home_overlay : (cfg.dark_theme? icon_home_dark : icon_home), 0, -2);
+        C2D::Image(item->state == MENU_STATE_FILEBROWSER? icon_home_overlay : (cfg.dark_theme? icon_home_dark : icon_home), 2, 0);
         C2D::Image((item->state == MENU_STATE_OPTIONS) || (item->state == MENU_STATE_PROPERTIES) || (item->state == MENU_STATE_DELETE)? 
             icon_options_overlay : (cfg.dark_theme? icon_options_dark : icon_options), 25, 0);
         C2D::Image((item->state == MENU_STATE_SETTINGS)? icon_settings_overlay : (cfg.dark_theme? icon_settings_dark : icon_settings), 50, 0);
