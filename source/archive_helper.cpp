@@ -40,10 +40,16 @@ namespace ArchiveHelper {
     int Extract(const std::string &path) {
         int ret = 0;
 
+        int flags = ARCHIVE_EXTRACT_TIME;
+        flags |= ARCHIVE_EXTRACT_PERM;
+        flags |= ARCHIVE_EXTRACT_ACL;
+        flags |= ARCHIVE_EXTRACT_FFLAGS;
+
         struct archive *arch = archive_read_new();
         archive_read_support_format_all(arch);
 
         struct archive *ext = archive_write_disk_new();
+        archive_write_disk_set_options(ext, flags);
 
         if ((ret = archive_read_open_filename(arch, path.c_str(), 0x3000)) != ARCHIVE_OK) {
             archive_read_close(arch);
@@ -78,9 +84,8 @@ namespace ArchiveHelper {
             const char *entry_name = archive_entry_pathname(entry);
             std::string dest_path = dest + "/";
             dest_path.append(entry_name);
-
-            if ((ret = archive_entry_update_pathname_utf8(entry, dest_path.c_str())) != ARCHIVE_OK)
-                Log::Error("archive_entry_update_pathname_utf8(%s) failed: %s\n", path.c_str(), archive_error_string(arch));
+            
+            archive_entry_update_pathname_utf8(entry, dest_path.c_str());
             
             s64 entry_size = archive_entry_size(entry);
             ret = archive_write_header(ext, entry);
@@ -136,6 +141,10 @@ namespace ArchiveHelper {
                 delete[] buf;
                 FSFILE_Close(dest_handle);
             }
+
+            ret = archive_write_finish_entry(ext);
+            if (ret < ARCHIVE_OK)
+                Log::Error("archive_write_finish_entry(%s) failed: %s\n", path.c_str(), archive_error_string(arch));
 
             GUI::ProgressBar("Extracting", filename, static_cast<float>(index), static_cast<float>(count));
             index++;
