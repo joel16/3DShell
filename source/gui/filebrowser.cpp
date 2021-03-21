@@ -24,11 +24,11 @@ namespace GUI {
     void DisplayFileBrowser(MenuItem *item) {
         float filename_height = 0.f;
         C2D::GetTextSize(0.45f, nullptr, &filename_height, cfg.cwd.c_str());
-        C2D::Text(5, 15 + ((25 - filename_height) / 2), 0.45f, WHITE, cfg.cwd.c_str());
+        C2D::Textf(5, 15 + ((25 - filename_height) / 2), 0.45f, WHITE, cfg.cwd.length() > 60? "%.60s..." : "%s", cfg.cwd.c_str());
 
         // Storage bar
         C2D::Rect(5, 28 + ((25 - filename_height) / 2), 390, 2, cfg.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
-        float fill = (static_cast<double>(item->used_storage)/static_cast<double>(item->total_storage)) * 390.0;
+        float fill = (static_cast<double>(item->used_storage)/static_cast<double>(item->total_storage)) * 390.f;
         C2D::Rect(5, 28 + ((25 - filename_height) / 2), fill, 2, cfg.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR);
 
         if (item->entries.empty()) {
@@ -54,7 +54,8 @@ namespace GUI {
             else
                 C2D::Image(file_icons[file_type], 20, start_y + (sel_dist * (i - start)));
 
-            C2D::Text(45, start_y + ((sel_dist - filename_height) / 2) + (i - start) * sel_dist, 0.45f, cfg.dark_theme? WHITE : BLACK, filename.c_str());
+            C2D::Textf(45, start_y + ((sel_dist - filename_height) / 2) + (i - start) * sel_dist, 0.45f, cfg.dark_theme? WHITE : BLACK,
+                filename.length() > 52? "%.52s..." : "%s", filename.c_str());
         }
     }
 

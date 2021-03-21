@@ -14,7 +14,8 @@ namespace GUI {
         C2D::Image(cfg.dark_theme? properties_dialog_dark : properties_dialog, ((320 - (properties_dialog.subtex->width)) / 2), ((240 - (properties_dialog.subtex->height)) / 2) + 10);
         C2D::Text(((320 - (properties_dialog.subtex->width)) / 2) + 6, ((240 - (properties_dialog.subtex->height)) / 2) + 13, 0.42f, cfg.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "Properties");
 
-        C2D::Textf(66, 57, 0.42f, cfg.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Parent: %.20s", cfg.cwd.c_str());
+        C2D::Textf(66, 57, 0.42f, cfg.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT,
+            cfg.cwd.length() > 22? "Parent: %.22s..." : "Parent: %s", cfg.cwd.c_str());
         if (!(item->entries[item->selected].attributes & FS_ATTRIBUTE_DIRECTORY)) {
             char utils_size[16];
             Utils::GetSizeString(utils_size, static_cast<double>(item->entries[item->selected].fileSize));
