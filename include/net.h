@@ -3,6 +3,9 @@
 
 #include <string>
 
+extern s64 download_offset, download_size;
+extern bool download_progress;
+
 namespace Net {
     Result Init(void);
     void Exit(void);

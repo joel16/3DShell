@@ -8,6 +8,7 @@
 #include "config.h"
 #include "fs.h"
 #include "gui.h"
+#include "net.h"
 #include "osk.h"
 #include "textures.h"
 #include "touch.h"
@@ -48,6 +49,14 @@ namespace GUI {
             4, cfg.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR);
 
         C2D::Render();
+    }
+
+    void DownloadProgressBar(void *args) {
+        while(download_progress) {
+            download_size = (download_size < 1.0f)? 1.0f : download_size;
+            download_size = (download_size < download_offset)? download_offset : download_size;
+            GUI::ProgressBar("Downloading", envIsHomebrew()? "3DShell.3dsx" : "3DShell.cia", download_offset, download_size);
+        }
     }
 
     static void DisplayStatusBar(void) {

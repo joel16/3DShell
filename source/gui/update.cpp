@@ -70,7 +70,14 @@ namespace GUI {
         if (*kDown & KEY_A) {
             if (selection == 1) {
                 Net::Init();
+                s32 prio = 0;
+                download_progress = true;
+                svcGetThreadPriority(&prio, CUR_THREAD_HANDLE);
+                Thread thread = threadCreate(GUI::DownloadProgressBar, nullptr, 32 * 1024, prio - 1, -2, false);
                 Net::GetLatestRelease(tag);
+                download_progress = false;
+                threadJoin(thread, U64_MAX);
+                threadFree(thread);
                 Net::Exit();
 
                 if (envIsHomebrew()) {

@@ -10,9 +10,18 @@
 #include "log.h"
 #include "net.h"
 
+s64 download_offset = 0, download_size = 1;
+bool download_progress = false;
+
 namespace Net {
     static s64 offset = 0;
     static void *soc_buf = nullptr;
+
+    static int ProgressCallback(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) {
+        download_offset = dlnow;
+        download_size = dltotal;
+        return 0;
+    }
 
     Result Init(void) {
         Result ret = 0;
@@ -130,6 +139,7 @@ namespace Net {
             curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, 0L);
             curl_easy_setopt(handle, CURLOPT_SSL_VERIFYHOST, 0L);
             curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, 1L);
+            curl_easy_setopt(handle, CURLOPT_XFERINFOFUNCTION, Net::ProgressCallback);
             curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, Net::Write3dsxData);
             curl_easy_setopt(handle, CURLOPT_WRITEDATA, &file);
             curl_easy_setopt(handle, CURLOPT_NOPROGRESS, 0L);
