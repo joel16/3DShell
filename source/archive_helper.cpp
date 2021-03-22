@@ -142,10 +142,6 @@ namespace ArchiveHelper {
                 FSFILE_Close(dest_handle);
             }
 
-            ret = archive_write_finish_entry(ext);
-            if (ret < ARCHIVE_OK)
-                Log::Error("archive_write_finish_entry(%s) failed: %s\n", path.c_str(), archive_error_string(arch));
-
             GUI::ProgressBar("Extracting", filename, static_cast<float>(index), static_cast<float>(count));
             index++;
         }
