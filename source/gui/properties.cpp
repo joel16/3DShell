@@ -5,6 +5,7 @@
 #include "gui.h"
 #include "log.h"
 #include "textures.h"
+#include "touch.h"
 #include "utils.h"
 
 namespace GUI {
@@ -33,5 +34,10 @@ namespace GUI {
             item->state = MENU_STATE_OPTIONS;
         else if (*kDown & KEY_B)
             item->state = MENU_STATE_OPTIONS;
+
+        if (Touch::Rect((253 - ok_width) - 5, (218 - ok_height) - 5, ((253 - ok_width) - 5) + ok_width + 10, ((218 - ok_height) - 5) + ok_height + 10)) {
+            if (*kDown & KEY_TOUCH)
+                item->state = MENU_STATE_OPTIONS;
+        }
     }
 }

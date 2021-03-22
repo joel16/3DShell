@@ -8,13 +8,13 @@
 #include "gui.h"
 #include "osk.h"
 #include "textures.h"
+#include "touch.h"
 #include "utils.h"
 
-namespace GUI {
-    static int row = 0, column = 0;
-    static float cancel_width = 0.f, cancel_height = 0.f;
-    static bool copy = false, move = false, options_more = false;
+static int row = 0, column = 0;
+static bool copy = false, move = false, options_more = false;
 
+namespace Options {
     static void ResetSelector(void) {
         row = 0;
         column = 0;
@@ -42,6 +42,92 @@ namespace GUI {
         GUI::ResetCheckbox(item);
         entries.clear();
     }
+
+    static void CreateFolder(MenuItem *item) {
+        std::string path = cfg.cwd;
+        std::string name = OSK::GetText("New Folder", "Enter folder name");
+        path.append(name);
+        std::u16string path_u16 = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(path.data());
+        
+        if (R_SUCCEEDED(FSUSER_CreateDirectory(archive, fsMakePath(PATH_UTF16, path_u16.c_str()), 0))) {
+            FS::GetDirList(cfg.cwd, item->entries);
+            GUI::ResetCheckbox(item);
+        }
+    }
+
+    static void CreateFile(MenuItem *item) {
+        std::string path = cfg.cwd;
+        std::string name = OSK::GetText("New File", "Enter file name");
+        path.append(name);
+        std::u16string path_u16 = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(path.data());
+        
+        if (R_SUCCEEDED(FSUSER_CreateFile(archive, fsMakePath(PATH_UTF16, path_u16.c_str()), 0, 0))) {
+            FS::GetDirList(cfg.cwd, item->entries);
+            GUI::ResetCheckbox(item);
+        }
+    }
+
+    static void Rename(MenuItem *item, const std::string &filename) {
+        std::string path = OSK::GetText(filename, "Enter new name");
+
+        if (R_SUCCEEDED(FS::Rename(&item->entries[item->selected], path.c_str()))) {
+            FS::GetDirList(cfg.cwd, item->entries);
+            Options::ResetSelector();
+            options_more = false;
+            item->state = MENU_STATE_FILEBROWSER;
+        }
+    }
+
+    static void Copy(MenuItem *item) {
+        if (!copy) {
+            if ((item->checked_count >= 1) && (item->checked_cwd.compare(cfg.cwd) != 0))
+                GUI::ResetCheckbox(item);
+            if (item->checked_count <= 1)
+                FS::Copy(&item->entries[item->selected], cfg.cwd);
+            
+            copy = !copy;
+            item->state = MENU_STATE_FILEBROWSER;
+        }
+        else {
+            if ((item->checked_count > 1) && (item->checked_cwd.compare(cfg.cwd) != 0))
+                Options::HandleMultipleCopy(item, &FS::Paste);
+            else {
+                if (R_SUCCEEDED(FS::Paste())) {
+                    FS::GetDirList(cfg.cwd, item->entries);
+                    GUI::ResetCheckbox(item);
+                }
+            }
+            
+            GUI::RecalcStorageSize(item);
+            copy = !copy;
+            item->state = MENU_STATE_FILEBROWSER;
+        }
+    }
+
+    static void Move(MenuItem *item) {
+        if (!move) {
+            if ((item->checked_count >= 1) && (item->checked_cwd.compare(cfg.cwd) != 0))
+                GUI::ResetCheckbox(item);
+                
+            if (item->checked_count <= 1)
+                FS::Copy(&item->entries[item->selected], cfg.cwd);
+        }
+        else {
+            if ((item->checked_count > 1) && (item->checked_cwd.compare(cfg.cwd) != 0))
+                Options::HandleMultipleCopy(item, &FS::Move);
+            else if (R_SUCCEEDED(FS::Move())) {
+                FS::GetDirList(cfg.cwd, item->entries);
+                GUI::ResetCheckbox(item);
+            }
+        }
+        
+        move = !move;
+        item->state = MENU_STATE_FILEBROWSER;
+    }
+}
+
+namespace GUI {
+    static float cancel_width = 0.f, cancel_height = 0.f;
 
     void DisplayFileOptions(MenuItem *item) {
         C2D::Image(cfg.dark_theme? options_dialog_dark : options_dialog, 54, 30);
@@ -115,121 +201,134 @@ namespace GUI {
                 if (!options_more) {
                     if (column == 0)
                         item->state = MENU_STATE_PROPERTIES;
-                    else if (column == 1) {
-                        // Copy
-                        if (!copy) {
-                            if ((item->checked_count >= 1) && (item->checked_cwd.compare(cfg.cwd) != 0))
-                                GUI::ResetCheckbox(item);
-                            if (item->checked_count <= 1)
-                                FS::Copy(&item->entries[item->selected], cfg.cwd);
-                            
-                            copy = !copy;
-                            item->state = MENU_STATE_FILEBROWSER;
-                        }
-                        else {
-                            if ((item->checked_count > 1) && (item->checked_cwd.compare(cfg.cwd) != 0))
-                                GUI::HandleMultipleCopy(item, &FS::Paste);
-                            else {
-                                if (R_SUCCEEDED(FS::Paste())) {
-                                    FS::GetDirList(cfg.cwd, item->entries);
-                                    GUI::ResetCheckbox(item);
-                                }
-                            }
-                            
-                            GUI::RecalcStorageSize(item);
-                            copy = !copy;
-                            item->state = MENU_STATE_FILEBROWSER;
-                        }
-                    }
+                    else if (column == 1)
+                        Options::Copy(item);
                     else if (column == 2)
                         item->state = MENU_STATE_DELETE;
                 }
                 else {
-                    if (column == 0) {
-                        std::string path = cfg.cwd;
-                        std::string name = OSK::GetText("New Folder", "Enter folder name");
-                        path.append(name);
-                        std::u16string path_u16 = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(path.data());
-                        
-                        if (R_SUCCEEDED(FSUSER_CreateDirectory(archive, fsMakePath(PATH_UTF16, path_u16.c_str()), 0))) {
-                            FS::GetDirList(cfg.cwd, item->entries);
-                            GUI::ResetCheckbox(item);
-                        }
-                    }
-                    else if (column == 1) {
-                        std::string path = OSK::GetText(filename, "Enter new name");
-                        if (R_SUCCEEDED(FS::Rename(&item->entries[item->selected], path.c_str()))) {
-                            FS::GetDirList(cfg.cwd, item->entries);
-                            GUI::ResetSelector();
-                            options_more = false;
-                            item->state = MENU_STATE_FILEBROWSER;
-                        }
-                    }
+                    if (column == 0)
+                        Options::CreateFolder(item);
+                    else if (column == 1)
+                        Options::Rename(item, filename);
                 }
             }
             else if (row == 1) {
                 if (!options_more) {
                     if (column == 0) {
                         FS::GetDirList(cfg.cwd, item->entries);
-                        GUI::ResetSelector();
+                        Options::ResetSelector();
                         options_more = false;
                         item->selected = 0;
                         item->state = MENU_STATE_FILEBROWSER;
                     }
-                    else if (column == 1) {
-                        if (!move) {
-                            if ((item->checked_count >= 1) && (item->checked_cwd.compare(cfg.cwd) != 0))
-                                GUI::ResetCheckbox(item);
-                            if (item->checked_count <= 1)
-                                FS::Copy(&item->entries[item->selected], cfg.cwd);
-                        }
-                        else {
-                            if ((item->checked_count > 1) && (item->checked_cwd.compare(cfg.cwd) != 0))
-                                GUI::HandleMultipleCopy(item, &FS::Move);
-                            else if (R_SUCCEEDED(FS::Move())) {
-                                FS::GetDirList(cfg.cwd, item->entries);
-                                GUI::ResetCheckbox(item);
-                            }
-                        }
-                        
-                        move = !move;
-                        item->state = MENU_STATE_FILEBROWSER;
-                    }
+                    else if (column == 1)
+                        Options::Move(item);
                     else if (column == 2) {
-                        GUI::ResetSelector();
+                        Options::ResetSelector();
                         options_more = true;
                     }
                 }
                 else {
-                    if (column == 0) {
-                        std::string path = cfg.cwd;
-                        std::string name = OSK::GetText("New File", "Enter file name");
-                        path.append(name);
-                        std::u16string path_u16 = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(path.data());
-                        
-                        if (R_SUCCEEDED(FSUSER_CreateFile(archive, fsMakePath(PATH_UTF16, path_u16.c_str()), 0, 0))) {
-                            FS::GetDirList(cfg.cwd, item->entries);
-                            GUI::ResetCheckbox(item);
-                        }
-                    }
+                    if (column == 0)
+                        Options::CreateFile(item);
                 }
             }
             if (column == 3) {
-                options_more = false;
                 copy = false;
                 move = false;
-                row = 0;
-                column = 0;
+                Options::ResetSelector();
+                options_more = false;
                 item->state = MENU_STATE_FILEBROWSER;
             }
         }
         if (*kDown & KEY_B) {
-            GUI::ResetSelector();
+            Options::ResetSelector();
 
             if (!options_more)
                 item->state = MENU_STATE_FILEBROWSER;
             else
                 options_more = false;
+        }
+
+        if (Touch::Rect(56, 69, 159, 104)) {
+            row = 0;
+            column = 0;
+            
+            if (*kDown & KEY_TOUCH) {
+                if (!options_more)
+                    item->state = MENU_STATE_PROPERTIES;
+                else
+                    Options::CreateFolder(item);
+            }
+        }
+        else if (Touch::Rect(160, 69, 263, 104)) {
+            row = 1;
+            column = 0;
+            
+            if (*kDown & KEY_TOUCH) {
+                if (!options_more) {
+                    FS::GetDirList(cfg.cwd, item->entries);
+                    Options::ResetSelector();
+                    options_more = false;
+                    item->selected = 0;
+                    item->state = MENU_STATE_FILEBROWSER;
+                }
+                else
+                    Options::CreateFile(item);
+            }
+        }
+        else if (Touch::Rect(56, 105, 159, 141)) {
+            row = 0;
+            column = 1;
+            
+            if (*kDown & KEY_TOUCH) {
+                if (!options_more)
+                    Options::Copy(item);
+                else {
+                    const std::u16string entry_name_utf16 = reinterpret_cast<const char16_t *>(item->entries[item->selected].name);
+                    const std::string filename = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(entry_name_utf16.data());
+                    Options::Rename(item, filename);
+                }
+            }
+        }
+        else if ((Touch::Rect(160, 105, 263, 141)) && (!options_more)) {
+            row = 1;
+            column = 1;
+            
+            if (*kDown & KEY_TOUCH)
+                Options::Move(item);
+        }
+        else if ((Touch::Rect(56, 142, 159, 178)) && (!options_more)) {
+            row = 0;
+            column = 2;
+            
+            if (*kDown & KEY_TOUCH)
+                item->state = MENU_STATE_DELETE;
+        }
+        else if ((Touch::Rect(160, 142, 263, 178)) && (!options_more)) {
+            row = 1;
+            column = 2;
+            
+            if (*kDown & KEY_TOUCH) {
+                Options::ResetSelector();
+                options_more = true;
+            }
+        }
+        else if (Touch::Rect((256 - cancel_width) - 5, (221 - cancel_height) - 5, ((256 - cancel_width) - 5) + cancel_width + 10, 
+            ((221 - cancel_height) - 5) + cancel_height + 10)) {
+            if (options_more)
+                column = 2;
+            else
+                column = 3;
+                
+            if (*kDown & KEY_TOUCH) {
+                Options::ResetSelector();
+                options_more = false;
+                copy = false;
+                move = false;
+                item->state = MENU_STATE_FILEBROWSER;
+            }
         }
     }
 }

@@ -8,7 +8,40 @@
 #include "gui.h"
 #include "log.h"
 #include "textures.h"
+#include "touch.h"
 #include "utils.h"
+
+namespace Options {
+    void Delete(MenuItem *item, int *selection) {
+        Result ret = 0;
+        Log::Close();
+        
+        if ((item->checked_count > 1) && (!item->checked_cwd.compare(cfg.cwd))) {
+            for (u32 i = 0; i < item->checked.size(); i++) {
+                if (item->checked.at(i)) {
+                    if (R_FAILED(ret = FS::Delete(&item->entries[i]))) {
+                        FS::GetDirList(cfg.cwd, item->entries);
+                        GUI::ResetCheckbox(item);
+                        break;
+                    }
+                }
+            }
+        }
+        else
+            ret = FS::Delete(&item->entries[item->selected]);
+        
+        if (R_SUCCEEDED(ret)) {
+            FS::GetDirList(cfg.cwd, item->entries);
+            GUI::ResetCheckbox(item);
+        }
+        
+        GUI::RecalcStorageSize(item);
+        Log::Open();
+        *selection = 0;
+        item->selected = 0;
+        item->state = MENU_STATE_FILEBROWSER;
+    }
+}
 
 namespace GUI {
     static int selection = 0;
@@ -41,35 +74,8 @@ namespace GUI {
             selection--;
 
         if (*kDown & KEY_A) {
-            if (selection == 1) {
-                Result ret = 0;
-                Log::Close();
-                
-                if ((item->checked_count > 1) && (!item->checked_cwd.compare(cfg.cwd))) {
-                    for (u32 i = 0; i < item->checked.size(); i++) {
-                        if (item->checked.at(i)) {
-                            if (R_FAILED(ret = FS::Delete(&item->entries[i]))) {
-                                FS::GetDirList(cfg.cwd, item->entries);
-                                GUI::ResetCheckbox(item);
-                                break;
-                            }
-                        }
-                    }
-                }
-                else
-                    ret = FS::Delete(&item->entries[item->selected]);
-                    
-                if (R_SUCCEEDED(ret)) {
-                    FS::GetDirList(cfg.cwd, item->entries);
-                    GUI::ResetCheckbox(item);
-                }
-
-                GUI::RecalcStorageSize(item);
-                Log::Open();
-                selection = 0;
-                item->selected = 0;
-                item->state = MENU_STATE_FILEBROWSER;
-            }
+            if (selection == 1)
+                Options::Delete(item, &selection);
             else
                 item->state = MENU_STATE_OPTIONS;
 
@@ -77,6 +83,21 @@ namespace GUI {
         else if (*kDown & KEY_B)
             item->state = MENU_STATE_OPTIONS;
 
+        if (Touch::Rect((288 - cancel_width) - 5, (159 - cancel_height) - 5, ((288 - cancel_width) - 5) + cancel_width + 10, ((159 - cancel_height) - 5) + cancel_height + 10)) {
+            selection = 0;
+            
+            if (*kDown & KEY_TOUCH) {
+                item->state = MENU_STATE_OPTIONS;
+                selection = 0;
+            }
+        }
+        else if (Touch::Rect((248 - (confirm_width)) - 5, (159 - confirm_height) - 5, ((248 - (confirm_width)) - 5) + confirm_width + 10, ((159 - confirm_height) - 5) + confirm_height + 10)) {
+            selection = 1;
+            
+            if (*kDown & KEY_TOUCH)
+                Options::Delete(item, &selection);
+        }
+        
         Utils::SetBounds(&selection, 0, 1);
     }
 }

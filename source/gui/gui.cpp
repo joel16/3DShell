@@ -208,6 +208,7 @@ namespace GUI {
             C2D::Render();
 
             hidScanInput();
+            Touch::Update();
             u32 kDown = hidKeysDown();
             u32 kHeld = hidKeysHeld();
 
@@ -240,7 +241,6 @@ namespace GUI {
                     break;
             }
 
-            Touch::Update();
             GUI::ControlTouchButtons(&item, &kDown);
 
             if ((kDown & KEY_START) || (setjmp(exit_jmp)))
