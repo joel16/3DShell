@@ -77,7 +77,7 @@ namespace CIA {
             }
             
             offset += bytes_read;
-            GUI::ProgressBar("Installing", "3DShell_UPDATE.cia", static_cast<float>(offset), static_cast<float>(size));
+            GUI::ProgressBar("Installing", "3DShell_UPDATE.cia", offset, size);
         } while(offset < size);
         
         if (bytes_read != bytes_written) {

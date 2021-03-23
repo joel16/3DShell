@@ -142,7 +142,7 @@ namespace ArchiveHelper {
                 FSFILE_Close(dest_handle);
             }
 
-            GUI::ProgressBar("Extracting", filename, static_cast<float>(index), static_cast<float>(count));
+            GUI::ProgressBar("Extracting", filename, index, count);
             index++;
         }
         

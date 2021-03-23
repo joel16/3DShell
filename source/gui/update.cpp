@@ -1,6 +1,3 @@
-#include <codecvt>
-#include <locale>
-
 #include "c2d_helper.h"
 #include "cia.h"
 #include "colours.h"

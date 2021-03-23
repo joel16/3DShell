@@ -343,7 +343,7 @@ namespace FS {
             }
             
             offset += bytes_read;
-            GUI::ProgressBar("Copying", filename.c_str(), static_cast<float>(offset), static_cast<float>(size));
+            GUI::ProgressBar("Copying", filename.c_str(), offset, size);
         } while(offset < size);
         
         delete[] buf;

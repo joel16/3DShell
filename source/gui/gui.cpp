@@ -1,7 +1,4 @@
-#include <algorithm>
-#include <codecvt>
 #include <ctime>
-#include <locale>
 
 #include "c2d_helper.h"
 #include "colours.h"
@@ -32,8 +29,8 @@ namespace GUI {
     }
 
     void ProgressBar(const std::string &title, std::string message, u64 offset, u64 size) {
-        if (message.length() > 38) {
-            message.resize(38);
+        if (message.length() > 35) {
+            message.resize(35);
             message.append("...");
         }
 
@@ -50,7 +47,7 @@ namespace GUI {
         C2D::Text(((320 - (text_width)) / 2), ((240 - (dialog.subtex->height)) / 2) + 40 - 3, 0.42f, cfg.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, message.c_str());
 
         C2D::Rect(((320 - (dialog.subtex->width)) / 2) + 20, ((240 - (dialog.subtex->height)) / 2) + 65, 240, 4, cfg.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
-        C2D::Rect(((320 - (dialog.subtex->width)) / 2) + 20, ((240 - (dialog.subtex->height)) / 2) + 65, (static_cast<double>(offset) / static_cast<double>(size)) * 240.f, 
+        C2D::Rect(((320 - (dialog.subtex->width)) / 2) + 20, ((240 - (dialog.subtex->height)) / 2) + 65, static_cast<int>((static_cast<float>(offset) / static_cast<float>(size)) * 240.f), 
             4, cfg.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR);
 
         C2D::Render();
