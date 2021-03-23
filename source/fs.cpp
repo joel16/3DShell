@@ -397,8 +397,15 @@ namespace FS {
         
         return 0;
     }
+
+    static void ClearFSCopyEntry(void) {
+        fs_copy_entry.copy_path.clear();
+        fs_copy_entry.copy_filename.clear();
+        fs_copy_entry.is_dir = false;
+    }
     
     void Copy(FS_DirectoryEntry *entry, const std::string &path) {
+        FS::ClearFSCopyEntry();
         fs_copy_entry.copy_path = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(path.data());
         fs_copy_entry.copy_path.append(reinterpret_cast<const char16_t *>(entry->name));
         fs_copy_entry.copy_filename.append(reinterpret_cast<const char16_t *>(entry->name));
@@ -419,9 +426,7 @@ namespace FS {
         else // Copy file
             ret = FS::CopyFile(fs_copy_entry.copy_path, path);
             
-        fs_copy_entry.copy_path.clear();
-        fs_copy_entry.copy_filename.clear();
-        fs_copy_entry.is_dir = false;
+        FS::ClearFSCopyEntry();
         return ret;
     }
     
@@ -443,9 +448,7 @@ namespace FS {
             }
         }
         
-        fs_copy_entry.copy_path.clear();
-        fs_copy_entry.copy_filename.clear();
-        fs_copy_entry.is_dir = false;
+        FS::ClearFSCopyEntry();
         return 0;
     }
 }
