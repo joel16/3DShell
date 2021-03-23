@@ -19,7 +19,7 @@ Current features:
 - Multi-select items for delete/cut/copy (using Y button).
 - ~~FTP server (Press select or tap the ftp icon to toggle).~~
 - Image preview (If the image is around 400 * 480 which is the size of both screens, the image will be split in half and displayed. Support for the following image formats -> BMP, GIF - non animated, JPG, PCX, PNG, PGM, PPM and TGA)
-- ~~Extract various archives such as ZIP, RAR, 7Z, ISO 9660, AR, XAR and others supported by libarchive.~~
+- Extract various archives such as ZIP, RAR, and 7Z.
 - Searching for directories (allows you to quickly visit a directory by clicking the search icon on the top right (bottom screen).)
 - File properties - lets you view info on current file/folder, such as size, modified time, parent folder etc.
 - ~~File timestamps~~.
