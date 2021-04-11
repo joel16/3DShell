@@ -34,7 +34,7 @@ Building from source:
 2. Install the following dependecies from [devkitPro's pacman](https://devkitpro.org/viewtopic.php?f=13&t=8702):
 * `sudo dkp-pacman -Syu 3ds-dev --noconfirm --needed`
 * `sudo dkp-pacman -Syu 3ds-curl --noconfirm --force`
-* `sudo dkp-pacman -Syu 3ds-libarchive --noconfirm`
+* `sudo dkp-pacman -Syu 3ds-libarchive 3ds-jansson 3ds-libjpeg-turbo 3ds-libpng --noconfirm`
 
 3. Clone the 3DShell repository:
 ```bash
