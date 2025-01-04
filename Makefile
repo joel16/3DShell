@@ -37,53 +37,54 @@ SOURCES		:=	source source/gui libs/libnsbmp/src libs/libnsgif/src
 DATA		:=	data
 INCLUDES	:=	include libs/libnsbmp/include libs/libnsgif/include
 GRAPHICS	:=	res/drawable
+#GFXBUILD	:=	$(BUILD)
+ICON		:=	res/ic_launcher_filemanager.png
 ROMFS		:=	romfs
 GFXBUILD	:=	$(ROMFS)/res/drawable
 
-# 3dsx
+VERSION_MAJOR	:=	5
+VERSION_MINOR	:=	1
+VERSION_MICRO	:=	0
+
 APP_TITLE	:=	3DShell
 APP_DESCRIPTION	:=	Multi-purpose file manager
 APP_AUTHOR	:=	Joel16
-ICON		:=	res/ic_launcher_filemanager.png
 
 # CIA
 BANNER_AUDIO	:=	res/banner.wav
 BANNER_IMAGE	:=	res/banner.png
-RSF_PATH		:=	res/app.rsf
-LOGO			:=	res/logo.lz11
-UNIQUE_ID		:=	0x16200
+RSF_PATH	:=	res/app.rsf
+LOGO		:=	res/logo.lz11
+UNIQUE_ID	:=	0x16200
 PRODUCT_CODE	:=	CTR-3D-SHEL
-ICON_FLAGS		:=	nosavebackups,visible
-
-# Version
-VERSION_MAJOR	:=	5
-VERSION_MINOR	:=	1
-VERSION_MICRO	:=	0
+ICON_FLAGS	:=	nosavebackups,visible
 
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
 ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
-CFLAGS	:=	-g -Wall -O2 -mword-relocations -Wno-psabi \
-			-fomit-frame-pointer -ffunction-sections \
+CFLAGS	:=	-g -Wall -O2 -mword-relocations \
+			-ffunction-sections \
 			-DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO) \
 			$(ARCH)
 
-CFLAGS	+=	$(INCLUDE) -DARM11 -D_3DS
+CFLAGS	+=	$(INCLUDE) -D__3DS__
 
-CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++17
+CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++20
 
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:=	`curl-config --libs` -ljansson -lturbojpeg -ljpeg -lpng -larchive -lbz2 -llzma -lcitro2d -lcitro3d -lctru -lm -lz
+LIBS	:= `curl-config --libs` -ljansson -lturbojpeg -ljpeg -lpng -larchive -lbz2 -llzma -lzstd \
+	   -lcitro2d -lcitro3d -lctru -lm -lz
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
 LIBDIRS	:= $(PORTLIBS) $(CTRULIB)
+
 
 #---------------------------------------------------------------------------------
 # no real need to edit anything past this point unless you need to add additional
@@ -210,7 +211,7 @@ all: $(BUILD) $(GFXBUILD) $(DEPSDIR) $(ROMFS_T3XFILES) $(T3XHFILES)
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 	@$(BANNERTOOL) makebanner $(BANNER_IMAGE_ARG) "$(BANNER_IMAGE)" $(BANNER_AUDIO_ARG) "$(BANNER_AUDIO)" -o "$(BUILD)/banner.bnr"
 	@$(BANNERTOOL) makesmdh -s "$(APP_TITLE)" -l "$(APP_DESCRIPTION)" -p "$(APP_AUTHOR)" -i "$(APP_ICON)" -f "$(ICON_FLAGS)" -o "$(BUILD)/icon.icn"
-	$(MAKEROM) -f cia -o "$(OUTPUT).cia" -target t -exefslogo $(MAKEROM_ARGS)
+	$(MAKEROM) -f cia -o "$(TARGET).cia" -target t -exefslogo $(MAKEROM_ARGS)
 
 $(BUILD):
 	@mkdir -p $@
@@ -228,7 +229,7 @@ endif
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(TARGET).3dsx $(OUTPUT).smdh $(TARGET).elf $(GFXBUILD)
+	@rm -fr $(BUILD) $(TARGET).3dsx $(TARGET).cia $(TARGET).smdh $(TARGET).elf $(GFXBUILD)
 
 #---------------------------------------------------------------------------------
 $(GFXBUILD)/%.t3x	$(BUILD)/%.h	:	%.t3s
@@ -257,44 +258,18 @@ $(OUTPUT).elf	:	$(OFILES)
 	@$(bin2o)
 
 #---------------------------------------------------------------------------------
-.PRECIOUS	:	%.t3x
+.PRECIOUS	:	%.t3x %.shbin
 #---------------------------------------------------------------------------------
 %.t3x.o	%_t3x.h :	%.t3x
 #---------------------------------------------------------------------------------
-	@echo $(notdir $<)
-	@$(bin2o)
+	$(SILENTMSG) $(notdir $<)
+	$(bin2o)
 
 #---------------------------------------------------------------------------------
-# rules for assembling GPU shaders
+%.shbin.o %_shbin.h : %.shbin
 #---------------------------------------------------------------------------------
-define shader-as
-	$(eval CURBIN := $*.shbin)
-	$(eval DEPSFILE := $(DEPSDIR)/$*.shbin.d)
-	echo "$(CURBIN).o: $< $1" > $(DEPSFILE)
-	echo "extern const u8" `(echo $(CURBIN) | sed -e 's/^\([0-9]\)/_\1/' | tr . _)`"_end[];" > `(echo $(CURBIN) | tr . _)`.h
-	echo "extern const u8" `(echo $(CURBIN) | sed -e 's/^\([0-9]\)/_\1/' | tr . _)`"[];" >> `(echo $(CURBIN) | tr . _)`.h
-	echo "extern const u32" `(echo $(CURBIN) | sed -e 's/^\([0-9]\)/_\1/' | tr . _)`_size";" >> `(echo $(CURBIN) | tr . _)`.h
-	picasso -o $(CURBIN) $1
-	bin2s $(CURBIN) | $(AS) -o $*.shbin.o
-endef
-
-%.shbin.o %_shbin.h : %.v.pica %.g.pica
-	@echo $(notdir $^)
-	@$(call shader-as,$^)
-
-%.shbin.o %_shbin.h : %.v.pica
-	@echo $(notdir $<)
-	@$(call shader-as,$<)
-
-%.shbin.o %_shbin.h : %.shlist
-	@echo $(notdir $<)
-	@$(call shader-as,$(foreach file,$(shell cat $<),$(dir $<)$(file)))
-
-#---------------------------------------------------------------------------------
-%.t3x	%.h	:	%.t3s
-#---------------------------------------------------------------------------------
-	@echo $(notdir $<)
-	@tex3ds -i $< -H $*.h -d $*.d -o $*.t3x
+	$(SILENTMSG) $(notdir $<)
+	$(bin2o)
 
 -include $(DEPSDIR)/*.d
 

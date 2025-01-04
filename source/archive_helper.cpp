@@ -10,6 +10,10 @@
 #include "log.h"
 #include "utils.h"
 
+mode_t umask(mode_t mask) {
+    return 0;
+}
+
 namespace ArchiveHelper {
     u64 CountFiles(const std::string &path) {
         int ret = 0;
