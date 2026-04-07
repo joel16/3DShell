@@ -177,6 +177,9 @@ namespace GUI {
             C2D::Rect(0, 0, 320, 20, cfg.dark_theme? STATUS_BAR_DARK : MENU_BAR_LIGHT);
             GUI::DisplayTouchButtons(&item);
 
+            if (item.state == MENU_STATE_FILEBROWSER)
+                GUI::DisplayFileBrowserBottom();
+
             switch (item.state) {
                 case MENU_STATE_OPTIONS:
                     GUI::DisplayFileOptions(&item);
@@ -212,6 +215,7 @@ namespace GUI {
             switch (item.state) {
                 case MENU_STATE_FILEBROWSER:
                     GUI::ControlFileBrowser(&item, &kDown, &kHeld);
+                    GUI::ControlFileBrowserBottom(&item, &kDown);
                     break;
 
                 case MENU_STATE_OPTIONS:
