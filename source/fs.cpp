@@ -1,8 +1,6 @@
 #include <algorithm>
-#include <codecvt>
 #include <cstring>
 #include <filesystem>
-#include <locale>
 
 #include "config.h"
 #include "fs.h"
@@ -10,83 +8,116 @@
 #include "log.h"
 #include "utils.h"
 
-FS_Archive archive, sdmc_archive, nand_archive;
+FS_Archive archive, sdmcArchive, nandArchive;
 
 namespace FS {
-    static FS_Archive src_archive;
-    
     typedef struct {
-        std::u16string  copy_path;
-        std::u16string copy_filename;
-        bool is_dir = false;
+        std::u16string path;
+        std::u16string filename;
+        bool isDir = false;
     } FSCopyEntry;
     
-    FSCopyEntry fs_copy_entry;
+    static FSCopyEntry fsCopyEntry;
+    static FS_Archive srcArchive;
 
-    Result OpenArchive(FS_Archive *archive, FS_ArchiveID id) {
+    Result OpenArchive(FS_Archive *archive, FS_ArchiveID archiveID) {
         Result ret = 0;
         
-        if (R_FAILED(ret = FSUSER_OpenArchive(archive, id, fsMakePath(PATH_EMPTY, ""))))
+        if (R_FAILED(ret = FSUSER_OpenArchive(archive, archiveID, fsMakePath(PATH_EMPTY, "")))) {
             return ret;
-            
+        }
+
         return 0;
     }
-    
+
     Result CloseArchive(FS_Archive archive) {
         Result ret = 0;
         
-        if (R_FAILED(ret = FSUSER_CloseArchive(archive)))
+        if (R_FAILED(ret = FSUSER_CloseArchive(archive))) {
             return ret;
-            
+        }
+
         return 0;
     }
     
-    bool FileExists(FS_Archive archive, const std::string &path) {
+    bool FileExists(FS_Archive archive, const std::u16string& path) {
         Handle handle;
-        std::u16string path_u16 = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(path.data());
         
-        if (R_FAILED(FSUSER_OpenFile(&handle, archive, fsMakePath(PATH_UTF16, path_u16.c_str()), FS_OPEN_READ, 0)))
+        if (R_FAILED(FSUSER_OpenFile(&handle, archive, fsMakePath(PATH_UTF16, path.c_str()), FS_OPEN_READ, 0))) {
             return false;
-            
-        if (R_FAILED(FSFILE_Close(handle)))
+        }
+        
+        if (R_FAILED(FSFILE_Close(handle))) {
             return false;
-            
+        }
+        
         return true;
     }
-    
-    bool DirExists(FS_Archive archive, const std::string &path) {
-        Handle handle;
-        std::u16string path_u16 = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(path.data());
-        
-        if (R_FAILED(FSUSER_OpenDirectory(&handle, archive, fsMakePath(PATH_UTF16, path_u16.c_str()))))
-            return false;
-            
-        if (R_FAILED(FSDIR_Close(handle)))
-            return false;
-            
-        return true;
-    }
-    
-    std::string GetFileExt(const std::string &filename) {
-        std::string ext = std::filesystem::path(filename).extension();
-        std::transform(ext.begin(), ext.end(), ext.begin(), ::toupper);
-        return ext;
-    }
-    
-    FileType GetFileType(const std::string &filename) {
-        std::string ext = FS::GetFileExt(filename);
 
-        if ((!ext.compare(".BMP")) || (!ext.compare(".GIF")) || (!ext.compare(".JPG")) || (!ext.compare(".JPEG")) || (!ext.compare(".PGM"))
-            || (!ext.compare(".PPM")) || (!ext.compare(".PNG")) || (!ext.compare(".PSD")) || (!ext.compare(".TGA")) || (!ext.compare(".WEBP")))
-            return FileTypeImage;
-        else if ((!ext.compare(".JSON")) || (!ext.compare(".LOG")) || (!ext.compare(".TXT")) || (!ext.compare(".CFG")) || (!ext.compare(".INI")))
-            return FileTypeText;
-        else if ((!ext.compare(".ZIP")) || (!ext.compare(".RAR")) || (!ext.compare(".7Z")) || (!ext.compare(".LZMA")))
-            return FileTypeZip;
+    bool DirExists(FS_Archive archive, const std::u16string& path) {
+        Handle handle;
+        
+        if (R_FAILED(FSUSER_OpenDirectory(&handle, archive, fsMakePath(PATH_UTF16, path.c_str())))) {
+            return false;
+        }
             
-        return FileTypeNone;
+        if (R_FAILED(FSDIR_Close(handle))) {
+            return false;
+        }
+            
+        return true;
+    }
+
+    static void BuildPath(std::u16string& path, FS_DirectoryEntry *entry) {
+        if (path != u"/" && !path.empty() && path.back() != u'/') {
+            path += u'/';
+        }
+
+        if (entry != nullptr) {
+            path.append(reinterpret_cast<const char16_t *>(entry->name));
+        }
+    }
+
+    static void BuildPath(std::u16string& path, const std::u16string& filename) {
+        if (path != u"/" && !path.empty() && path.back() != u'/') {
+            path += u'/';
+        }
+
+        if (!filename.empty()) {
+            path.append(filename);
+        }
+    }
+
+    Result MakeDir(FS_Archive archive, const std::u16string& path) {
+        Result ret = 0;
+        
+        if (R_FAILED(ret = FSUSER_CreateDirectory(archive, fsMakePath(PATH_UTF16, path.c_str()), 0))) {
+            return ret;
+        }
+        
+        return 0;
     }
     
+    static bool CompareEntry(const u16 *nameA, const u16 *nameB) {
+        while (*nameA && *nameB) {
+            char16_t lowerA = std::tolower(*nameA);
+            char16_t lowerB = std::tolower(*nameB);
+            
+            if (lowerA < lowerB) {
+                return true;
+            }
+
+            if (lowerA > lowerB) {
+                return false;
+            }
+            
+            ++nameA;
+            ++nameB;
+        }
+        
+        return *nameA < *nameB;
+    }
+
     static u64 GetFreeStorage(FS_SystemMediaType mediatype) {
         Result ret = 0;
         FS_ArchiveResource resource = { 0 };
@@ -124,125 +155,202 @@ namespace FS {
             (static_cast<u64>(resource.freeClusters) * static_cast<u64>(resource.clusterSize)));
     }
     
-    static bool Sort(const FS_DirectoryEntry &entryA, const FS_DirectoryEntry &entryB) {
-        if ((entryA.attributes & FS_ATTRIBUTE_DIRECTORY) && !(entryB.attributes & FS_ATTRIBUTE_DIRECTORY))
+    static bool Sort(const FS_DirectoryEntry& entryA, const FS_DirectoryEntry& entryB) {
+        bool isADir = entryA.attributes & FS_ATTRIBUTE_DIRECTORY;
+        bool isBDir = entryB.attributes & FS_ATTRIBUTE_DIRECTORY;
+        
+        if (isADir && !isBDir) {
             return true;
-        else if (!(entryA.attributes & FS_ATTRIBUTE_DIRECTORY) && (entryB.attributes & FS_ATTRIBUTE_DIRECTORY))
-            return false;
-        else {
-            std::u16string entryA_name = reinterpret_cast<const char16_t *>(entryA.name);
-            std::u16string entryB_name = reinterpret_cast<const char16_t *>(entryB.name);
-            std::transform(entryA_name.begin(), entryA_name.end(), entryA_name.begin(), [](unsigned char c){ return std::tolower(c); });
-            std::transform(entryB_name.begin(), entryB_name.end(), entryB_name.begin(), [](unsigned char c){ return std::tolower(c); });
-
-            switch(cfg.sort) {
-                case 0: // Sort alphabetically (ascending - A to Z)
-                    if (entryA_name.compare(entryB_name) < 0)
-                        return true;
-                    break;
-                
-                case 1: // Sort alphabetically (descending - Z to A)
-                    if (entryB_name.compare(entryA_name) < 0)
-                        return true;
-                    break;
-                    
-                case 2: // Sort by file size (largest first)
-                    if (entryB.fileSize < entryA.fileSize)
-                        return true;
-                    break;
-                
-                case 3: // Sort by file size (smallest first)
-                    if (entryA.fileSize < entryB.fileSize)
-                        return true;
-                    break;
-            }
         }
-        return false;
+        
+        if (!isADir && isBDir) {
+            return false;
+        }
+        
+        switch (cfg.sort) {
+            case 0: // Sort alphabetically (ascending)
+                return FS::CompareEntry(entryA.name, entryB.name);
+                
+            case 1: // Sort alphabetically (descending)
+                return FS::CompareEntry(entryB.name, entryA.name);
+                
+            case 2: // Sort by file size (largest first)
+                return entryB.fileSize < entryA.fileSize;
+                
+            case 3: // Sort by file size (smallest first)
+                return entryA.fileSize < entryB.fileSize;
+                
+            default:
+                return false;
+        }
     }
     
-    Result GetDirList(const std::string &path, std::vector<FS_DirectoryEntry> &entries) {
-        if (!entries.empty())
-            entries.clear();
+    Result GetDirList(const std::u16string& path, std::vector<FS_DirectoryEntry>& entries, int filter) {
+        entries.clear();
             
         Result ret = 0;
         Handle dir = 0;
-        std::u16string path_u16 = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(path.data());
         
-        if (R_FAILED(ret = FSUSER_OpenDirectory(&dir, archive, fsMakePath(PATH_UTF16, path_u16.c_str())))) {
-            Log::Error("FSUSER_OpenDirectory(%s) failed: 0x%x\n", path.c_str(), ret);
+        if (R_FAILED(ret = FSUSER_OpenDirectory(&dir, archive, fsMakePath(PATH_UTF16, path.c_str())))) {
+            std::string utf8Path = Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(path.c_str()));
+            Log::Error("FSUSER_OpenDirectory(%s) failed: 0x%x\n", utf8Path.c_str(), ret);
             return ret;
         }
         
-        u32 entry_count = 0;
+        u32 count = 0;
         
         do {
             FS_DirectoryEntry entry;
             
-            if (R_FAILED(ret = FSDIR_Read(dir, &entry_count, 1, &entry))) {
-                Log::Error("FSDIR_Read(%s) failed: 0x%x\n", path.c_str(), ret);
+            if (R_FAILED(ret = FSDIR_Read(dir, &count, 1, &entry))) {
+                std::string utf8Path = Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(path.c_str()));
+                Log::Error("FSDIR_Read(%s) failed: 0x%x\n", utf8Path.c_str(), ret);
+                FSDIR_Close(dir);
                 return ret;
             }
             
-            if (entry_count == 1)
+            if (count == 1) {
                 entries.push_back(entry);
-        } while(entry_count > 0);
+            }
+        } while(count > 0);
         
         std::sort(entries.begin(), entries.end(), FS::Sort);
         
         if (R_FAILED(ret = FSDIR_Close(dir))) {
-            Log::Error("FSDIR_Close(%s) failed: 0x%x\n", path.c_str(), ret);
+            std::string utf8Path = Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(path.c_str()));
+            Log::Error("FSDIR_Close(%s) failed: 0x%x\n", utf8Path.c_str(), ret);
             return ret;
         }
         
         return 0;
     }
     
-    static Result ChangeDir(const std::string &path, std::vector<FS_DirectoryEntry> &entries) {
-        Result ret = 0;
-        std::vector<FS_DirectoryEntry> new_entries;
-        
-        if (R_FAILED(ret = FS::GetDirList(path, new_entries)))
-            return ret;
-            
-        entries.clear();
-        cfg.cwd = path;
+    static Result ChangeDir(const std::u16string &path, std::vector<FS_DirectoryEntry> &entries) {
+        Result ret = FS::GetDirList(path, entries);
 
-        if (archive == sdmc_archive)
-            Config::Save(cfg);
+        if (R_FAILED(ret)) {
+            return ret;
+        }
         
-        entries = new_entries;
+        cfg.cwd = path.empty() ? u"/" : path;
         return 0;
     }
     
-    Result ChangeDirNext(const std::string &path, std::vector<FS_DirectoryEntry> &entries) {
-        std::string new_path = cfg.cwd;
-        new_path.append(path);
-        new_path.append("/");
-        return FS::ChangeDir(new_path, entries);
+    Result ChangeDirNext(const std::u16string &path, std::vector<FS_DirectoryEntry> &entries) {
+        std::u16string newPath = cfg.cwd;
+        FS::BuildPath(newPath, nullptr);
+        
+        if (!path.empty() && path.front() == u'/') {
+            newPath += path.substr(1);
+        }
+        else {
+            newPath += path;
+        }
+        
+        return FS::ChangeDir(newPath, entries);
     }
     
     Result ChangeDirPrev(std::vector<FS_DirectoryEntry> &entries) {
-        std::filesystem::path path = (cfg.cwd.length() <= 1)? cfg.cwd : cfg.cwd.substr(0, cfg.cwd.size() - 1);
-        std::string parent_path = path.parent_path();
-        return FS::ChangeDir((parent_path.length() <= 1)? parent_path : parent_path.append("/"), entries);
+        if (cfg.cwd == u"/" || cfg.cwd.empty()) {
+            return -1;
+        }
+        
+        size_t pos = cfg.cwd.find_last_of(u'/');
+        
+        if (pos == 0 || pos == std::u16string::npos) {
+            cfg.cwd = u"/";
+        }
+        else {
+            cfg.cwd.erase(pos);
+        }
+        
+        return ChangeDir(cfg.cwd, entries);
     }
     
-    Result Delete(FS_DirectoryEntry *entry) {
-        Result ret = 0;
+    const char* GetFileExt(const char *filename) {
+        const char *ext = strrchr(filename, '.');
         
-        std::u16string cwd = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(cfg.cwd.data());
-        std::u16string path = cwd;
-        path.append(reinterpret_cast<const char16_t *>(entry->name));
+        if (ext == nullptr) {
+            return "";
+        }
+        
+        return ext + 1;
+    }
+
+    FileType GetFileType(const char *ext) {
+        if (!ext || ext[0] == '\0') {
+            return FileTypeNone;
+        }
+
+        // Archives
+        if ((strncasecmp(ext, "zip", 3) == 0) || (strncasecmp(ext, "rar", 3) == 0) || (strncasecmp(ext, "7z", 2) == 0)
+            || (strncasecmp(ext, "lzm", 3) == 0)) {
+            return FileTypeArchive;
+        }
+        // Audio
+        else if ((strncasecmp(ext, "fla", 3) == 0) || (strncasecmp(ext, "it", 2) == 0) || (strncasecmp(ext, "mod", 3) == 0)
+            || (strncasecmp(ext, "mp3", 3) == 0) || (strncasecmp(ext, "ogg", 3) == 0) || (strncasecmp(ext, "opu", 3) == 0)
+            || (strncasecmp(ext, "s3m", 3) == 0) || (strncasecmp(ext, "wav", 3) == 0) || (strncasecmp(ext, "xm", 2) == 0)) {
+            return FileTypeAudio;
+        }
+        // Images
+        if ((strncasecmp(ext, "bmp", 3) == 0) || (strncasecmp(ext, "gif", 3) == 0) || (strncasecmp(ext, "jpg", 3) == 0)
+            || (strncasecmp(ext, "jpe", 3) == 0) || (strncasecmp(ext, "pgm", 3) == 0) || (strncasecmp(ext, "ppm", 3) == 0)
+            || (strncasecmp(ext, "png", 3) == 0) || (strncasecmp(ext, "psd", 3) == 0) || (strncasecmp(ext, "tga", 3) == 0)
+            || (strncasecmp(ext, "web", 3) == 0)) {
+            return FileTypeImage;
+        }
+        // Text
+        else if ((strncasecmp(ext, "jso", 3) == 0) || (strncasecmp(ext, "log", 3) == 0) || (strncasecmp(ext, "txt", 3) == 0)
+            || (strncasecmp(ext, "cfg", 3) == 0) || (strncasecmp(ext, "ini", 3) == 0)) {
+            return FileTypeText;
+        }
+            
+        return FileTypeNone;
+    }
+    
+    void GetUTF8Path(char *out, size_t size, const u16 *filename) {
+        std::string utf8Path = Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(cfg.cwd.c_str()));
+        std::string utf8filename = Utils::UTF16ToUTF8(filename);
+        
+        if (!utf8Path.empty() && utf8Path.back() != '/') {
+            utf8Path += '/';
+        }
+        
+        std::snprintf(out, size, "%s%s", utf8Path.c_str(), utf8filename.c_str());
+    }
+    
+    const char *GetFilename(const char *path) {
+        const char *lastSlash = strrchr(path, '/');
+
+        if (lastSlash == nullptr) {
+            return path;
+        }
+        
+        return lastSlash + 1;
+    }
+
+    Result Rename(FS_DirectoryEntry *entry, const std::u16string& filename) {
+        Result ret = 0;
+        std::u16string path = cfg.cwd;
+        FS::BuildPath(path, entry);
+        
+        std::u16string newPath = cfg.cwd;
+        FS::BuildPath(newPath, filename);
         
         if (entry->attributes & FS_ATTRIBUTE_DIRECTORY) {
-            if (R_FAILED(ret = FSUSER_DeleteDirectoryRecursively(archive, fsMakePath(PATH_UTF16, path.c_str())))) {
-                Log::Error("FSUSER_DeleteDirectoryRecursively(%s) failed: 0x%x\n", path.c_str(), ret);
+            if (R_FAILED(ret = FSUSER_RenameDirectory(archive, fsMakePath(PATH_UTF16, path.c_str()), archive, fsMakePath(PATH_UTF16, newPath.c_str())))) {
+                std::string utf8Path = Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(path.c_str()));
+                std::string utf8NewPath = Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(newPath.c_str()));
+                Log::Error("FSUSER_RenameDirectory(%s, %s) failed: 0x%x\n", utf8Path.c_str(), utf8NewPath.c_str(), ret);
                 return ret;
             }
         }
         else {
-            if (R_FAILED(ret = FSUSER_DeleteFile(archive, fsMakePath(PATH_UTF16, path.c_str())))) {
-                Log::Error("FSUSER_DeleteFile(%s) failed: 0x%x\n", path.c_str(), ret);
+            if (R_FAILED(ret = FSUSER_RenameFile(archive, fsMakePath(PATH_UTF16, path.c_str()), archive, fsMakePath(PATH_UTF16, newPath.c_str())))) {
+                std::string utf8Path = Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(path.c_str()));
+                std::string utf8NewPath = Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(newPath.c_str()));
+                Log::Error("FSUSER_RenameFile(%s, %s) failed: 0x%x\n", utf8Path.c_str(), utf8NewPath.c_str(), ret);
                 return ret;
             }
         }
@@ -250,181 +358,168 @@ namespace FS {
         return 0;
     }
     
-    Result Rename(FS_DirectoryEntry *entry, const std::string &filename) {
-        Result ret = 0;
-        std::u16string cwd = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(cfg.cwd.data());
-        std::u16string filename_u16 = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(filename.data());
-        
-        std::u16string path = cwd;
-        path.append(reinterpret_cast<const char16_t *>(entry->name));
-        
-        std::u16string new_path = cwd;
-        new_path.append(filename_u16);
-        
-        if (entry->attributes & FS_ATTRIBUTE_DIRECTORY) {
-            if (R_FAILED(ret = FSUSER_RenameDirectory(archive, fsMakePath(PATH_UTF16, path.c_str()), archive, fsMakePath(PATH_UTF16, new_path.c_str())))) {
-                Log::Error("FSUSER_RenameDirectory(%s, %s) failed: 0x%x\n", path.c_str(), new_path.c_str(), ret);
-                return ret;
-            }
-        }
-        else {
-            if (R_FAILED(ret = FSUSER_RenameFile(archive, fsMakePath(PATH_UTF16, path.c_str()), archive, fsMakePath(PATH_UTF16, new_path.c_str())))) {
-                Log::Error("FSUSER_RenameFile(%s, %s) failed: 0x%x\n", path.c_str(), new_path.c_str(), ret);
-                return ret;
-            }
-        }
-        
-        return 0;
+    static void ClearFSCopyEntry(void) {
+        fsCopyEntry.path.clear();
+        fsCopyEntry.filename.clear();
+        fsCopyEntry.isDir = false;
     }
-    
-    static Result CopyFile(const std::u16string &src_path, const std::u16string &dest_path) {
+
+    static Result CopyFile(const std::u16string &srcPath, const std::u16string &destPath) {
         Result ret = 0;
-        Handle src_handle, dest_handle;
+        Handle srcHandle, destHandle;
         
-        if (R_FAILED(ret = FSUSER_OpenFile(&src_handle, src_archive, fsMakePath(PATH_UTF16, src_path.c_str()), FS_OPEN_READ, 0))) {
-            Log::Error("FSUSER_OpenFile(%s) failed: 0x%x\n", src_path.c_str(), ret);
+        if (R_FAILED(ret = FSUSER_OpenFile(&srcHandle, srcArchive, fsMakePath(PATH_UTF16, srcPath.c_str()), FS_OPEN_READ, 0))) {
+            std::string utf8Path = Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(srcPath.c_str()));
+            Log::Error("FSUSER_OpenFile(%s) failed: 0x%x\n", utf8Path.c_str(), ret);
             return ret;
         }
         
         u64 size = 0;
-        if (R_FAILED(ret = FSFILE_GetSize(src_handle, &size))) {
-            Log::Error("FSFILE_GetSize(%s) failed: 0x%x\n", src_path.c_str(), ret);
-            FSFILE_Close(src_handle);
+        if (R_FAILED(ret = FSFILE_GetSize(srcHandle, &size))) {
+            std::string utf8Path = Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(srcPath.c_str()));
+            Log::Error("FSFILE_GetSize(%s) failed: 0x%x\n", utf8Path.c_str(), ret);
+            FSFILE_Close(srcHandle);
             return ret;
         }
 
         // Make sure we have enough storage to carry out this operation
-        if (FS::GetFreeStorage(src_archive == sdmc_archive? SYSTEM_MEDIATYPE_SD : SYSTEM_MEDIATYPE_CTR_NAND) < size) {
-            Log::Error("Not enough storage is available to process this command 0x%x\n", src_path.c_str(), ret);
-            FSFILE_Close(src_handle);
+        if (FS::GetFreeStorage(srcArchive == sdmcArchive? SYSTEM_MEDIATYPE_SD : SYSTEM_MEDIATYPE_CTR_NAND) < size) {
+            std::string utf8Path = Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(srcPath.c_str()));
+            Log::Error("Not enough storage is available to process this command 0x%x\n", utf8Path.c_str(), ret);
+            FSFILE_Close(srcHandle);
             return -1;
         }
         
         // This may fail or not, but we don't care -> create the file if it doesn't exist, otherwise continue.
-        FSUSER_CreateFile(archive, fsMakePath(PATH_UTF16, dest_path.c_str()), 0, size);
+        FSUSER_CreateFile(archive, fsMakePath(PATH_UTF16, destPath.c_str()), 0, size);
         
-        if (R_FAILED(ret = FSUSER_OpenFile(&dest_handle, archive, fsMakePath(PATH_UTF16, dest_path.c_str()), FS_OPEN_WRITE, 0))) {
-            Log::Error("FSUSER_OpenFile(%s) failed: 0x%x\n", dest_path.c_str(), ret);
-            FSFILE_Close(src_handle);
+        if (R_FAILED(ret = FSUSER_OpenFile(&destHandle, archive, fsMakePath(PATH_UTF16, destPath.c_str()), FS_OPEN_WRITE, 0))) {
+            std::string utf8Path = Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(destPath.c_str()));
+            Log::Error("FSUSER_OpenFile(%s) failed: 0x%x\n", utf8Path.c_str(), ret);
+            FSFILE_Close(srcHandle);
             return ret;
         }
         
-        u32 bytes_read = 0, bytes_written = 0;
-        const u64 buf_size = 0x10000;
+        u32 bytesRead = 0, bytesWritten = 0;
+        const u64 bufferSize = 0x10000;
         u64 offset = 0;
-        u8 *buf = new u8[buf_size];
-        std::string filename = std::filesystem::path(std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(src_path.data())).filename();
+        u8 *buf = new u8[bufferSize];
+        std::string filename = std::filesystem::path(Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(srcPath.c_str()))).filename();
         
         do {
             if (Utils::IsCancelButtonPressed()) {
-                FSFILE_SetSize(dest_handle, offset);
+                FSFILE_SetSize(destHandle, offset);
                 delete[] buf;
-                FSFILE_Close(src_handle);
-                FSFILE_Close(dest_handle);
+                FSFILE_Close(srcHandle);
+                FSFILE_Close(destHandle);
                 return 0;
             }
             
-            std::memset(buf, 0, buf_size);
+            std::memset(buf, 0, bufferSize);
             
-            if (R_FAILED(ret = FSFILE_Read(src_handle, &bytes_read, offset, buf, buf_size))) {
-                Log::Error("FSFILE_Read(%s) failed: 0x%x\n", src_path.c_str(), ret);
+            if (R_FAILED(ret = FSFILE_Read(srcHandle, &bytesRead, offset, buf, bufferSize))) {
+                std::string utf8Path = Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(srcPath.c_str()));
+                Log::Error("FSFILE_Read(%s) failed: 0x%x\n", utf8Path.c_str(), ret);
                 delete[] buf;
-                FSFILE_Close(src_handle);
-                FSFILE_Close(dest_handle);
+                FSFILE_Close(srcHandle);
+                FSFILE_Close(destHandle);
                 return ret;
             }
             
-            if (R_FAILED(ret = FSFILE_Write(dest_handle, &bytes_written, offset, buf, bytes_read, FS_WRITE_FLUSH))) {
-                Log::Error("FSFILE_Write(%s) failed: 0x%x\n", dest_path.c_str(), ret);
+            if (R_FAILED(ret = FSFILE_Write(destHandle, &bytesWritten, offset, buf, bytesRead, FS_WRITE_FLUSH))) {
+                std::string utf8Path = Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(destPath.c_str()));
+                Log::Error("FSFILE_Write(%s) failed: 0x%x\n", utf8Path.c_str(), ret);
                 delete[] buf;
-                FSFILE_Close(src_handle);
-                FSFILE_Close(dest_handle);
+                FSFILE_Close(srcHandle);
+                FSFILE_Close(destHandle);
                 return ret;
             }
             
-            offset += bytes_read;
+            offset += bytesRead;
             GUI::ProgressBar("Copying", filename.c_str(), offset, size);
         } while(offset < size);
         
         delete[] buf;
-        FSFILE_Close(src_handle);
-        FSFILE_Close(dest_handle);
+        FSFILE_Close(srcHandle);
+        FSFILE_Close(destHandle);
         return 0;
     }
-    
-    static Result CopyDir(const std::u16string &src_path, const std::u16string &dest_path) {
+
+    static Result CopyDir(const std::u16string &srcPath, const std::u16string &destPath) {
         Result ret = 0;
         Handle dir;
         
-        if (R_FAILED(ret = FSUSER_OpenDirectory(&dir, src_archive, fsMakePath(PATH_UTF16, src_path.c_str())))) {
-            Log::Error("FSUSER_OpenDirectory(%s) failed: 0x%x\n", src_path, ret);
+        if (R_FAILED(ret = FSUSER_OpenDirectory(&dir, srcArchive, fsMakePath(PATH_UTF16, srcPath.c_str())))) {
+            std::string utf8Path = Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(srcPath.c_str()));
+            Log::Error("FSUSER_OpenDirectory(%s) failed: 0x%x\n", utf8Path.c_str(), ret);
             return ret;
         }
         
         // This may fail or not, but we don't care -> make the dir if it doesn't exist, otherwise continue.
-        FSUSER_CreateDirectory(archive, fsMakePath(PATH_UTF16, dest_path.c_str()), 0);
+        FSUSER_CreateDirectory(archive, fsMakePath(PATH_UTF16, destPath.c_str()), 0);
         
-        u32 entry_count = 0;
+        u32 count = 0;
         
         do {
             FS_DirectoryEntry entry;
             
-            if (R_FAILED(ret = FSDIR_Read(dir, &entry_count, 1, &entry))) {
-                Log::Error("FSDIR_Read(%s) failed: 0x%x\n", src_path.c_str(), ret);
+            if (R_FAILED(ret = FSDIR_Read(dir, &count, 1, &entry))) {
+                std::string utf8Path = Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(srcPath.c_str()));
+                Log::Error("FSDIR_Read(%s) failed: 0x%x\n", utf8Path.c_str(), ret);
                 return ret;
             }
             
-            if (entry_count == 1) {
-                std::u16string src = src_path;
+            if (count == 1) {
+                std::u16string src = srcPath;
                 src.append(u"/");
                 src.append(reinterpret_cast<const char16_t *>(entry.name));
                 
-                std::u16string dest = dest_path;
+                std::u16string dest = destPath;
                 dest.append(u"/");
                 dest.append(reinterpret_cast<const char16_t *>(entry.name));
                 
-                if (entry.attributes & FS_ATTRIBUTE_DIRECTORY)
-                    FS::CopyDir(src, dest); // Copy Folder (via recursion)
-                else
-                    FS::CopyFile(src, dest); // Copy File
+                if (entry.attributes & FS_ATTRIBUTE_DIRECTORY) {
+                    FS::CopyDir(src, dest);
+                }
+                else {
+                    FS::CopyFile(src, dest);
+                }
             }
-        } while(entry_count > 0);
+        } while(count > 0);
         
         if (R_FAILED(ret = FSDIR_Close(dir))) {
-            Log::Error("FSDIR_Close(%s) failed: 0x%x\n", src_path.c_str(), ret);
+            std::string utf8Path = Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(srcPath.c_str()));
+            Log::Error("FSDIR_Close(%s) failed: 0x%x\n", utf8Path.c_str(), ret);
             return ret;
         }
         
         return 0;
     }
-
-    static void ClearFSCopyEntry(void) {
-        fs_copy_entry.copy_path.clear();
-        fs_copy_entry.copy_filename.clear();
-        fs_copy_entry.is_dir = false;
-    }
     
-    void Copy(FS_DirectoryEntry *entry, const std::string &path) {
+    void Copy(FS_DirectoryEntry *entry, const std::u16string& path) {
         FS::ClearFSCopyEntry();
-        fs_copy_entry.copy_path = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(path.data());
-        fs_copy_entry.copy_path.append(reinterpret_cast<const char16_t *>(entry->name));
-        fs_copy_entry.copy_filename.append(reinterpret_cast<const char16_t *>(entry->name));
+        fsCopyEntry.path = path;
+        FS::BuildPath(fsCopyEntry.path, entry);
+        fsCopyEntry.filename = reinterpret_cast<const char16_t *>(entry->name);
         
-        if (entry->attributes & FS_ATTRIBUTE_DIRECTORY)
-            fs_copy_entry.is_dir = true;
+        if (entry->attributes & FS_ATTRIBUTE_DIRECTORY) {
+            fsCopyEntry.isDir = true;
+        }
             
-        src_archive = archive;
+        srcArchive = archive;
     }
     
     Result Paste(void) {
         Result ret = 0;
-        std::u16string path = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(cfg.cwd.data());
-        path.append(fs_copy_entry.copy_filename);
+        std::u16string path = cfg.cwd;
+        FS::BuildPath(path, fsCopyEntry.filename);
         
-        if (fs_copy_entry.is_dir) // Copy folder recursively
-            ret = FS::CopyDir(fs_copy_entry.copy_path, path);
-        else // Copy file
-            ret = FS::CopyFile(fs_copy_entry.copy_path, path);
+        if (fsCopyEntry.isDir) {
+            ret = FS::CopyDir(fsCopyEntry.path, path);
+        }
+        else {
+            ret = FS::CopyFile(fsCopyEntry.path, path);
+        }
             
         FS::ClearFSCopyEntry();
         return ret;
@@ -432,23 +527,78 @@ namespace FS {
     
     Result Move(void) {
         Result ret = 0;
-        std::u16string path = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(cfg.cwd.data());
-        path.append(fs_copy_entry.copy_filename);
+        std::u16string path = cfg.cwd;
+        FS::BuildPath(path, fsCopyEntry.filename);
         
-        if (fs_copy_entry.is_dir) {
-            if (R_FAILED(ret = FSUSER_RenameDirectory(src_archive, fsMakePath(PATH_UTF16, fs_copy_entry.copy_path.c_str()), archive, fsMakePath(PATH_UTF16, path.c_str())))) {
-                Log::Error("FSUSER_RenameDirectory(%s, %s) failed: 0x%x\n", path.c_str(), fs_copy_entry.copy_filename.c_str(), ret);
+        if (fsCopyEntry.isDir) {
+            if (R_FAILED(ret = FSUSER_RenameDirectory(srcArchive, fsMakePath(PATH_UTF16, fsCopyEntry.path.c_str()), archive, fsMakePath(PATH_UTF16, path.c_str())))) {
+                std::string utf8Path = Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(path.c_str()));
+                std::string utf8Filename = Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(fsCopyEntry.filename.c_str()));
+                Log::Error("FSUSER_RenameDirectory(%s, %s) failed: 0x%x\n", utf8Path.c_str(), utf8Filename.c_str(), ret);
                 return ret;
             }
         }
         else {
-            if (R_FAILED(ret = FSUSER_RenameFile(src_archive, fsMakePath(PATH_UTF16, fs_copy_entry.copy_path.c_str()), archive, fsMakePath(PATH_UTF16, path.c_str())))) {
-                Log::Error("FSUSER_RenameFile(%s, %s) failed: 0x%x\n", path.c_str(), fs_copy_entry.copy_filename.c_str(), ret);
+            if (R_FAILED(ret = FSUSER_RenameFile(srcArchive, fsMakePath(PATH_UTF16, fsCopyEntry.path.c_str()), archive, fsMakePath(PATH_UTF16, path.c_str())))) {
+                std::string utf8Path = Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(path.c_str()));
+                std::string utf8Filename = Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(fsCopyEntry.filename.c_str()));
+                Log::Error("FSUSER_RenameFile(%s, %s) failed: 0x%x\n", utf8Path.c_str(), utf8Filename.c_str(), ret);
                 return ret;
             }
         }
         
         FS::ClearFSCopyEntry();
+        return 0;
+    }
+
+    Result Delete(FS_DirectoryEntry& entry) {
+        Result ret = 0;
+        std::u16string path = cfg.cwd;
+        FS::BuildPath(path, std::addressof(entry));
+        
+        if (entry.attributes & FS_ATTRIBUTE_DIRECTORY) {
+            if (R_FAILED(ret = FSUSER_DeleteDirectoryRecursively(archive, fsMakePath(PATH_UTF16, path.c_str())))) {
+                std::string utf8Path = Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(path.c_str()));
+                Log::Error("FSUSER_DeleteDirectoryRecursively(%s) failed: 0x%x\n", utf8Path.c_str(), ret);
+                return ret;
+            }
+        }
+        else {
+            if (R_FAILED(ret = FSUSER_DeleteFile(archive, fsMakePath(PATH_UTF16, path.c_str())))) {
+                std::string utf8Path = Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(path.c_str()));
+                Log::Error("FSUSER_DeleteFile(%s) failed: 0x%x\n", utf8Path.c_str(), ret);
+                return ret;
+            }
+        }
+        
+        return 0;
+    }
+
+    Result CreateFile(const std::u16string& filename) {
+        Result ret = 0;
+        std::u16string path = cfg.cwd;
+        FS::BuildPath(path, filename);
+
+        if (R_FAILED(ret = FSUSER_CreateFile(archive, fsMakePath(PATH_UTF16, path.c_str()), 0, 0))) {
+            std::string utf8Path = Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(path.c_str()));
+            Log::Error("FSUSER_CreateFile(%s) failed: 0x%x\n", utf8Path.c_str(), ret);
+            return ret;
+        }
+
+        return 0;
+    }
+
+    Result CreateFolder(const std::u16string& filename) {
+        Result ret = 0;
+        std::u16string path = cfg.cwd;
+        FS::BuildPath(path, filename);
+
+        if (R_FAILED(ret = FSUSER_CreateDirectory(archive, fsMakePath(PATH_UTF16, path.c_str()), 0))) {
+            std::string utf8Path = Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(path.c_str()));
+            Log::Error("FSUSER_CreateDirectory(%s) failed: 0x%x\n", utf8Path.c_str(), ret);
+            return ret;
+        }
+
         return 0;
     }
 }

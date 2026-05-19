@@ -1,58 +1,94 @@
-#ifndef _3D_SHELL_GUI_H
-#define _3D_SHELL_GUI_H
+#pragma once
 
 #include <3ds.h>
 #include <citro2d.h>
+#include <string>
 #include <vector>
 
-enum MENU_STATES {
-    MENU_STATE_FILEBROWSER,
-    MENU_STATE_OPTIONS,
-    MENU_STATE_DELETE,
-    MENU_STATE_PROPERTIES,
-    MENU_STATE_SETTINGS,
-    MENU_STATE_IMAGEVIEWER,
-    MENU_STATE_ARCHIVEEXTRACT,
-    MENU_STATE_TEXTREADER,
-    MENU_STATE_UPDATE
+#include "fs.h"
+
+enum {
+    TARGET_TOP = 0,
+    TARGET_BOTTOM,
+    TARGET_MAX
+};
+
+enum GUI_STATES {
+    GUI_STATE_FILEBROWSER,
+    GUI_STATE_OPTIONS,
+    GUI_STATE_DELETE,
+    GUI_STATE_PROPERTIES,
+    GUI_STATE_SETTINGS,
+    GUI_STATE_IMAGEVIEWER,
+    GUI_STATE_ARCHIVEEXTRACT,
+    GUI_STATE_TEXTREADER,
+    GUI_STATE_UPDATE
 };
 
 typedef struct {
-    MENU_STATES state = MENU_STATE_FILEBROWSER;
+    GUI_STATES state = GUI_STATE_FILEBROWSER;
     int selected = 0;
     std::vector<FS_DirectoryEntry> entries;
-    std::vector<bool> checked;
-    std::vector<bool> checked_copy;
-    std::string checked_cwd;
-    int checked_count = 0;
-    u64 used_storage = 0;
-    u64 total_storage = 0;
+    std::vector<u8> checked;
+    std::vector<u8> checkedCopy;
+    std::u16string checkedCwd;
+    float textHeight = 0.0f;
+    u32 checkedCount = 0;
+    u64 usedSize = 0;
+    u64 totalSize = 0;
     C2D_Image texture;
-} MenuItem;
+} GuiData;
+
+
+constexpr u32 guiBgColourTop[2] = { C2D_Color32(255, 255, 255, 255), C2D_Color32(48, 48, 48, 255) };
+constexpr u32 guiBgColourBottom[2] = { C2D_Color32(37, 79, 174, 255), C2D_Color32(55, 71, 79, 255) };
+constexpr u32 guiSelectorColour[2] = { C2D_Color32(220, 220, 220, 255), C2D_Color32(76, 76, 76, 255) };
+constexpr u32 guiTitleColour[2] = { C2D_Color32(30, 136, 229, 255), C2D_Color32(0, 150, 136, 255) };
+constexpr u32 guiTextColour[2] = { C2D_Color32(32, 32, 32, 255), C2D_Color32(185, 185, 185, 255) };
 
 namespace GUI {
-    void ResetCheckbox(MenuItem *item);
-    void RecalcStorageSize(MenuItem *item);
+    void Init(void);
+    void Exit(void);
+    void Begin(u32 topScreenColour, u32 bottomScreenColour);
+    void End(void);
+    C3D_RenderTarget *GetRenderTarget(u8 target);
+
+    bool DrawRect(float x, float y, float w, float h, u32 colour);
+    void GetTextDimensions(float size, float *width, float *height, const char *text);
+    bool DrawImage(C2D_Image image, float x, float y);
+    bool DrawImageScale(C2D_Image image, float x, float y, float scaleX, float scaleY);
+    void DrawText(float x, float y, float size, u32 colour, const char *text);
+    void DrawTextf(float x, float y, float size, u32 colour, const char* text, ...);
+    
+    void ResetCheckbox(GuiData& data);
+    void LoadStorageBar(GuiData& data);
     void ProgressBar(const std::string &title, std::string message, u64 offset, u64 size);
     void DownloadProgressBar(void *args);
-    Result Loop(void);
+    void DisplayStatusBar(void);
+    
+    void MainMenu(void);
+    
+    void DisplayFileBrowser(GuiData& data);
+    void ControlFileBrowser(GuiData& data, u32& kDown, u32& kHeld);
+    
+    void DisplayFileOptions(GuiData& data);
+    void ControlFileOptions(GuiData& data, u32& kDown);
 
-    // Windows
-    void DisplayFileBrowser(MenuItem *item);
-    void ControlFileBrowser(MenuItem *item, u32 *kDown, u32 *kHeld);
-    void DisplayFileOptions(MenuItem *item);
-    void ControlFileOptions(MenuItem *item, u32 *kDown);
-    void DisplayProperties(MenuItem *item);
-    void ControlProperties(MenuItem *item, u32 *kDown);
-    void DisplaySettings(MenuItem *item);
-    void ControlSettings(MenuItem *item, u32 *kDown);
-    void DisplayImageViewerTop(MenuItem *item);
-    void DisplayImageViewerBottom(MenuItem *item);
-    void ControlImageViewer(MenuItem *item, u32 *kDown, u32 *kHeld, u64 *delta_time);
-    void DisplayDeleteOptions(MenuItem *item);
-    void ControlDeleteOptions(MenuItem *item, u32 *kDown);
-    void DisplayUpdateOptions(bool *connection_status, bool *available, const std::string &tag);
-    void ControlUpdateOptions(MenuItem *item, u32 *kDown, bool *state, bool *connection_status, bool *available, const std::string &tag);
+    void DisplayDeleteOptions(GuiData& data);
+    void ControlDeleteOptions(GuiData& data, u32& kDown);
+    
+    void DisplayProperties(GuiData& data);
+    void ControlProperties(GuiData& data, u32& kDown);
+
+    void DisplayAudioPlayer(const char *path);
+    
+    void DisplaySettings(GuiData& data);
+    void ControlSettings(GuiData& data, u32& kDown);
+    
+    void DisplayUpdateOptions(bool& status, bool& available, const std::string &tag);
+    void ControlUpdateOptions(GuiData& data, u32& kDown, bool& state, bool& status, bool& available, const std::string &tag);
+
+    void DisplayImageViewerTop(GuiData& data);
+    void DisplayImageViewerBottom(GuiData& data);
+    void ControlImageViewer(GuiData& data, u32& kDown, u32& kHeld, u64& delta);
 }
-
-#endif

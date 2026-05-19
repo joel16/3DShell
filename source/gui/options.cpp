@@ -1,18 +1,17 @@
 #include <codecvt>
 #include <locale>
 
-#include "c2d_helper.h"
-#include "colours.h"
 #include "config.h"
 #include "fs.h"
 #include "gui.h"
+#include "log.h"
 #include "osk.h"
 #include "textures.h"
 #include "touch.h"
 #include "utils.h"
 
 static int row = 0, column = 0;
-static bool copy = false, move = false, options_more = false;
+static bool copy = false, move = false, moreOptions = false;
 
 namespace Options {
     static void ResetSelector(void) {
@@ -20,314 +19,343 @@ namespace Options {
         column = 0;
     }
 
-    static void HandleMultipleCopy(MenuItem *item, Result (*func)()) {
+    static void HandleMultipleCopy(GuiData& data, Result (*func)()) {
         Result ret = 0;
         std::vector<FS_DirectoryEntry> entries;
         
-        if (R_FAILED(ret = FS::GetDirList(item->checked_cwd.data(), entries)))
+        if (R_FAILED(ret = FS::GetDirList(data.checkedCwd.data(), entries))) {
             return;
+        }
             
-        for (u32 i = 0; i < item->checked_copy.size(); i++) {
-            if (item->checked_copy.at(i)) {
-                FS::Copy(&entries[i], item->checked_cwd);
+        for (u32 i = 0; i < data.checkedCopy.size(); i++) {
+            if (data.checkedCopy.at(i)) {
+                FS::Copy(&entries[i], data.checkedCwd);
                 if (R_FAILED((*func)())) {
-                    FS::GetDirList(cfg.cwd, item->entries);
-                    GUI::ResetCheckbox(item);
+                    FS::GetDirList(cfg.cwd, data.entries);
+                    GUI::ResetCheckbox(data);
                     break;
                 }
             }
         }
         
-        FS::GetDirList(cfg.cwd, item->entries);
-        GUI::ResetCheckbox(item);
+        FS::GetDirList(cfg.cwd, data.entries);
+        GUI::ResetCheckbox(data);
         entries.clear();
     }
 
-    static void CreateFolder(MenuItem *item) {
-        std::string path = cfg.cwd;
-        std::string name = OSK::GetText("New Folder", "Enter folder name");
-        path.append(name);
-        std::u16string path_u16 = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(path.data());
+    static void CreateFolder(GuiData& data) {
+        std::u16string name = OSK::GetText("New Folder", "Enter folder name");
         
-        if (R_SUCCEEDED(FSUSER_CreateDirectory(archive, fsMakePath(PATH_UTF16, path_u16.c_str()), 0))) {
-            FS::GetDirList(cfg.cwd, item->entries);
-            GUI::ResetCheckbox(item);
+        if (R_SUCCEEDED(FS::CreateFolder(name))) {
+            FS::GetDirList(cfg.cwd, data.entries);
+            GUI::ResetCheckbox(data);
         }
     }
 
-    static void CreateFile(MenuItem *item) {
-        std::string path = cfg.cwd;
-        std::string name = OSK::GetText("New File", "Enter file name");
-        path.append(name);
-        std::u16string path_u16 = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(path.data());
+    static void CreateFile(GuiData& data) {
+        std::u16string name = OSK::GetText("New File", "Enter file name");
         
-        if (R_SUCCEEDED(FSUSER_CreateFile(archive, fsMakePath(PATH_UTF16, path_u16.c_str()), 0, 0))) {
-            FS::GetDirList(cfg.cwd, item->entries);
-            GUI::ResetCheckbox(item);
+        if (R_SUCCEEDED(FS::CreateFile(name))) {
+            FS::GetDirList(cfg.cwd, data.entries);
+            GUI::ResetCheckbox(data);
         }
     }
 
-    static void Rename(MenuItem *item, const std::string &filename) {
-        std::string path = OSK::GetText(filename, "Enter new name");
+    static void Rename(GuiData& data, const std::u16string &filename) {
+        std::u16string path = OSK::GetText(Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(filename.c_str())), "Enter new name");
+        std::string renamePath = Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(path.c_str()));
+        Log::Error("renamePath %s\n", renamePath.c_str());
 
-        if (R_SUCCEEDED(FS::Rename(&item->entries[item->selected], path.c_str()))) {
-            FS::GetDirList(cfg.cwd, item->entries);
+        if (R_SUCCEEDED(FS::Rename(&data.entries[data.selected], path.c_str()))) {
+            FS::GetDirList(cfg.cwd, data.entries);
             Options::ResetSelector();
-            options_more = false;
-            item->state = MENU_STATE_FILEBROWSER;
+            moreOptions = false;
+            data.state = GUI_STATE_FILEBROWSER;
         }
     }
 
-    static void Copy(MenuItem *item) {
+    static void Copy(GuiData& data) {
         if (!copy) {
-            if ((item->checked_count >= 1) && (item->checked_cwd.compare(cfg.cwd) != 0))
-                GUI::ResetCheckbox(item);
-            if (item->checked_count <= 1)
-                FS::Copy(&item->entries[item->selected], cfg.cwd);
+            if ((data.checkedCount >= 1) && (data.checkedCwd.compare(cfg.cwd) != 0)) {
+                GUI::ResetCheckbox(data);
+            }
+            if (data.checkedCount <= 1) {
+                FS::Copy(&data.entries[data.selected], cfg.cwd);
+            }
             
             copy = !copy;
-            item->state = MENU_STATE_FILEBROWSER;
+            data.state = GUI_STATE_FILEBROWSER;
         }
         else {
-            if ((item->checked_count > 1) && (item->checked_cwd.compare(cfg.cwd) != 0))
-                Options::HandleMultipleCopy(item, &FS::Paste);
+            if ((data.checkedCount > 1) && (data.checkedCwd.compare(cfg.cwd) != 0)) {
+                Options::HandleMultipleCopy(data, &FS::Paste);
+            }
             else {
                 if (R_SUCCEEDED(FS::Paste())) {
-                    FS::GetDirList(cfg.cwd, item->entries);
-                    GUI::ResetCheckbox(item);
+                    FS::GetDirList(cfg.cwd, data.entries);
+                    GUI::ResetCheckbox(data);
                 }
             }
             
-            GUI::RecalcStorageSize(item);
+            GUI::LoadStorageBar(data);
             copy = !copy;
-            item->state = MENU_STATE_FILEBROWSER;
+            data.state = GUI_STATE_FILEBROWSER;
         }
     }
 
-    static void Move(MenuItem *item) {
+    static void Move(GuiData& data) {
         if (!move) {
-            if ((item->checked_count >= 1) && (item->checked_cwd.compare(cfg.cwd) != 0))
-                GUI::ResetCheckbox(item);
+            if ((data.checkedCount >= 1) && (data.checkedCwd.compare(cfg.cwd) != 0)) {
+                GUI::ResetCheckbox(data);
+            }
                 
-            if (item->checked_count <= 1)
-                FS::Copy(&item->entries[item->selected], cfg.cwd);
+            if (data.checkedCount <= 1) {
+                FS::Copy(&data.entries[data.selected], cfg.cwd);
+            }
         }
         else {
-            if ((item->checked_count > 1) && (item->checked_cwd.compare(cfg.cwd) != 0))
-                Options::HandleMultipleCopy(item, &FS::Move);
+            if ((data.checkedCount > 1) && (data.checkedCwd.compare(cfg.cwd) != 0)) {
+                Options::HandleMultipleCopy(data, &FS::Move);
+            }
             else if (R_SUCCEEDED(FS::Move())) {
-                FS::GetDirList(cfg.cwd, item->entries);
-                GUI::ResetCheckbox(item);
+                FS::GetDirList(cfg.cwd, data.entries);
+                GUI::ResetCheckbox(data);
             }
         }
         
         move = !move;
-        item->state = MENU_STATE_FILEBROWSER;
+        data.state = GUI_STATE_FILEBROWSER;
     }
 }
 
 namespace GUI {
-    static float cancel_width = 0.f, cancel_height = 0.f;
+    static float cancelWidth = 0.f, cancelHeight = 0.f;
 
-    void DisplayFileOptions(MenuItem *item) {
-        C2D::Image(cfg.dark_theme? options_dialog_dark : options_dialog, 54, 30);
-        C2D::Text(61, 34, 0.42f, cfg.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "Actions");
+    void DisplayFileOptions(GuiData& data) {
+        GUI::DrawImage(optionsDialog[cfg.theme], 54, 30);
+        GUI::DrawText(61, 34, 0.42f, guiTitleColour[cfg.theme], "Actions");
         
-        C2D::GetTextSize(0.42f, &cancel_width, &cancel_height, "CANCEL");
+        GUI::GetTextDimensions(0.42f, &cancelWidth, &cancelHeight, "CANCEL");
         
-        if (row == 0 && column == 0)
-            C2D::Rect(56, 69, 103, 36, cfg.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
-        else if (row == 1 && column == 0)
-            C2D::Rect(160, 69, 103, 36, cfg.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
-        else if (row == 0 && column == 1)
-            C2D::Rect(56, 105, 103, 36, cfg.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
-        else if (row == 1 && column == 1)
-            C2D::Rect(160, 105, 103, 36, cfg.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
-        else if (row == 0 && column == 2 && !options_more)
-            C2D::Rect(56, 142, 103, 36, cfg.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
-        else if (row == 1 && column == 2 && !options_more)
-            C2D::Rect(160, 142, 103, 36, cfg.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
-        else if (column == 3 && !options_more)
-            C2D::Rect((256 - cancel_width) - 5, (221 - cancel_height) - 5, cancel_width+ 10, cancel_height + 10, cfg.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
-        else if (column == 2 && options_more)
-            C2D::Rect((256 - cancel_width) - 5, (221 - cancel_height) - 5, cancel_width + 10, cancel_height + 10, cfg.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
+        if (row == 0 && column == 0) {
+            GUI::DrawRect(56, 69, 103, 36, guiSelectorColour[cfg.theme]);
+        }
+        else if (row == 1 && column == 0) {
+            GUI::DrawRect(160, 69, 103, 36, guiSelectorColour[cfg.theme]);
+        }
+        else if (row == 0 && column == 1) {
+            GUI::DrawRect(56, 105, 103, 36, guiSelectorColour[cfg.theme]);
+        }
+        else if (row == 1 && column == 1) {
+            GUI::DrawRect(160, 105, 103, 36, guiSelectorColour[cfg.theme]);
+        }
+        else if (row == 0 && column == 2 && !moreOptions) {
+            GUI::DrawRect(56, 142, 103, 36, guiSelectorColour[cfg.theme]);
+        }
+        else if (row == 1 && column == 2 && !moreOptions) {
+            GUI::DrawRect(160, 142, 103, 36, guiSelectorColour[cfg.theme]);
+        }
+        else if (column == 3 && !moreOptions) {
+            GUI::DrawRect((256 - cancelWidth) - 5, (221 - cancelHeight) - 5, cancelWidth+ 10, cancelHeight + 10, guiSelectorColour[cfg.theme]);
+        }
+        else if (column == 2 && moreOptions) {
+            GUI::DrawRect((256 - cancelWidth) - 5, (221 - cancelHeight) - 5, cancelWidth + 10, cancelHeight + 10, guiSelectorColour[cfg.theme]);
+        }
             
-        C2D::Text(256 - cancel_width, 221 - cancel_height - 3, 0.42f, cfg.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "CANCEL");
+        GUI::DrawText(256 - cancelWidth, 221 - cancelHeight - 3, 0.42f, guiTitleColour[cfg.theme], "CANCEL");
         
-        if (!options_more) {
-            C2D::Text(66, 78, 0.42f, cfg.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Properties");
-            C2D::Text(66, 114, 0.42f, cfg.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, copy? "Paste" : "Copy");
-            C2D::Text(66, 150, 0.42f, cfg.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Delete");
-            C2D::Text(170, 78, 0.42f, cfg.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Refresh");
-            C2D::Text(170, 114, 0.42f, cfg.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, move? "Paste" : "Move");
-            C2D::Text(170, 150, 0.42f, cfg.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "More...");
+        if (!moreOptions) {
+            GUI::DrawText(66, 78, 0.42f, guiTextColour[cfg.theme], "Properties");
+            GUI::DrawText(66, 114, 0.42f, guiTextColour[cfg.theme], copy? "Paste" : "Copy");
+            GUI::DrawText(66, 150, 0.42f, guiTextColour[cfg.theme], "Delete");
+            GUI::DrawText(170, 78, 0.42f, guiTextColour[cfg.theme], "Refresh");
+            GUI::DrawText(170, 114, 0.42f, guiTextColour[cfg.theme], move? "Paste" : "Move");
+            GUI::DrawText(170, 150, 0.42f, guiTextColour[cfg.theme], "More...");
         }
         else {
-            C2D::Text(66, 78, 0.42f, cfg.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "New folder");
-            C2D::Text(66, 114, 0.42f, cfg.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "Rename");
-            C2D::Text(170, 78, 0.42f, cfg.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "New file");
+            GUI::DrawText(66, 78, 0.42f, guiTextColour[cfg.theme], "New folder");
+            GUI::DrawText(66, 114, 0.42f, guiTextColour[cfg.theme], "Rename");
+            GUI::DrawText(170, 78, 0.42f, guiTextColour[cfg.theme], "New file");
         }
     }
 
-    void ControlFileOptions(MenuItem *item, u32 *kDown) {
-        if (*kDown & KEY_RIGHT)
+    void ControlFileOptions(GuiData& data, u32& kDown) {
+        if (kDown & KEY_RIGHT) {
             row++;
-        else if (*kDown & KEY_LEFT)
+        }
+        else if (kDown & KEY_LEFT) {
             row--;
+        }
         
-        if (*kDown & KEY_DDOWN)
+        if (kDown & KEY_DDOWN) {
             column++;
-        else if (*kDown & KEY_DUP)
+        }
+        else if (kDown & KEY_DUP) {
             column--;
+        }
 
-        if (!options_more) {
-            Utils::SetBounds(&row, 0, 1);
-            Utils::SetBounds(&column, 0, 3);
+        if (!moreOptions) {
+            Utils::Wrap(row, 0, 1);
+            Utils::Wrap(column, 0, 3);
         }
         else {
-            Utils::SetBounds(&column, 0, 2);
+            Utils::Wrap(column, 0, 2);
             
-            if (column == 1)
-                Utils::SetBounds(&row, 0, 0);
-            else
-                Utils::SetBounds(&row, 0, 1);
+            if (column == 1) {
+                Utils::Wrap(row, 0, 0);
+            }
+            else {
+                Utils::Wrap(row, 0, 1);
+            }
         }
 
-        if (*kDown & KEY_A) {
-            const std::u16string entry_name_utf16 = reinterpret_cast<const char16_t *>(item->entries[item->selected].name);
-            const std::string filename = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(entry_name_utf16.data());
-
+        if (kDown & KEY_A) {
             if (row == 0) {
-                if (!options_more) {
-                    if (column == 0)
-                        item->state = MENU_STATE_PROPERTIES;
-                    else if (column == 1)
-                        Options::Copy(item);
-                    else if (column == 2)
-                        item->state = MENU_STATE_DELETE;
+                if (!moreOptions) {
+                    if (column == 0) {
+                        data.state = GUI_STATE_PROPERTIES;
+                    }
+                    else if (column == 1) {
+                        Options::Copy(data);
+                    }
+                    else if (column == 2) {
+                        data.state = GUI_STATE_DELETE;
+                    }
                 }
                 else {
-                    if (column == 0)
-                        Options::CreateFolder(item);
-                    else if (column == 1)
-                        Options::Rename(item, filename);
+                    if (column == 0) {
+                        Options::CreateFolder(data);
+                    }
+                    else if (column == 1) {
+                        Options::Rename(data, reinterpret_cast<const char16_t *>(data.entries[data.selected].name));
+                    }
                 }
             }
             else if (row == 1) {
-                if (!options_more) {
+                if (!moreOptions) {
                     if (column == 0) {
-                        FS::GetDirList(cfg.cwd, item->entries);
+                        FS::GetDirList(cfg.cwd, data.entries);
                         Options::ResetSelector();
-                        options_more = false;
-                        item->selected = 0;
-                        item->state = MENU_STATE_FILEBROWSER;
+                        moreOptions = false;
+                        data.selected = 0;
+                        data.state = GUI_STATE_FILEBROWSER;
                     }
-                    else if (column == 1)
-                        Options::Move(item);
+                    else if (column == 1) {
+                        Options::Move(data);
+                    }
                     else if (column == 2) {
                         Options::ResetSelector();
-                        options_more = true;
+                        moreOptions = true;
                     }
                 }
                 else {
-                    if (column == 0)
-                        Options::CreateFile(item);
+                    if (column == 0) {
+                        Options::CreateFile(data);
+                    }
                 }
             }
             if (column == 3) {
                 copy = false;
                 move = false;
                 Options::ResetSelector();
-                options_more = false;
-                item->state = MENU_STATE_FILEBROWSER;
+                moreOptions = false;
+                data.state = GUI_STATE_FILEBROWSER;
             }
         }
-        if (*kDown & KEY_B) {
+        if (kDown & KEY_B) {
             Options::ResetSelector();
 
-            if (!options_more)
-                item->state = MENU_STATE_FILEBROWSER;
-            else
-                options_more = false;
+            if (!moreOptions) {
+                data.state = GUI_STATE_FILEBROWSER;
+            }
+            else {
+                moreOptions = false;
+            }
         }
 
         if (Touch::Rect(56, 69, 159, 104)) {
             row = 0;
             column = 0;
             
-            if (*kDown & KEY_TOUCH) {
-                if (!options_more)
-                    item->state = MENU_STATE_PROPERTIES;
-                else
-                    Options::CreateFolder(item);
+            if (kDown & KEY_TOUCH) {
+                if (!moreOptions) {
+                    data.state = GUI_STATE_PROPERTIES;
+                }
+                else {
+                    Options::CreateFolder(data);
+                }
             }
         }
         else if (Touch::Rect(160, 69, 263, 104)) {
             row = 1;
             column = 0;
             
-            if (*kDown & KEY_TOUCH) {
-                if (!options_more) {
-                    FS::GetDirList(cfg.cwd, item->entries);
+            if (kDown & KEY_TOUCH) {
+                if (!moreOptions) {
+                    FS::GetDirList(cfg.cwd, data.entries);
                     Options::ResetSelector();
-                    options_more = false;
-                    item->selected = 0;
-                    item->state = MENU_STATE_FILEBROWSER;
+                    moreOptions = false;
+                    data.selected = 0;
+                    data.state = GUI_STATE_FILEBROWSER;
                 }
-                else
-                    Options::CreateFile(item);
+                else {
+                    Options::CreateFile(data);
+                }
             }
         }
         else if (Touch::Rect(56, 105, 159, 141)) {
             row = 0;
             column = 1;
             
-            if (*kDown & KEY_TOUCH) {
-                if (!options_more)
-                    Options::Copy(item);
+            if (kDown & KEY_TOUCH) {
+                if (!moreOptions) {
+                    Options::Copy(data);
+                }
                 else {
-                    const std::u16string entry_name_utf16 = reinterpret_cast<const char16_t *>(item->entries[item->selected].name);
-                    const std::string filename = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(entry_name_utf16.data());
-                    Options::Rename(item, filename);
+                    Options::Rename(data, reinterpret_cast<const char16_t *>(data.entries[data.selected].name));
                 }
             }
         }
-        else if ((Touch::Rect(160, 105, 263, 141)) && (!options_more)) {
+        else if ((Touch::Rect(160, 105, 263, 141)) && (!moreOptions)) {
             row = 1;
             column = 1;
             
-            if (*kDown & KEY_TOUCH)
-                Options::Move(item);
+            if (kDown & KEY_TOUCH) {
+                Options::Move(data);
+            }
         }
-        else if ((Touch::Rect(56, 142, 159, 178)) && (!options_more)) {
+        else if ((Touch::Rect(56, 142, 159, 178)) && (!moreOptions)) {
             row = 0;
             column = 2;
             
-            if (*kDown & KEY_TOUCH)
-                item->state = MENU_STATE_DELETE;
+            if (kDown & KEY_TOUCH) {
+                data.state = GUI_STATE_DELETE;
+            }
         }
-        else if ((Touch::Rect(160, 142, 263, 178)) && (!options_more)) {
+        else if ((Touch::Rect(160, 142, 263, 178)) && (!moreOptions)) {
             row = 1;
             column = 2;
             
-            if (*kDown & KEY_TOUCH) {
+            if (kDown & KEY_TOUCH) {
                 Options::ResetSelector();
-                options_more = true;
+                moreOptions = true;
             }
         }
-        else if (Touch::Rect((256 - cancel_width) - 5, (221 - cancel_height) - 5, ((256 - cancel_width) - 5) + cancel_width + 10, 
-            ((221 - cancel_height) - 5) + cancel_height + 10)) {
-            if (options_more)
+        else if (Touch::Rect((256 - cancelWidth) - 5, (221 - cancelHeight) - 5, ((256 - cancelWidth) - 5) + cancelWidth + 10, 
+            ((221 - cancelHeight) - 5) + cancelHeight + 10)) {
+            if (moreOptions) {
                 column = 2;
-            else
+            }
+            else {
                 column = 3;
+            }
                 
-            if (*kDown & KEY_TOUCH) {
+            if (kDown & KEY_TOUCH) {
                 Options::ResetSelector();
-                options_more = false;
+                moreOptions = false;
                 copy = false;
                 move = false;
-                item->state = MENU_STATE_FILEBROWSER;
+                data.state = GUI_STATE_FILEBROWSER;
             }
         }
     }

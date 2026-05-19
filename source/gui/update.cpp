@@ -1,6 +1,4 @@
-#include "c2d_helper.h"
 #include "cia.h"
-#include "colours.h"
 #include "config.h"
 #include "fs.h"
 #include "gui.h"
@@ -10,126 +8,138 @@
 #include "touch.h"
 #include "utils.h"
 
-static float cancel_height = 0.f, cancel_width = 0.f, confirm_height = 0.f, confirm_width = 0.f, text_width = 0.f;
+static float cancelHeight = 0.f, cancelWidth = 0.f, confirmHeight = 0.f, confirmWidth = 0.f, textWidth = 0.f;
 
 // Kinda messy, perhaps clean this up later if I ever revisit this.
 namespace GUI {
     static int selection = 0;
-    static const std::string error = "Could not connect to network.";
-    static const std::string prompt = "Do you wish to download and install vX.X.X?";
-    static const std::string success = "Update installed. Please re-run the application";
-    static const std::string no_updates = "You are already on the latest version";
+    constexpr const char *error = "Could not connect to network.";
+    constexpr const char *prompt = "Do you wish to download and install vX.X.X?";
+    constexpr const char *success = "Update installed. Please re-run the application";
+    constexpr const char *noUpdates = "You are already on the latest version";
     static bool done = false;
 
     void DownloadHelper(const std::string &tag) {
         Net::Init();
         s32 prio = 0;
-        download_progress = true;
+        downloadProgress = true;
         svcGetThreadPriority(&prio, CUR_THREAD_HANDLE);
         Thread thread = threadCreate(GUI::DownloadProgressBar, nullptr, 32 * 1024, prio - 1, -2, false);
         Net::GetLatestRelease(tag);
-        download_progress = false;
+        downloadProgress = false;
         threadJoin(thread, U64_MAX);
         threadFree(thread);
         Net::Exit();
         
         if (envIsHomebrew()) {
             Result ret = 0;
-            if (R_FAILED(ret = FSUSER_DeleteFile(sdmc_archive, fsMakePath(PATH_ASCII, __application_path__.c_str()))))
-                Log::Error("FSUSER_DeleteFile(%s) failed: 0x%x\n", __application_path__, ret);
+            if (R_FAILED(ret = FSUSER_DeleteFile(sdmcArchive, fsMakePath(PATH_ASCII, __application_path__.c_str())))) {
+                Log::Error("FSUSER_DeleteFile(%s) failed: 0x%x\n", __application_path__.c_str(), ret);
+            }
                 
-            if (R_FAILED(ret = FSUSER_RenameFile(sdmc_archive, fsMakePath(PATH_ASCII, "/3ds/3DShell/3DShell_UPDATE.3dsx"), sdmc_archive, fsMakePath(PATH_ASCII, __application_path__.c_str()))))
+            if (R_FAILED(ret = FSUSER_RenameFile(sdmcArchive, fsMakePath(PATH_ASCII, "/3ds/3DShell/3DShell_UPDATE.3dsx"), sdmcArchive, fsMakePath(PATH_ASCII, __application_path__.c_str())))) {
                 Log::Error("FSUSER_RenameFile(update) failed: 0x%x\n", ret);
+            }
         }
-        else
+        else {
             CIA::InstallUpdate();
+        }
         
         done = true;
     }
 
-    void DisplayUpdateOptions(bool *connection_status, bool *available, const std::string &tag) {
-        C2D::Image(cfg.dark_theme? dialog_dark : dialog, ((320 - (dialog.subtex->width)) / 2), ((240 - (dialog.subtex->height)) / 2));
+    void DisplayUpdateOptions(bool& connectionStatus, bool& available, const std::string& tag) {
+        GUI::DrawImage(dialog[cfg.theme], ((320 - (dialog[0].subtex->width)) / 2), ((240 - (dialog[0].subtex->height)) / 2));
 
-        if (!*connection_status) {
-            C2D::Text(((320 - (dialog.subtex->width)) / 2) + 6, ((240 - (dialog.subtex->height)) / 2) + 6 - 3, 0.42f, cfg.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "Error");
-            C2D::GetTextSize(0.42f, &text_width, nullptr, error.c_str());
-            C2D::Text(((320 - (text_width)) / 2), ((240 - (dialog.subtex->height)) / 2) + 40 - 3, 0.42f, cfg.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, error.c_str());
+        if (!connectionStatus) {
+            GUI::DrawText(((320 - (dialog[0].subtex->width)) / 2) + 6, ((240 - (dialog[0].subtex->height)) / 2) + 6 - 3, 0.42f, guiTitleColour[cfg.theme], "Error");
+            GUI::GetTextDimensions(0.42f, &textWidth, nullptr, error);
+            GUI::DrawText(((320 - (textWidth)) / 2), ((240 - (dialog[0].subtex->height)) / 2) + 40 - 3, 0.42f, guiTextColour[cfg.theme], error);
         }
-        else if ((*connection_status) && (*available) && (!tag.empty()) && (!done)) {
-            C2D::Text(((320 - (dialog.subtex->width)) / 2) + 6, ((240 - (dialog.subtex->height)) / 2) + 6 - 3, 0.42f, cfg.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "Update Available");
-            C2D::GetTextSize(0.42f, &text_width, nullptr, prompt.c_str());
-            C2D::Textf(((320 - (text_width)) / 2), ((240 - (dialog.subtex->height)) / 2) + 40 - 3, 0.42f, cfg.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, 
+        else if ((connectionStatus) && (available) && (!tag.empty()) && (!done)) {
+            GUI::DrawText(((320 - (dialog[0].subtex->width)) / 2) + 6, ((240 - (dialog[0].subtex->height)) / 2) + 6 - 3, 0.42f, guiTitleColour[cfg.theme], "Update Available");
+            GUI::GetTextDimensions(0.42f, &textWidth, nullptr, prompt);
+            GUI::DrawTextf(((320 - (textWidth)) / 2), ((240 - (dialog[0].subtex->height)) / 2) + 40 - 3, 0.42f, guiTextColour[cfg.theme], 
                 "Do you wish to download and install %s?", tag.c_str());
         }
-        else if (!*available) {
-            C2D::Text(((320 - (dialog.subtex->width)) / 2) + 6, ((240 - (dialog.subtex->height)) / 2) + 6 - 3, 0.42f, cfg.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "No Updates");
-            C2D::GetTextSize(0.42f, &text_width, nullptr, no_updates.c_str());
-            C2D::Text(((320 - (text_width)) / 2), ((240 - (dialog.subtex->height)) / 2) + 40 - 3, 0.42f, cfg.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, no_updates.c_str());
+        else if (!available) {
+            GUI::DrawText(((320 - (dialog[0].subtex->width)) / 2) + 6, ((240 - (dialog[0].subtex->height)) / 2) + 6 - 3, 0.42f, guiTitleColour[cfg.theme], "No Updates");
+            GUI::GetTextDimensions(0.42f, &textWidth, nullptr, noUpdates);
+            GUI::DrawText(((320 - (textWidth)) / 2), ((240 - (dialog[0].subtex->height)) / 2) + 40 - 3, 0.42f, guiTextColour[cfg.theme], noUpdates);
         }
         else if (done) {
-            C2D::Text(((320 - (dialog.subtex->width)) / 2) + 6, ((240 - (dialog.subtex->height)) / 2) + 6 - 3, 0.42f, cfg.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "Update Successful");
-            C2D::GetTextSize(0.42f, &text_width, nullptr, success.c_str());
-            C2D::Text(((320 - (text_width)) / 2), ((240 - (dialog.subtex->height)) / 2) + 40 - 3, 0.42f, cfg.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, success.c_str());
+            GUI::DrawText(((320 - (dialog[0].subtex->width)) / 2) + 6, ((240 - (dialog[0].subtex->height)) / 2) + 6 - 3, 0.42f, guiTitleColour[cfg.theme], "Update Successful");
+            GUI::GetTextDimensions(0.42f, &textWidth, nullptr, success);
+            GUI::DrawText(((320 - (textWidth)) / 2), ((240 - (dialog[0].subtex->height)) / 2) + 40 - 3, 0.42f, guiTextColour[cfg.theme], success);
         }
         
-        C2D::GetTextSize(0.42f, &confirm_width, &confirm_height, "YES");
-        C2D::GetTextSize(0.42f, &cancel_width, &cancel_height, "NO");
+        GUI::GetTextDimensions(0.42f, &confirmWidth, &confirmHeight, "YES");
+        GUI::GetTextDimensions(0.42f, &cancelWidth, &cancelHeight, "NO");
         
-        if (selection == 0)
-            C2D::Rect((288 - cancel_width) - 5, (159 - cancel_height) - 5, cancel_width + 10, cancel_height + 10, cfg.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
-        else if (selection == 1)
-            C2D::Rect((248 - (confirm_width)) - 5, (159 - confirm_height) - 5, confirm_width + 10, confirm_height + 10, cfg.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
+        if (selection == 0) {
+            GUI::DrawRect((288 - cancelWidth) - 5, (159 - cancelHeight) - 5, cancelWidth + 10, cancelHeight + 10, guiSelectorColour[cfg.theme]);
+        }
+        else if (selection == 1) {
+            GUI::DrawRect((248 - (confirmWidth)) - 5, (159 - confirmHeight) - 5, confirmWidth + 10, confirmHeight + 10, guiSelectorColour[cfg.theme]);
+        }
             
-        if ((!done) && (*connection_status) && (*available))
-            C2D::Text(248 - (confirm_width), (159 - confirm_height) - 3, 0.42f, cfg.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "YES");
+        if ((!done) && (connectionStatus) && (available)) {
+            GUI::DrawText(248 - (confirmWidth), (159 - confirmHeight) - 3, 0.42f, guiTitleColour[cfg.theme], "YES");
+        }
         
-        C2D::Text(288 - cancel_width, (159 - cancel_height) - 3, 0.42f, cfg.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, ((!*connection_status) || (done) || (!*available))? "OK" : "NO");
+        GUI::DrawText(288 - cancelWidth, (159 - cancelHeight) - 3, 0.42f, guiTitleColour[cfg.theme], ((!connectionStatus) || (done) || (!available))? "OK" : "NO");
     }
 
-    void ControlUpdateOptions(MenuItem *item, u32 *kDown, bool *state, bool *connection_status, bool *available, const std::string &tag) {
-        if (*kDown & KEY_RIGHT)
+    void ControlUpdateOptions(GuiData& data, u32& kDown, bool& state, bool& connectionStatus, bool& available, const std::string &tag) {
+        if (kDown & KEY_RIGHT) {
             selection++;
-        else if (*kDown & KEY_LEFT)
+        }
+        else if (kDown & KEY_LEFT) {
             selection--;
+        }
 
-        if (*kDown & KEY_A) {
+        if (kDown & KEY_A) {
             if (selection == 1)
                 GUI::DownloadHelper(tag);
             else if (!done) {
-                *state = false;
-                item->state = MENU_STATE_SETTINGS;
+                state = false;
+                data.state = GUI_STATE_SETTINGS;
             }
-            else if (done)
-                longjmp(exit_jmp, 1);
-
+            else if (done) {
+                longjmp(exitJmp, 1);
+            }
         }
-        else if (*kDown & KEY_B) {
-            *state = false;
-            item->state = MENU_STATE_SETTINGS;
+        else if (kDown & KEY_B) {
+            state = false;
+            data.state = GUI_STATE_SETTINGS;
         }
 
-        if (Touch::Rect((288 - cancel_width) - 5, (159 - cancel_height) - 5, ((288 - cancel_width) - 5) + cancel_width + 10, ((159 - cancel_height) - 5) + cancel_height + 10)) {
+        if (Touch::Rect((288 - cancelWidth) - 5, (159 - cancelHeight) - 5, ((288 - cancelWidth) - 5) + cancelWidth + 10, ((159 - cancelHeight) - 5) + cancelHeight + 10)) {
             selection = 0;
             
-            if (*kDown & KEY_TOUCH) {
+            if (kDown & KEY_TOUCH) {
                 if (!done) {
-                    *state = false;
-                    item->state = MENU_STATE_SETTINGS;
+                    state = false;
+                    data.state = GUI_STATE_SETTINGS;
                 }
-                else if (done)
-                    longjmp(exit_jmp, 1);
+                else if (done) {
+                    longjmp(exitJmp, 1);
+                }
             }
         }
-        else if (Touch::Rect((248 - (confirm_width)) - 5, (159 - confirm_height) - 5, ((248 - (confirm_width)) - 5) + confirm_width + 10, ((159 - confirm_height) - 5) + confirm_height + 10)) {
+        else if (Touch::Rect((248 - (confirmWidth)) - 5, (159 - confirmHeight) - 5, ((248 - (confirmWidth)) - 5) + confirmWidth + 10, ((159 - confirmHeight) - 5) + confirmHeight + 10)) {
             selection = 1;
             
-            if ((*kDown & KEY_TOUCH) && (!done) && (*connection_status) && (*available))
+            if ((kDown & KEY_TOUCH) && (!done) && (connectionStatus) && (available)) {
                 GUI::DownloadHelper(tag);
+            }
         }
 
-        if ((done) || (!*connection_status) || (!*available))
-            Utils::SetBounds(&selection, 0, 0);
-        else
-            Utils::SetBounds(&selection, 0, 1);
+        if ((done) || (!connectionStatus) || (!available)) {
+            Utils::Wrap(selection, 0, 0);
+        }
+        else {
+            Utils::Wrap(selection, 0, 1);
+        }
     }
 }

@@ -33,17 +33,17 @@ include $(DEVKITARM)/3ds_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
-SOURCES		:=	source source/gui libs/libnsbmp/src libs/libnsgif/src
+SOURCES		:=	source source/gui source/audio libs/libnsbmp libs/libnsgif
 DATA		:=	data
-INCLUDES	:=	include libs/libnsbmp/include libs/libnsgif/include
+INCLUDES	:=	include libs/include libs/libnsbmp libs/libnsgif
 GRAPHICS	:=	res/drawable
 #GFXBUILD	:=	$(BUILD)
 ICON		:=	res/ic_launcher_filemanager.png
 ROMFS		:=	romfs
 GFXBUILD	:=	$(ROMFS)/res/drawable
 
-VERSION_MAJOR	:=	5
-VERSION_MINOR	:=	1
+VERSION_MAJOR	:=	1
+VERSION_MINOR	:=	0
 VERSION_MICRO	:=	0
 
 APP_TITLE	:=	3DShell
@@ -64,10 +64,9 @@ ICON_FLAGS	:=	nosavebackups,visible
 #---------------------------------------------------------------------------------
 ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
-CFLAGS	:=	-g -Wall -O2 -mword-relocations \
-			-ffunction-sections \
-			-DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO) \
-			$(ARCH)
+CFLAGS	:=	-g -Wall -Wno-psabi -Wno-unused-function -O2 -mword-relocations -ffunction-sections \
+		-DVERSION_MAJOR=$(VERSION_MAJOR) -DVERSION_MINOR=$(VERSION_MINOR) -DVERSION_MICRO=$(VERSION_MICRO) \
+		-I$(PORTLIBS)/include/opus $(ARCH) -DBUILD_CITRA
 
 CFLAGS	+=	$(INCLUDE) -D__3DS__
 
@@ -76,8 +75,10 @@ CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++20
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:= `curl-config --libs` -ljansson -lturbojpeg -ljpeg -lpng -larchive -lbz2 -llzma -lzstd \
-	   -lcitro2d -lcitro3d -lctru -lm -lz
+LIBS	:=	`curl-config --libs` \
+		-lxmp -lmpg123 -lvorbisidec -lopusfile -lopus -lFLAC -logg \
+		-ljansson -lturbojpeg -ljpeg -lpng -larchive -lbz2 -llzma -lzstd \
+		-lcitro2d -lcitro3d -lctru -lm -lz
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing

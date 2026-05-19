@@ -1,5 +1,4 @@
-#ifndef _3D_SHELL_LOG_H
-#define _3D_SHELL_LOG_H
+#pragma once
 
 #include <3ds.h>
 
@@ -8,5 +7,3 @@ namespace Log {
     Result Close(void);
     void Error(const char *data, ...);
 }
-
-#endif

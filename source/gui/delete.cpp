@@ -1,5 +1,3 @@
-#include "c2d_helper.h"
-#include "colours.h"
 #include "config.h"
 #include "fs.h"
 #include "gui.h"
@@ -8,93 +6,99 @@
 #include "touch.h"
 #include "utils.h"
 
-namespace Options {
-    void Delete(MenuItem *item, int *selection) {
+namespace GUI {
+    static int selection = 0;
+    constexpr const char *prompt = "Do you wish to continue?";
+    static float cancelHeight = 0.0f, cancelWidth = 0.0f, confirmHeight = 0.0f, confirmWidth = 0.0f, promptWidth = 0.0f;
+
+    static void Delete(GuiData& data, int& selection) {
         Result ret = 0;
         Log::Close();
         
-        if ((item->checked_count > 1) && (!item->checked_cwd.compare(cfg.cwd))) {
-            for (u32 i = 0; i < item->checked.size(); i++) {
-                if (item->checked.at(i)) {
-                    if (R_FAILED(ret = FS::Delete(&item->entries[i]))) {
-                        FS::GetDirList(cfg.cwd, item->entries);
-                        GUI::ResetCheckbox(item);
+        if ((data.checkedCount > 1) && (!data.checkedCwd.compare(cfg.cwd))) {
+            for (u32 i = 0; i < data.checked.size(); i++) {
+                if (data.checked.at(i)) {
+                    if (R_FAILED(ret = FS::Delete(data.entries[i]))) {
+                        FS::GetDirList(cfg.cwd, data.entries);
+                        GUI::ResetCheckbox(data);
                         break;
                     }
                 }
             }
         }
         else
-            ret = FS::Delete(&item->entries[item->selected]);
+            ret = FS::Delete(data.entries[data.selected]);
         
         if (R_SUCCEEDED(ret)) {
-            FS::GetDirList(cfg.cwd, item->entries);
-            GUI::ResetCheckbox(item);
+            FS::GetDirList(cfg.cwd, data.entries);
+            GUI::ResetCheckbox(data);
         }
         
-        GUI::RecalcStorageSize(item);
+        GUI::LoadStorageBar(data);
         Log::Open();
-        *selection = 0;
-        item->selected = 0;
-        item->state = MENU_STATE_FILEBROWSER;
+        selection = 0;
+        data.selected = 0;
+        data.state = GUI_STATE_FILEBROWSER;
     }
-}
 
-namespace GUI {
-    static int selection = 0;
-    static const std::string prompt = "Do you wish to continue?";
-    static float cancel_height = 0.f, cancel_width = 0.f, confirm_height = 0.f, confirm_width = 0.f, prompt_width = 0.f;
+    void DisplayDeleteOptions(GuiData& data) {
+        GUI::DrawImage(dialog[cfg.theme], ((320 - (dialog[0].subtex->width)) / 2), ((240 - (dialog[0].subtex->height)) / 2));
+        GUI::DrawText(((320 - (dialog[0].subtex->width)) / 2) + 6, ((240 - (dialog[0].subtex->height)) / 2) + 6 - 3, 0.42f, guiTitleColour[cfg.theme], "Delete");
 
-    void DisplayDeleteOptions(MenuItem *item) {
-        C2D::Image(cfg.dark_theme? dialog_dark : dialog, ((320 - (dialog.subtex->width)) / 2), ((240 - (dialog.subtex->height)) / 2));
-        C2D::Text(((320 - (dialog.subtex->width)) / 2) + 6, ((240 - (dialog.subtex->height)) / 2) + 6 - 3, 0.42f, cfg.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "Delete");
-
-        C2D::GetTextSize(0.42f, &prompt_width, nullptr, prompt.c_str());
-        C2D::Text(((320 - (prompt_width)) / 2), ((240 - (dialog.subtex->height)) / 2) + 40 - 3, 0.42f, cfg.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, prompt.c_str());
+        GUI::GetTextDimensions(0.42f, &promptWidth, nullptr, prompt);
+        GUI::DrawText(((320 - (promptWidth)) / 2), ((240 - (dialog[0].subtex->height)) / 2) + 40 - 3, 0.42f, guiTextColour[cfg.theme], prompt);
         
-        C2D::GetTextSize(0.42f, &confirm_width, &confirm_height, "YES");
-        C2D::GetTextSize(0.42f, &cancel_width, &cancel_height, "NO");
+        GUI::GetTextDimensions(0.42f, &confirmWidth, &confirmHeight, "YES");
+        GUI::GetTextDimensions(0.42f, &cancelWidth, &cancelHeight, "NO");
         
-        if (selection == 0)
-            C2D::Rect((288 - cancel_width) - 5, (159 - cancel_height) - 5, cancel_width + 10, cancel_height + 10, cfg.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
-        else
-            C2D::Rect((248 - (confirm_width)) - 5, (159 - confirm_height) - 5, confirm_width + 10, confirm_height + 10, cfg.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
+        if (selection == 0) {
+            GUI::DrawRect((288 - cancelWidth) - 5, (159 - cancelHeight) - 5, cancelWidth + 10, cancelHeight + 10, guiSelectorColour[cfg.theme]);
+        }
+        else {
+            GUI::DrawRect((248 - (confirmWidth)) - 5, (159 - confirmHeight) - 5, confirmWidth + 10, confirmHeight + 10, guiSelectorColour[cfg.theme]);
+        }
             
-        C2D::Text(248 - (confirm_width), (159 - confirm_height) - 3, 0.42f, cfg.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "YES");
-        C2D::Text(288 - cancel_width, (159 - cancel_height) - 3, 0.42f, cfg.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "NO");
+        GUI::DrawText(248 - (confirmWidth), (159 - confirmHeight) - 3, 0.42f, guiTitleColour[cfg.theme], "YES");
+        GUI::DrawText(288 - cancelWidth, (159 - cancelHeight) - 3, 0.42f, guiTitleColour[cfg.theme], "NO");
     }
 
-    void ControlDeleteOptions(MenuItem *item, u32 *kDown) {
-        if (*kDown & KEY_RIGHT)
+    void ControlDeleteOptions(GuiData& data, u32& kDown) {
+        if (kDown & KEY_RIGHT) {
             selection++;
-        else if (*kDown & KEY_LEFT)
+        }
+        else if (kDown & KEY_LEFT) {
             selection--;
+        }
 
-        if (*kDown & KEY_A) {
-            if (selection == 1)
-                Options::Delete(item, &selection);
-            else
-                item->state = MENU_STATE_OPTIONS;
+        if (kDown & KEY_A) {
+            if (selection == 1) {
+                GUI::Delete(data, selection);
+            }
+            else {
+                data.state = GUI_STATE_OPTIONS;
+            }
 
         }
-        else if (*kDown & KEY_B)
-            item->state = MENU_STATE_OPTIONS;
+        else if (kDown & KEY_B) {
+            data.state = GUI_STATE_OPTIONS;
+        }
 
-        if (Touch::Rect((288 - cancel_width) - 5, (159 - cancel_height) - 5, ((288 - cancel_width) - 5) + cancel_width + 10, ((159 - cancel_height) - 5) + cancel_height + 10)) {
+        if (Touch::Rect((288 - cancelWidth) - 5, (159 - cancelHeight) - 5, ((288 - cancelWidth) - 5) + cancelWidth + 10, ((159 - cancelHeight) - 5) + cancelHeight + 10)) {
             selection = 0;
             
-            if (*kDown & KEY_TOUCH) {
-                item->state = MENU_STATE_OPTIONS;
+            if (kDown & KEY_TOUCH) {
+                data.state = GUI_STATE_OPTIONS;
                 selection = 0;
             }
         }
-        else if (Touch::Rect((248 - (confirm_width)) - 5, (159 - confirm_height) - 5, ((248 - (confirm_width)) - 5) + confirm_width + 10, ((159 - confirm_height) - 5) + confirm_height + 10)) {
+        else if (Touch::Rect((248 - (confirmWidth)) - 5, (159 - confirmHeight) - 5, ((248 - (confirmWidth)) - 5) + confirmWidth + 10, ((159 - confirmHeight) - 5) + confirmHeight + 10)) {
             selection = 1;
             
-            if (*kDown & KEY_TOUCH)
-                Options::Delete(item, &selection);
+            if (kDown & KEY_TOUCH) {
+                GUI::Delete(data, selection);
+            }
         }
         
-        Utils::SetBounds(&selection, 0, 1);
+        Utils::Wrap(selection, 0, 1);
     }
 }

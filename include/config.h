@@ -1,21 +1,17 @@
-#ifndef _3D_SHELL_CONFIG_H
-#define _3D_SHELL_CONFIG_H
+#pragma once
 
-#include <3ds.h>
 #include <string>
 
 typedef struct {
-	int sort = 0;
-	bool dev_options = false;
-	bool dark_theme = false;
-	std::string cwd;
-} config_t;
+    int sort = 0;
+    bool debug = true;
+    bool theme = true;
+    std::u16string cwd = u"/";
+} ConfigData;
 
-extern config_t cfg;
+extern ConfigData cfg;
 
 namespace Config {
-	int Save(config_t config);
-	int Load(void);
+    int Save(const ConfigData &config);
+    int Load(void);
 }
-
-#endif

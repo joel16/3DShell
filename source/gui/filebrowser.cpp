@@ -1,10 +1,7 @@
 #include <algorithm>
-#include <codecvt>
-#include <locale>
+#include <cstring>
 
-#include "archive_helper.h"
-#include "c2d_helper.h"
-#include "colours.h"
+#include "archiveextractor.h"
 #include "config.h"
 #include "fs.h"
 #include "gui.h"
@@ -12,128 +9,141 @@
 #include "utils.h"
 
 namespace GUI {
-    static const int sel_dist = 20;
-    static const int start_y = 40;
-    static const u32 max_entries = 10;
+    constexpr int guiSelDist = 20;
+    constexpr int guiStartY = 40;
+    constexpr int maxEntries = 10;
     static int start = 0;
     static u64 timestamp = 0;
 
-    static std::string empty_dir = "This is an empty directory";
-    static float empty_dir_width = 0.f, empty_dir_height = 0.f;
+    constexpr u32 guiTextColour[2] = { C2D_Color32(0, 0, 0, 255), C2D_Color32(255, 255, 255, 255) };
 
-    void DisplayFileBrowser(MenuItem *item) {
-        float filename_height = 0.f;
-        C2D::GetTextSize(0.45f, nullptr, &filename_height, cfg.cwd.c_str());
-        C2D::Textf(5, 15 + ((25 - filename_height) / 2), 0.45f, WHITE, cfg.cwd.length() > 60? "%.60s..." : "%s", cfg.cwd.c_str());
+    void DisplayFileBrowser(GuiData& data) {
+        GUI::DrawTextf(5, 15 + ((25 - data.textHeight) / 2), 0.45f, guiTextColour[1], cfg.cwd.length() > 60? "%.60s..." : "%s", Utils::UTF16ToUTF8(reinterpret_cast<u16 *>(cfg.cwd.data())).c_str());
 
         // Storage bar
-        C2D::Rect(5, 28 + ((25 - filename_height) / 2), 390, 2, cfg.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
-        float fill = (static_cast<double>(item->used_storage)/static_cast<double>(item->total_storage)) * 390.f;
-        C2D::Rect(5, 28 + ((25 - filename_height) / 2), fill, 2, cfg.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR);
+        GUI::DrawRect(5, 28 + ((25 - data.textHeight) / 2), 390, 2, guiTextColour[cfg.theme]);
+        float fill = (static_cast<float>(data.usedSize)/static_cast<float>(data.totalSize)) * 390.0f;
+        GUI::DrawRect(5, 28 + ((25 - data.textHeight) / 2), fill, 2, guiTitleColour[cfg.theme]);
 
-        if (item->entries.empty()) {
-            C2D::GetTextSize(0.5f, &empty_dir_width, &empty_dir_height, empty_dir.c_str());
-            C2D::Text(((400 - empty_dir_width) / 2), ((240 - empty_dir_height) / 2), 0.5f, cfg.dark_theme? WHITE : BLACK, empty_dir.c_str());
-        }
+        // Bound the loop so it only processes the max entries (10) that are visible on the screen.
+        int end = std::min(static_cast<int>(data.entries.size()), start + maxEntries);
 
-        for (u32 i = start; i < item->entries.size(); i++) {
-            const std::u16string entry_name_utf16 = reinterpret_cast<const char16_t *>(item->entries[i].name);
-            const std::string filename = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(entry_name_utf16.data());
+        for (int i = start; i < end; i++) {
+            char filename[256];
+            Utils::UTF16ToUTF8(reinterpret_cast<u8*>(filename), reinterpret_cast<const u16*>(data.entries[i].name), sizeof(filename) - 1);
 
-            if (i == static_cast<u32>(item->selected))
-                C2D::Rect(0, start_y + (sel_dist * (i - start)), 400, sel_dist, cfg.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
+            if (i == data.selected) {
+                GUI::DrawRect(0, guiStartY + (guiSelDist * (i - start)), 400, guiSelDist, guiSelectorColour[cfg.theme]);
+            }
 
-            if ((item->checked.at(i)) && (!item->checked_cwd.compare(cfg.cwd)))
-                C2D::Image(cfg.dark_theme? icon_check_dark : icon_check, 0, start_y + (sel_dist * (i - start)));
-            else
-                C2D::Image(cfg.dark_theme? icon_uncheck_dark : icon_uncheck, 0, start_y + (sel_dist * (i - start)));
+            if ((data.checked.at(i)) && (!data.checkedCwd.compare(cfg.cwd))) {
+                GUI::DrawImage(iconCheck[cfg.theme], 0, guiStartY + (guiSelDist * (i - start)));
+            }
+            else {
+                GUI::DrawImage(iconUncheck[cfg.theme], 0, guiStartY + (guiSelDist * (i - start)));
+            }
 
-            FileType file_type = FS::GetFileType(filename);
-            if (item->entries[i].attributes & FS_ATTRIBUTE_DIRECTORY)
-                C2D::Image(cfg.dark_theme? icon_dir_dark : icon_dir, 20, start_y + (sel_dist * (i - start)));
-            else
-                C2D::Image(file_icons[file_type], 20, start_y + (sel_dist * (i - start)));
+            FileType fileType = FS::GetFileType(data.entries[i].shortExt);
+            if (data.entries[i].attributes & FS_ATTRIBUTE_DIRECTORY) {
+                GUI::DrawImage(iconDir[cfg.theme], 20, guiStartY + (guiSelDist * (i - start)));
+            }
+            else {
+                GUI::DrawImage(fileIcon[fileType], 20, guiStartY + (guiSelDist * (i - start)));
+            }
 
-            C2D::Textf(45, start_y + ((sel_dist - filename_height) / 2) + (i - start) * sel_dist, 0.45f, cfg.dark_theme? WHITE : BLACK,
-                filename.length() > 52? "%.52s..." : "%s", filename.c_str());
+            int len = std::strlen(filename);
+            GUI::DrawTextf(45, guiStartY + ((guiSelDist - data.textHeight) / 2) + (i - start) * guiSelDist, 0.45f, guiTextColour[cfg.theme],
+                len > 52? "%.52s..." : "%s", filename);
         }
     }
 
-    void ControlFileBrowser(MenuItem *item, u32 *kDown, u32 *kHeld) {
-        u32 size = (item->entries.size() - 1);
-        Utils::SetBounds(&item->selected, 0, size);
+    void ControlFileBrowser(GuiData& data, u32& kDown, u32& kHeld) {
+        int size = (data.entries.size() - 1);
+        Utils::Wrap(data.selected, 0, size);
 
-        if ((*kDown & KEY_UP) || ((*kHeld & KEY_UP) && osGetTime() >= timestamp)) {
-            item->selected--;
-            if (item->selected < 0)
-                item->selected = size;
+        if ((kDown & KEY_UP) || ((kHeld & KEY_UP) && osGetTime() >= timestamp)) {
+            data.selected--;
 
-            if (size < max_entries)
+            if (data.selected < 0) {
+                data.selected = size;
+            }
+
+            if (size < maxEntries) {
                 start = 0;
-            else if (start > item->selected)
+            }
+            else if (start > data.selected) {
                 start--;
-            else if ((static_cast<u32>(item->selected) == size) && (size > (max_entries - 1)))
-                start = size - (max_entries - 1);
+            }
+            else if ((data.selected == size) && (size > (maxEntries - 1))) {
+                start = size - (maxEntries - 1);
+            }
 
-            timestamp = osGetTime() + ((*kDown & KEY_UP) ? 500 : 100);
+            timestamp = osGetTime() + ((kDown & KEY_UP) ? 500 : 100);
         }
-        else if ((*kDown & KEY_DOWN) || ((*kHeld & KEY_DOWN) && osGetTime() >= timestamp)) {
-            item->selected++;
-            if(static_cast<u32>(item->selected) > size)
-                item->selected = 0;
+        else if ((kDown & KEY_DOWN) || ((kHeld & KEY_DOWN) && osGetTime() >= timestamp)) {
+            data.selected++;
 
-            if ((static_cast<u32>(item->selected) > (start + (max_entries - 1))) && ((start + (max_entries - 1)) < size))
+            if(data.selected > size) {
+                data.selected = 0;
+            }
+
+            if ((data.selected > (start + (maxEntries - 1))) && ((start + (maxEntries - 1)) < size)) {
                 start++;
-            if (item->selected == 0)
+            }
+            if (data.selected == 0) {
                 start = 0;
+            }
 
-            timestamp = osGetTime() + ((*kDown & KEY_DOWN) ? 500 : 100);
+            timestamp = osGetTime() + ((kDown & KEY_DOWN) ? 500 : 100);
         }
 
-        if (*kDown & KEY_DLEFT) {
-            item->selected = 0;
+        if (kDown & KEY_DLEFT) {
+            data.selected = 0;
             start = 0;
         }
-        else if (*kDown & KEY_DRIGHT) {
-            item->selected = item->entries.size() - 1;
-            if ((item->entries.size() - 1) > max_entries)
-                start = size - (max_entries - 1);
+        else if (kDown & KEY_DRIGHT) {
+            data.selected = data.entries.size() - 1;
+
+            if ((data.entries.size() - 1) > maxEntries) {
+                start = size - (maxEntries - 1);
+            }
         }
-
-        if (*kDown & KEY_A) {
-            const std::u16string entry_name_utf16 = reinterpret_cast<const char16_t *>(item->entries[item->selected].name);
-            const std::string filename = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(entry_name_utf16.data());
-
-            if (item->entries[item->selected].attributes & FS_ATTRIBUTE_DIRECTORY) {
-                if (item->entries.size() != 0) {
-                    if (R_SUCCEEDED(FS::ChangeDirNext(filename, item->entries))) {
+        if (kDown & KEY_A) {
+            if (data.entries[data.selected].attributes & FS_ATTRIBUTE_DIRECTORY) {
+                if (data.entries.size() != 0) {
+                    if (R_SUCCEEDED(FS::ChangeDirNext(reinterpret_cast<const char16_t *>(data.entries[data.selected].name), data.entries))) {
                         start = 0;
                         // Make a copy before resizing our vector.
-                        if ((item->checked_count > 1) && (item->checked_copy.empty()))
-                            item->checked_copy = item->checked;
+                        if ((data.checkedCount > 1) && (data.checkedCopy.empty())) {
+                            data.checkedCopy = data.checked;
+                        }
                         
-                        item->checked.resize(item->entries.size());
-                        item->selected = 0;
+                        data.checked.resize(data.entries.size());
+                        data.selected = 0;
                     }
                 }
             }
             else {
-                std::string path = cfg.cwd;
-                path.append(filename);
-                FileType file_type = FS::GetFileType(filename);
-                
-                switch(file_type) {
-                    case FileTypeImage:
-                        if (Textures::LoadImageFile(path, &item->texture))
-                            item->state = MENU_STATE_IMAGEVIEWER;
+                char path[1024];
+                FS::GetUTF8Path(path, sizeof(path), data.entries[data.selected].name);
+                FileType fileType = FS::GetFileType(data.entries[data.selected].shortExt);
+
+                switch (fileType) {
+                    case FileTypeAudio:
+                        GUI::DisplayAudioPlayer(path);
                         break;
 
-                    case FileTypeZip:
-                        if (R_SUCCEEDED(ArchiveHelper::Extract(path))) {
-                            FS::GetDirList(cfg.cwd, item->entries);
-                            GUI::ResetCheckbox(item);
+                    case FileTypeImage:
+                        if (Textures::LoadImageFile(path, &data.texture)) {
+                            data.state = GUI_STATE_IMAGEVIEWER;
                         }
+                        break;
 
+                    case FileTypeArchive:
+                        if (R_SUCCEEDED(ArchiveExtractor::Extract(path))) {
+                            FS::GetDirList(cfg.cwd, data.entries);
+                            GUI::ResetCheckbox(data);
+                        }
                         break;
                     
                     default:
@@ -141,26 +151,29 @@ namespace GUI {
                 }
             }
         }
-        else if (*kDown & KEY_B) {
-            if (R_SUCCEEDED(FS::ChangeDirPrev(item->entries))) {
+        else if (kDown & KEY_B) {
+            if (R_SUCCEEDED(FS::ChangeDirPrev(data.entries))) {
                 // Make a copy before resizing our vector.
-                if (item->checked_count > 1)
-                    item->checked_copy = item->checked;
+                if (data.checkedCount > 1) {
+                    data.checkedCopy = data.checked;
+                }
                     
-                item->checked.resize(item->entries.size());
-                item->selected = 0;
+                data.checked.resize(data.entries.size());
+                data.selected = 0;
                 start = 0;
             }
         }
-        else if (*kDown & KEY_Y) {
-            if ((!item->checked_cwd.empty()) && (item->checked_cwd.compare(cfg.cwd) != 0))
-                GUI::ResetCheckbox(item);
+        else if (kDown & KEY_Y) {
+            if ((!data.checkedCwd.empty()) && (data.checkedCwd.compare(cfg.cwd) != 0)) {
+                GUI::ResetCheckbox(data);
+            }
                 
-            item->checked_cwd = cfg.cwd;
-            item->checked.at(item->selected) = !item->checked.at(item->selected);
-            item->checked_count = std::count(item->checked.begin(), item->checked.end(), true);
+            data.checkedCwd = cfg.cwd;
+            data.checked.at(data.selected) = !data.checked.at(data.selected);
+            data.checkedCount = std::count(data.checked.begin(), data.checked.end(), 1);
         }
-        else if (*kDown & KEY_X)
-            item->state = MENU_STATE_OPTIONS;
+        else if (kDown & KEY_X) {
+            data.state = GUI_STATE_OPTIONS;
+        }
     }
 }

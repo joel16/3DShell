@@ -1,10 +1,9 @@
-#ifndef _3D_SHELL_NET_H
-#define _3D_SHELL_NET_H
+#pragma once
 
 #include <string>
 
-extern s64 download_offset, download_size;
-extern bool download_progress;
+extern s64 downloadOffset, downloadSize;
+extern bool downloadProgress;
 
 namespace Net {
     Result Init(void);
@@ -14,5 +13,3 @@ namespace Net {
     std::string GetLatestReleaseJSON(void);
     void GetLatestRelease(const std::string &tag);
 }
-
-#endif

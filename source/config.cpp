@@ -1,136 +1,156 @@
 #include <cstdio>
+#include <cstring>
 #include <jansson.h>
 #include <string>
 
+#include <3ds.h>
 #include "config.h"
 #include "fs.h"
 #include "log.h"
+#include "utils.h"
 
-#define CONFIG_VERSION 1
+#define CONFIG_VERSION 2
 
-config_t cfg;
+ConfigData cfg;
 
 namespace Config {
-    static const char *config_file = "{\n\t\"config_ver\": %d,\n\t\"sort\": %d,\n\t\"dev_options\": %d,\n\t\"dark_theme\": %d,\n\t\"last_dir\": \"%s\"\n}";
-    static int config_version_holder = 0;
-    static std::string config_path = "/3ds/3DShell/config.json";
+    constexpr const char16_t *path = u"/3ds/3DShell/config.json";
+    static int configVersion = 0;
     
-    int Save(config_t config) {
+    static void SetDefault(ConfigData &config) {
+        config.sort = 0;
+        config.debug = false;
+        config.theme = false;
+        config.cwd = u"/";
+    }
+    
+    int Save(const ConfigData &config) {
         Result ret = 0;
-        char *buf = new char[1024];
-        u32 length = std::snprintf(buf, 1024, config_file, CONFIG_VERSION, config.sort, config.dev_options, config.dark_theme, config.cwd.c_str());
+        std::string cwd_utf8 = Utils::UTF16ToUTF8(reinterpret_cast<const u16*>(config.cwd.c_str()));
         
-        // Delete and re-create the file, we don't care about the return value here.
-        FSUSER_DeleteFile(sdmc_archive, fsMakePath(PATH_ASCII, config_path.c_str()));
-        FSUSER_CreateFile(sdmc_archive, fsMakePath(PATH_ASCII, config_path.c_str()), 0, length);
-        
-        Handle file;
-        if (R_FAILED(ret = FSUSER_OpenFile(&file, sdmc_archive, fsMakePath(PATH_ASCII, config_path.c_str()), FS_OPEN_WRITE, 0))) {
-            Log::Error("FSUSER_OpenFile(/3ds/3DShell/config.json) failed: 0x%x\n", ret);
-            delete[] buf;
-            return ret;
+        json_t *root = json_pack("{s:i, s:i, s:b, s:b, s:s}",
+            "config_ver", CONFIG_VERSION,
+            "sort", config.sort,
+            "debug", config.debug,
+            "theme", config.theme,
+            "cwd", cwd_utf8.c_str()
+        );
+
+        if (!root) {
+            Log::Error("Failed to create JSON object for config.");
+            return -1;
         }
-        
-        u32 bytes_written = 0;
-        if (R_FAILED(ret = FSFILE_Write(file, &bytes_written, 0, buf, length, FS_WRITE_FLUSH))) {
-            Log::Error("FSFILE_Write(/3ds/3DShell/config.json) failed: 0x%x\n", ret);
-            FSFILE_Close(file);
-            delete[] buf;
+
+        char *json_str = json_dumps(root, JSON_INDENT(4));
+        json_decref(root);
+
+        if (!json_str) {
+            Log::Error("Failed to encode config JSON.");
+            return -1;
+        }
+
+        // Delete and recreate config file
+        FSUSER_DeleteFile(sdmcArchive, fsMakePath(PATH_UTF16, path));
+        FSUSER_CreateFile(sdmcArchive, fsMakePath(PATH_UTF16, path), 0, strlen(json_str));
+
+        Handle file;
+        if (R_FAILED(ret = FSUSER_OpenFile(&file, sdmcArchive, fsMakePath(PATH_UTF16, path), FS_OPEN_WRITE, 0))) {
+            Log::Error("FSUSER_OpenFile(config.json) failed: 0x%x\n", ret);
+            free(json_str);
             return ret;
         }
 
-        if (bytes_written != length) {
-            FSFILE_Close(file);
-            delete[] buf;
+        u32 bytesWritten = 0;
+        ret = FSFILE_Write(file, &bytesWritten, 0, json_str, strlen(json_str), FS_WRITE_FLUSH);
+        FSFILE_Close(file);
+        free(json_str);
+
+        if (R_FAILED(ret) || bytesWritten == 0) {
+            Log::Error("FSFILE_Write(config.json) failed: 0x%x\n", ret);
             return ret;
         }
-        
-        FSFILE_Close(file);
-        delete[] buf;
+
         return 0;
-    }
-    
-    static void SetDefault(config_t *config) {
-        config->sort = 0;
-        config->dev_options = false;
-        config->dark_theme = false;
-        config->cwd = "/";
     }
     
     int Load(void) {
         Result ret = 0;
-        
-        if (!FS::DirExists(sdmc_archive, "/3ds/"))
-            FSUSER_CreateDirectory(sdmc_archive, fsMakePath(PATH_ASCII, "/3ds"), 0);
-        if (!FS::DirExists(sdmc_archive, "/3ds/3DShell/"))
-            FSUSER_CreateDirectory(sdmc_archive, fsMakePath(PATH_ASCII, "/3ds/3DShell"), 0);
-            
-        if (!FS::FileExists(sdmc_archive, config_path.c_str())) {
-            Config::SetDefault(&cfg);
+
+        if (!FS::DirExists(sdmcArchive, u"/3ds/")) {
+            FSUSER_CreateDirectory(sdmcArchive, fsMakePath(PATH_ASCII, "/3ds"), 0);
+        }
+
+        if (!FS::DirExists(sdmcArchive, u"/3ds/3DShell/")) {
+            FSUSER_CreateDirectory(sdmcArchive, fsMakePath(PATH_ASCII, "/3ds/3DShell"), 0);
+        }
+
+        // Create default config if missing
+        if (!FS::FileExists(sdmcArchive, path)) {
+            Config::SetDefault(cfg);
             return Config::Save(cfg);
         }
-        
+
         Handle file;
-        if (R_FAILED(ret = FSUSER_OpenFile(&file, sdmc_archive, fsMakePath(PATH_ASCII, config_path.c_str()), FS_OPEN_READ, 0)))
+        if (R_FAILED(ret = FSUSER_OpenFile(&file, sdmcArchive, fsMakePath(PATH_UTF16, path), FS_OPEN_READ, 0))) {
+            Log::Error("Failed to open config.json: 0x%x\n", ret);
             return ret;
-        
+        }
+
+        // Read file contents
         u64 size = 0;
-        if (R_FAILED(ret = FSFILE_GetSize(file, &size))) {
+        if (R_FAILED(FSFILE_GetSize(file, &size)) || size == 0) {
             FSFILE_Close(file);
-            return ret;
+            Config::SetDefault(cfg);
+            return Config::Save(cfg);
         }
 
-        char *buf =  new char[size + 1];
-        u32 bytes_read = 0;
+        std::string json_str;
+        json_str.resize(size);
+        u32 bytesRead = 0;
 
-        if (R_FAILED(ret = FSFILE_Read(file, &bytes_read, 0, buf, size))) {
-            FSFILE_Close(file);
-            delete[] buf;
-            return ret;
-        }
-
-        if (bytes_read != size) {
-            FSFILE_Close(file);
-            delete[] buf;
-            return ret;
-        }
-        
+        ret = FSFILE_Read(file, &bytesRead, 0, &json_str[0], size);
         FSFILE_Close(file);
 
-        json_t *root;
+        if (R_FAILED(ret) || bytesRead != size) {
+            Log::Error("Failed to read config.json: 0x%x\n", ret);
+            Config::SetDefault(cfg);
+            return Config::Save(cfg);
+        }
+
+        // Parse JSON
         json_error_t error;
-        root = json_loads(buf, JSON_DISABLE_EOF_CHECK, &error);
-        delete[] buf;
-        
-        if (!root)
-            Log::Error("Failed to decode config.json!\n");
-        
-        json_t *config_ver = json_object_get(root, "config_ver");
-        config_version_holder = json_integer_value(config_ver);
-        
-        json_t *sort = json_object_get(root, "sort");
-        cfg.sort = json_integer_value(sort);
-        
-        json_t *dev_options = json_object_get(root, "dev_options");
-        cfg.dev_options = json_integer_value(dev_options);
+        json_t *root = json_loads(json_str.c_str(), JSON_DISABLE_EOF_CHECK, &error);
 
-        json_t *dark_theme = json_object_get(root, "dark_theme");
-        cfg.dark_theme = json_integer_value(dark_theme);
-        
-        json_t *last_dir = json_object_get(root, "last_dir");
-        cfg.cwd = json_string_value(last_dir);
-
-        if (!FS::DirExists(sdmc_archive, cfg.cwd))
-            cfg.cwd = "/";
-            
-        // Delete config file if config file is updated. This will rarely happen.
-        if (config_version_holder < CONFIG_VERSION) {
-            FSUSER_DeleteFile(sdmc_archive, fsMakePath(PATH_ASCII, config_path.c_str()));
-            Config::SetDefault(&cfg);
+        if (!root) {
+            Log::Error("JSON parse error at line %d: %s", error.line, error.text);
+            Config::SetDefault(cfg);
             return Config::Save(cfg);
         }
         
+        configVersion = json_integer_value(json_object_get(root, "config_ver"));
+        cfg.sort = json_integer_value(json_object_get(root, "sort"));
+        cfg.debug = json_is_true(json_object_get(root, "debug"));
+        cfg.theme = json_is_true(json_object_get(root, "theme"));
+
+        json_t *cwd = json_object_get(root, "cwd");
+        if (json_is_string(cwd)) {
+            cfg.cwd = Utils::UTF8ToUTF16(json_string_value(cwd));
+        } else {
+            cfg.cwd = u"/";
+        }
+
         json_decref(root);
+        
+        if (!FS::DirExists(sdmcArchive, cfg.cwd)) {
+            cfg.cwd = u"/";
+        }
+        
+        if (configVersion < CONFIG_VERSION) {
+            FSUSER_DeleteFile(sdmcArchive, fsMakePath(PATH_UTF16, path));
+            Config::SetDefault(cfg);
+            return Config::Save(cfg);
+        }
+
         return 0;
     }
 }

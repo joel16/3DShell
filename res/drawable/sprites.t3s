@@ -10,6 +10,17 @@ btn_material_light_radio_on_normal.png
 btn_material_light_toggle_off_normal.png
 btn_material_light_toggle_on_normal_dark.png
 btn_material_light_toggle_on_normal.png
+default_artwork_blur.png
+ic_album_lg.png
+ic_music_bg_bottom.png
+btn_playback_forward.png
+btn_playback_pause.png
+btn_playback_play.png
+btn_playback_repeat_overlay.png
+btn_playback_repeat.png
+btn_playback_rewind.png
+btn_playback_shuffle_overlay.png
+btn_playback_shuffle.png
 ic_material_light_filesystem.png
 ic_material_light_filesystem_dark.png
 ic_material_light_filesystem_overlay.png
@@ -33,6 +44,7 @@ ic_arrow_back_normal.png
 ic_fso_default.png
 ic_fso_folder_dark.png
 ic_fso_folder.png
+ic_fso_type_audio.png
 ic_fso_type_compress.png
 ic_fso_type_image.png
 ic_fso_type_text.png

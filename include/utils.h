@@ -1,18 +1,20 @@
-#ifndef _3D_SHELL_UTILS_H
-#define _3D_SHELL_UTILS_H
+#pragma once
 
 #include <setjmp.h>
 #include <string>
 
 extern std::string __application_path__;
-extern jmp_buf exit_jmp;
+extern jmp_buf exitJmp;
 
 namespace Utils {
-    void GetSizeString(char *string, double size);
-    void SetBounds(int *set, int min, int max);
-    void SetMax(int *set, int value, int max);
-    void SetMin(int *set, int value, int min);
+    bool IsNew3DS(void);
+    void GetSizeString(char *string, u64 size);
+    void UTF16ToUTF8(u8 *buf, const u16 *data, size_t length);
+    std::string UTF16ToUTF8(const u16 *data);
+    std::u16string UTF8ToUTF16(const char *data);
     bool IsCancelButtonPressed(void);
+    void SetMax(int& set, int value, int max);
+    void SetMin(int& set, int value, int min);
+    void Wrap(int& value, int min, int max);
+    void SafeCopy(char *dest, const char *src, std::size_t size);
 }
-
-#endif

@@ -66,8 +66,6 @@ typedef struct bmp_bitmap_callback_vt_s {
         bmp_bitmap_cb_destroy bitmap_destroy;
         /** Return a pointer to the pixel data in a bitmap. */
         bmp_bitmap_cb_get_buffer bitmap_get_buffer;
-        /** Find the width of a pixel row in bytes. */
-        bmp_bitmap_cb_get_bpp bitmap_get_bpp;
 } bmp_bitmap_callback_vt;
 
 /**

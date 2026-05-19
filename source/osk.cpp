@@ -1,25 +1,28 @@
 #include <3ds.h>
 
-#include "c2d_helper.h"
+#include "gui.h"
 #include "osk.h"
+#include "utils.h"
 
 namespace OSK {
-    std::string GetText(const std::string &initial_text, const std::string &hint_text) {
-        C2D::Render();
+    std::u16string GetText(const std::string& initialText, const std::string& hintText) {
+        GUI::End();
 
         static SwkbdState swkbd;
         static SwkbdStatusData swkbdStatus;
         static SwkbdLearningData swkbdLearning;
         bool reload = false;
-        char input_string[256];
+        char text[256];
         
         swkbdInit(&swkbd, SWKBD_TYPE_NORMAL, 2, 256);
         
-        if (hint_text.length() != 0)
-            swkbdSetHintText(&swkbd, hint_text.c_str());
+        if (hintText.length() != 0) {
+            swkbdSetHintText(&swkbd, hintText.c_str());
+        }
             
-        if (initial_text.length() != 0)
-            swkbdSetInitialText(&swkbd, initial_text.c_str());
+        if (initialText.length() != 0) {
+            swkbdSetInitialText(&swkbd, initialText.c_str());
+        }
             
         swkbdSetButton(&swkbd, SWKBD_BUTTON_LEFT, "Cancel", false);
         swkbdSetButton(&swkbd, SWKBD_BUTTON_RIGHT, "Confirm", true);
@@ -41,7 +44,7 @@ namespace OSK {
         swkbdSetLearningData(&swkbd, &swkbdLearning, reload, true);
         reload = true;
         
-        swkbdInputText(&swkbd, input_string, 256);
-        return input_string;
+        swkbdInputText(&swkbd, text, 256);
+        return Utils::UTF8ToUTF16(text);
     }
 }

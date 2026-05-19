@@ -10,29 +10,30 @@
 #include "log.h"
 #include "net.h"
 
-s64 download_offset = 0, download_size = 1;
-bool download_progress = false;
+s64 downloadOffset = 0, downloadSize = 1;
+bool downloadProgress = false;
 
 namespace Net {
     static s64 offset = 0;
-    static void *soc_buf = nullptr;
+    static void *socbuffer = nullptr;
 
     static int ProgressCallback(void *clientp, curl_off_t dltotal, curl_off_t dlnow, curl_off_t ultotal, curl_off_t ulnow) {
-        download_offset = dlnow;
-        download_size = dltotal;
+        downloadOffset = dlnow;
+        downloadSize = dltotal;
         return 0;
     }
 
     Result Init(void) {
         Result ret = 0;
-        soc_buf = aligned_alloc(0x1000, 0x100000);
+        socbuffer = aligned_alloc(0x1000, 0x100000);
 
-        if (!soc_buf)
+        if (!socbuffer) {
             return -1;
+        }
             
-        if (R_FAILED(ret = socInit(static_cast<u32* >(soc_buf), 0x100000))) {
+        if (R_FAILED(ret = socInit(static_cast<u32* >(socbuffer), 0x100000))) {
             Log::Error("socInit() failed: 0x%x\n", ret);
-            std::free(soc_buf);
+            std::free(socbuffer);
             return ret;
         }
 
@@ -42,8 +43,9 @@ namespace Net {
     void Exit(void) {
         socExit();
 
-        if (soc_buf)
-            std::free(soc_buf);
+        if (socbuffer) {
+            std::free(socbuffer);
+        }
     }
     
     bool GetNetworkStatus(void) {
@@ -59,8 +61,9 @@ namespace Net {
     }
     
     bool GetAvailableUpdate(const std::string &tag) {
-        if (tag.empty())
+        if (tag.empty()) {
             return false;
+        }
             
         int current_ver = ((VERSION_MAJOR * 100) + (VERSION_MINOR * 10) + VERSION_MICRO);
         
@@ -81,10 +84,10 @@ namespace Net {
         std::string json = std::string();
         CURL *handle = curl_easy_init();
         
-        curl_slist *header_data = nullptr;
-        header_data = curl_slist_append(header_data, "Content-Type: application/json");
-        header_data = curl_slist_append(header_data, "Accept: application/json");
-        curl_easy_setopt(handle, CURLOPT_HTTPHEADER, header_data);
+        curl_slist *headerData = nullptr;
+        headerData = curl_slist_append(headerData, "Content-Type: application/json");
+        headerData = curl_slist_append(headerData, "Accept: application/json");
+        curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headerData);
         
         curl_easy_setopt(handle, CURLOPT_URL, "https://api.github.com/repos/joel16/3DShell/releases/latest");
         curl_easy_setopt(handle, CURLOPT_USERAGENT, "3DShell");
@@ -106,13 +109,14 @@ namespace Net {
         }
         
         json_t *tag = json_object_get(root, "tag_name");
-        std::string tag_name = json_string_value(tag);
-        return tag_name;
+        std::string tagName = json_string_value(tag);
+        return tagName;
     }
     
     size_t Write3dsxData(const char *ptr, size_t size, size_t nmemb, Handle *userdata) {
-        if (R_SUCCEEDED(FSFILE_Write(*userdata, nullptr, offset, ptr, (size * nmemb), FS_WRITE_FLUSH)))
+        if (R_SUCCEEDED(FSFILE_Write(*userdata, nullptr, offset, ptr, (size * nmemb), FS_WRITE_FLUSH))) {
             offset += (size * nmemb);
+        }
         
         return (size * nmemb);
     }
@@ -120,20 +124,21 @@ namespace Net {
     void GetLatestRelease(const std::string &tag) {
         Result ret = 0;
         Handle file;
-        bool is_3dsx = envIsHomebrew();
-        const std::string path = (is_3dsx? "/3ds/3DShell/3DShell_UPDATE.3dsx" : "/3ds/3DShell/3DShell_UPDATE.cia");
+        bool is3DSX = envIsHomebrew();
+        const std::u16string path = (is3DSX? u"/3ds/3DShell/3DShell_UPDATE.3dsx" : u"/3ds/3DShell/3DShell_UPDATE.cia");
         
-        if (!FS::FileExists(sdmc_archive, path))
-            FSUSER_CreateFile(sdmc_archive, fsMakePath(PATH_ASCII, path.c_str()), 0, 0);
+        if (!FS::FileExists(sdmcArchive, path)) {
+            FSUSER_CreateFile(sdmcArchive, fsMakePath(PATH_UTF16, path.c_str()), 0, 0);
+        }
         
-        if (R_FAILED(ret = FSUSER_OpenFile(&file, sdmc_archive, fsMakePath(PATH_ASCII, path.c_str()), FS_OPEN_WRITE, 0))) {
+        if (R_FAILED(ret = FSUSER_OpenFile(&file, sdmcArchive, fsMakePath(PATH_UTF16, path.c_str()), FS_OPEN_WRITE, 0))) {
             Log::Error("fsFsOpenFile(%s) failed: 0x%x\n", path, ret);
             return;
         }
         
         CURL *handle = curl_easy_init();
         if (handle) {
-            std::string URL = "https://github.com/joel16/3DShell/releases/download/" + tag + (is_3dsx? "/3DShell.3dsx" : "/3DShell.cia");
+            std::string URL = "https://github.com/joel16/3DShell/releases/download/" + tag + (is3DSX? "/3DShell.3dsx" : "/3DShell.cia");
             curl_easy_setopt(handle, CURLOPT_URL, URL.c_str());
             curl_easy_setopt(handle, CURLOPT_USERAGENT, "3DShell");
             curl_easy_setopt(handle, CURLOPT_SSL_VERIFYPEER, 0L);

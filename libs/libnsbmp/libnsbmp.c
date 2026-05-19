@@ -530,7 +530,7 @@ static bmp_result bmp_decode_rgb32(bmp_image *bmp, uint8_t **start, int bytes)
         assert(bmp->bpp == 32);
 
         data = *start;
-        swidth = bmp->bitmap_callbacks.bitmap_get_bpp(bmp->bitmap) * bmp->width;
+        swidth = sizeof(uint32_t) * bmp->width;
         top = bmp->bitmap_callbacks.bitmap_get_buffer(bmp->bitmap);
         if (!top)
                 return BMP_INSUFFICIENT_MEMORY;
@@ -612,7 +612,7 @@ static bmp_result bmp_decode_rgb24(bmp_image *bmp, uint8_t **start, int bytes)
         assert(bmp->bpp == 24);
 
         data = *start;
-        swidth = bmp->bitmap_callbacks.bitmap_get_bpp(bmp->bitmap) * bmp->width;
+        swidth = sizeof(uint32_t) * bmp->width;
         top = bmp->bitmap_callbacks.bitmap_get_buffer(bmp->bitmap);
         if (!top) {
                 return BMP_INSUFFICIENT_MEMORY;
@@ -683,7 +683,7 @@ static bmp_result bmp_decode_rgb16(bmp_image *bmp, uint8_t **start, int bytes)
         uint16_t word;
 
         data = *start;
-        swidth = bmp->bitmap_callbacks.bitmap_get_bpp(bmp->bitmap) * bmp->width;
+        swidth = sizeof(uint32_t) * bmp->width;
         top = bmp->bitmap_callbacks.bitmap_get_buffer(bmp->bitmap);
         if (!top)
                 return BMP_INSUFFICIENT_MEMORY;
@@ -777,7 +777,7 @@ static bmp_result bmp_decode_rgb(bmp_image *bmp, uint8_t **start, int bytes)
                 bit_shifts[i] = 8 - ((i + 1) * bmp->bpp);
 
         data = *start;
-        swidth = bmp->bitmap_callbacks.bitmap_get_bpp(bmp->bitmap) * bmp->width;
+        swidth = sizeof(uint32_t) * bmp->width;
         top = bmp->bitmap_callbacks.bitmap_get_buffer(bmp->bitmap);
         if (!top)
                 return BMP_INSUFFICIENT_MEMORY;
@@ -842,7 +842,7 @@ static bmp_result bmp_decode_mask(bmp_image *bmp, uint8_t *data, int bytes)
         uint32_t x, y, swidth;
         uint32_t cur_byte = 0;
 
-        swidth = bmp->bitmap_callbacks.bitmap_get_bpp(bmp->bitmap) * bmp->width;
+        swidth = sizeof(uint32_t) * bmp->width;
         top = bmp->bitmap_callbacks.bitmap_get_buffer(bmp->bitmap);
         if (!top)
                 return BMP_INSUFFICIENT_MEMORY;
@@ -897,7 +897,7 @@ bmp_decode_rle8(bmp_image *bmp, uint8_t *data, int bytes)
         if (bmp->ico)
                 return BMP_DATA_ERROR;
 
-        swidth = bmp->bitmap_callbacks.bitmap_get_bpp(bmp->bitmap) * bmp->width;
+        swidth = sizeof(uint32_t) * bmp->width;
         top = bmp->bitmap_callbacks.bitmap_get_buffer(bmp->bitmap);
         if (!top)
                 return BMP_INSUFFICIENT_MEMORY;
@@ -1051,7 +1051,7 @@ bmp_decode_rle4(bmp_image *bmp, uint8_t *data, int bytes)
         if (bmp->ico)
                 return BMP_DATA_ERROR;
 
-        swidth = bmp->bitmap_callbacks.bitmap_get_bpp(bmp->bitmap) * bmp->width;
+        swidth = sizeof(uint32_t) * bmp->width;
         top = bmp->bitmap_callbacks.bitmap_get_buffer(bmp->bitmap);
         if (!top)
                 return BMP_INSUFFICIENT_MEMORY;
