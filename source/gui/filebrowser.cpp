@@ -22,11 +22,12 @@ namespace GUI {
 
         // Storage bar
         GUI::DrawRect(5, 28 + ((25 - data.textHeight) / 2), 390, 2, guiTextColour[cfg.theme]);
-        float fill = (static_cast<float>(data.usedSize)/static_cast<float>(data.totalSize)) * 390.0f;
+        float fill = (static_cast<float>(data.usedSize) / data.totalSize) * 390.f;
         GUI::DrawRect(5, 28 + ((25 - data.textHeight) / 2), fill, 2, guiTitleColour[cfg.theme]);
 
         // Bound the loop so it only processes the max entries (10) that are visible on the screen.
         int end = std::min(static_cast<int>(data.entries.size()), start + maxEntries);
+        bool cwdMatch = !data.checkedCwd.compare(cfg.cwd);
 
         for (int i = start; i < end; i++) {
             char filename[256];
@@ -36,24 +37,24 @@ namespace GUI {
                 GUI::DrawRect(0, guiStartY + (guiSelDist * (i - start)), 400, guiSelDist, guiSelectorColour[cfg.theme]);
             }
 
-            if ((data.checked.at(i)) && (!data.checkedCwd.compare(cfg.cwd))) {
+            if ((data.checked.at(i)) && (cwdMatch)) {
                 GUI::DrawImage(iconCheck[cfg.theme], 0, guiStartY + (guiSelDist * (i - start)));
             }
             else {
                 GUI::DrawImage(iconUncheck[cfg.theme], 0, guiStartY + (guiSelDist * (i - start)));
             }
 
-            FileType fileType = FS::GetFileType(data.entries[i].shortExt);
             if (data.entries[i].attributes & FS_ATTRIBUTE_DIRECTORY) {
                 GUI::DrawImage(iconDir[cfg.theme], 20, guiStartY + (guiSelDist * (i - start)));
             }
             else {
+                FileType fileType = FS::GetFileType(data.entries[i].shortExt);
                 GUI::DrawImage(fileIcon[fileType], 20, guiStartY + (guiSelDist * (i - start)));
             }
-
-            int len = std::strlen(filename);
+            
+            bool truncated = (filename[52] != '\0');
             GUI::DrawTextf(45, guiStartY + ((guiSelDist - data.textHeight) / 2) + (i - start) * guiSelDist, 0.45f, guiTextColour[cfg.theme],
-                len > 52? "%.52s..." : "%s", filename);
+                truncated? "%.52s..." : "%s", filename);
         }
     }
 
