@@ -1,0 +1,49 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ next ]
+  pull_request:
+    branches: [ next ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: 'devkitpro/devkitarm'
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Install dependencies
+      run: |
+       apt-get update
+       apt-get install -y git build-essential cmake
+
+    - name: Configure Git
+      run: |
+        git config --global url."https://github.com/".insteadOf git://github.com/
+
+    - name: Build bannertool
+      run: |
+        git clone --recursive https://github.com/Epicpkmn11/bannertool.git
+        cd bannertool
+        make
+        make install
+
+    - name: Build makerom
+      run: |
+        git clone https://github.com/3DSGuy/Project_CTR.git
+        cd Project_CTR/makerom
+        make deps
+        make
+        install -m 755 bin/makerom /usr/local/bin/makerom
+    
+    - name: Compile project
+      run: make
+
+    - uses: actions/upload-artifact@v7
+      with:
+        name: 3DShell
+        path: |
+          3DShell.3dsx
+          3DShell.cia
