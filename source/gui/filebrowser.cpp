@@ -30,7 +30,7 @@ namespace GUI {
         bool cwdMatch = !data.checkedCwd.compare(cfg.cwd);
 
         for (int i = start; i < end; i++) {
-            char filename[256];
+            char filename[256] = {};
             Utils::UTF16ToUTF8(reinterpret_cast<u8*>(filename), reinterpret_cast<const u16*>(data.entries[i].name), sizeof(filename) - 1);
 
             if (i == data.selected) {
