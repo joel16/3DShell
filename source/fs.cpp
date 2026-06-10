@@ -210,7 +210,17 @@ namespace FS {
             }
             
             if (count == 1) {
-                entries.push_back(entry);
+                bool isDir = entry.attributes & FS_ATTRIBUTE_DIRECTORY;
+                
+                if (filter == -1 || isDir) {
+                    entries.push_back(entry);
+                }
+                else {
+                    FileType type = GetFileType(entry.shortExt);
+                    if (static_cast<int>(type) == filter) {
+                        entries.push_back(entry);
+                    }
+                }
             }
         } while(count > 0);
         
