@@ -135,9 +135,7 @@ namespace GUI {
                         break;
 
                     case FileTypeImage:
-                        if (Textures::LoadImageFile(path, &data.texture)) {
-                            data.state = GUI_STATE_IMAGEVIEWER;
-                        }
+                        GUI::DisplayImageViewer(path, data);
                         break;
 
                     case FileTypeArchive:

@@ -1,4 +1,10 @@
+#include <algorithm>
+#include <cstring>
+#include <string>
+#include <vector>
+
 #include "config.h"
+#include "fs.h"
 #include "gui.h"
 #include "textures.h"
 #include "utils.h"
@@ -10,6 +16,9 @@ namespace GUI {
         DIMENSION_DUAL_SCREEN = 2
     };
 
+    static std::vector<FS_DirectoryEntry> entries;
+    static int selection = 0;
+
     static bool properties = false;
     static float okHeight = 0.f, okWidth = 0.f, scaleLevel = 0.f, width = 0.f, height = 0.f, zoomLevel = 1.f;
     static int posX = 0, posY = 0;
@@ -17,199 +26,220 @@ namespace GUI {
 
     constexpr u32 guiBgColour = C2D_Color32(48, 48, 48, 255);
 
-    // static bool DrawImage(C2D_Image image, float x, float y, float start, float end, float w, float h, float zoomLevel) {
-    //     C2D_DrawParams params = {
-    //         { x - (posX * zoomLevel - posX) / 2, y - (posY * zoomLevel - posY) / 2, w * zoomLevel, h * zoomLevel },
-    //         { start, end },
-    //         0.f, 0.f
-    //     };
-        
-    //     return C2D_DrawImage(image, &params, nullptr);
-    // }
-
     static bool DrawImage(C2D_Image image, float x, float y, float start, float end, float w, float h, float zoomLevel) {
-        float zoomedWidth = w * zoomLevel;
-        float zoomedHeight = h * zoomLevel;
-        
-        float offsetX = posX * zoomLevel;
-        float offsetY = posY * zoomLevel;
-        
-        float adjustedX = x - offsetX;
-        float adjustedY = y - offsetY;
-        
         C2D_DrawParams params = {
-            { adjustedX, adjustedY, zoomedWidth, zoomedHeight },
+            { x - (posX * zoomLevel), y - (posY * zoomLevel), w * zoomLevel, h * zoomLevel },
             { start, end },
             0.f, 0.f
         };
-        
+
         return C2D_DrawImage(image, &params, nullptr);
     }
 
-    void DisplayImageViewerTop(GuiData& data) {
-        C2D_TargetClear(GUI::GetRenderTarget(TARGET_TOP), guiBgColour);
+    static void DisplayImageProperties(int& texW, int& texH) {
+        float dialogW = propertiesDialog[0].subtex->width;
+        float dialogH = propertiesDialog[0].subtex->height;
+        float dX = (320.f - dialogW) / 2.f;
+        float dY = (240.f - dialogH) / 2.f;
         
-        if ((data.texture.subtex->width == 432) && (data.texture.subtex->height == 528)) {
-            state = DIMENSION_NINTENDO_SCREENSHOT;
-        }
-        else if ((data.texture.subtex->width == 400) && ((data.texture.subtex->height == 480) || (data.texture.subtex->height == 482))) {
-            state = DIMENSION_DUAL_SCREEN;
+        GUI::DrawImage(propertiesDialog[cfg.theme], dX, dY);
+        GUI::DrawText(dX + 6, dY + 6, 0.42f, guiTitleColour[cfg.theme], "Properties");
+        
+        char filename[256];
+        if (!entries.empty()) {
+            Utils::UTF16ToUTF8(reinterpret_cast<u8*>(filename), reinterpret_cast<const u16*>(entries[selection].name), sizeof(filename));
         }
         else {
-            state = DIMENSION_DEFAULT;
+            std::strncpy(filename, "Unknown", sizeof(filename));
+        }
+        
+        GUI::DrawTextf(66, 57, 0.42f, guiTextColour[cfg.theme], "Name: %.20s", filename);
+        GUI::DrawTextf(66, 73, 0.42f, guiTextColour[cfg.theme], "Width: %hu px", texW);
+        GUI::DrawTextf(66, 89, 0.42f, guiTextColour[cfg.theme], "Height: %hu px", texH);
+        
+        if (okWidth == 0.f && okHeight == 0.f) {
+            GUI::GetTextDimensions(0.42f, &okWidth, &okHeight, "OK");
+        }
+        
+        float okX = 253.f - okWidth;
+        float okY = 218.f - okHeight;
+        GUI::DrawRect(okX - 5, okY - 15, okWidth + 10, okHeight + 10, guiSelectorColour[cfg.theme]);
+        GUI::DrawText(okX, okY - 10, 0.42f, guiTitleColour[cfg.theme], "OK");
+    }
 
-            if (static_cast<float>(data.texture.subtex->height) > 240.f) {
-                scaleLevel = (240.f / static_cast<float>(data.texture.subtex->height));
-                width = static_cast<float>(data.texture.subtex->width) * scaleLevel;
-                height = static_cast<float>(data.texture.subtex->height) * scaleLevel;
+    void DisplayImageViewer(const char* path, GuiData& data) {
+        FS::GetDirList(cfg.cwd, entries, FileTypeImage);
+        std::string initialName = FS::GetFilename(path);
+        selection = 0;
+        
+        for (size_t i = 0; i < entries.size(); i++) {
+            char entryName[256];
+            Utils::UTF16ToUTF8(reinterpret_cast<u8*>(entryName), reinterpret_cast<const u16*>(entries[i].name), sizeof(entryName));
+            if (strcasecmp(entryName, initialName.c_str()) == 0) {
+                selection = i;
+                break;
+            }
+        }
+        
+        properties = false;
+        zoomLevel = 1.f;
+        posX = 0; posY = 0;
+        okWidth = 0.f; okHeight = 0.f;
+        bool quit = false;
+
+        Textures::LoadImageFile(path, &data.texture);
+
+        while (aptMainLoop() && !quit) {
+            float deltaSeconds = 1.0f / 60.0f;
+
+            int texW = data.texture.subtex->width;
+            int texH = data.texture.subtex->height;
+
+            if (texW == 432 && texH == 528) {
+                state = DIMENSION_NINTENDO_SCREENSHOT;
+            }
+            else if (texW == 400 && (texH == 480 || texH == 482)) {
+                state = DIMENSION_DUAL_SCREEN;
             }
             else {
-                width = static_cast<float>(data.texture.subtex->width);
-                height = static_cast<float>(data.texture.subtex->height);
-            }
-        }
-
-        switch (state) {
-            case DIMENSION_DEFAULT:
-                GUI::DrawImage(data.texture, ((400.f - (width * zoomLevel)) / 2), ((240.f - (height * zoomLevel)) / 2), 0, 0, width, height, zoomLevel);
-                break;
-
-            case DIMENSION_NINTENDO_SCREENSHOT:
-                GUI::DrawImage(data.texture, 0, 0, 16, 16, data.texture.subtex->width, data.texture.subtex->height, 1.f);
-                break;
-
-            case DIMENSION_DUAL_SCREEN:
-                GUI::DrawImage(data.texture, 0, 0, 0, 0, data.texture.subtex->width, data.texture.subtex->height, 1.f);
-                break;
-        }
-    }
-
-    void DisplayImageViewerBottom(GuiData& data) {
-        C2D_TargetClear(GUI::GetRenderTarget(TARGET_BOTTOM), guiBgColour);
-
-        switch (state) {
-            case DIMENSION_NINTENDO_SCREENSHOT:
-                GUI::DrawImage(data.texture, 0, 0, 56, 272, data.texture.subtex->width, data.texture.subtex->height, 1.f);
-                break;
-
-            case DIMENSION_DUAL_SCREEN:
-                GUI::DrawImage(data.texture, 0, 0, 40, 240, data.texture.subtex->width, data.texture.subtex->height, 1.f);
-                break;
-
-            default:
-                break;
-        }
-
-        if (properties) {
-            GUI::DrawImage(propertiesDialog[cfg.theme], ((320 - (propertiesDialog[0].subtex->width)) / 2), ((240 - (propertiesDialog[0].subtex->height)) / 2));
-            GUI::DrawText(((320 - (propertiesDialog[0].subtex->width)) / 2) + 6, ((240 - (propertiesDialog[0].subtex->height)) / 2) + 6, 0.42f, guiTitleColour[cfg.theme], "Properties");
-
-            GUI::DrawTextf(66, 57, 0.42f, guiTextColour[cfg.theme], "Name: %.20s", data.entries[data.selected].name);
-            GUI::DrawTextf(66, 73, 0.42f, guiTextColour[cfg.theme], "Width: %hu px", data.texture.subtex->width);
-            GUI::DrawTextf(66, 89, 0.42f, guiTextColour[cfg.theme], "Height: %hu px", data.texture.subtex->height);
-
-            if (okWidth == 0.f && okHeight == 0.f) {
-                GUI::GetTextDimensions(0.42f, &okWidth, &okHeight, "OK");
+                state = DIMENSION_DEFAULT;
+                scaleLevel = (texH > 240) ? (240.f / static_cast<float>(texH)) : 1.0f;
+                width = static_cast<float>(texW) * scaleLevel;
+                height = static_cast<float>(texH) * scaleLevel;
             }
 
-            GUI::DrawRect((253 - okWidth) - 5, (218 - okHeight) - 15, okWidth + 10, okHeight + 10, guiSelectorColour[cfg.theme]);
-            GUI::DrawText(253 - okWidth, (218 - okHeight) - 10, 0.42f, guiTitleColour[cfg.theme], "OK");
-        }
-    }
+            GUI::Begin(guiBgColourTop[cfg.theme], guiBgColourBottom[cfg.theme]);
 
-    void ControlImageViewer(GuiData& data, u32& kDown, u32& kHeld, u64& delta) {
-        float deltaSeconds = delta / 1000.0f;
-
-        if (state == DIMENSION_DEFAULT) {
-            if ((height * zoomLevel > 240) || (width * zoomLevel > 400)) {
-                float velocity = 200.0f / zoomLevel;
+            switch (state) {
+                case DIMENSION_DEFAULT:
+                    GUI::DrawImage(data.texture, (400.f - (width * zoomLevel)) / 2.f, (240.f - (height * zoomLevel)) / 2.f, 0, 0, width, height, zoomLevel);
+                    break;
                 
-                if (kHeld & KEY_CPAD_UP) {
-                    posY -= ((velocity * zoomLevel) * deltaSeconds);
+                case DIMENSION_NINTENDO_SCREENSHOT:
+                    GUI::DrawImage(data.texture, 0, 0, 16, 16, texW, texH, 1.f);
+                    break;
+                
+                case DIMENSION_DUAL_SCREEN:
+                    GUI::DrawImage(data.texture, 0, 0, 0, 0, texW, texH, 1.f);
+                    break;
+            }
+
+            C2D_SceneBegin(GUI::GetRenderTarget(TARGET_BOTTOM));
+            
+            if (state == DIMENSION_NINTENDO_SCREENSHOT) {
+                GUI::DrawImage(data.texture, 0, 0, 56, 272, texW, texH, 1.f);
+            }
+            else if (state == DIMENSION_DUAL_SCREEN) {
+                GUI::DrawImage(data.texture, 0, 0, 40, 240, texW, texH, 1.f);
+            }
+
+            if (properties) {
+                GUI::DisplayImageProperties(texW, texH);
+            }
+
+            GUI::End();
+
+            hidScanInput();
+            u32 kDown = hidKeysDown();
+            u32 kHeld = hidKeysHeld();
+
+            bool next = (kDown & KEY_R);
+            bool prev = (kDown & KEY_L);
+
+            if (state == DIMENSION_DEFAULT && !properties) {
+                if ((height * zoomLevel > 240) || (width * zoomLevel > 400)) {
+                    float step = 200.0f * deltaSeconds;
+
+                    if (kHeld & KEY_CPAD_UP) {
+                        posY -= step;
+                    }
+                    else if (kHeld & KEY_CPAD_DOWN) {
+                        posY += step;
+                    }
+                    
+                    if (kHeld & KEY_CPAD_LEFT) {
+                        posX -= step;
+                    }
+                    else if (kHeld & KEY_CPAD_RIGHT) {
+                        posX += step;
+                    }
                 }
-                else if (kHeld & KEY_CPAD_DOWN) {
-                    posY += ((velocity * zoomLevel) * deltaSeconds);
+                
+                if ((kHeld & KEY_DUP) || (kHeld & KEY_CSTICK_UP)) {
+                    zoomLevel = std::min(zoomLevel + (0.5f * deltaSeconds), 2.0f);
                 }
-                else if (kHeld & KEY_CPAD_LEFT) {
-                    posX -= ((velocity * zoomLevel) * deltaSeconds);
+                else if ((kHeld & KEY_DDOWN) || (kHeld & KEY_CSTICK_DOWN)) {
+                    zoomLevel = std::max(zoomLevel - (0.5f * deltaSeconds), 0.5f);
+
+                    if (zoomLevel <= 1.f) {
+                        posX = posY = 0;
+                    }
                 }
-                else if (kHeld & KEY_CPAD_RIGHT) {
-                    posX += ((velocity * zoomLevel) * deltaSeconds);
+                
+                if (kDown & KEY_SELECT) { 
+                    posX = posY = 0;
+                    zoomLevel = 1.f;
                 }
             }
             
-            // Zoom in
-            if ((kHeld & KEY_DUP) || (kHeld & KEY_CSTICK_UP)) {
-                zoomLevel += 0.5f * deltaSeconds;
-                
-                if (zoomLevel > 2.f) {
-                    zoomLevel = 2.f;
+            if (kDown & KEY_A) {
+                if (properties) {
+                    properties = false;
                 }
             }
-            // Zoom out
-            else if ((kHeld & KEY_DDOWN) || (kHeld & KEY_CSTICK_DOWN)) {
-                zoomLevel -= 0.5f * deltaSeconds;
-                
-                if (zoomLevel < 0.5f) {
-                    zoomLevel = 0.5f;
+            else if (kDown & KEY_B) {
+                if (properties) {
+                    properties = false;
                 }
+                else {
+                    quit = true;
+                    break;
+                }
+            }
+            else if (kDown & KEY_X) {
+                properties = !properties;
+            }
+            else if (!properties && (next || prev)) {
+                if (!entries.empty()) {
+                    if (next) {
+                        selection = (selection + 1) % entries.size();
+                    }
+                    else {
+                        selection = (selection - 1 + entries.size()) % entries.size();
+                    }
                     
-                if (zoomLevel <= 1.f) {
+                    char fullPath[1024];
+                    FS::GetUTF8Path(fullPath, sizeof(fullPath), entries[selection].name);
+                    Textures::LoadImageFile(fullPath, &data.texture);
+                    
+                    zoomLevel = 1.f;
+                    posX = posY = 0;
+                    state = DIMENSION_DEFAULT;
+                }
+            }
+            
+            if (state == DIMENSION_DEFAULT) {
+                if (width * zoomLevel > 400.f) {
+                    int maxPosX = static_cast<int>((width * zoomLevel - 400.f) / (2.f * zoomLevel));
+                    posX = std::clamp(posX, -maxPosX, maxPosX);
+                }
+                else {
                     posX = 0;
+                }
+
+                if (height * zoomLevel > 240.f) {
+                    int maxPosY = static_cast<int>((height * zoomLevel - 240.f) / (2.f * zoomLevel));
+                    posY = std::clamp(posY, -maxPosY, maxPosY);
+                }
+                else {
                     posY = 0;
                 }
             }
-            
-            if (kDown & KEY_SELECT) { // Reset zoom/pos
-                posX = 0;
-                posY = 0;
-                zoomLevel = 1.f;
-            }
         }
         
-        if (kDown & KEY_A) {
-            if (properties) {
-                properties = false;
-            }
-        }
-        if (kDown & KEY_B) {
-            if (!properties) {
-                delete[] data.texture.tex;
-                delete[] data.texture.subtex;
-                zoomLevel = 1.f;
-                posX = 0;
-                posY = 0;
-                data.state = GUI_STATE_FILEBROWSER;
-            }
-            else {
-                properties = false;
-            }
-        }
-        else if (kDown & KEY_X) {
-            if (!properties) {
-                properties = true;
-            }
-        }
-        
-        // Bound zoomed image to screen
-        if (state == DIMENSION_DEFAULT) {
-            if (width * zoomLevel > 400.f) {
-                int maxPosX = static_cast<int>((width * zoomLevel - 400.f) / (2.f * zoomLevel));
-                Utils::SetMax(posX, maxPosX, maxPosX);
-                Utils::SetMin(posX, -maxPosX, -maxPosX);
-            }
-            else {
-                posX = 0;
-            }
-
-            if (height * zoomLevel > 240.f) {
-                int maxPosY = static_cast<int>((height * zoomLevel - 240.f) / (2.f * zoomLevel));
-                Utils::SetMax(posY, maxPosY, maxPosY);
-                Utils::SetMin(posY, -maxPosY, -maxPosY);
-            }
-            else {
-                posY = 0;
-            }
-        }
+        entries.clear();
+        zoomLevel = 1.f;
+        posX = posY = 0;
+        data.state = GUI_STATE_FILEBROWSER;
     }
 }

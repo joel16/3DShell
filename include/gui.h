@@ -19,7 +19,6 @@ enum GUI_STATES {
     GUI_STATE_DELETE,
     GUI_STATE_PROPERTIES,
     GUI_STATE_SETTINGS,
-    GUI_STATE_IMAGEVIEWER,
     GUI_STATE_ARCHIVEEXTRACT,
     GUI_STATE_TEXTREADER,
     GUI_STATE_UPDATE
@@ -88,7 +87,5 @@ namespace GUI {
     void DisplayUpdateOptions(bool& status, bool& available, const std::string &tag);
     void ControlUpdateOptions(GuiData& data, u32& kDown, bool& state, bool& status, bool& available, const std::string &tag);
 
-    void DisplayImageViewerTop(GuiData& data);
-    void DisplayImageViewerBottom(GuiData& data);
-    void ControlImageViewer(GuiData& data, u32& kDown, u32& kHeld, u64& delta);
+    void DisplayImageViewer(const char *path, GuiData& data);
 }

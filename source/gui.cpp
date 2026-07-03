@@ -275,26 +275,12 @@ namespace GUI {
 
             GUI::DisplayFileBrowser(data);
 
-            // Top screen view
-            switch (data.state) {
-                case GUI_STATE_IMAGEVIEWER:
-                    GUI::DisplayImageViewerTop(data);
-                    break;
-
-                default:
-                    break;
-            }
-
             C2D_SceneBegin(c3dRenderTarget[TARGET_BOTTOM]);
             GUI::DrawRect(0, 0, 320, 20, guiTouchBarColour[cfg.theme]);
             GUI::DisplayTouchBar(data);
 
             // Bottom screen view
             switch (data.state) {
-                case GUI_STATE_IMAGEVIEWER:
-                    GUI::DisplayImageViewerBottom(data);
-                    break;
-                
                 case GUI_STATE_OPTIONS:
                     GUI::DisplayFileOptions(data);
                     break;
@@ -325,10 +311,6 @@ namespace GUI {
             switch (data.state) {
                 case GUI_STATE_FILEBROWSER:
                     GUI::ControlFileBrowser(data, kDown, kHeld);
-                    break;
-
-                case GUI_STATE_IMAGEVIEWER:
-                    GUI::ControlImageViewer(data, kDown, kHeld, delta);
                     break;
 
                 case GUI_STATE_OPTIONS:
