@@ -84,32 +84,14 @@ namespace Utils {
         hidScanInput();
         return hidKeysDown() & KEY_B;
     }
-    
-    void SetMax(int& set, int value, int max) {
-        if (set > max) {
-            set = value;
-        }
-    }
-    
-    void SetMin(int& set, int value, int min) {
-        if (set < min) {
-            set = value;
-        }
-    }
-    
-    void Wrap(int& value, int min, int max) {
-        if (max < min) {
-            return;
-        }
 
-        int range = max - min + 1;
-        value = (value - min) % range;
-        
-        if (value < 0) {
-            value += range;
+    void Wrap(int& value, int min, int max) {
+        if (value > max) {
+            value = min;
         }
-        
-        value += min;
+        else if (value < min) {
+            value = max;
+        }
     }
     
     void SafeCopy(char *dest, const char *src, std::size_t size) {

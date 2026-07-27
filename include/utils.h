@@ -13,8 +13,6 @@ namespace Utils {
     std::string UTF16ToUTF8(const u16 *data);
     std::u16string UTF8ToUTF16(const char *data);
     bool IsCancelButtonPressed(void);
-    void SetMax(int& set, int value, int max);
-    void SetMin(int& set, int value, int min);
     void Wrap(int& value, int min, int max);
     void SafeCopy(char *dest, const char *src, std::size_t size);
 }

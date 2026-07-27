@@ -41,29 +41,28 @@ namespace Config {
             return -1;
         }
 
-        char *json_str = json_dumps(root, JSON_INDENT(4));
+        char *json = json_dumps(root, JSON_INDENT(4));
         json_decref(root);
 
-        if (!json_str) {
+        if (!json) {
             Log::Error("Failed to encode config JSON.");
             return -1;
         }
 
-        // Delete and recreate config file
-        FSUSER_DeleteFile(sdmcArchive, fsMakePath(PATH_UTF16, path));
-        FSUSER_CreateFile(sdmcArchive, fsMakePath(PATH_UTF16, path), 0, strlen(json_str));
-
         Handle file;
-        if (R_FAILED(ret = FSUSER_OpenFile(&file, sdmcArchive, fsMakePath(PATH_UTF16, path), FS_OPEN_WRITE, 0))) {
+        if (R_FAILED(ret = FSUSER_OpenFile(&file, sdmcArchive, fsMakePath(PATH_UTF16, path), FS_OPEN_WRITE | FS_OPEN_CREATE, 0))) {
             Log::Error("FSUSER_OpenFile(config.json) failed: 0x%x\n", ret);
-            free(json_str);
+            free(json);
             return ret;
         }
 
+        // Truncate the file to match the new JSON length instead of deleting and re-creating the config.
+        FSFILE_SetSize(file, std::strlen(json));
+
         u32 bytesWritten = 0;
-        ret = FSFILE_Write(file, &bytesWritten, 0, json_str, strlen(json_str), FS_WRITE_FLUSH);
+        ret = FSFILE_Write(file, &bytesWritten, 0, json, std::strlen(json), FS_WRITE_FLUSH);
         FSFILE_Close(file);
-        free(json_str);
+        free(json);
 
         if (R_FAILED(ret) || bytesWritten == 0) {
             Log::Error("FSFILE_Write(config.json) failed: 0x%x\n", ret);
@@ -104,11 +103,11 @@ namespace Config {
             return Config::Save(cfg);
         }
 
-        std::string json_str;
-        json_str.resize(size);
+        std::string json;
+        json.resize(size);
         u32 bytesRead = 0;
 
-        ret = FSFILE_Read(file, &bytesRead, 0, &json_str[0], size);
+        ret = FSFILE_Read(file, &bytesRead, 0, &json[0], size);
         FSFILE_Close(file);
 
         if (R_FAILED(ret) || bytesRead != size) {
@@ -119,7 +118,7 @@ namespace Config {
 
         // Parse JSON
         json_error_t error;
-        json_t *root = json_loads(json_str.c_str(), JSON_DISABLE_EOF_CHECK, &error);
+        json_t *root = json_loads(json.c_str(), JSON_DISABLE_EOF_CHECK, &error);
 
         if (!root) {
             Log::Error("JSON parse error at line %d: %s", error.line, error.text);
