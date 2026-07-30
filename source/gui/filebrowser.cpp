@@ -138,6 +138,11 @@ namespace GUI {
                         GUI::DisplayImageViewer(path, data);
                         break;
 
+                    case FileTypeDocument:
+                        Reader::OpenDocument(path, data.book);
+                        data.state = GUI_STATE_BOOKREADER;
+                        break;
+
                     case FileTypeArchive:
                         if (R_SUCCEEDED(ArchiveExtractor::Extract(path))) {
                             FS::GetDirList(cfg.cwd, data.entries);

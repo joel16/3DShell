@@ -90,7 +90,7 @@ namespace Textures {
         return 0;
     }
 
-    static u32 GetNextPowerOf2(u32 v) {
+    u32 GetNextPowerOf2(u32 v) {
         v--;
         v |= v >> 1;
         v |= v >> 2;
@@ -101,54 +101,61 @@ namespace Textures {
         return (v >= 64 ? v : 64);
     }
 
-    static bool C3DTexToC2DImage(C2D_Image *out, u32 width, u32 height, u8 *rgba) {
-        if (width >= 1024 || height >= 1024) {
-            return false;
-        }
-        
-        C3D_Tex *tex = new C3D_Tex();
-        Tex3DS_SubTexture *subtex = new Tex3DS_SubTexture();
-
-        subtex->width  = width;
-        subtex->height = height;
-        
-        // RGBA → ABGR
-        for (u32 y = 0; y < height; y++) {
-            for (u32 x = 0; x < width; x++) {
-                u32 i = (y * width + x) * 4;
-                std::swap(rgba[i + 0], rgba[i + 3]);
-                std::swap(rgba[i + 1], rgba[i + 2]);
-            }
-        }
-        
-        u32 w2 = Textures::GetNextPowerOf2(width);
-        u32 h2 = Textures::GetNextPowerOf2(height);
-        
-        subtex->left = 0.f;
-        subtex->top = 1.f;
-        subtex->right = width  / static_cast<float>(w2);
-        subtex->bottom = 1.f - (height / static_cast<float>(h2));
-        
-        C3D_TexInit(tex, w2, h2, GPU_RGBA8);
-        C3D_TexSetFilter(tex, GPU_NEAREST, GPU_NEAREST);
-        std::memset(tex->data, 0, tex->size);
-        
-        for (u32 y = 0; y < height; y++) {
-            for (u32 x = 0; x < width; x++) {
-                u32 dst = ((((y >> 3) * (w2 >> 3) + (x >> 3)) << 6) | ((x & 1) | ((y & 1) << 1) | ((x & 2) << 1) | ((y & 2) << 2) | ((x & 4) << 2) | ((y & 4) << 3))) * 4;
-                u32 src = (y * width + x) * 4;
-                std::memcpy((u8*)tex->data + dst, rgba + src, 4);
-            }
-        }
-        
-        C3D_TexFlush(tex);
-        tex->border = 0xFFFFFFFF;
-        C3D_TexSetWrap(tex, GPU_CLAMP_TO_BORDER, GPU_CLAMP_TO_BORDER);
-        
-        out->tex = tex;
-        out->subtex = subtex;
-        return true;
+    bool C3DTexToC2DImage(C2D_Image *out, u32 width, u32 height, u32 channels, u8 *buf) {
+    if (width >= 1024 || height >= 1024 || (channels != 3 && channels != 4)) {
+        return false;
     }
+    
+    C3D_Tex *tex = new C3D_Tex();
+    Tex3DS_SubTexture *subtex = new Tex3DS_SubTexture();
+
+    subtex->width  = width;
+    subtex->height = height;
+    
+    u32 w2 = Textures::GetNextPowerOf2(width);
+    u32 h2 = Textures::GetNextPowerOf2(height);
+    
+    subtex->left = 0.f;
+    subtex->top = 1.f;
+    subtex->right = width  / static_cast<float>(w2);
+    subtex->bottom = 1.f - (height / static_cast<float>(h2));
+    
+    // Always use GPU_RGBA8 for the destination texture
+    C3D_TexInit(tex, w2, h2, GPU_RGBA8);
+    C3D_TexSetFilter(tex, GPU_NEAREST, GPU_NEAREST);
+    std::memset(tex->data, 0, tex->size);
+    
+    u8 *dst_data = static_cast<u8*>(tex->data);
+
+    // Swizzle AND convert RGBA/RGB -> ABGR in one pass without mutating the source buffer
+    for (u32 y = 0; y < height; y++) {
+        for (u32 x = 0; x < width; x++) {
+            u32 dst = ((((y >> 3) * (w2 >> 3) + (x >> 3)) << 6) | 
+                      ((x & 1) | ((y & 1) << 1) | ((x & 2) << 1) | ((y & 2) << 2) | ((x & 4) << 2) | ((y & 4) << 3))) * 4;
+            
+            u32 src = (y * width + x) * channels;
+            
+            u8 r = buf[src + 0];
+            u8 g = buf[src + 1];
+            u8 b = buf[src + 2];
+            u8 a = (channels == 4) ? buf[src + 3] : 255; // Default alpha to 255 for RGB documents
+
+            // Write as ABGR for 3DS GPU byte order
+            dst_data[dst + 0] = a;
+            dst_data[dst + 1] = b;
+            dst_data[dst + 2] = g;
+            dst_data[dst + 3] = r;
+        }
+    }
+    
+    C3D_TexFlush(tex);
+    tex->border = 0xFFFFFFFF;
+    C3D_TexSetWrap(tex, GPU_CLAMP_TO_BORDER, GPU_CLAMP_TO_BORDER); // Restore wrap fixing edge artifacts
+    
+    out->tex = tex;
+    out->subtex = subtex;
+    return true;
+}
 
     static bool LoadImageBMP(u8 *data, u64 size, C2D_Image *texture) {
         bmp_bitmap_callback_vt callbacks = {
@@ -184,7 +191,7 @@ namespace Textures {
             }
         }
         
-        bool ret = Textures::C3DTexToC2DImage(texture, bmp.width, bmp.height, static_cast<unsigned char *>(bmp.bitmap));
+        bool ret = Textures::C3DTexToC2DImage(texture, bmp.width, bmp.height, 4, static_cast<unsigned char *>(bmp.bitmap));
         bmp_finalise(&bmp);
         return ret;
     }
@@ -219,7 +226,7 @@ namespace Textures {
             return false;
         }
 
-        bool ret = Textures::C3DTexToC2DImage(texture, info->width, info->height, static_cast<u8 *>(bitmap));
+        bool ret = Textures::C3DTexToC2DImage(texture, info->width, info->height, 4, static_cast<u8 *>(bitmap));
         nsgif_destroy(gif);
         return ret;
     }
@@ -233,7 +240,7 @@ namespace Textures {
         u8 *buffer = new u8[width * height * 4];
         tjDecompress2(handle, data, size, buffer, width, 0, height, TJPF_RGBA, TJFLAG_FASTDCT);
         
-        bool ret = Textures::C3DTexToC2DImage(texture, width, height, buffer);
+        bool ret = Textures::C3DTexToC2DImage(texture, width, height, 4, buffer);
         
         delete[] buffer;
         tjDestroy(handle);
@@ -260,7 +267,7 @@ namespace Textures {
         bool ret = false;
         
         if (png_image_finish_read(&image, nullptr, buffer, 0, nullptr)) {
-            ret = Textures::C3DTexToC2DImage(texture, image.width, image.height, buffer);
+            ret = Textures::C3DTexToC2DImage(texture, image.width, image.height, 4, buffer);
         }
         
         delete[] buffer;
@@ -277,7 +284,7 @@ namespace Textures {
             return false;
         }
 
-        bool ret = Textures::C3DTexToC2DImage(texture, width, height, image);
+        bool ret = Textures::C3DTexToC2DImage(texture, width, height, 4, image);
         stbi_image_free(image);
         return ret;
     }
@@ -336,8 +343,9 @@ namespace Textures {
         fileIcon[0] = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_default_idx);
         fileIcon[1] = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_type_compress_idx);
         fileIcon[2] = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_type_audio_idx);
-        fileIcon[3] = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_type_image_idx);
-        fileIcon[4] = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_type_text_idx);
+        fileIcon[3] = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_type_text_idx);
+        fileIcon[4] = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_type_image_idx);
+        fileIcon[5] = fileIcon[3];
         iconDir[0] = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_folder_idx);
         iconDir[1] = C2D_SpriteSheetGetImage(spritesheet, sprites_ic_fso_folder_dark_idx);
         iconCheck[0] = C2D_SpriteSheetGetImage(spritesheet, sprites_btn_material_light_check_on_normal_idx);

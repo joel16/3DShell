@@ -78,13 +78,13 @@ LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 LIBS	:=	`curl-config --libs` \
 		-lxmp -lmpg123 -lvorbisidec -lopusfile -lopus -lFLAC -logg \
 		-ljansson -lturbojpeg -ljpeg -lpng -larchive -lbz2 -llzma -lzstd \
-		-lcitro2d -lcitro3d -lctru -lm -lz
+		-lmupdf -lmupdf-third -lcitro2d -lcitro3d -lctru -lm -lz
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
-LIBDIRS	:= $(PORTLIBS) $(CTRULIB)
+LIBDIRS	:= $(PORTLIBS) $(CTRULIB) $(CURDIR)/libs
 
 
 #---------------------------------------------------------------------------------

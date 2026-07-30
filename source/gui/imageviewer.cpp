@@ -26,24 +26,14 @@ namespace GUI {
 
     constexpr u32 guiBgColour = C2D_Color32(48, 48, 48, 255);
 
-    static bool DrawImage(C2D_Image image, float x, float y, float start, float end, float w, float h, float zoomLevel) {
-        C2D_DrawParams params = {
-            { x - (posX * zoomLevel), y - (posY * zoomLevel), w * zoomLevel, h * zoomLevel },
-            { start, end },
-            0.f, 0.f
-        };
-
-        return C2D_DrawImage(image, &params, nullptr);
-    }
-
     static void DisplayImageProperties(int& texW, int& texH) {
         float dialogW = propertiesDialog[0].subtex->width;
         float dialogH = propertiesDialog[0].subtex->height;
-        float dX = (320.f - dialogW) / 2.f;
-        float dY = (240.f - dialogH) / 2.f;
+        float x = (320.f - dialogW) / 2.f;
+        float y = (240.f - dialogH) / 2.f;
         
-        GUI::DrawImage(propertiesDialog[cfg.theme], dX, dY);
-        GUI::DrawText(dX + 6, dY + 6, 0.42f, guiTitleColour[cfg.theme], "Properties");
+        GUI::DrawImage(propertiesDialog[cfg.theme], x, y);
+        GUI::DrawText(x + 6, y + 6, 0.42f, guiTitleColour[cfg.theme], "Properties");
         
         char filename[256];
         if (!entries.empty()) {
@@ -112,25 +102,25 @@ namespace GUI {
 
             switch (state) {
                 case DIMENSION_DEFAULT:
-                    GUI::DrawImage(data.texture, (400.f - (width * zoomLevel)) / 2.f, (240.f - (height * zoomLevel)) / 2.f, 0, 0, width, height, zoomLevel);
+                    GUI::DrawImage(data.texture, (400.f - (width * zoomLevel)) / 2.f, (240.f - (height * zoomLevel)) / 2.f, posX, posY, 0, 0, width, height, zoomLevel);
                     break;
                 
                 case DIMENSION_NINTENDO_SCREENSHOT:
-                    GUI::DrawImage(data.texture, 0, 0, 16, 16, texW, texH, 1.f);
+                    GUI::DrawImage(data.texture, 0, 0, posX, posY, 16, 16, texW, texH, 1.f);
                     break;
                 
                 case DIMENSION_DUAL_SCREEN:
-                    GUI::DrawImage(data.texture, 0, 0, 0, 0, texW, texH, 1.f);
+                    GUI::DrawImage(data.texture, 0, 0, posX, posY, 0, 0, texW, texH, 1.f);
                     break;
             }
 
             C2D_SceneBegin(GUI::GetRenderTarget(TARGET_BOTTOM));
             
             if (state == DIMENSION_NINTENDO_SCREENSHOT) {
-                GUI::DrawImage(data.texture, 0, 0, 56, 272, texW, texH, 1.f);
+                GUI::DrawImage(data.texture, 0, 0, posX, posY, 56, 272, texW, texH, 1.f);
             }
             else if (state == DIMENSION_DUAL_SCREEN) {
-                GUI::DrawImage(data.texture, 0, 0, 40, 240, texW, texH, 1.f);
+                GUI::DrawImage(data.texture, 0, 0, posX, posY, 40, 240, texW, texH, 1.f);
             }
 
             if (properties) {

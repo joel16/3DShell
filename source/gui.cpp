@@ -100,6 +100,15 @@ namespace GUI {
         return C2D_DrawImageAt(image, x, y, guiDepth, nullptr, 1.f, 1.f);
     }
 
+    bool DrawImage(C2D_Image image, float x, float y, int& posX, int& posY, float start, float end, float w, float h, float zoom) {
+        C2D_DrawParams params = {
+            { x - (posX * zoom), y - (posY * zoom), w * zoom, h * zoom },
+            { start, end },
+            0.f, 0.f
+        };
+        return C2D_DrawImage(image, &params, nullptr);
+    }
+
     bool DrawImageScale(C2D_Image image, float x, float y, float scaleX, float scaleY) {
         return C2D_DrawImageAt(image, x, y, guiDepth, nullptr, scaleX, scaleY);
     }
@@ -275,12 +284,26 @@ namespace GUI {
 
             GUI::DisplayFileBrowser(data);
 
+            // Top screen view
+            switch (data.state) {
+                case GUI_STATE_BOOKREADER:
+                    GUI::DisplayDocumentViewerTop(data.book);
+                    break;
+
+                default:
+                    break;
+            }
+
             C2D_SceneBegin(c3dRenderTarget[TARGET_BOTTOM]);
             GUI::DrawRect(0, 0, 320, 20, guiTouchBarColour[cfg.theme]);
             GUI::DisplayTouchBar(data);
 
             // Bottom screen view
             switch (data.state) {
+                case GUI_STATE_BOOKREADER:
+                    GUI::DisplayDocumentViewerBottom(data.book);
+                    break;
+                
                 case GUI_STATE_OPTIONS:
                     GUI::DisplayFileOptions(data);
                     break;
@@ -311,6 +334,10 @@ namespace GUI {
             switch (data.state) {
                 case GUI_STATE_FILEBROWSER:
                     GUI::ControlFileBrowser(data, kDown, kHeld);
+                    break;
+
+                case GUI_STATE_BOOKREADER:
+                    GUI::ControlDocumentViewer(data.book, data, kDown, kHeld, delta);
                     break;
 
                 case GUI_STATE_OPTIONS:

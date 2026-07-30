@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "fs.h"
+#include "reader.h"
 
 enum {
     TARGET_TOP = 0,
@@ -21,6 +22,7 @@ enum GUI_STATES {
     GUI_STATE_SETTINGS,
     GUI_STATE_ARCHIVEEXTRACT,
     GUI_STATE_TEXTREADER,
+    GUI_STATE_BOOKREADER,
     GUI_STATE_UPDATE
 };
 
@@ -36,6 +38,7 @@ typedef struct {
     u64 usedSize = 0;
     u64 totalSize = 0;
     C2D_Image texture;
+    Book book;
 } GuiData;
 
 
@@ -56,6 +59,7 @@ namespace GUI {
     void GetTextDimensions(float size, float *width, float *height, const char *text);
     bool DrawImage(C2D_Image image, float x, float y);
     bool DrawImageScale(C2D_Image image, float x, float y, float scaleX, float scaleY);
+    bool DrawImage(C2D_Image image, float x, float y, int& posX, int& posY, float start, float end, float w, float h, float zoom);
     void DrawText(float x, float y, float size, u32 colour, const char *text);
     void DrawTextf(float x, float y, float size, u32 colour, const char* text, ...);
     
@@ -88,4 +92,8 @@ namespace GUI {
     void ControlUpdateOptions(GuiData& data, u32& kDown, bool& state, bool& status, bool& available, const std::string &tag);
 
     void DisplayImageViewer(const char *path, GuiData& data);
+
+    void DisplayDocumentViewerTop(Book& book);
+    void DisplayDocumentViewerBottom(Book& book);
+    void ControlDocumentViewer(Book& book, GuiData& data, u32& kDown, u32& kHeld, u64& delta);
 }

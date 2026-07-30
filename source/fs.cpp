@@ -303,6 +303,12 @@ namespace FS {
             || (strncasecmp(ext, "s3m", 3) == 0) || (strncasecmp(ext, "wav", 3) == 0) || (strncasecmp(ext, "xm", 2) == 0)) {
             return FileTypeAudio;
         }
+        // Documents
+        else if ((strncasecmp(ext, "cbt", 3) == 0) || (strncasecmp(ext, "cbz", 3) == 0) || (strncasecmp(ext, "epu", 3) == 0)
+            || (strncasecmp(ext, "fb2", 3) == 0) || (strncasecmp(ext, "mob", 3) == 0) || (strncasecmp(ext, "pdf", 3) == 0)
+            || (strncasecmp(ext, "xps", 3) == 0)) {
+            return FileTypeDocument;
+        }
         // Images
         if ((strncasecmp(ext, "bmp", 3) == 0) || (strncasecmp(ext, "gif", 3) == 0) || (strncasecmp(ext, "jpg", 3) == 0)
             || (strncasecmp(ext, "jpe", 3) == 0) || (strncasecmp(ext, "pgm", 3) == 0) || (strncasecmp(ext, "ppm", 3) == 0)
