@@ -12,6 +12,10 @@ namespace GUI {
     static bool properties = false;
 
     constexpr u32 guiBgColour = C2D_Color32(48, 48, 48, 255);
+    constexpr u32 guiTextBgColour = C2D_Color32(0, 0, 0, 100);
+    constexpr u32 guiTextColour = C2D_Color32(220, 220, 220, 255);
+
+    static float pageTextWidth = 0.f, pageTextHeight = 0.f;
 
     void DisplayDocumentViewerTop(Book& book) {
         C2D_TargetClear(GUI::GetRenderTarget(TARGET_TOP), guiBgColour);
@@ -37,6 +41,12 @@ namespace GUI {
         float yOffset = (480.f - (height * book.zoom)) / 2.f;
 
         GUI::DrawImage(book.page, xOffset + 40.f, yOffset, posX, posY, 0, 0, width, height, book.zoom);
+
+        char pageText[32];
+        std::snprintf(pageText, sizeof(pageText), "%d / %d", book.pageNumber + 1, book.pageCount);
+        GUI::GetTextDimensions(0.42f, &pageTextWidth, &pageTextHeight, pageText);
+        GUI::DrawRect(2, 2, 2 + pageTextWidth + 3, 2 + pageTextHeight + 3, guiTextBgColour);
+        GUI::DrawText(5, 5, 0.42f, guiTextColour, pageText);
     }
 
     void DisplayDocumentViewerBottom(Book& book) {
@@ -49,10 +59,6 @@ namespace GUI {
 
             GUI::DrawImage(book.page, xOffset, yOffset - 240.f, posX, posY, 0, 0, width, height, book.zoom);
         }
-
-        char pageText[64];
-        std::snprintf(pageText, sizeof(pageText), "Page: %d / %d", book.pageNumber + 1, book.pageCount);
-        GUI::DrawText(10, 10, 0.5f, C2D_Color32(255,255,255,255), pageText);
 
         if (!book.hasTexture) {
             GUI::DrawText(10, 30, 0.5f, C2D_Color32(200,200,200,255), "Processing PDF...");
@@ -67,16 +73,24 @@ namespace GUI {
             if ((height * book.zoom > 480.f) || (width * book.zoom > 320.f)) {
                 float step = 200.0f * deltaSeconds; 
                 
-                if (kHeld & KEY_CPAD_UP)    posY -= step;
-                if (kHeld & KEY_CPAD_DOWN)  posY += step;
-                if (kHeld & KEY_CPAD_LEFT)  posX -= step;
-                if (kHeld & KEY_CPAD_RIGHT) posX += step;
+                if (kHeld & KEY_CPAD_UP) {
+                    posY -= step;
+                }
+                if (kHeld & KEY_CPAD_DOWN) {
+                    posY += step;
+                }
+                if (kHeld & KEY_CPAD_LEFT) {
+                    posX -= step;
+                }
+                if (kHeld & KEY_CPAD_RIGHT) {
+                    posX += step;
+                }
             }
             
             // Modify book.zoom instead of zoomLevel
             if ((kHeld & KEY_DUP) || (kHeld & KEY_CSTICK_UP)) {
                 book.zoom = std::min(book.zoom + (0.5f * deltaSeconds), 4.0f);
-                // Call Reader::SetZoom(book, book.zoom); here if you want real-time texture scaling
+                // Reader::SetZoom(book, book.zoom); Real-time texture scaling - too slow at the moment
             }
             else if ((kHeld & KEY_DDOWN) || (kHeld & KEY_CSTICK_DOWN)) {
                 book.zoom = std::max(book.zoom - (0.5f * deltaSeconds), 1.0f);

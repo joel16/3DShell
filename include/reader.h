@@ -17,7 +17,7 @@ typedef struct {
     int pageCount = 0;
     int pageNumber = 0;
     float rotate = 0.0f;
-    float zoom = 1.0f;
+    float zoom = 1.50f;
 } Book;
 
 typedef struct {

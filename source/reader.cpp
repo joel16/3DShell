@@ -156,7 +156,7 @@ namespace Reader {
         // Calculate a safe base scale to fit the 320x480 viewport
         float scaleX = VIEWPORT_W / (bounds.x1 - bounds.x0);
         float scaleY = VIEWPORT_H / (bounds.y1 - bounds.y0);
-        float renderScale = std::min(scaleX, scaleY);
+        float renderScale = std::min(scaleX, scaleY) * 1.50f;
 
         // Ensure the zoom loaded from config is valid
         if (book.zoom <= 0.0f) {
