@@ -46,7 +46,7 @@ VERSION_MAJOR	:=	1
 VERSION_MINOR	:=	0
 VERSION_MICRO	:=	0
 
-APP_TITLE	:=	3DShell
+APP_TITLE	:=	3DShell-next
 APP_DESCRIPTION	:=	Multi-purpose file manager
 APP_AUTHOR	:=	Joel16
 
