@@ -44,7 +44,7 @@ GFXBUILD	:=	$(ROMFS)/res/drawable
 
 VERSION_MAJOR	:=	1
 VERSION_MINOR	:=	0
-VERSION_MICRO	:=	0
+VERSION_MICRO	:=	1
 
 APP_TITLE	:=	3DShell-next
 APP_DESCRIPTION	:=	Multi-purpose file manager
