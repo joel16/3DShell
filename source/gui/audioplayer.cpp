@@ -109,6 +109,8 @@ namespace GUI {
 
             bool locked = false;
             bool forceNext = false;
+
+            aptSetSleepAllowed(false);
             
             while (aptMainLoop()) {
                 GUI::Begin(guiBgColourTop[cfg.theme], guiBgColourBottom[cfg.theme]);
@@ -202,6 +204,7 @@ namespace GUI {
             }
 
             Audio::Exit();
+            aptSetSleepAllowed(true);
         }
     }
 }
