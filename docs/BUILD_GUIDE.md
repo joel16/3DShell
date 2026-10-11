@@ -3,7 +3,7 @@
 ## Requisitos del Sistema
 - macOS/Linux/Windows con devkitPro instalado
 - devkitARM toolchain
-- ctrulib, Citro3D, Citro2D
+- ctrulib, Citro2D (c2D)
 - makerom y bannertool en PATH
 
 ## Instalación de Dependencias

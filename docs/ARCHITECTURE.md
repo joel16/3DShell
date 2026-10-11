@@ -41,6 +41,8 @@ main.cpp
 - `libnsbmp`: Decodificación de imágenes BMP
 - `libnsgif`: Decodificación de GIFs
 
+Nota: Se usará Citro2D (referido en el proyecto como c2D) para el renderizado 2D.
+
 ## Flujo de Datos
 1. Inicialización → Carga de configuración
 2. Bucle GUI → Procesamiento de entrada

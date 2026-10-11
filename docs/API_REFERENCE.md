@@ -49,12 +49,13 @@
 - `GetArchiveType()`: Determina tipo de archivo
 
 ## Módulo C2D Helper (c2d_helper.h/cpp)
+Nota: Este módulo está implementado sobre Citro2D (referido como c2D) y expone funciones de ayuda para renderizado 2D.
 - `DrawRect()`: Dibuja rectángulo
 - `DrawText()`: Dibuja texto
 - `LoadFont()`: Carga fuente
 
 ## Tipos de Datos Principales
 - `FS_Archive`: Estructura de archivo del sistema
-- `C3D_RenderTarget`: Objetivo de renderizado
+Render targets are managed internally; the public API exposes C2D helpers and opaque types.
 - `C2D_TextBuf`: Buffer de texto
 - `Texture`: Estructura de textura personalizada

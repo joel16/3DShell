@@ -1,7 +1,7 @@
 # Análisis del Proyecto 3DShell
 
 ## Resumen Ejecutivo
-3DShell es un gestor de archivos multipropósito para Nintendo 3DS, enfocado en el manejo de archivos multimedia. Desarrollado en C++ utilizando las bibliotecas de desarrollo de homebrew de 3DS (devkitARM, ctrulib, Citro3D, Citro2D).
+3DShell es un gestor de archivos multipropósito para Nintendo 3DS, enfocado en el manejo de archivos multimedia. Desarrollado en C++ utilizando las bibliotecas de desarrollo de homebrew de 3DS (devkitARM, ctrulib, Citro2D).
 
 ## Arquitectura del Proyecto
 
@@ -23,7 +23,7 @@
 
 ### Dependencias Externas
 - devkitARM toolchain
-- ctrulib, Citro3D, Citro2D
+- ctrulib, Citro2D (c2D)
 - libnsbmp, libnsgif
 - makerom, bannertool
 
@@ -33,12 +33,11 @@
 - Extracción de archivos (ZIP, RAR, 7Z)
 - Navegación por SD y NAND
 - Búsqueda de directorios
-- Propiedades de archivos
-- Actualizaciones en línea
+- Propiedades de archivos- **Editor de texto integrado** (archivos .txt, .log, .json, .xml, .ini, .cfg, .md, .cpp, .c, .h, .hpp, .py, .js, .html, .css)- Actualizaciones en línea
 
-## Análisis Técnico
+### Análisis Técnico
 - Lenguaje: C++ con extensiones de 3DS
-- Gráficos: Citro3D/Citro2D para renderizado 3D/2D
+- Gráficos: Citro2D (c2D) para renderizado 2D
 - Sistema de archivos: FS API de 3DS
 - Memoria: Gestión manual con buffers estáticos/dinámicos
 - Logging: Sistema de logs integrado

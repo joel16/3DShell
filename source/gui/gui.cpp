@@ -6,6 +6,7 @@
 #include "fs.h"
 #include "gui.h"
 #include "net.h"
+#include "notepad.h"
 #include "osk.h"
 #include "textures.h"
 #include "touch.h"
@@ -100,12 +101,19 @@ namespace GUI {
     }
 
     static void ControlTouchButtons(MenuItem *item, u32 *kDown) {
-        if ((*kDown & KEY_TOUCH) && (Touch::Rect(0, 0, 22, 20)))
+        if ((*kDown & KEY_TOUCH) && (Touch::Rect(0, 0, 22, 20))) {
+            if (item->state == MENU_STATE_TEXTREADER && Notepad::IsOpen())
+                Notepad::Close();
             item->state = MENU_STATE_FILEBROWSER;
-        else if ((*kDown & KEY_TOUCH) && (Touch::Rect(23, 0, 47, 20)))
+        }
+        else if ((*kDown & KEY_TOUCH) && (Touch::Rect(23, 0, 47, 20))) {
+            if (item->state == MENU_STATE_TEXTREADER) return;
             item->state = MENU_STATE_OPTIONS;
-        else if ((*kDown & KEY_TOUCH) && (Touch::Rect(48, 0, 72, 20)))
+        }
+        else if ((*kDown & KEY_TOUCH) && (Touch::Rect(48, 0, 72, 20))) {
+            if (item->state == MENU_STATE_TEXTREADER) return;
             item->state = MENU_STATE_SETTINGS;
+        }
         else if ((*kDown & KEY_TOUCH) && (Touch::Rect(247, 0, 272, 20))) {
             if (archive != sdmc_archive) {
                 archive = sdmc_archive;
@@ -168,7 +176,10 @@ namespace GUI {
             C2D::Rect(0, 15, 400, 25, cfg.dark_theme? MENU_BAR_DARK : MENU_BAR_LIGHT);
             GUI::DisplayStatusBar();
             
-            GUI::DisplayFileBrowser(&item);
+            if (item.state == MENU_STATE_TEXTREADER)
+                Notepad::DisplayTop();
+            else
+                GUI::DisplayFileBrowser(&item);
 
             if (item.state == MENU_STATE_IMAGEVIEWER)
                 GUI::DisplayImageViewerTop(&item);
@@ -179,6 +190,8 @@ namespace GUI {
 
             if (item.state == MENU_STATE_FILEBROWSER)
                 GUI::DisplayFileBrowserBottom();
+            else if (item.state == MENU_STATE_TEXTREADER)
+                Notepad::DisplayBottom();
 
             switch (item.state) {
                 case MENU_STATE_OPTIONS:
@@ -199,6 +212,11 @@ namespace GUI {
 
                 case MENU_STATE_IMAGEVIEWER:
                     DisplayImageViewerBottom(&item);
+                    break;
+
+                case MENU_STATE_TEXTREADER:
+                    // Dibujado bottom ya hecho via Notepad::DisplayBottom arriba.
+                    // No se necesita dialogo adicional aqui.
                     break;
 
                 default:
@@ -236,6 +254,16 @@ namespace GUI {
 
                 case MENU_STATE_IMAGEVIEWER:
                     GUI::ControlImageViewer(&item, &kDown, &kHeld, &delta_time);
+                    break;
+
+                case MENU_STATE_TEXTREADER:
+                    Notepad::Control(kDown, kHeld);
+                    if (!Notepad::IsOpen()) {
+                        // Se cerro el editor -> volver al browser y refrescar
+                        item.state = MENU_STATE_FILEBROWSER;
+                        FS::GetDirList(cfg.cwd, item.entries);
+                        GUI::ResetCheckbox(&item);
+                    }
                     break;
 
                 default:

@@ -8,6 +8,7 @@
 #include "config.h"
 #include "fs.h"
 #include "gui.h"
+#include "notepad.h"
 #include "osk.h"
 #include "textures.h"
 #include "touch.h"
@@ -244,6 +245,11 @@ namespace GUI {
                     case FileTypeImage:
                         if (Textures::LoadImageFile(path, &item->texture))
                             item->state = MENU_STATE_IMAGEVIEWER;
+                        break;
+
+                    case FileTypeText:
+                        if (Notepad::IsTextFile(filename) && Notepad::Open(path, filename))
+                            item->state = MENU_STATE_TEXTREADER;
                         break;
 
                     case FileTypeZip:
