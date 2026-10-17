@@ -8,6 +8,8 @@
 #include "config.h"
 #include "fs.h"
 #include "gui.h"
+#include "hbloader.h"
+#include "netloader.h"
 #include "notepad.h"
 #include "osk.h"
 #include "textures.h"
@@ -98,6 +100,12 @@ namespace GUI {
                 C2D::Text(text_x, text_y, 0.4f, cfg.dark_theme? WHITE : BLACK, button_texts[index]);
             }
         }
+
+        // NetLoader hint (SELECT key), centered below the button grid
+        static const char* hint_text = "3ds netloader - <select>";
+        float hint_width = 0.f, hint_height = 0.f;
+        C2D::GetTextSize(0.4f, &hint_width, &hint_height, hint_text);
+        C2D::Text(((320 - hint_width) / 2), 140 + margin, 0.4f, cfg.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, hint_text);
     }
 
     static void CreateFolder(MenuItem *item) {
@@ -259,7 +267,11 @@ namespace GUI {
                         }
 
                         break;
-                    
+
+                    case FileType3dsx:
+                        HBLoader::Boot(path);
+                        break;
+
                     default:
                         break;
                 }
@@ -283,6 +295,10 @@ namespace GUI {
             item->checked_cwd = cfg.cwd;
             item->checked.at(item->selected) = !item->checked.at(item->selected);
             item->checked_count = std::count(item->checked.begin(), item->checked.end(), true);
+        }
+        else if (*kDown & KEY_SELECT) {
+            if (NetLoader::Run() == NL_NOCHAIN)
+                GUI::ProgressBar("NetLoader", "No chainloader available", 0, 1);
         }
         else if (*kDown & KEY_X)
             item->state = MENU_STATE_OPTIONS;
