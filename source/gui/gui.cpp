@@ -190,7 +190,7 @@ namespace GUI {
             GUI::DisplayTouchButtons(&item);
 
             if (item.state == MENU_STATE_FILEBROWSER)
-                GUI::DisplayFileBrowserBottom();
+                GUI::DisplayFileBrowserBottom(&item);
             else if (item.state == MENU_STATE_TEXTREADER)
                 Notepad::DisplayBottom();
 
