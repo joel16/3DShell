@@ -88,6 +88,8 @@ namespace FS {
             return FileTypeText;
         else if ((!ext.compare(".ZIP")) || (!ext.compare(".RAR")) || (!ext.compare(".7Z")) || (!ext.compare(".LZMA")))
             return FileTypeZip;
+        else if (!ext.compare(".3DSX"))
+            return FileType3dsx;
             
         return FileTypeNone;
     }

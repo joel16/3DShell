@@ -5,6 +5,7 @@
 #include "config.h"
 #include "fs.h"
 #include "gui.h"
+#include "hbloader.h"
 #include "net.h"
 #include "notepad.h"
 #include "osk.h"
@@ -271,6 +272,10 @@ namespace GUI {
             }
 
             GUI::ControlTouchButtons(&item, &kDown);
+
+            /* A .3dsx chainload was triggered — leave so hbldr/hax takes over. */
+            if (HBLoader::PendingExit())
+                break;
 
             if ((kDown & KEY_START) || (setjmp(exit_jmp)))
                 break;
