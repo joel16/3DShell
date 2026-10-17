@@ -33,9 +33,9 @@ include $(DEVKITARM)/3ds_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
-SOURCES		:=	source source/gui libs/libnsbmp/src libs/libnsgif/src
+SOURCES		:=	source source/gui source/notepad source/osk libs/libnsbmp/src libs/libnsgif/src
 DATA		:=	data
-INCLUDES	:=	include libs/libnsbmp/include libs/libnsgif/include
+INCLUDES	:=	include source/notepad source/osk libs/libnsbmp/include libs/libnsgif/include
 GRAPHICS	:=	res/drawable
 #GFXBUILD	:=	$(BUILD)
 ICON		:=	res/ic_launcher_filemanager.png
@@ -77,7 +77,7 @@ ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
 LIBS	:= `curl-config --libs` -ljansson -lturbojpeg -ljpeg -lpng -larchive -lbz2 -llzma -lzstd \
-	   -lcitro2d -lcitro3d -lctru -lm -lz
+	-lcitro2d -lcitro3d -lctru -lm -lz
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
@@ -207,11 +207,22 @@ else
 endif
 
 #---------------------------------------------------------------------------------
+
+
 all: $(BUILD) $(GFXBUILD) $(DEPSDIR) $(ROMFS_T3XFILES) $(T3XHFILES)
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 	@$(BANNERTOOL) makebanner $(BANNER_IMAGE_ARG) "$(BANNER_IMAGE)" $(BANNER_AUDIO_ARG) "$(BANNER_AUDIO)" -o "$(BUILD)/banner.bnr"
 	@$(BANNERTOOL) makesmdh -s "$(APP_TITLE)" -l "$(APP_DESCRIPTION)" -p "$(APP_AUTHOR)" -i "$(APP_ICON)" -f "$(ICON_FLAGS)" -o "$(BUILD)/icon.icn"
-	$(MAKEROM) -f cia -o "$(TARGET).cia" -target t -exefslogo $(MAKEROM_ARGS)
+
+# 3dslink - network upload to 3DS (hbmenu netloader, port 3000)
+3DSLINK_ADDR	?=	192.168.1.241
+3DSLINK		?=	3dslink
+
+rom:
+	$(MAKEROM) -f cia -o "$(TARGET).cia" -target t -exefslogo $(MAKEROM_ARGS)	
+
+send: all
+	$(3DSLINK) -a $(3DSLINK_ADDR) "$(TARGET).3dsx"
 
 $(BUILD):
 	@mkdir -p $@

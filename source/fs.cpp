@@ -79,10 +79,17 @@ namespace FS {
         if ((!ext.compare(".BMP")) || (!ext.compare(".GIF")) || (!ext.compare(".JPG")) || (!ext.compare(".JPEG")) || (!ext.compare(".PGM"))
             || (!ext.compare(".PPM")) || (!ext.compare(".PNG")) || (!ext.compare(".PSD")) || (!ext.compare(".TGA")) || (!ext.compare(".WEBP")))
             return FileTypeImage;
-        else if ((!ext.compare(".JSON")) || (!ext.compare(".LOG")) || (!ext.compare(".TXT")) || (!ext.compare(".CFG")) || (!ext.compare(".INI")))
+        else if ((!ext.compare(".TXT")) || (!ext.compare(".LOG")) || (!ext.compare(".JSON")) || (!ext.compare(".XML"))
+            || (!ext.compare(".INI")) || (!ext.compare(".CFG")) || (!ext.compare(".MD")) || (!ext.compare(".CPP"))
+            || (!ext.compare(".C")) || (!ext.compare(".H")) || (!ext.compare(".HPP")) || (!ext.compare(".PY"))
+            || (!ext.compare(".JS")) || (!ext.compare(".HTML")) || (!ext.compare(".CSS")) || (!ext.compare(".CSV"))
+            || (!ext.compare(".YML")) || (!ext.compare(".YAML")) || (!ext.compare(".TOML")) || (!ext.compare(".LUA"))
+            || (!ext.compare(".SH")) || (!ext.compare(".RS")))
             return FileTypeText;
         else if ((!ext.compare(".ZIP")) || (!ext.compare(".RAR")) || (!ext.compare(".7Z")) || (!ext.compare(".LZMA")))
             return FileTypeZip;
+        else if (!ext.compare(".3DSX"))
+            return FileType3dsx;
             
         return FileTypeNone;
     }

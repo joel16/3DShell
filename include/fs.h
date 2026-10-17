@@ -12,7 +12,8 @@ typedef enum FileType {
     FileTypeArchive,
     FileTypeImage,
     FileTypeText,
-    FileTypeZip
+    FileTypeZip,
+    FileType3dsx
 } FileType;
 
 namespace FS {
