@@ -43,7 +43,7 @@ ROMFS		:=	romfs
 GFXBUILD	:=	$(ROMFS)/res/drawable
 
 VERSION_MAJOR	:=	5
-VERSION_MINOR	:=	1
+VERSION_MINOR	:=	2
 VERSION_MICRO	:=	0
 
 APP_TITLE	:=	3DShell
