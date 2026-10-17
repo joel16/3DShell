@@ -33,13 +33,15 @@ typedef struct {
 namespace GUI {
     void ResetCheckbox(MenuItem *item);
     void RecalcStorageSize(MenuItem *item);
+    void RestoreLastBrowserPosition(MenuItem *item);
+    void SaveBrowserPosition(MenuItem *item);
     void ProgressBar(const std::string &title, std::string message, u64 offset, u64 size);
     void DownloadProgressBar(void *args);
     Result Loop(void);
 
     // Windows
     void DisplayFileBrowser(MenuItem *item);
-    void DisplayFileBrowserBottom(void);
+    void DisplayFileBrowserBottom(MenuItem *item);
     void ControlFileBrowser(MenuItem *item, u32 *kDown, u32 *kHeld);
     void ControlFileBrowserBottom(MenuItem *item, u32 *kDown);
     void DisplayFileOptions(MenuItem *item);

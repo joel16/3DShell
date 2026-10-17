@@ -12,19 +12,128 @@
 #include "netloader.h"
 #include "notepad.h"
 #include "osk.h"
+#include "smdh.h"
 #include "textures.h"
 #include "touch.h"
 #include "utils.h"
 
 namespace GUI {
+    /* Cached cwd as UTF16, rebuilt on directory changes (control phase; the
+     * draw phase only reads it). Declared here so both the top-screen list
+     * and the bottom SMDH panel can address entries by full UTF16 path. */
+    static std::u16string smdh_cwd_u16;
+
+    /* Last-session position restore runs once per GUI::Loop lifetime. */
+    static bool browser_position_restored = false;
+
+    /* UTF16 strlen (entries carry fixed 262-char name arrays). */
+    static std::size_t u16len(const u16 *src) {
+        std::size_t len = 0;
+        while (src[len])
+            len++;
+        return len;
+    }
+
     static const int sel_dist = 20;
     static const int start_y = 40;
     static const u32 max_entries = 10;
     static int start = 0;
     static u64 timestamp = 0;
 
+    /* Per-directory navigation anchors: pushing the current directory's
+     * position before entering a subdirectory lets Back (B) restore the
+     * exact spot in the parent, and re-entering any sibling refreshes
+     * its anchor. One anchor per directory, capped. */
+    typedef struct BrowserAnchor {
+        std::string cwd;
+        int selected;
+        int scroll;
+    } BrowserAnchor;
+
+    static std::vector<BrowserAnchor> nav_anchors;
+
+    static void PushNavAnchor(MenuItem *item) {
+        std::string cwd = cfg.cwd;
+
+        /* Keep at most one anchor per directory (the freshest). */
+        for (std::size_t i = 0; i < nav_anchors.size();) {
+            if (nav_anchors[i].cwd.compare(cwd) == 0)
+                nav_anchors.erase(nav_anchors.begin() + i);
+            else
+                i++;
+        }
+
+        BrowserAnchor anchor;
+        anchor.cwd = cwd;
+        anchor.selected = item->selected;
+        anchor.scroll = start;
+        nav_anchors.push_back(anchor);
+
+        if (nav_anchors.size() > 64)
+            nav_anchors.erase(nav_anchors.begin());
+    }
+
+    /* Restore data for the newest anchor of a directory (if any); used
+     * when navigating back (B) so the parent loads where you left it.
+     * Selection validity is checked by the caller against the loaded
+     * directory list. */
+    static int pending_anchor_selected = 0;
+    static int pending_anchor_scroll = -1;
+
+    static bool PeekNavAnchor(const std::string &cwd) {
+        for (std::size_t i = nav_anchors.size(); i-- > 0;) {
+            if (nav_anchors[i].cwd.compare(cwd) == 0) {
+                pending_anchor_selected = nav_anchors[i].selected;
+                pending_anchor_scroll = nav_anchors[i].scroll;
+                return true;
+            }
+        }
+        pending_anchor_scroll = -1;
+        return false;
+    }
+
     static std::string empty_dir = "This is an empty directory";
     static float empty_dir_width = 0.f, empty_dir_height = 0.f;
+
+    /* Clamp the scroll window for a freshly (re)loaded directory. */
+    static void setBrowserStart(MenuItem *item) {
+        int max_start = (int)item->entries.size() - static_cast<int>(max_entries);
+        if (max_start < 0)
+            max_start = 0;
+        if (start < 0)
+            start = 0;
+        start = std::min(start, max_start);
+
+        /* Keep the selection visible inside the window. */
+        if ((item->selected < start) || (item->selected >= (start + (int)max_entries))) {
+            start = std::max(0, item->selected - (int)max_entries + 1);
+        }
+    }
+
+    /* Last-session position restore runs once per GUI::Loop lifetime. */
+    void RestoreLastBrowserPosition(MenuItem *item) {
+        if (browser_position_restored)
+            return;
+
+        browser_position_restored = true;
+
+        if ((item->entries.empty()) || (cfg.last_selected >= static_cast<int>(item->entries.size())))
+            return;
+
+        int max_start = (int)item->entries.size() - static_cast<int>(max_entries);
+        if (max_start < 0)
+            max_start = 0;
+
+        item->selected = cfg.last_selected;
+        start = (cfg.last_scroll < 0)? 0 : std::min(cfg.last_scroll, max_start);
+    }
+
+    /* Mirror the live position into the config cache (cheap; Config::Save
+     * only happens on directory changes and app exit). */
+    void SaveBrowserPosition(MenuItem *item) {
+        cfg.last_selected = item->selected;
+        cfg.last_scroll = start;
+    }
 
     void DisplayFileBrowser(MenuItem *item) {
         float filename_height = 0.f;
@@ -56,6 +165,18 @@ namespace GUI {
             FileType file_type = FS::GetFileType(filename);
             if (item->entries[i].attributes & FS_ATTRIBUTE_DIRECTORY)
                 C2D::Image(cfg.dark_theme? icon_dir_dark : icon_dir, 20, start_y + (sel_dist * (i - start)));
+            else if (file_type == FileType3dsx) {
+                /* SMDH icon scaled to the list row (like hbmenu tiles, 48->16). */
+                SMDHMeta *meta = nullptr;
+                const char16_t *entry_name16 = reinterpret_cast<const char16_t *>(item->entries[i].name);
+                std::u16string path = smdh_cwd_u16;
+                path.append(entry_name16, u16len(item->entries[i].name));
+
+                if (SMDH::Peek(path, &meta) && meta->has_icon)
+                    C2D::ImageScale(meta->icon, 20, start_y + (sel_dist * (i - start)) + 2, 16.0f / 48.0f, 16.0f / 48.0f);
+                else
+                    C2D::Image(file_icons[FileTypeNone], 20, start_y + (sel_dist * (i - start)));
+            }
             else
                 C2D::Image(file_icons[file_type], 20, start_y + (sel_dist * (i - start)));
 
@@ -64,15 +185,145 @@ namespace GUI {
         }
     }
 
-    void DisplayFileBrowserBottom(void) {
+    /* Chop text to fit max_width (UTF8-aware), append ".." when cut. */
+    static std::string FitText(const std::string &text, float size, float max_width) {
+        if (text.empty())
+            return std::string();
+
+        std::string out = text;
+        float width = 0.f;
+        C2D::GetTextSize(size, &width, nullptr, out.c_str());
+        while ((width > max_width) && (out.length() > 1)) {
+            std::size_t cut = out.length() - 1;
+            while (cut && ((out[cut] & 0xC0) == 0x80)) /* keep UTF8 multibyte atoms */
+                cut--;
+            if (cut == 0)
+                cut = 1;
+            out.resize(out.length() - (out.length() - cut));
+
+            out.append("..");
+            C2D::GetTextSize(size, &width, nullptr, out.c_str());
+            if (width <= max_width)
+                break;
+            out.erase(out.length() - 2); /* still too wide: keep chopping */
+        }
+        return out;
+    }
+
+    /* UTF16 (FS names) -> UTF8, defensive: never abort on malformed names.
+     * Surrogates are dropped (exceptions are disabled in devkitARM). */
+    static std::string SafeUtf16ToUtf8(const char16_t *src, std::size_t len) {
+        std::u16string clean;
+        for (std::size_t i = 0; i < len; i++) {
+            char16_t c = src[i];
+            if ((c >= 0xD800) && (c <= 0xDFFF))
+                continue;
+            clean.push_back(c);
+        }
+
+        return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(clean);
+    }
+
+    /* ASCII-safe utf8 -> utf16 path builder for SMDH requests: cwd strings
+     * come from config json; dropping non-ASCII bytes beats aborting the
+     * whole app on a malformed cwd (devkitARM builds have no exceptions). */
+    static std::u16string ToUtf16Path(const std::string &path) {
+        std::u16string clean;
+        for (std::size_t i = 0; i < path.length(); i++) {
+            unsigned char c = (unsigned char)path[i];
+            if (c & 0x80)
+                continue;
+            clean.push_back((char16_t)c);
+        }
+        return clean;
+    }
+
+    /* SMDH decode trigger — runs in the control phase (outside the C3D frame).
+     * Feeds the whole visible window (plus selection) to the one-decode-per-
+     * frame LRU pump. */
+    static void ControlSmdhPanel(MenuItem *item) {
+        smdh_cwd_u16 = ToUtf16Path(cfg.cwd);
+        if ((item->entries.empty()) ||
+            (item->selected >= static_cast<int>(item->entries.size())))
+            return;
+
+        std::vector<std::u16string> wanted;
+
+        u32 last = (item->entries.size() < (u32)(start + max_entries))?
+            item->entries.size() : (u32)(start + max_entries);
+        for (u32 i = start; i < last; i++) {
+            if (item->entries[i].attributes & FS_ATTRIBUTE_DIRECTORY)
+                continue;
+
+            std::u16string path = smdh_cwd_u16;
+            const char16_t *name16 = reinterpret_cast<const char16_t *>(item->entries[i].name);
+            path.append(name16, u16len(item->entries[i].name));
+            if (FS::GetFileType(SafeUtf16ToUtf8(reinterpret_cast<const char16_t *>(item->entries[i].name), u16len(item->entries[i].name))) != FileType3dsx)
+                continue;
+
+            wanted.push_back(path);
+        }
+
+        /* Always keep the selected entry decoded for the bottom panel. */
+        std::u16string sel_path = smdh_cwd_u16;
+        const char16_t *sel_name16 = reinterpret_cast<const char16_t *>(item->entries[item->selected].name);
+        sel_path.append(sel_name16, u16len(item->entries[item->selected].name));
+        if (FS::GetFileType(SafeUtf16ToUtf8(reinterpret_cast<const char16_t *>(item->entries[item->selected].name), u16len(item->entries[item->selected].name))) == FileType3dsx) {
+            bool listed = false;
+            for (const std::u16string &p : wanted)
+                if (p.compare(sel_path) == 0)
+                    listed = true;
+            if (!listed)
+                wanted.push_back(sel_path);
+        }
+
+        if (!wanted.empty())
+            SMDH::Pump(wanted);
+    }
+
+    /* SMDH info panel for the selected .3dsx entry (icon + name/desc/publisher). */
+    static void DisplaySmdhPanel(MenuItem *item) {
+        if ((item->entries.empty()) || smdh_cwd_u16.empty() ||
+            (item->selected >= static_cast<int>(item->entries.size())))
+            return;
+
+        const std::u16string entry_name(
+            reinterpret_cast<const char16_t *>(item->entries[item->selected].name),
+            u16len(item->entries[item->selected].name));
+        if (FS::GetFileType(SafeUtf16ToUtf8(entry_name.data(), entry_name.size())) != FileType3dsx)
+            return;
+
+        SMDHMeta *meta = nullptr;
+        if (!SMDH::Peek(smdh_cwd_u16 + entry_name, &meta))
+            return;
+
+        u32 dim = cfg.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT;
+        float x = 16;
+
+        if (meta->has_icon)
+            C2D::Image(meta->icon, x, 26);
+
+        if (!meta->name.empty())
+            C2D::Text((meta->has_icon? x + 56 : x), 26, 0.45f, cfg.dark_theme? WHITE : BLACK, FitText(SafeUtf16ToUtf8(meta->name.data(), meta->name.size()), 0.45f, 232).c_str());
+
+        if (!meta->description.empty())
+            C2D::Text((meta->has_icon? x + 56 : x), 44, 0.35f, dim, FitText(meta->description, 0.35f, 232).c_str());
+
+        if (!meta->publisher.empty())
+            C2D::Text((meta->has_icon? x + 56 : x), 58, 0.35f, dim, FitText(meta->publisher, 0.35f, 232).c_str());
+    }
+
+    void DisplayFileBrowserBottom(MenuItem *item) {
+        DisplaySmdhPanel(item);
+
         // Grid of 4 buttons on bottom screen
-        const char* button_texts[4] = {"Nuevo Archivo", "Nueva Carpeta", "Propiedades", "Renombrar"};
-        static float button_widths[4] = {0};
-        static float button_heights[4] = {0};
+        const char* button_texts[5] = {"Nuevo Archivo", "Nueva Carpeta", "Propiedades", "Renombrar", "NetLoader"};
+        static float button_widths[5] = {0};
+        static float button_heights[5] = {0};
         static bool sizes_calculated = false;
 
         if (!sizes_calculated) {
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < 5; i++) {
                 C2D::GetTextSize(0.4f, &button_widths[i], &button_heights[i], button_texts[i]);
             }
             sizes_calculated = true;
@@ -93,7 +344,7 @@ namespace GUI {
 
                 // Draw button background
                 C2D::Rect(x, y, button_width, button_height, cfg.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
-                
+
                 // Draw button text centered
                 float text_x = x + (button_width - button_widths[index]) / 2;
                 float text_y = y + (button_height - button_heights[index]) / 2;
@@ -101,11 +352,17 @@ namespace GUI {
             }
         }
 
-        // NetLoader hint (SELECT key), centered below the button grid
-        static const char* hint_text = "3ds netloader - <select>";
-        float hint_width = 0.f, hint_height = 0.f;
-        C2D::GetTextSize(0.4f, &hint_width, &hint_height, hint_text);
-        C2D::Text(((320 - hint_width) / 2), 140 + margin, 0.4f, cfg.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, hint_text);
+        // NetLoader button below the 2x2 grid, full-grid width; SELECT also opens it
+        float netloader_x = start_x;
+        float netloader_y = start_y + 2 * (button_height + margin);
+        C2D::Rect(netloader_x, netloader_y, (2 * button_width + margin), button_height, cfg.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
+        C2D::Text(netloader_x + ((2 * button_width + margin) - button_widths[4]) / 2,
+            netloader_y + (button_height - button_heights[4]) / 2, 0.4f, cfg.dark_theme? WHITE : BLACK, button_texts[4]);
+    }
+
+    static void RunNetLoader(void) {
+        if (NetLoader::Run() == NL_NOCHAIN)
+            GUI::ProgressBar("NetLoader", "No chainloader available", 0, 1);
     }
 
     static void CreateFolder(MenuItem *item) {
@@ -183,10 +440,22 @@ namespace GUI {
                     }
                 }
             }
+
+            // NetLoader button (below the grid, full-grid width)
+            float netloader_x = start_x;
+            float netloader_y = start_y + 2 * (button_height + margin);
+            if (Touch::Rect(netloader_x, netloader_y, netloader_x + (2 * button_width + margin),
+                netloader_y + button_height)) {
+                RunNetLoader();
+            }
         }
     }
 
     void ControlFileBrowser(MenuItem *item, u32 *kDown, u32 *kHeld) {
+        /* Decode SMDH metadata/icon for the selected .3dsx (control phase
+         * only — the draw phase never touches FS/GX). */
+        ControlSmdhPanel(item);
+
         u32 size = (item->entries.size() - 1);
         Utils::SetBounds(&item->selected, 0, size);
 
@@ -233,6 +502,10 @@ namespace GUI {
 
             if (item->entries[item->selected].attributes & FS_ATTRIBUTE_DIRECTORY) {
                 if (item->entries.size() != 0) {
+                    /* Anchor the current position before entering, so
+                     * Back (B) returns exactly here. */
+                    PushNavAnchor(item);
+
                     if (R_SUCCEEDED(FS::ChangeDirNext(filename, item->entries))) {
                         start = 0;
                         // Make a copy before resizing our vector.
@@ -241,6 +514,10 @@ namespace GUI {
                         
                         item->checked.resize(item->entries.size());
                         item->selected = 0;
+
+                        /* Fresh position for the new directory. */
+                        cfg.last_selected = 0;
+                        cfg.last_scroll = 0;
                     }
                 }
             }
@@ -278,14 +555,33 @@ namespace GUI {
             }
         }
         else if (*kDown & KEY_B) {
+            /* Settle the child's live position before going up; the config
+             * snapshot of this session happens on app exit. */
+            GUI::SaveBrowserPosition(item);
+
             if (R_SUCCEEDED(FS::ChangeDirPrev(item->entries))) {
                 // Make a copy before resizing our vector.
                 if (item->checked_count > 1)
                     item->checked_copy = item->checked;
-                    
+
                 item->checked.resize(item->entries.size());
-                item->selected = 0;
-                start = 0;
+
+                /* Re-anchor to how this directory was left by entering it
+                 * (fall back to its top when there's no anchor). */
+                bool restored = PeekNavAnchor(cfg.cwd);
+                if (restored) {
+                    item->selected = pending_anchor_selected;
+                    if ((item->selected < 0) ||
+                        (item->selected >= static_cast<int>(item->entries.size())))
+                        item->selected = 0;
+                    setBrowserStart(item);
+                } else {
+                    item->selected = 0;
+                    setBrowserStart(item);
+                }
+
+                cfg.last_selected = item->selected;
+                cfg.last_scroll = start;
             }
         }
         else if (*kDown & KEY_Y) {
@@ -296,11 +592,13 @@ namespace GUI {
             item->checked.at(item->selected) = !item->checked.at(item->selected);
             item->checked_count = std::count(item->checked.begin(), item->checked.end(), true);
         }
-        else if (*kDown & KEY_SELECT) {
-            if (NetLoader::Run() == NL_NOCHAIN)
-                GUI::ProgressBar("NetLoader", "No chainloader available", 0, 1);
-        }
+        else if (*kDown & KEY_SELECT)
+            RunNetLoader();
         else if (*kDown & KEY_X)
             item->state = MENU_STATE_OPTIONS;
+
+        /* Mirror the live position into the config cache every control
+         * frame; Config::Save only happens on dir changes / app exit. */
+        GUI::SaveBrowserPosition(item);
     }
 }

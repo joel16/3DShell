@@ -9,6 +9,8 @@ typedef struct {
 	bool dev_options = false;
 	bool dark_theme = false;
 	std::string cwd;
+	int last_selected = 0;
+	int last_scroll = 0;
 } config_t;
 
 extern config_t cfg;

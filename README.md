@@ -8,6 +8,14 @@ Purpose:
   <img src="https://i.imgur.com/e9I3sBc.png" alt="3DShell Screenshot"/>
 </p>
 
+Using as boot.3dsx (Homebrew Launcher replacement):
+--------------------------------------------------------------------------------
+3DShell can replace the stock Homebrew Launcher. Copy the `3DShell.3dsx` binary to the root of your SD card and rename it to `boot.3dsx` (`sdmc:/boot.3dsx`). It will now start instead of the Homebrew Launcher.
+
+On top of the file management features, it also acts as your homebrew menu:
+- Navigate to any `.3dsx` file and press A to run it.
+- Press SELECT in the file browser to open the netloader and send payloads from your PC over the network with `3dslink`. It waits for a Wi-Fi connection, shows the device `ip:port` and live transfer speed; received files are stored in `sdmc:/3ds/`.
+
 Current features:
 --------------------------------------------------------------------------------
 - Storage bar (at the very top, just beneath the current working directory).
