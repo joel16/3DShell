@@ -11,7 +11,7 @@ namespace OSK {
         static SwkbdStatusData swkbdStatus;
         static SwkbdLearningData swkbdLearning;
         bool reload = false;
-        char input_string[256];
+        char input_string[256] = {};
         
         swkbdInit(&swkbd, SWKBD_TYPE_NORMAL, 2, 256);
         

@@ -20,7 +20,7 @@ namespace C2D {
     }
     
     void Textf(float x, float y, float size, u32 colour, const char* text, ...) {
-        char buffer[256];
+        char buffer[256] = {};
         va_list args;
         va_start(args, text);
         vsnprintf(buffer, 256, text, args);

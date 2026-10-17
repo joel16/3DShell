@@ -168,7 +168,7 @@ static int NL_RunTransfer(int datafd) {
     s32 namelen = 0;
     s32 filelen = 0;
     s32 response = -1;
-    char name[256];
+    char name[256] = {};
     Handle file = 0;
 
     if (!NL_WaitAll(datafd, &namelen, sizeof(namelen)) || (namelen <= 0) || (namelen >= (s32)sizeof(name))) {
@@ -257,7 +257,7 @@ NetLoaderResult NetLoader::Run(void) {
     NetLoaderResult result = NL_CANCELLED;
     struct sockaddr_in addr;
     struct sockaddr_in udp_remote;
-    char recvbuf[64];
+    char recvbuf[64] = {};
     socklen_t remotelen = sizeof(udp_remote);
 
     if (R_FAILED(Net::Init())) {
