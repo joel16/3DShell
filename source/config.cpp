@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <algorithm>
 #include <jansson.h>
 #include <string>
 
@@ -11,14 +12,14 @@
 config_t cfg;
 
 namespace Config {
-    static const char *config_file = "{\n\t\"config_ver\": %d,\n\t\"sort\": %d,\n\t\"dev_options\": %d,\n\t\"dark_theme\": %d,\n\t\"last_dir\": \"%s\"\n}";
+    static const char *config_file = "{\n\t\"config_ver\": %d,\n\t\"sort\": %d,\n\t\"dev_options\": %d,\n\t\"dark_theme\": %d,\n\t\"last_dir\": \"%s\",\n\t\"last_selected\": %d,\n\t\"last_scroll\": %d\n}";
     static int config_version_holder = 0;
     static std::string config_path = "/3ds/3DShell/config.json";
     
     int Save(config_t config) {
         Result ret = 0;
         char *buf = new char[1024];
-        u32 length = std::snprintf(buf, 1024, config_file, CONFIG_VERSION, config.sort, config.dev_options, config.dark_theme, config.cwd.c_str());
+        u32 length = std::snprintf(buf, 1024, config_file, CONFIG_VERSION, config.sort, config.dev_options, config.dark_theme, config.cwd.c_str(), config.last_selected, config.last_scroll);
         
         // Delete and re-create the file, we don't care about the return value here.
         FSUSER_DeleteFile(sdmc_archive, fsMakePath(PATH_ASCII, config_path.c_str()));
@@ -120,8 +121,23 @@ namespace Config {
         json_t *last_dir = json_object_get(root, "last_dir");
         cfg.cwd = json_string_value(last_dir);
 
-        if (!FS::DirExists(sdmc_archive, cfg.cwd))
+        json_t *last_selected = json_object_get(root, "last_selected");
+        json_int_t selected = json_integer_value(last_selected);
+        if (selected < 0)
+            selected = 0;
+        cfg.last_selected = static_cast<int>(selected);
+        
+        json_t *last_scroll = json_object_get(root, "last_scroll");
+        json_int_t scroll = json_integer_value(last_scroll);
+        if (scroll < 0)
+            scroll = 0;
+        cfg.last_scroll = static_cast<int>(scroll);
+
+        if (!FS::DirExists(sdmc_archive, cfg.cwd)) {
             cfg.cwd = "/";
+            cfg.last_selected = 0;
+            cfg.last_scroll = 0;
+        }
             
         // Delete config file if config file is updated. This will rarely happen.
         if (config_version_holder < CONFIG_VERSION) {

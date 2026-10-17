@@ -23,6 +23,9 @@ namespace GUI {
      * and the bottom SMDH panel can address entries by full UTF16 path. */
     static std::u16string smdh_cwd_u16;
 
+    /* Last-session position restore runs once per GUI::Loop lifetime. */
+    static bool browser_position_restored = false;
+
     /* UTF16 strlen (entries carry fixed 262-char name arrays). */
     static std::size_t u16len(const u16 *src) {
         std::size_t len = 0;
@@ -37,8 +40,100 @@ namespace GUI {
     static int start = 0;
     static u64 timestamp = 0;
 
+    /* Per-directory navigation anchors: pushing the current directory's
+     * position before entering a subdirectory lets Back (B) restore the
+     * exact spot in the parent, and re-entering any sibling refreshes
+     * its anchor. One anchor per directory, capped. */
+    typedef struct BrowserAnchor {
+        std::string cwd;
+        int selected;
+        int scroll;
+    } BrowserAnchor;
+
+    static std::vector<BrowserAnchor> nav_anchors;
+
+    static void PushNavAnchor(MenuItem *item) {
+        std::string cwd = cfg.cwd;
+
+        /* Keep at most one anchor per directory (the freshest). */
+        for (std::size_t i = 0; i < nav_anchors.size();) {
+            if (nav_anchors[i].cwd.compare(cwd) == 0)
+                nav_anchors.erase(nav_anchors.begin() + i);
+            else
+                i++;
+        }
+
+        BrowserAnchor anchor;
+        anchor.cwd = cwd;
+        anchor.selected = item->selected;
+        anchor.scroll = start;
+        nav_anchors.push_back(anchor);
+
+        if (nav_anchors.size() > 64)
+            nav_anchors.erase(nav_anchors.begin());
+    }
+
+    /* Restore data for the newest anchor of a directory (if any); used
+     * when navigating back (B) so the parent loads where you left it.
+     * Selection validity is checked by the caller against the loaded
+     * directory list. */
+    static int pending_anchor_selected = 0;
+    static int pending_anchor_scroll = -1;
+
+    static bool PeekNavAnchor(const std::string &cwd) {
+        for (std::size_t i = nav_anchors.size(); i-- > 0;) {
+            if (nav_anchors[i].cwd.compare(cwd) == 0) {
+                pending_anchor_selected = nav_anchors[i].selected;
+                pending_anchor_scroll = nav_anchors[i].scroll;
+                return true;
+            }
+        }
+        pending_anchor_scroll = -1;
+        return false;
+    }
+
     static std::string empty_dir = "This is an empty directory";
     static float empty_dir_width = 0.f, empty_dir_height = 0.f;
+
+    /* Clamp the scroll window for a freshly (re)loaded directory. */
+    static void setBrowserStart(MenuItem *item) {
+        int max_start = (int)item->entries.size() - static_cast<int>(max_entries);
+        if (max_start < 0)
+            max_start = 0;
+        if (start < 0)
+            start = 0;
+        start = std::min(start, max_start);
+
+        /* Keep the selection visible inside the window. */
+        if ((item->selected < start) || (item->selected >= (start + (int)max_entries))) {
+            start = std::max(0, item->selected - (int)max_entries + 1);
+        }
+    }
+
+    /* Last-session position restore runs once per GUI::Loop lifetime. */
+    void RestoreLastBrowserPosition(MenuItem *item) {
+        if (browser_position_restored)
+            return;
+
+        browser_position_restored = true;
+
+        if ((item->entries.empty()) || (cfg.last_selected >= static_cast<int>(item->entries.size())))
+            return;
+
+        int max_start = (int)item->entries.size() - static_cast<int>(max_entries);
+        if (max_start < 0)
+            max_start = 0;
+
+        item->selected = cfg.last_selected;
+        start = (cfg.last_scroll < 0)? 0 : std::min(cfg.last_scroll, max_start);
+    }
+
+    /* Mirror the live position into the config cache (cheap; Config::Save
+     * only happens on directory changes and app exit). */
+    void SaveBrowserPosition(MenuItem *item) {
+        cfg.last_selected = item->selected;
+        cfg.last_scroll = start;
+    }
 
     void DisplayFileBrowser(MenuItem *item) {
         float filename_height = 0.f;
@@ -407,6 +502,10 @@ namespace GUI {
 
             if (item->entries[item->selected].attributes & FS_ATTRIBUTE_DIRECTORY) {
                 if (item->entries.size() != 0) {
+                    /* Anchor the current position before entering, so
+                     * Back (B) returns exactly here. */
+                    PushNavAnchor(item);
+
                     if (R_SUCCEEDED(FS::ChangeDirNext(filename, item->entries))) {
                         start = 0;
                         // Make a copy before resizing our vector.
@@ -415,6 +514,10 @@ namespace GUI {
                         
                         item->checked.resize(item->entries.size());
                         item->selected = 0;
+
+                        /* Fresh position for the new directory. */
+                        cfg.last_selected = 0;
+                        cfg.last_scroll = 0;
                     }
                 }
             }
@@ -452,14 +555,33 @@ namespace GUI {
             }
         }
         else if (*kDown & KEY_B) {
+            /* Settle the child's live position before going up; the config
+             * snapshot of this session happens on app exit. */
+            GUI::SaveBrowserPosition(item);
+
             if (R_SUCCEEDED(FS::ChangeDirPrev(item->entries))) {
                 // Make a copy before resizing our vector.
                 if (item->checked_count > 1)
                     item->checked_copy = item->checked;
-                    
+
                 item->checked.resize(item->entries.size());
-                item->selected = 0;
-                start = 0;
+
+                /* Re-anchor to how this directory was left by entering it
+                 * (fall back to its top when there's no anchor). */
+                bool restored = PeekNavAnchor(cfg.cwd);
+                if (restored) {
+                    item->selected = pending_anchor_selected;
+                    if ((item->selected < 0) ||
+                        (item->selected >= static_cast<int>(item->entries.size())))
+                        item->selected = 0;
+                    setBrowserStart(item);
+                } else {
+                    item->selected = 0;
+                    setBrowserStart(item);
+                }
+
+                cfg.last_selected = item->selected;
+                cfg.last_scroll = start;
             }
         }
         else if (*kDown & KEY_Y) {
@@ -474,5 +596,9 @@ namespace GUI {
             RunNetLoader();
         else if (*kDown & KEY_X)
             item->state = MENU_STATE_OPTIONS;
+
+        /* Mirror the live position into the config cache every control
+         * frame; Config::Save only happens on dir changes / app exit. */
+        GUI::SaveBrowserPosition(item);
     }
 }

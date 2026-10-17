@@ -214,9 +214,9 @@ namespace FS {
         entries.clear();
         cfg.cwd = path;
 
-        if (archive == sdmc_archive)
-            Config::Save(cfg);
-        
+        /* Position persistence is handled by the caller (filebrowser),
+         * which knows the selected/scroll state for the old directory. */
+
         entries = new_entries;
         return 0;
     }

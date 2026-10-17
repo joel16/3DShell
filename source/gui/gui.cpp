@@ -160,6 +160,7 @@ namespace GUI {
             
         GUI::ResetCheckbox(&item);
         GUI::RecalcStorageSize(&item);
+        GUI::RestoreLastBrowserPosition(&item);
 
         u64 last_time = osGetTime(), current_time = 0;
 
@@ -282,6 +283,12 @@ namespace GUI {
         }
 
         item.entries.clear();
-        return 0;
+
+        /* Persist the browse position for the next session. */
+        GUI::SaveBrowserPosition(&item);
+        if (archive == sdmc_archive)
+            Config::Save(cfg);
+
+        return ret;
     }
 }
