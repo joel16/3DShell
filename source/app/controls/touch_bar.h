@@ -8,15 +8,20 @@
 #include <textures.h>
 
 #include <container_control.h>
-#include <touch_button.h>
+#include <layout.h>
+
+#include "touch_button.h"
 #include <c2d_helper.h>
 #include <colours.h>
 
 namespace GUI {
 
-/* Bottom screen chrome: background bar + six icon buttons. Owns the
- * hit zones; each button fires its own event on release. Overlay
- * highlights derive from the current section and the active archive. */
+/* Bottom screen chrome: background bar + six icon buttons laid out in
+ * two groups. LEFT group flows from the left edge (home, options,
+ * settings); RIGHT group is anchored to the right edge (sd, secure,
+ * search). Hiding a button re-packs the group. Each button fires its
+ * own event on release; overlay highlights derive from the current
+ * section and the active archive. */
 class TouchBar : public UI::ContainerControl {
 public:
     enum Section {
@@ -29,12 +34,12 @@ public:
     TouchBar() {
         bounds_ = UI::Rect{0.0f, 0.0f, 320.0f, 20.0f};
 
-        auto home = std::make_unique<TouchButton>(icon_home, icon_home_dark, icon_home_overlay, UI::Rect{0, 0, 23, 20}, 2.0f);
-        auto options = std::make_unique<TouchButton>(icon_options, icon_options_dark, icon_options_overlay, UI::Rect{23, 0, 47, 20}, 25.0f);
-        auto settings = std::make_unique<TouchButton>(icon_settings, icon_settings_dark, icon_settings_overlay, UI::Rect{48, 0, 72, 20}, 50.0f);
-        auto sd = std::make_unique<TouchButton>(icon_sd, icon_sd_dark, icon_sd_overlay, UI::Rect{247, 0, 272, 20}, 250.0f);
-        auto secure = std::make_unique<TouchButton>(icon_secure, icon_secure_dark, icon_secure_overlay, UI::Rect{273, 0, 292, 20}, 275.0f);
-        auto search = std::make_unique<TouchButton>(icon_search, icon_search, icon_search, UI::Rect{293, 0, 320, 20}, 300.0f);
+        auto home = std::make_unique<TouchButton>(icon_home, icon_home_dark, icon_home_overlay);
+        auto options = std::make_unique<TouchButton>(icon_options, icon_options_dark, icon_options_overlay);
+        auto settings = std::make_unique<TouchButton>(icon_settings, icon_settings_dark, icon_settings_overlay);
+        auto sd = std::make_unique<TouchButton>(icon_sd, icon_sd_dark, icon_sd_overlay);
+        auto secure = std::make_unique<TouchButton>(icon_secure, icon_secure_dark, icon_secure_overlay);
+        auto search = std::make_unique<TouchButton>(icon_search, icon_search, icon_search);
 
         home_ = home.get();
         options_ = options.get();
@@ -49,6 +54,18 @@ public:
         Add(std::move(sd));
         Add(std::move(secure));
         Add(std::move(search));
+
+        left_items_ = {
+            { home_, home_->IntrinsicWidth() },
+            { options_, options_->IntrinsicWidth() },
+            { settings_, settings_->IntrinsicWidth() }
+        };
+
+        right_items_ = {
+            { sd_, sd_->IntrinsicWidth() },
+            { secure_, secure_->IntrinsicWidth() },
+            { search_, search_->IntrinsicWidth() }
+        };
     }
 
     void Draw() override {
@@ -63,6 +80,8 @@ public:
         secure_->SetVisible(cfg.dev_options);
         secure_->SetActive(archive == nand_archive);
 
+        Reflow();
+
         ContainerControl::Draw();
     }
 
@@ -76,6 +95,16 @@ public:
     TouchButton &Search() { return *search_; }
 
 private:
+    void Reflow() {
+        const float y = bounds_.y;
+        const float height = bounds_.h;
+        const float margin = 2.0f;
+        const float gap = 4.0f;
+
+        UI::FlowLayout::Flow(left_items_, y, height, bounds_.x + margin, gap, false);
+        UI::FlowLayout::Flow(right_items_, y, height, bounds_.x + bounds_.w - margin, gap, true);
+    }
+
     Section section_ = SECTION_NONE;
     TouchButton *home_ = nullptr;
     TouchButton *options_ = nullptr;
@@ -83,6 +112,8 @@ private:
     TouchButton *sd_ = nullptr;
     TouchButton *secure_ = nullptr;
     TouchButton *search_ = nullptr;
+    std::vector<UI::FlowLayout::Item> left_items_;
+    std::vector<UI::FlowLayout::Item> right_items_;
 };
 
 }

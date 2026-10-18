@@ -66,17 +66,20 @@ top chrome (`FileBrowserScreen`, `TextReaderScreen`).
 
 Class: `source/app/controls/touch_bar.h`. A `UI::ContainerControl` holding
 six `GUI::TouchButton` children (icon button with light/dark/active variants
-and a `Click` event). Hit testing and touch capture are handled by the
-container tree — no hard-coded zones.
+and a `Click` event), laid out by `UI::FlowLayout` in two groups: the LEFT
+group flows from the left edge, the RIGHT group is anchored to the right
+edge. Invisible buttons are skipped by the layout, so the group re-packs
+(no dead gaps). Hit testing and touch capture are handled by the container
+tree — no hard-coded zones.
 
-| Button | Zone | Event | Overlay (active) when |
+| Button | Group | Event | Overlay (active) when |
 |---|---|---|---|
-| Home | (0, 0, 23, 20) | `Home().Click` | `section == SECTION_BROWSER` |
-| Options | (23, 0, 47, 20) | `Options().Click` | `section == SECTION_ACTIONS` |
-| Settings | (48, 0, 72, 20) | `Settings().Click` | `section == SECTION_SETTINGS` |
-| SD card | (247, 0, 272, 20) | `SD().Click` | `archive == sdmc_archive` |
-| NAND (secure) | (273, 0, 292, 20) | `Secure().Click` | `archive == nand_archive` (needs `cfg.dev_options` to switch) |
-| Search | (293, 0, 320, 20) | `Search().Click` | — |
+| Home | LEFT | `Home().Click` | `section == SECTION_BROWSER` |
+| Options | LEFT | `Options().Click` | `section == SECTION_ACTIONS` |
+| Settings | LEFT | `Settings().Click` | `section == SECTION_SETTINGS` |
+| SD card | RIGHT | `SD().Click` | `archive == sdmc_archive` |
+| NAND (secure) | RIGHT | `Secure().Click` | `archive == nand_archive` (needs `cfg.dev_options` to switch) |
+| Search | RIGHT | `Search().Click` | — |
 
 `TouchBar::SetSection()` controls which button shows its overlay variant;
 screens wire the `Click` events to their own actions (the browser pushes
