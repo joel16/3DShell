@@ -25,7 +25,11 @@ namespace FS {
     u64 GetTotalStorage(FS_SystemMediaType mediatype);
     u64 GetUsedStorage(FS_SystemMediaType mediatype);
     FileType GetFileType(const std::string &filename);
-    Result GetDirList(const std::string &path, std::vector<FS_DirectoryEntry> &entries);
+    Result GetDirList(const std::string &path, std::vector<FS_DirectoryEntry> &entries, int file_filter = -1);
+
+    /* Incremented on every directory listing refresh; consumers that cache
+     * per-entry data (filebrowser draw cache) use it for invalidation. */
+    extern u32 dirlist_epoch;
     Result ChangeDirNext(const std::string &path, std::vector<FS_DirectoryEntry> &entries);
     Result ChangeDirPrev(std::vector<FS_DirectoryEntry> &entries);
     Result Delete(FS_DirectoryEntry *entry);

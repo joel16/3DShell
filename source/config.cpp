@@ -12,14 +12,14 @@
 config_t cfg;
 
 namespace Config {
-    static const char *config_file = "{\n\t\"config_ver\": %d,\n\t\"sort\": %d,\n\t\"dev_options\": %d,\n\t\"dark_theme\": %d,\n\t\"last_dir\": \"%s\",\n\t\"last_selected\": %d,\n\t\"last_scroll\": %d\n}";
+    static const char *config_file = "{\n\t\"config_ver\": %d,\n\t\"sort\": %d,\n\t\"dev_options\": %d,\n\t\"dark_theme\": %d,\n\t\"last_dir\": \"%s\",\n\t\"last_selected\": %d,\n\t\"last_scroll\": %d,\n\t\"filter\": %d\n}";
     static int config_version_holder = 0;
     static std::string config_path = "/3ds/3DShell/config.json";
     
     int Save(config_t config) {
         Result ret = 0;
         char *buf = new char[1024];
-        u32 length = std::snprintf(buf, 1024, config_file, CONFIG_VERSION, config.sort, config.dev_options, config.dark_theme, config.cwd.c_str(), config.last_selected, config.last_scroll);
+        u32 length = std::snprintf(buf, 1024, config_file, CONFIG_VERSION, config.sort, config.dev_options, config.dark_theme, config.cwd.c_str(), config.last_selected, config.last_scroll, config.filter);
         
         // Delete and re-create the file, we don't care about the return value here.
         FSUSER_DeleteFile(sdmc_archive, fsMakePath(PATH_ASCII, config_path.c_str()));
@@ -132,6 +132,12 @@ namespace Config {
         if (scroll < 0)
             scroll = 0;
         cfg.last_scroll = static_cast<int>(scroll);
+
+        json_t *filter = json_object_get(root, "filter");
+        json_int_t filter_value = json_integer_value(filter);
+        if (filter_value < -1)
+            filter_value = -1;
+        cfg.filter = static_cast<int>(filter_value);
 
         if (!FS::DirExists(sdmc_archive, cfg.cwd)) {
             cfg.cwd = "/";

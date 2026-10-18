@@ -11,6 +11,7 @@ typedef struct {
 	std::string cwd;
 	int last_selected = 0;
 	int last_scroll = 0;
+	int filter = -1; /* -1 = show everything; else FileType id */
 } config_t;
 
 extern config_t cfg;
