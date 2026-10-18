@@ -43,34 +43,21 @@ namespace GUI {
         : scroll_bar_(UI::Rect{395.0f, 40.0f, 4.0f, 200.0f}, BAR_COLOUR, TITLE_COLOUR) {
         SetTopBackground(cfg.dark_theme? BLACK_BG : WHITE);
         SetBottomBackground(cfg.dark_theme? MENU_BAR_DARK : STATUS_BAR_LIGHT);
+        touch_bar_.SetSection(TouchBar::SECTION_BROWSER);
 
-        touch_bar_.Home().Click = [this]() {
-            if (dialog_open_) {
-                dialog_open_ = false;
-                touch_bar_.SetSection(TouchBar::SECTION_BROWSER);
-                UI::ScreenManager::Instance().Pop();
-            }
+        touch_bar_.AddButton(TouchBar::ICON_HOME, false).Click = [this]() {
+            UI::ScreenManager::Instance().Pop();
         };
 
-        touch_bar_.Options().Click = [this]() {
-            if (dialog_open_) {
-                dialog_open_ = false;
-                UI::ScreenManager::Instance().Pop();
-            }
-            touch_bar_.SetSection(TouchBar::SECTION_ACTIONS);
+        touch_bar_.AddButton(TouchBar::ICON_OPTIONS, false).Click = [this]() {
             PushOptions();
         };
 
-        touch_bar_.Settings().Click = [this]() {
-            if (dialog_open_) {
-                dialog_open_ = false;
-                UI::ScreenManager::Instance().Pop();
-            }
-            touch_bar_.SetSection(TouchBar::SECTION_SETTINGS);
+        touch_bar_.AddButton(TouchBar::ICON_SETTINGS, false).Click = [this]() {
             PushSettings();
         };
 
-        touch_bar_.SD().Click = [this]() {
+        touch_bar_.AddButton(TouchBar::ICON_SD, true).Click = [this]() {
             if (archive != sdmc_archive) {
                 archive = sdmc_archive;
                 cfg.cwd = "/";
@@ -80,7 +67,7 @@ namespace GUI {
             }
         };
 
-        touch_bar_.Secure().Click = [this]() {
+        touch_bar_.AddButton(TouchBar::ICON_NAND, true).Click = [this]() {
             if ((archive != nand_archive) && (cfg.dev_options)) {
                 archive = nand_archive;
                 cfg.cwd = "/";
@@ -90,7 +77,7 @@ namespace GUI {
             }
         };
 
-        touch_bar_.Search().Click = [this]() {
+        touch_bar_.AddButton(TouchBar::ICON_SEARCH, true).Click = [this]() {
             std::string path = OSK::GetText("/", "Enter file path");
             path.append((path.back() != '/')? "/" : "");
             if (FS::DirExists(archive, path)) {
@@ -361,13 +348,13 @@ namespace GUI {
     }
 
     void FileBrowserScreen::DisplayActionGrid() {
-        const char *button_texts[5] = {"New File", "New Folder", "Properties", "Rename", "NetLoader"};
-        static float button_widths[5] = {0};
-        static float button_heights[5] = {0};
+        const char *button_texts[4] = {"New File", "New Folder", "Properties", "Rename"};
+        static float button_widths[4] = {0};
+        static float button_heights[4] = {0};
         static bool sizes_calculated = false;
 
         if (!sizes_calculated) {
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 4; i++)
                 C2D::GetTextSize(0.4f, &button_widths[i], &button_heights[i], button_texts[i]);
             sizes_calculated = true;
         }
@@ -391,11 +378,6 @@ namespace GUI {
                 C2D::Text(text_x, text_y, 0.4f, cfg.dark_theme? WHITE : BLACK, button_texts[index]);
             }
         }
-
-        float netloader_y = grid_y + 2 * (button_height + margin);
-        C2D::Rect(grid_x, netloader_y, (2 * button_width + margin), button_height, cfg.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
-        C2D::Text(grid_x + ((2 * button_width + margin) - button_widths[4]) / 2,
-            netloader_y + (button_height - button_heights[4]) / 2, 0.4f, cfg.dark_theme? WHITE : BLACK, button_texts[4]);
     }
 
     void FileBrowserScreen::DrawTop() {
@@ -482,11 +464,6 @@ namespace GUI {
         Touch::Update();
     }
 
-    void FileBrowserScreen::RunNetLoader() {
-        if (NetLoader::Run() == NL_NOCHAIN)
-            GUI::ProgressBar("NetLoader", "No chainloader available", 0, 1);
-    }
-
     void FileBrowserScreen::RefreshListing() {
         FS::GetDirList(cfg.cwd, item_.entries, cfg.filter);
         ResetCheckbox(&item_);
@@ -530,8 +507,12 @@ namespace GUI {
     }
 
     void FileBrowserScreen::PushSettings() {
-        touch_bar_.SetSection(TouchBar::SECTION_SETTINGS);
-        OpenDialog(std::make_unique<SettingsScreen>(this, &item_));
+        auto settings = std::make_unique<SettingsScreen>(this);
+        settings->ListingChanged = [this]() {
+            RefreshListing();
+            SetBrowserStart();
+        };
+        OpenDialog(std::move(settings));
     }
 
     void FileBrowserScreen::OnKeyDown(u32 k_down) {
@@ -682,8 +663,6 @@ namespace GUI {
             item_.checked.at(item_.selected) = !item_.checked.at(item_.selected);
             item_.checked_count = std::count(item_.checked.begin(), item_.checked.end(), true);
         }
-        else if (k_down & KEY_SELECT)
-            RunNetLoader();
         else if (k_down & KEY_X) {
             PushOptions();
             return;
@@ -731,14 +710,6 @@ namespace GUI {
                     return;
                 }
             }
-        }
-
-        // NetLoader button (below the grid, full-grid width)
-        float netloader_x = grid_x;
-        float netloader_y = grid_y + 2 * (button_height + margin);
-        if (Touch::Rect(netloader_x, netloader_y, netloader_x + (2 * button_width + margin),
-            netloader_y + button_height)) {
-            RunNetLoader();
         }
     }
 

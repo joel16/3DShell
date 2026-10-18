@@ -1,23 +1,22 @@
 // netloader — 3dslink receiver (hbmenu-compatible protocol).
 //
-// Wire protocol (devkitPro/3dslink, confirmed against hbmenu 1.x
-// source/netloader.c and the 3dslink host implementation):
-//   1. UDP 17491: host broadcasts "3dsboot" (source port = its recv
-//      socket, also 17491); device answers "boot3ds" on port 17491.
-//   2. TCP 17491: one connection per transfer. Host sends:
-//        s32 namelen, <name>, s32 filelen
-//      Device opens sdmc:/3ds/<name> (WRITE|CREATE), pre-reserves
-//      filelen via SetSize and answers s32: 0 ok / -1 create fail /
-//      -2 size fail.
-//   3. Host streams zlib chunks: s32 csize + <csize bytes> until the
-//      deflate stream ends. Device inflates and appends to the file.
-//   4. Device answers s32 response again, then the host sends
-//      s32 cmdlen + <cmdlen bytes> of packed argv (argv[0] =
-//      "sdmc:/3ds/<name>", extra args NUL-terminated). No argc is
-//      sent; strings are scanned NUL to NUL.
+// Runs on its own worker thread (like hbmenu's netloaderTask): the UI
+// panel draws progress every frame from the shared state below, while
+// the worker receives, inflates and commits to SD in large batches.
+//
+// Wire protocol (devkitPro/3dslink):
+//   1. UDP 17491: host broadcasts "3dsboot"; device answers "boot3ds".
+//   2. TCP 17491: s32 namelen, <name>, s32 filelen; device pre-reserves
+//      and answers s32 (0 ok / -1 create fail / -2 size fail).
+//   3. zlib chunks: s32 csize + <csize bytes> until stream end.
+//   4. s32 response, then s32 cmdlen + packed argv (argv[0] first).
 #include <3ds.h>
 #include <arpa/inet.h>
 #include <cerrno>
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <codecvt>
 #include <fcntl.h>
 #include <locale>
@@ -29,7 +28,6 @@
 #include <zlib.h>
 
 #include "fs.h"
-#include "gui.h"
 #include "hbloader.h"
 #include "log.h"
 #include "net.h"
@@ -39,10 +37,33 @@
 #define NL_OUT_CHUNK (256 * 1024)
 #define NL_WRITE_CHUNK (512 * 1024)
 
-static void DisplayProgress(const std::string &message, s64 offset, s64 size, s64 fallback_size = 1) {
+/* Shared transfer state (worker thread -> UI panel). */
+static volatile bool nl_busy = false;
+static volatile bool nl_cancel = false;
+static volatile s64 nl_total = 0;
+static volatile s64 nl_size = 1;
+static char nl_msg[64] = "Waiting...";
+
+static Thread nl_thread = nullptr;
+
+static void NL_SetProgress(s64 total, s64 size) {
+    nl_total = total;
+    nl_size = (size < 1)? 1 : size;
+    if (nl_size < nl_total)
+        nl_size = nl_total;
+}
+
+static void NL_SetMessage(const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(nl_msg, sizeof(nl_msg), fmt, args);
+    va_end(args);
+}
+
+static void DisplayProgress(s64 offset, s64 size, s64 fallback_size = 1) {
     s64 total = (size < 1)? fallback_size : size;
     total = (total < offset)? offset : total;
-    GUI::ProgressBar("NetLoader", message, offset, total);
+    NL_SetProgress(offset, total);
 }
 
 /* Read exactly size bytes from a blocking socket. */
@@ -67,8 +88,7 @@ static bool NL_WaitAll(int sock, void *buffer, size_t size) {
 }
 
 /* Accumulate inflated output and commit to SD in large batches: an
- * explicit FS_WRITE_FLUSH per chunk (like hbmenu's stdio buffering does
- * implicitly with a 64KB setvbuf) costs one FAT commit transaction each
+ * explicit FS_WRITE_FLUSH per chunk costs one FAT commit transaction each
  * and dominates transfer time. hbmenu parity: flush once at the end. */
 static bool NL_WriteBuffered(Handle file, u8 *wrbuf, size_t *wrpos, const u8 *data, size_t have, u64 *offset) {
     if (*wrpos + have > NL_WRITE_CHUNK) {
@@ -116,6 +136,11 @@ static bool NL_Transfer(int sock, Handle file, const char *name, u32 filelen, si
     u64 last_redraw_time = osGetTime();
 
     while (ok && (ret != Z_STREAM_END)) {
+        if (nl_cancel) { /* user backed out of the panel */
+            ok = false;
+            break;
+        }
+
         s32 csize = 0;
         if (!NL_WaitAll(sock, &csize, sizeof(csize)) || (csize < 0) || ((u32)csize > NL_RECV_CHUNK)) {
             ok = false;
@@ -159,17 +184,16 @@ static bool NL_Transfer(int sock, Handle file, const char *name, u32 filelen, si
             u64 elapsed = (now > last_redraw_time)? (now - last_redraw_time) : 1;
             u32 speed_kb = (u32)((total - last_redraw) * 1000 / elapsed / 1024);
 
-            char speed_msg[64];
             char short_name[19] = {0};
             size_t name_len = strlen(name);
             if (name_len > 17)
                 snprintf(short_name, sizeof(short_name), "%.15s..", name);
             else
                 snprintf(short_name, sizeof(short_name), "%s", name);
-            snprintf(speed_msg, sizeof(speed_msg), "%s - %u KB/s", short_name, speed_kb);
+            NL_SetMessage("%s - %u KB/s", short_name, speed_kb);
+            NL_SetProgress(total, filelen);
             last_redraw = total;
             last_redraw_time = now;
-            DisplayProgress(speed_msg, total, filelen);
         }
     }
 
@@ -241,7 +265,7 @@ static int NL_RunTransfer(int datafd) {
         return NL_ERROR;
     }
 
-    DisplayProgress(name, 0, filelen);
+    NL_SetProgress(0, filelen);
 
     size_t total = 0;
     if (!NL_Transfer(datafd, file, name, filelen, &total)) {
@@ -287,35 +311,41 @@ static int NL_RunTransfer(int datafd) {
     return NL_NOCHAIN;
 }
 
-NetLoaderResult NetLoader::Run(void) {
-    int udpfd = -1, listenfd = -1;
+static void NL_Task(void *arg) {
+    (void)arg;
+
+    nl_busy = true;
+    nl_total = 0;
+    nl_size = 1;
+    NL_SetMessage("Waiting for connection...");
+
     NetLoaderResult result = NL_CANCELLED;
+    int udpfd = -1, listenfd = -1;
     struct sockaddr_in addr;
     struct sockaddr_in udp_remote;
     char recvbuf[64] = {};
     socklen_t remotelen = sizeof(udp_remote);
 
     if (R_FAILED(Net::Init())) {
-        DisplayProgress("Network init failed", 0, 1);
-        return NL_ERROR;
+        NL_SetMessage("Network init failed");
+        nl_busy = false;
+        return;
     }
 
-    /* Wait for a Wi-Fi connection before opening sockets. Cancelable. */
+    /* Wait for a Wi-Fi connection before opening sockets. */
     while (!Net::GetNetworkStatus()) {
-        DisplayProgress("Waiting for connection...", 0, 1);
-        hidScanInput();
+        NL_SetMessage("Waiting for connection...");
         svcSleepThread(100000000ULL); /* 100ms between AC probes */
-        if (hidKeysDown() & (KEY_B | KEY_START))
-            return NL_CANCELLED;
-        if (!aptMainLoop())
-            return NL_CANCELLED;
+        if (nl_cancel || !aptMainLoop())
+            goto nl_done;
     }
 
     /* UDP discovery socket (non-blocking). */
     udpfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (udpfd < 0) {
-        DisplayProgress("UDP socket failed", 0, 1);
-        return NL_ERROR;
+        NL_SetMessage("UDP socket failed");
+        nl_busy = false;
+        return;
     }
 
     memset(&addr, 0, sizeof(addr));
@@ -347,14 +377,15 @@ NetLoaderResult NetLoader::Run(void) {
     if (listen(listenfd, 5) < 0)
         goto nl_fail;
 
-    struct in_addr self_addr;
-    self_addr.s_addr = gethostid();
-    Log::Error("NetLoader: listening on %s:%d\n", inet_ntoa(self_addr), NETLOADER_PORT);
-    char listen_msg[64];
-    snprintf(listen_msg, sizeof(listen_msg), "3dslink to %s:%d", inet_ntoa(self_addr), NETLOADER_PORT);
+    {
+        struct in_addr self_addr;
+        self_addr.s_addr = gethostid();
+        Log::Error("NetLoader: listening on %s:%d\n", inet_ntoa(self_addr), NETLOADER_PORT);
+    }
 
     while (aptMainLoop()) {
-        hidScanInput();
+        if (nl_cancel)
+            goto nl_done;
 
         /* UDP discovery: "3dsboot" -> reply "boot3ds" (port 17491). */
         ssize_t len = recvfrom(udpfd, recvbuf, sizeof(recvbuf), 0, (struct sockaddr *)&udp_remote, &remotelen);
@@ -365,31 +396,71 @@ NetLoaderResult NetLoader::Run(void) {
 
         int datafd = accept(listenfd, nullptr, nullptr);
         if (datafd >= 0) {
+            close(listenfd);
+            listenfd = -1;
+
             /* Accepted sockets inherit O_NONBLOCK on 3DS: clear it so the
              * transfer path blocks on recv instead of spinning on EAGAIN. */
             int flags = fcntl(datafd, F_GETFL, 0);
             fcntl(datafd, F_SETFL, flags & ~O_NONBLOCK);
 
-            close(listenfd);
-            listenfd = -1;
-
+            NL_SetMessage("3dslink connected");
             result = static_cast<NetLoaderResult>(NL_RunTransfer(datafd));
             break;
         }
 
-        DisplayProgress(listen_msg, 0, 1);
+        NL_SetMessage("3dslink - waiting for host");
         svcSleepThread(16000000ULL);
-
-        u32 kDown = hidKeysDown();
-        if (kDown & (KEY_B | KEY_START))
-            break;
     }
 
+nl_done:
 nl_fail:
     if (udpfd >= 0)
         close(udpfd);
     if (listenfd >= 0)
         close(listenfd);
 
-    return result;
+    (void)result;
+    nl_busy = false;
+    return;
+}
+
+namespace NetLoader {
+
+    void Start(void) {
+        if (nl_busy)
+            return;
+
+        /* Join the previous (already finished) worker before spawning a new one. */
+        if (nl_thread) {
+            threadJoin(nl_thread, U64_MAX);
+            threadFree(nl_thread);
+            nl_thread = nullptr;
+        }
+
+        nl_cancel = false;
+        s32 prio = 0;
+        svcGetThreadPriority(&prio, CUR_THREAD_HANDLE);
+        nl_thread = threadCreate(NL_Task, nullptr, 64 * 1024, prio - 1, -2, false);
+    }
+
+    void Cancel(void) {
+        nl_cancel = true;
+    }
+
+    bool Busy(void) {
+        return nl_busy;
+    }
+
+    s64 Total(void) {
+        return nl_total;
+    }
+
+    s64 Size(void) {
+        return nl_size;
+    }
+
+    const char *Message(void) {
+        return nl_msg;
+    }
 }

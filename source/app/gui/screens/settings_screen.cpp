@@ -16,8 +16,8 @@ namespace GUI {
     static const std::string update_success = "Update installed. Please re-run the application";
     static const std::string no_updates = "You are already on the latest version";
 
-SettingsScreen::SettingsScreen(UI::Screen *owner, MenuItem *item)
-    : owner_(owner), item_(item) {
+SettingsScreen::SettingsScreen(UI::Screen *owner)
+    : owner_(owner) {
     SetTopBackground(cfg.dark_theme? BLACK_BG : WHITE);
     SetBottomBackground(cfg.dark_theme? MENU_BAR_DARK : STATUS_BAR_LIGHT);
 }
@@ -289,7 +289,7 @@ void SettingsScreen::ControlSort(u32 k_down) {
     else if (k_down & KEY_A) {
         cfg.sort = selection_;
         Config::Save(cfg);
-        FS::GetDirList(cfg.cwd, item_->entries);
+        if (ListingChanged) ListingChanged();
     }
     else if (k_down & KEY_B) {
         selection_ = 0;
@@ -302,7 +302,7 @@ void SettingsScreen::ControlSort(u32 k_down) {
         if (k_down & KEY_TOUCH) {
             cfg.sort = selection_;
             Config::Save(cfg);
-            FS::GetDirList(cfg.cwd, item_->entries);
+            if (ListingChanged) ListingChanged();
         }
     }
     else if (Touch::Rect(0, 95, 320, 134)) {
@@ -311,7 +311,7 @@ void SettingsScreen::ControlSort(u32 k_down) {
         if (k_down & KEY_TOUCH) {
             cfg.sort = selection_;
             Config::Save(cfg);
-            FS::GetDirList(cfg.cwd, item_->entries);
+            if (ListingChanged) ListingChanged();
         }
     }
     else if (Touch::Rect(0, 135, 320, 174)) {
@@ -320,7 +320,7 @@ void SettingsScreen::ControlSort(u32 k_down) {
         if (k_down & KEY_TOUCH) {
             cfg.sort = selection_;
             Config::Save(cfg);
-            FS::GetDirList(cfg.cwd, item_->entries);
+            if (ListingChanged) ListingChanged();
         }
     }
     else if (Touch::Rect(0, 175, 320, 215)) {
@@ -329,7 +329,7 @@ void SettingsScreen::ControlSort(u32 k_down) {
         if (k_down & KEY_TOUCH) {
             cfg.sort = selection_;
             Config::Save(cfg);
-            FS::GetDirList(cfg.cwd, item_->entries);
+            if (ListingChanged) ListingChanged();
         }
     }
     else if (Touch::Rect(5, 25, 30, 50)) {

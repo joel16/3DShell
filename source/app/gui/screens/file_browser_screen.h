@@ -49,7 +49,6 @@ private:
     void DisplaySmdhPanel();
     void DisplayActionGrid();
     void HandleActionGrid(u32 k_down);
-    void RunNetLoader();
     void CreateFolder();
     void CreateFile();
     void RenameSelected();

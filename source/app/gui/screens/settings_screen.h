@@ -6,11 +6,16 @@
 #include "screen.h"
 #include "screen_manager.h"
 
+#include <functional>
+
 namespace GUI {
 
 class SettingsScreen : public UI::Screen {
 public:
-    SettingsScreen(UI::Screen *owner, MenuItem *item);
+    SettingsScreen(UI::Screen *owner);
+
+    /* Fired when a setting alters the directory listing (sort changes). */
+    std::function<void()> ListingChanged;
 
     void OnFrame(u64 delta_time) override;
     void DrawTop() override;
@@ -37,7 +42,6 @@ private:
     void CheckForUpdate();
 
     UI::Screen *owner_;
-    MenuItem *item_;
     SettingsPage page_ = GENERAL_SETTINGS;
     int selection_ = 0;
     static const int sel_dist = 40;

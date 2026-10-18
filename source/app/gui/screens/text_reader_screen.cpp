@@ -14,7 +14,7 @@ TextReaderScreen::TextReaderScreen(MenuItem *item)
     SetBottomBackground(cfg.dark_theme? MENU_BAR_DARK : STATUS_BAR_LIGHT);
 
     touch_bar_.SetSection(TouchBar::SECTION_NONE);
-    touch_bar_.Home().Click = [this]() {
+    touch_bar_.AddButton(TouchBar::ICON_HOME, false).Click = [this]() {
         Notepad::Close();
     };
 }

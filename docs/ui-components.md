@@ -43,6 +43,7 @@ Frame order inside `UI::ScreenManager::Run()` (every iteration):
 | `UI::Button` | Rect + centered text + press feedback + `Click` callback. |
 | `UI::ScrollBar` | Vertical track/thumb; `SetRange(item_count, page_size)`, `Value()` = first visible row, finger drag. |
 | `UI::Dialog` | Panel with title bar; base for popups (derives from `ContainerControl`). |
+| `UI::FlowLayout` | Horizontal packer: places visible controls left-to-right from an anchor or right-to-right ending at an anchor (right-aligned groups); invisible controls are skipped, so groups re-pack when one is hidden. |
 
 ## 3. Shared chrome (application controls)
 
@@ -97,7 +98,7 @@ browser is the root and pushes dialogs with `OpenDialog()`.
 
 | Element | Position | Drawn by |
 |---|---|---|
-| Status bar background + clock/battery/wifi | y = 0..15 | `GUI::DisplayStatusBar()` (see 3.1) |
+| Status bar (background, clock, battery, wifi) | y = 0..15 | `status_bar_.Draw()` — `GUI::StatusBar` (see 3.1) |
 | Menu bar background | rect (0, 15, 400, 25) | `C2D::Rect`, `MENU_BAR_*` |
 | Current directory path (truncated at 60 chars) | x = 5, inside menu bar | `C2D::Textf` |
 | Storage usage bar (used vs total) | (5, ~28..30), width 390 | `C2D::Rect` x2 (`SELECTOR_*` track + `TITLE_*` fill) |
@@ -109,10 +110,10 @@ browser is the root and pushes dialogs with `OpenDialog()`.
 
 | Element | Position | Drawn by |
 |---|---|---|
-| Touch bar background + buttons | y = 0..20 | `GUI::DisplayTouchButtons(section)` (see 3.2) |
+| Touch bar (six buttons in LEFT/RIGHT layout groups) | y = 0..20 | `touch_bar_.Draw()` — `GUI::TouchBar` (see 3.2) |
 | SMDH info panel for the selected .3dsx (icon, name, description, publisher) | (16, 26) onwards | `FileBrowserScreen::DisplaySmdhPanel()` + `FitText()` |
 | Action grid 2x2 (New File, New Folder, Properties, Rename) + NetLoader button | grid centered at y = 80 | `FileBrowserScreen::DisplayActionGrid()` |
-| Touch handling for the grid + touch bar | y = 80..140 | `FileBrowserScreen::HandleActionGrid()` / `HandleTouchBar()` |
+| Touch handling for the action grid | y = 80..140 | `FileBrowserScreen::HandleActionGrid()` (touch bar is handled by `TouchBar` itself, see 3.2) |
 
 Hidden while a dialog is open (`dialog_open_`): the SMDH panel and the grid.
 
@@ -198,7 +199,7 @@ gfx0 — `TextReaderScreen::DrawTop()`:
 
 | Element | Position | Drawn by |
 |---|---|---|
-| Status bar + menu bar background | y = 0..15 / 15..40 | `C2D::Rect` + `GUI::DisplayStatusBar()` |
+| Status bar + menu bar background | y = 0..15 / 15..40 | `status_bar_.Draw()` — `GUI::StatusBar` + `C2D::Rect` |
 | File name title (truncated at 45 chars, `*` when modified) | (5, 40) | `Notepad::DisplayTop()` |
 | Text lines (11 visible, 50 cols, horizontal/vertical scroll) | from (8, 60), line height 14.5 | `Notepad::DisplayTop()` loop |
 | Cursor line highlight + blinking cursor (edit mode) | cursor line | `C2D::Rect` |
@@ -209,10 +210,10 @@ gfx1 — `TextReaderScreen::DrawBottom()`:
 
 | Element | Position | Drawn by |
 |---|---|---|
-| Touch bar background + buttons | y = 0..20 | `GUI::DisplayTouchButtons(TOUCH_BAR_NONE)` |
+| Touch bar (no active section) | y = 0..20 | `touch_bar_.Draw()` — `GUI::TouchBar`, `SECTION_NONE` |
 | **View mode**: title "Text Reader", key hints (A:Edit X:Save B:Back Pad:Move), buttons Edit/Save/Back, `* unsaved` marker | (10, 30) onwards | `Notepad::DisplayBottom()` |
 | **Edit mode**: `VirtualKeyboard::Display()` on-screen keyboard | lower area | `VirtualKeyboard::Display()` (`source/app/osk/virtual_keyboard.cpp`) |
-| Home touch button closes the editor | (0, 0, 22, 20) | `TextReaderScreen::OnTouch()` |
+| Touch bar Home button closes the editor | y = 0..20, left zone | `TextReaderScreen` wires `touch_bar_.Home().Click` → `Notepad::Close()` |
 
 ### 4.8 Progress overlay (any screen, transfer-time only)
 

@@ -11,7 +11,14 @@ typedef enum NetLoaderResult {
 } NetLoaderResult;
 
 namespace NetLoader {
-    NetLoaderResult Run(void);
+    /* hbmenu-style worker thread: the panel draws progress from these
+     * accessors while the transfer runs on its own thread. */
+    void Start(void);
+    void Cancel(void);
+    bool Busy(void);
+    s64 Total(void);
+    s64 Size(void);
+    const char *Message(void);
 }
 
 #endif

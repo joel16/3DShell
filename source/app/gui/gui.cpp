@@ -10,9 +10,7 @@
 #include "screen_manager.h"
 #include "textures.h"
 #include "utils.h"
-#include "screens/file_browser_screen.h"
-
-jmp_buf exit_jmp;
+#include "screens/desktop_screen.h"
 
 namespace GUI {
     void ResetCheckbox(MenuItem *item) {
@@ -65,13 +63,7 @@ namespace GUI {
     Result Loop(void) {
         Result ret = 0;
 
-        auto browser = std::make_unique<FileBrowserScreen>();
-        ret = browser->Init();
-        if (R_FAILED(ret))
-            return ret;
-
-        if (setjmp(exit_jmp) == 0)
-            UI::ScreenManager::Instance().Run(std::move(browser));
+        UI::ScreenManager::Instance().Run(std::make_unique<DesktopScreen>());
 
         return ret;
     }
