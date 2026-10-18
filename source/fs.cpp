@@ -167,7 +167,11 @@ namespace FS {
         return false;
     }
     
-    Result GetDirList(const std::string &path, std::vector<FS_DirectoryEntry> &entries) {
+    u32 dirlist_epoch = 0;
+
+    Result GetDirList(const std::string &path, std::vector<FS_DirectoryEntry> &entries, int file_filter) {
+        dirlist_epoch++;
+
         if (!entries.empty())
             entries.clear();
             
@@ -190,8 +194,28 @@ namespace FS {
                 return ret;
             }
             
-            if (entry_count == 1)
-                entries.push_back(entry);
+            if (entry_count == 1) {
+                bool is_dir = (entry.attributes & FS_ATTRIBUTE_DIRECTORY);
+                
+                if ((file_filter < 0) || is_dir) {
+                    entries.push_back(entry);
+                } else {
+                    /* Directory listing is a cold path: building the full
+                     * name to reuse GetFileType keeps one source of truth.
+                     * Surrogates dropped first — codecvt aborts without
+                     * exceptions on malformed names. */
+                    std::u16string clean;
+                    for (std::size_t i = 0; entry.name[i]; i++) {
+                        u16 ch = entry.name[i];
+                        if ((ch < 0xD800) || (ch > 0xDFFF))
+                            clean.push_back((char16_t)ch);
+                    }
+                    std::string filename = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(clean);
+
+                    if (static_cast<int>(FS::GetFileType(filename)) == file_filter)
+                        entries.push_back(entry);
+                }
+            }
         } while(entry_count > 0);
         
         std::sort(entries.begin(), entries.end(), FS::Sort);

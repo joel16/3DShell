@@ -171,8 +171,10 @@ namespace GUI {
         C2D::Text(10, 114, 0.42f, cfg.dark_theme? WHITE : BLACK, "Enables dark theme mode.");
         C2D::Text(10, 138, 0.44f, cfg.dark_theme? WHITE : BLACK, "Developer options");
         C2D::Text(10, 154, 0.42f, cfg.dark_theme? WHITE : BLACK, "Enable logging and fs access to NAND.");
-        C2D::Text(10, 178, 0.44f, cfg.dark_theme? WHITE : BLACK, "Check for update");
-        C2D::Text(10, 194, 0.42f, cfg.dark_theme? WHITE : BLACK, "Downloads and installs the latest version.");
+        C2D::Text(10, 178, 0.44f, cfg.dark_theme? WHITE : BLACK, "File filter");
+        C2D::Textf(170, 178, 0.42f, cfg.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "%s", (cfg.filter >= 0)? "Homebrew (.3dsx)" : "All files");
+        C2D::Text(10, 206, 0.42f, cfg.dark_theme? WHITE : BLACK, "Show only one type of file in the browser.");
+        C2D::Text(10, 230, 0.44f, cfg.dark_theme? WHITE : BLACK, "Check for update");
         
         if (cfg.dark_theme)
             C2D::Image(cfg.dark_theme? icon_toggle_dark_on : icon_toggle_on, 270, 97);
@@ -206,6 +208,12 @@ namespace GUI {
                     break;
 
                 case 3:
+                    /* Cycle: show everything <-> only .3dsx payloads. */
+                    cfg.filter = (cfg.filter >= 0)? -1 : FileType3dsx;
+                    Config::Save(cfg);
+                    break;
+
+                case 4:
                     settings_state = UPDATE_SETTINGS;
                     selection = 0;
                     break;
@@ -238,8 +246,16 @@ namespace GUI {
                 Config::Save(cfg);
             }
         }
-        else if (Touch::Rect(0, 175, 320, 215)) {
+        else if (Touch::Rect(0, 175, 320, 200)) {
             selection = 3;
+            
+            if (*kDown & KEY_TOUCH) {
+                cfg.filter = (cfg.filter >= 0)? -1 : FileType3dsx;
+                Config::Save(cfg);
+            }
+        }
+        else if (Touch::Rect(0, 205, 320, 239)) {
+            selection = 4;
             
             if (*kDown & KEY_TOUCH) {
                 settings_state = UPDATE_SETTINGS;
@@ -247,7 +263,7 @@ namespace GUI {
             }
         }
 
-        Utils::SetBounds(&selection, 0, 3);
+        Utils::SetBounds(&selection, 0, 4);
     }
 
     void DisplaySettings(MenuItem *item) {

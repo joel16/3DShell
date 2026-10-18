@@ -4,6 +4,7 @@
 #include "c2d_helper.h"
 #include "colours.h"
 #include "config.h"
+#include "fs.h"
 #include "gui.h"
 #include "textures.h"
 #include "utils.h"
@@ -19,6 +20,72 @@ namespace GUI {
     static float ok_height = 0.f, ok_width = 0.f, scale_factor = 0.f, width = 0.f, height = 0.f, zoom_factor = 1.f;
     static int pos_x = 0, pos_y = 0;
     static IMAGE_STATES image_state = DIMENSION_DEFAULT;
+
+    /* Prev/next navigation (upstream 2f47d5f): cycle through the image
+     * files of the current directory without going back to the browser. */
+    static std::string EntryNameUtf8(MenuItem *item, u32 index) {
+        std::u16string clean;
+        for (std::size_t i = 0; i < (sizeof(item->entries[index].name) / sizeof(u16)); i++) {
+            u16 ch = item->entries[index].name[i];
+            if (!ch)
+                break;
+            if ((ch < 0xD800) || (ch > 0xDFFF))
+                clean.push_back((char16_t)ch);
+        }
+
+        return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(clean);
+    }
+
+    static bool IsImageEntry(MenuItem *item, u32 index) {
+        if (item->entries[index].attributes & FS_ATTRIBUTE_DIRECTORY)
+            return false;
+        if (index >= item->entries.size())
+            return false;
+
+        return (FS::GetFileType(EntryNameUtf8(item, index)) == FileTypeImage);
+    }
+
+    static bool FindNeighborImage(MenuItem *item, int dir, u32 *out_index) {
+        int count = static_cast<int>(item->entries.size());
+        if (count <= 1)
+            return false;
+
+        int sel = item->selected;
+        for (int step = 1; step < count; step++) {
+            int i = ((sel + dir * step) % count + count) % count; /* wrap around */
+            if (i == sel)
+                break;
+            if (IsImageEntry(item, static_cast<u32>(i))) {
+                *out_index = static_cast<u32>(i);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    static bool SwitchImage(MenuItem *item, int dir) {
+        u32 index = 0;
+        if (!FindNeighborImage(item, dir, &index))
+            return false;
+
+        std::string path = cfg.cwd;
+        path.append(EntryNameUtf8(item, index));
+
+        C2D_Image new_texture;
+        if (!Textures::LoadImageFile(path, &new_texture))
+            return false;
+
+        delete[] item->texture.tex;
+        delete[] item->texture.subtex;
+        item->texture = new_texture;
+
+        item->selected = static_cast<int>(index); /* the browser resumes here */
+        zoom_factor = 1.f;
+        pos_x = 0;
+        pos_y = 0;
+        return true;
+    }
 
     static bool DrawImage(C2D_Image image, float x, float y, float start, float end, float w, float h, float zoom_factor) {
         C2D_DrawParams params = {
@@ -140,6 +207,13 @@ namespace GUI {
         if (*kDown & KEY_A) {
             if (properties)
                 properties = false;
+        }
+        if (!properties && (*kDown & (KEY_DLEFT | KEY_L))) {
+            /* Previous image in the directory (wraps around). */
+            SwitchImage(item, -1);
+        }
+        else if (!properties && (*kDown & (KEY_DRIGHT | KEY_R))) {
+            SwitchImage(item, 1);
         }
         if (*kDown & KEY_B) {
             if (!properties) {
