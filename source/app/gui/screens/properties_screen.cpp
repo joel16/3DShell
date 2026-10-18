@@ -45,6 +45,18 @@ void PropertiesScreen::OnKeyDown(u32 k_down) {
 }
 
 void PropertiesScreen::OnTouch(const touchPosition &touch, bool down) {
+    /* Touch bar zones forward to the browser (works with a dialog open),
+     * including the release so buttons complete their click. */
+    bool in_bar = down? (touch.py < 20) : bar_touching_;
+
+    if (in_bar) {
+        owner_->OnTouch(touch, down);
+        bar_touching_ = down;
+        return;
+    }
+
+    bar_touching_ = false;
+
     if (!down) {
         touching_ = false;
         return;

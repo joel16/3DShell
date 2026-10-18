@@ -17,6 +17,7 @@ public:
     void DrawBottom() override;
     void OnKeyDown(u32 k_down) override;
     void OnKeyHeld(u32 k_held) override;
+    void OnTouch(const touchPosition &touch, bool down) override;
 
 private:
     enum SettingsPage {
@@ -44,6 +45,7 @@ private:
     bool network_status_ = false;
     bool update_available_ = false;
     bool update_popup_ = false;
+    bool bar_touching_ = false;
     float confirm_popup_width_ = 0.0f;
     float confirm_popup_height_ = 0.0f;
     float cancel_popup_width_ = 0.0f;

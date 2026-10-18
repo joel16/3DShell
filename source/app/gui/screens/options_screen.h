@@ -34,6 +34,7 @@ private:
     int column_ = 0;
     bool options_more_ = false;
     bool touching_ = false;
+    bool bar_touching_ = false;
     float cancel_width_ = 0.0f;
     float cancel_height_ = 0.0f;
     UI::Rect cancel_rect_;

@@ -16,6 +16,7 @@ void ScreenManager::Run(std::unique_ptr<Screen> root) {
     running_ = true;
 
     u64 last_time = osGetTime();
+    touchPosition last_touch = {};
 
     while (running_ && aptMainLoop() && !stack_.empty()) {
         u64 current_time = osGetTime();
@@ -51,10 +52,12 @@ void ScreenManager::Run(std::unique_ptr<Screen> root) {
         if (Current() == screen)
             screen->OnKeyDown(k_down);
 
-        touchPosition touch = {};
+        touchPosition touch = last_touch;
         bool touching = (k_held & KEY_TOUCH) != 0;
-        if (touching)
+        if (touching) {
             hidTouchRead(&touch);
+            last_touch = touch;
+        }
 
         if (Current() == screen)
             screen->OnTouch(touch, touching);

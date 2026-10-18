@@ -165,6 +165,17 @@ void SettingsScreen::OnKeyHeld(u32 k_held) {
     Touch::Update();
 }
 
+void SettingsScreen::OnTouch(const touchPosition &touch, bool down) {
+    /* Touch bar zones forward to the browser (works with a dialog open),
+     * including the release so buttons complete their click. */
+    bool in_bar = down? (touch.py < 20) : bar_touching_;
+
+    if (in_bar) {
+        owner_->OnTouch(touch, down);
+        bar_touching_ = down;
+    }
+}
+
 void SettingsScreen::OnKeyDown(u32 k_down) {
     if (k_down & KEY_START) {
         UI::ScreenManager::Instance().Exit();

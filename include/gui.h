@@ -23,21 +23,12 @@ namespace Options {
 }
 
 namespace GUI {
-    enum TouchBarSection {
-        TOUCH_BAR_NONE,
-        TOUCH_BAR_BROWSER,
-        TOUCH_BAR_ACTIONS,
-        TOUCH_BAR_SETTINGS
-    };
-
     void ResetCheckbox(MenuItem *item);
     void RecalcStorageSize(MenuItem *item);
     void ProgressBar(const std::string &title, std::string message, u64 offset, u64 size);
     void DownloadProgressBar(void *args);
     Result Loop(void);
 
-    void DisplayStatusBar(void);
-    void DisplayTouchButtons(TouchBarSection section);
     void DisplayProperties(MenuItem *item);
     void DownloadHelper(const std::string &tag);
     bool UpdateDone(void);

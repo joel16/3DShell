@@ -25,6 +25,7 @@ private:
     MenuItem *item_;
     UI::Rect ok_rect_;
     bool touching_ = false;
+    bool bar_touching_ = false;
 };
 
 }

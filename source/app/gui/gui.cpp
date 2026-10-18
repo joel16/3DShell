@@ -62,42 +62,6 @@ namespace GUI {
         }
     }
 
-    void DisplayStatusBar(void) {
-        const std::time_t time = std::time(nullptr);
-        const std::tm calendar_time = *std::localtime(std::addressof(time));
-
-        static char time_string[30];
-        std::snprintf(time_string, 30, "%2i:%02i %s", (calendar_time.tm_hour % 12) == 0? 12 : (calendar_time.tm_hour % 12), calendar_time.tm_min, (calendar_time.tm_hour / 12)? "PM" : "AM");
-        
-        float text_height = 0.f;
-        C2D::GetTextSize(0.45f, nullptr, &text_height, time_string);
-        C2D::Text(5, ((15 - text_height) / 2), 0.45f, WHITE, time_string);
-
-        u8 level = 0;
-        PTMU_GetBatteryLevel(&level);
-
-        u8 percent = 0;
-        MCUHWC_GetBatteryLevel(&percent);
-
-        std::string percent_string = std::to_string(percent) + "%";
-
-        float percent_width = 0.f;
-        C2D::GetTextSize(0.45f, &percent_width, nullptr, percent_string.c_str());
-        C2D::Text(395 - percent_width, ((15 - text_height) / 2), 0.45f, WHITE, percent_string.c_str());
-
-        C2D::Image(battery_icons[level], 395 - percent_width - battery_icons[level].subtex->width - 5, 0);
-        C2D::Image(wifi_icons[osGetWifiStrength()], 395 - percent_width - wifi_icons[osGetWifiStrength()].subtex->width - 25, 1);
-    }
-
-    void DisplayTouchButtons(TouchBarSection section) {
-        C2D::Image(section == TOUCH_BAR_BROWSER? icon_home_overlay : (cfg.dark_theme? icon_home_dark : icon_home), 2, 0);
-        C2D::Image(section == TOUCH_BAR_ACTIONS? icon_options_overlay : (cfg.dark_theme? icon_options_dark : icon_options), 25, 0);
-        C2D::Image(section == TOUCH_BAR_SETTINGS? icon_settings_overlay : (cfg.dark_theme? icon_settings_dark : icon_settings), 50, 0);
-        C2D::Image(archive == sdmc_archive? icon_sd_overlay : (cfg.dark_theme? icon_sd_dark : icon_sd), 250, 0);
-        C2D::Image(archive == nand_archive? icon_secure_overlay : (cfg.dark_theme? icon_secure_dark : icon_secure), 275, 0);
-        C2D::Image(icon_search, 300, 0);
-    }
-
     Result Loop(void) {
         Result ret = 0;
 

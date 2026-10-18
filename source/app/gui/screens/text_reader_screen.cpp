@@ -12,6 +12,11 @@ TextReaderScreen::TextReaderScreen(MenuItem *item)
     : item_(item) {
     SetTopBackground(cfg.dark_theme? BLACK_BG : WHITE);
     SetBottomBackground(cfg.dark_theme? MENU_BAR_DARK : STATUS_BAR_LIGHT);
+
+    touch_bar_.SetSection(TouchBar::SECTION_NONE);
+    touch_bar_.Home().Click = [this]() {
+        Notepad::Close();
+    };
 }
 
 void TextReaderScreen::OnFrame(u64 delta_time) {
@@ -29,32 +34,23 @@ void TextReaderScreen::OnFrame(u64 delta_time) {
 }
 
 void TextReaderScreen::DrawTop() {
-    C2D::Rect(0, 0, 400, 15, cfg.dark_theme? STATUS_BAR_DARK : STATUS_BAR_LIGHT);
+    status_bar_.Draw();
     C2D::Rect(0, 15, 400, 25, cfg.dark_theme? MENU_BAR_DARK : MENU_BAR_LIGHT);
-    DisplayStatusBar();
     Notepad::DisplayTop();
 }
 
 void TextReaderScreen::DrawBottom() {
-    C2D::Rect(0, 0, 320, 20, cfg.dark_theme? STATUS_BAR_DARK : MENU_BAR_LIGHT);
-    DisplayTouchButtons(TOUCH_BAR_NONE);
+    touch_bar_.Draw();
     Notepad::DisplayBottom();
 }
 
 void TextReaderScreen::OnTouch(const touchPosition &touch, bool down) {
-    if (!down) {
-        touching_ = false;
-        return;
+    bool in_bar = down? (touch.py < 20) : bar_touching_;
+
+    if (in_bar) {
+        touch_bar_.OnTouch(touch, down);
+        bar_touching_ = down;
     }
-
-    if (touching_)
-        return;
-
-    touching_ = true;
-
-    /* Home button closes the editor (same as the old global touch bar). */
-    if (UI::Rect(0.0f, 0.0f, 22.0f, 20.0f).Contains(touch))
-        Notepad::Close();
 }
 
 void TextReaderScreen::OnKeyHeld(u32 k_held) {

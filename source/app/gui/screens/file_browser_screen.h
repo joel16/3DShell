@@ -4,6 +4,8 @@
 #include "gui.h"
 
 #include "controls/scroll_bar.h"
+#include <status_bar.h>
+#include <touch_bar.h>
 #include "fs.h"
 #include "screen.h"
 #include "screen_manager.h"
@@ -47,7 +49,6 @@ private:
     void DisplaySmdhPanel();
     void DisplayActionGrid();
     void HandleActionGrid(u32 k_down);
-    void HandleTouchBar(u32 k_down);
     void RunNetLoader();
     void CreateFolder();
     void CreateFile();
@@ -59,6 +60,8 @@ private:
 
     MenuItem item_;
     UI::ScrollBar scroll_bar_;
+    StatusBar status_bar_;
+    TouchBar touch_bar_;
 
     int start_ = 0;
     u64 key_repeat_timestamp_ = 0;
@@ -66,7 +69,7 @@ private:
     u32 k_held_ = 0;
     bool dialog_open_ = false;
     int pushed_filter_ = -1;
-    TouchBarSection touch_section_ = TOUCH_BAR_BROWSER;
+    bool bar_touching_ = false;
 
     u32 cache_epoch_ = 0;
     std::size_t cache_count_ = 0;

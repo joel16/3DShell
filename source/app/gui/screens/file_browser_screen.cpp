@@ -43,6 +43,63 @@ namespace GUI {
         : scroll_bar_(UI::Rect{395.0f, 40.0f, 4.0f, 200.0f}, BAR_COLOUR, TITLE_COLOUR) {
         SetTopBackground(cfg.dark_theme? BLACK_BG : WHITE);
         SetBottomBackground(cfg.dark_theme? MENU_BAR_DARK : STATUS_BAR_LIGHT);
+
+        touch_bar_.Home().Click = [this]() {
+            if (dialog_open_) {
+                dialog_open_ = false;
+                touch_bar_.SetSection(TouchBar::SECTION_BROWSER);
+                UI::ScreenManager::Instance().Pop();
+            }
+        };
+
+        touch_bar_.Options().Click = [this]() {
+            if (dialog_open_) {
+                dialog_open_ = false;
+                UI::ScreenManager::Instance().Pop();
+            }
+            touch_bar_.SetSection(TouchBar::SECTION_ACTIONS);
+            PushOptions();
+        };
+
+        touch_bar_.Settings().Click = [this]() {
+            if (dialog_open_) {
+                dialog_open_ = false;
+                UI::ScreenManager::Instance().Pop();
+            }
+            touch_bar_.SetSection(TouchBar::SECTION_SETTINGS);
+            PushSettings();
+        };
+
+        touch_bar_.SD().Click = [this]() {
+            if (archive != sdmc_archive) {
+                archive = sdmc_archive;
+                cfg.cwd = "/";
+                item_.selected = 0;
+                RefreshListing();
+                RecalcStorageSize(&item_);
+            }
+        };
+
+        touch_bar_.Secure().Click = [this]() {
+            if ((archive != nand_archive) && (cfg.dev_options)) {
+                archive = nand_archive;
+                cfg.cwd = "/";
+                item_.selected = 0;
+                RefreshListing();
+                RecalcStorageSize(&item_);
+            }
+        };
+
+        touch_bar_.Search().Click = [this]() {
+            std::string path = OSK::GetText("/", "Enter file path");
+            path.append((path.back() != '/')? "/" : "");
+            if (FS::DirExists(archive, path)) {
+                cfg.cwd = path;
+                item_.selected = 0;
+                RefreshListing();
+                RecalcStorageSize(&item_);
+            }
+        };
     }
 
     FileBrowserScreen::~FileBrowserScreen() {
@@ -81,7 +138,7 @@ namespace GUI {
          * re-list if the file filter was toggled while we were away. */
         if (dialog_open_ && UI::ScreenManager::Instance().IsCurrent(this)) {
             dialog_open_ = false;
-            touch_section_ = TOUCH_BAR_BROWSER;
+            touch_bar_.SetSection(TouchBar::SECTION_BROWSER);
             if (pushed_filter_ != cfg.filter)
                 RefreshListing();
             SetBrowserStart();
@@ -342,9 +399,9 @@ namespace GUI {
     }
 
     void FileBrowserScreen::DrawTop() {
-        C2D::Rect(0, 0, 400, 15, cfg.dark_theme? STATUS_BAR_DARK : STATUS_BAR_LIGHT);
+        status_bar_.Draw();
+
         C2D::Rect(0, 15, 400, 25, cfg.dark_theme? MENU_BAR_DARK : MENU_BAR_LIGHT);
-        DisplayStatusBar();
 
         float filename_height = 0.0f;
         C2D::GetTextSize(0.45f, nullptr, &filename_height, cfg.cwd.c_str());
@@ -410,8 +467,7 @@ namespace GUI {
     }
 
     void FileBrowserScreen::DrawBottom() {
-        C2D::Rect(0, 0, 320, 20, cfg.dark_theme? STATUS_BAR_DARK : MENU_BAR_LIGHT);
-        DisplayTouchButtons(touch_section_);
+        touch_bar_.Draw();
 
         /* While a dialog is up, the browser grid stays hidden behind it. */
         if (dialog_open_)
@@ -468,15 +524,15 @@ namespace GUI {
         }
     }
 
-void FileBrowserScreen::PushOptions() {
-    touch_section_ = TOUCH_BAR_ACTIONS;
-    OpenDialog(std::make_unique<OptionsScreen>(this, &item_));
-}
+    void FileBrowserScreen::PushOptions() {
+        touch_bar_.SetSection(TouchBar::SECTION_ACTIONS);
+        OpenDialog(std::make_unique<OptionsScreen>(this, &item_));
+    }
 
-void FileBrowserScreen::PushSettings() {
-    touch_section_ = TOUCH_BAR_SETTINGS;
-    OpenDialog(std::make_unique<SettingsScreen>(this, &item_));
-}
+    void FileBrowserScreen::PushSettings() {
+        touch_bar_.SetSection(TouchBar::SECTION_SETTINGS);
+        OpenDialog(std::make_unique<SettingsScreen>(this, &item_));
+    }
 
     void FileBrowserScreen::OnKeyDown(u32 k_down) {
         if (k_down & KEY_START) {
@@ -634,7 +690,6 @@ void FileBrowserScreen::PushSettings() {
         }
 
         HandleActionGrid(k_down);
-        HandleTouchBar(k_down);
 
         /* Mirror the live position into the config cache every control
          * frame; Config::Save only happens on dir changes / app exit. */
@@ -666,7 +721,7 @@ void FileBrowserScreen::PushSettings() {
                             CreateFolder();
                             break;
                         case 2: // Properties
-                            touch_section_ = TOUCH_BAR_ACTIONS;
+                            touch_bar_.SetSection(TouchBar::SECTION_ACTIONS);
                             OpenDialog(std::make_unique<PropertiesScreen>(this, &item_));
                             break;
                         case 3: // Rename
@@ -687,49 +742,16 @@ void FileBrowserScreen::PushSettings() {
         }
     }
 
-    void FileBrowserScreen::HandleTouchBar(u32 k_down) {
-        if (!(k_down & KEY_TOUCH))
-            return;
-
-        if (Touch::Rect(23, 0, 47, 20)) {
-            PushOptions();
-        }
-        else if (Touch::Rect(48, 0, 72, 20)) {
-            PushSettings();
-        }
-        else if (Touch::Rect(247, 0, 272, 20)) {
-            if (archive != sdmc_archive) {
-                archive = sdmc_archive;
-                cfg.cwd = "/";
-                item_.selected = 0;
-                RefreshListing();
-                RecalcStorageSize(&item_);
-            }
-        }
-        else if (Touch::Rect(273, 0, 292, 20)) {
-            if ((archive != nand_archive) && (cfg.dev_options)) {
-                archive = nand_archive;
-                cfg.cwd = "/";
-                item_.selected = 0;
-                RefreshListing();
-                RecalcStorageSize(&item_);
-            }
-        }
-        else if (Touch::Rect(293, 0, 320, 20)) {
-            std::string path = OSK::GetText("/", "Enter file path");
-            path.append((path.back() != '/')? "/" : "");
-            if (FS::DirExists(archive, path)) {
-                cfg.cwd = path;
-                item_.selected = 0;
-                RefreshListing();
-                RecalcStorageSize(&item_);
-            }
-        }
-    }
-
     void FileBrowserScreen::OnTouch(const touchPosition &touch, bool down) {
-        (void)touch;
-        (void)down;
+        /* Touch bar zones live at the top 20px of the bottom screen. Dialogs
+         * forward touches there, so this works whether or not the browser is
+         * the current screen. */
+        bool in_bar = down? (touch.py < 20) : bar_touching_;
+
+        if (in_bar) {
+            touch_bar_.OnTouch(touch, down);
+            bar_touching_ = down;
+        }
     }
 
 }

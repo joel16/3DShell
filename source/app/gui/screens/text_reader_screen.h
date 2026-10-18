@@ -4,6 +4,8 @@
 #include "gui.h"
 #include "notepad.h"
 
+#include <status_bar.h>
+#include <touch_bar.h>
 #include "screen.h"
 #include "screen_manager.h"
 
@@ -23,7 +25,9 @@ public:
 private:
     MenuItem *item_;
     u32 k_held_ = 0;
-    bool touching_ = false;
+    bool bar_touching_ = false;
+    StatusBar status_bar_;
+    TouchBar touch_bar_;
 };
 
 }

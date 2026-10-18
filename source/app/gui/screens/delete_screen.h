@@ -28,6 +28,7 @@ private:
     UI::Rect confirm_rect_;
     UI::Rect cancel_rect_;
     bool touching_ = false;
+    bool bar_touching_ = false;
 };
 
 }
