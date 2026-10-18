@@ -30,8 +30,8 @@ namespace FS {
     /* Incremented on every directory listing refresh; consumers that cache
      * per-entry data (filebrowser draw cache) use it for invalidation. */
     extern u32 dirlist_epoch;
-    Result ChangeDirNext(const std::string &path, std::vector<FS_DirectoryEntry> &entries);
-    Result ChangeDirPrev(std::vector<FS_DirectoryEntry> &entries);
+    Result ChangeDirNext(const std::string &path, std::vector<FS_DirectoryEntry> &entries, int file_filter = -1);
+    Result ChangeDirPrev(std::vector<FS_DirectoryEntry> &entries, int file_filter = -1);
     Result Delete(FS_DirectoryEntry *entry);
     Result Rename(FS_DirectoryEntry *entry, const std::string &filename);
     void Copy(FS_DirectoryEntry *entry, const std::string &path);

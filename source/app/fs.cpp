@@ -228,13 +228,13 @@ namespace FS {
         return 0;
     }
     
-    static Result ChangeDir(const std::string &path, std::vector<FS_DirectoryEntry> &entries) {
+    static Result ChangeDir(const std::string &path, std::vector<FS_DirectoryEntry> &entries, int file_filter) {
         Result ret = 0;
         std::vector<FS_DirectoryEntry> new_entries;
-        
-        if (R_FAILED(ret = FS::GetDirList(path, new_entries)))
+
+        if (R_FAILED(ret = FS::GetDirList(path, new_entries, file_filter)))
             return ret;
-            
+
         entries.clear();
         cfg.cwd = path;
 
@@ -244,18 +244,18 @@ namespace FS {
         entries = new_entries;
         return 0;
     }
-    
-    Result ChangeDirNext(const std::string &path, std::vector<FS_DirectoryEntry> &entries) {
+
+    Result ChangeDirNext(const std::string &path, std::vector<FS_DirectoryEntry> &entries, int file_filter) {
         std::string new_path = cfg.cwd;
         new_path.append(path);
         new_path.append("/");
-        return FS::ChangeDir(new_path, entries);
+        return FS::ChangeDir(new_path, entries, file_filter);
     }
-    
-    Result ChangeDirPrev(std::vector<FS_DirectoryEntry> &entries) {
+
+    Result ChangeDirPrev(std::vector<FS_DirectoryEntry> &entries, int file_filter) {
         std::filesystem::path path = (cfg.cwd.length() <= 1)? cfg.cwd : cfg.cwd.substr(0, cfg.cwd.size() - 1);
         std::string parent_path = path.parent_path();
-        return FS::ChangeDir((parent_path.length() <= 1)? parent_path : parent_path.append("/"), entries);
+        return FS::ChangeDir((parent_path.length() <= 1)? parent_path : parent_path.append("/"), entries, file_filter);
     }
     
     Result Delete(FS_DirectoryEntry *entry) {

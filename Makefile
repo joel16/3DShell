@@ -33,9 +33,9 @@ include $(DEVKITARM)/3ds_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
-SOURCES		:=	source source/gui source/notepad source/osk libs/libnsbmp/src libs/libnsgif/src
+SOURCES		:=	source/ui source/app source/app/gui source/app/gui/screens source/app/notepad source/app/osk libs/libnsbmp/src libs/libnsgif/src
 DATA		:=	data
-INCLUDES	:=	include source/notepad source/osk libs/libnsbmp/include libs/libnsgif/include
+INCLUDES	:=	include source/ui source/app/notepad source/app/osk libs/libnsbmp/include libs/libnsgif/include
 GRAPHICS	:=	res/drawable
 #GFXBUILD	:=	$(BUILD)
 ICON		:=	res/ic_launcher_filemanager.png

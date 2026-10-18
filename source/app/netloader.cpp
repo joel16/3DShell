@@ -36,7 +36,8 @@
 #include "netloader.h"
 
 #define NL_RECV_CHUNK (16 * 1024) /* 3dslink ZLIB_CHUNK upper bound */
-#define NL_OUT_CHUNK (64 * 1024)
+#define NL_OUT_CHUNK (256 * 1024)
+#define NL_WRITE_CHUNK (512 * 1024)
 
 static void DisplayProgress(const std::string &message, s64 offset, s64 size, s64 fallback_size = 1) {
     s64 total = (size < 1)? fallback_size : size;
@@ -65,6 +66,24 @@ static bool NL_WaitAll(int sock, void *buffer, size_t size) {
     return true;
 }
 
+/* Accumulate inflated output and commit to SD in large batches: an
+ * explicit FS_WRITE_FLUSH per chunk (like hbmenu's stdio buffering does
+ * implicitly with a 64KB setvbuf) costs one FAT commit transaction each
+ * and dominates transfer time. hbmenu parity: flush once at the end. */
+static bool NL_WriteBuffered(Handle file, u8 *wrbuf, size_t *wrpos, const u8 *data, size_t have, u64 *offset) {
+    if (*wrpos + have > NL_WRITE_CHUNK) {
+        u32 written = 0;
+        if (R_FAILED(FSFILE_Write(file, &written, *offset, wrbuf, *wrpos, FS_WRITE_UPDATE_TIME)))
+            return false;
+        *offset += *wrpos;
+        *wrpos = 0;
+    }
+
+    memcpy(wrbuf + *wrpos, data, have);
+    *wrpos += have;
+    return true;
+}
+
 /* Inflate the chunk stream into an open FSFILE. */
 static bool NL_Transfer(int sock, Handle file, const char *name, u32 filelen, size_t *out_total) {
     int ret = 0;
@@ -73,16 +92,20 @@ static bool NL_Transfer(int sock, Handle file, const char *name, u32 filelen, si
 
     u8 *inbuf = static_cast<u8 *>(malloc(NL_RECV_CHUNK));
     u8 *outbuf = static_cast<u8 *>(malloc(NL_OUT_CHUNK));
+    u8 *wrbuf = static_cast<u8 *>(malloc(NL_WRITE_CHUNK));
+    size_t wrpos = 0;
 
-    if (!inbuf || !outbuf) {
+    if (!inbuf || !outbuf || !wrbuf) {
         free(inbuf);
         free(outbuf);
+        free(wrbuf);
         return false;
     }
 
     if (R_FAILED(ret = inflateInit(&strm))) {
         free(inbuf);
         free(outbuf);
+        free(wrbuf);
         return false;
     }
 
@@ -118,12 +141,10 @@ static bool NL_Transfer(int sock, Handle file, const char *name, u32 filelen, si
 
             u32 have = (NL_OUT_CHUNK - strm.avail_out);
             if (have > 0) {
-                u32 written = 0;
-                if (R_FAILED(FSFILE_Write(file, &written, offset, outbuf, have, FS_WRITE_FLUSH))) {
+                if (!NL_WriteBuffered(file, wrbuf, &wrpos, outbuf, have, &offset)) {
                     ok = false;
                     break;
                 }
-                offset += have;
                 total += have;
             }
         } while (strm.avail_out == 0);
@@ -152,14 +173,28 @@ static bool NL_Transfer(int sock, Handle file, const char *name, u32 filelen, si
         }
     }
 
+    /* Commit whatever is left in the write buffer, then flush to SD once. */
+    if (ok) {
+        if (wrpos > 0) {
+            u32 written = 0;
+            if (R_FAILED(FSFILE_Write(file, &written, offset, wrbuf, wrpos, FS_WRITE_UPDATE_TIME)))
+                ok = false;
+            offset += wrpos;
+        }
+
+        if (ok)
+            ok = R_SUCCEEDED(FSFILE_Flush(file));
+    }
+
     if (ok && ret == Z_STREAM_END)
-        ret = R_SUCCEEDED(FSFILE_Flush(file))? Z_OK : Z_ERRNO;
+        ret = Z_OK;
     else if (ok)
         ret = Z_DATA_ERROR;
 
     inflateEnd(&strm);
     free(inbuf);
     free(outbuf);
+    free(wrbuf);
     *out_total = total;
     return (ret == Z_OK);
 }
@@ -330,6 +365,11 @@ NetLoaderResult NetLoader::Run(void) {
 
         int datafd = accept(listenfd, nullptr, nullptr);
         if (datafd >= 0) {
+            /* Accepted sockets inherit O_NONBLOCK on 3DS: clear it so the
+             * transfer path blocks on recv instead of spinning on EAGAIN. */
+            int flags = fcntl(datafd, F_GETFL, 0);
+            fcntl(datafd, F_SETFL, flags & ~O_NONBLOCK);
+
             close(listenfd);
             listenfd = -1;
 

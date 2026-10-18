@@ -15,5 +15,7 @@
 #define TEXT_MIN_COLOUR_LIGHT C2D_Color32(32, 32, 32, 255)
 #define TEXT_MIN_COLOUR_DARK  C2D_Color32(185, 185, 185, 255)
 #define BAR_COLOUR            C2D_Color32(200, 200, 200, 255)
+#define ERROR_COLOUR          C2D_Color32(239, 83, 80, 255)
+#define SUCCESS_COLOUR        C2D_Color32(67, 160, 71, 255)
 
 #endif

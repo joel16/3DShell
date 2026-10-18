@@ -56,6 +56,7 @@ namespace Config {
         config->dev_options = false;
         config->dark_theme = false;
         config->cwd = "/";
+        config->filter = -1;
     }
     
     int Load(void) {
@@ -138,10 +139,15 @@ namespace Config {
         cfg.last_scroll = static_cast<int>(scroll);
 
         json_t *filter = json_object_get(root, "filter");
-        json_int_t filter_value = json_integer_value(filter);
-        if (filter_value < -1)
-            filter_value = -1;
-        cfg.filter = static_cast<int>(filter_value);
+        /* Missing key (older configs) -> show all files. */
+        if (json_is_integer(filter)) {
+            json_int_t filter_value = json_integer_value(filter);
+            if (filter_value < -1)
+                filter_value = -1;
+            cfg.filter = static_cast<int>(filter_value);
+        }
+        else
+            cfg.filter = -1;
 
         if (!FS::DirExists(sdmc_archive, cfg.cwd)) {
             cfg.cwd = "/";

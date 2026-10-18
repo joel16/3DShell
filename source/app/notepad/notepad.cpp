@@ -19,6 +19,8 @@ namespace Notepad {
     static NotepadData data;
     static u64 cursor_blink = 0;
     static bool cursor_visible = true;
+    static u64 saved_flash = 0;
+    static bool last_save_ok = false;
 
     static std::string ToLowerExt(std::string ext) {
         std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
@@ -113,6 +115,7 @@ namespace Notepad {
         data.mode = NOTEPAD_VIEW;
         data.modified = false;
         data.open = false;
+        saved_flash = 0;
     }
 
     bool IsOpen(void) { return data.open; }
@@ -138,7 +141,11 @@ namespace Notepad {
             // Try create then open (should already exist, but just in case)
             FSUSER_CreateFile(archive, fsMakePath(PATH_UTF16, path_u16.c_str()), 0, out.size());
             ret = FSUSER_OpenFile(&handle, archive, fsMakePath(PATH_UTF16, path_u16.c_str()), FS_OPEN_WRITE, 0);
-            if (R_FAILED(ret)) return false;
+            if (R_FAILED(ret)) {
+                saved_flash = osGetTime() + 1500;
+                last_save_ok = false;
+                return false;
+            }
         }
 
         FSFILE_SetSize(handle, out.size());
@@ -146,12 +153,18 @@ namespace Notepad {
             u32 written = 0;
             ret = FSFILE_Write(handle, &written, 0, out.c_str(), (u32)out.size(), FS_WRITE_FLUSH);
             FSFILE_Close(handle);
-            if (R_FAILED(ret)) return false;
+            if (R_FAILED(ret)) {
+                saved_flash = osGetTime() + 1500;
+                last_save_ok = false;
+                return false;
+            }
         } else {
             FSFILE_Close(handle);
         }
 
         data.modified = false;
+        saved_flash = osGetTime() + 1500;
+        last_save_ok = true;
         return true;
     }
 
@@ -262,29 +275,38 @@ namespace Notepad {
         }
 
         // Status bar bottom of top screen
-        const char *mode_str = (data.mode == NOTEPAD_VIEW) ? "Vista" : "Edicion";
+        const char *mode_str = (data.mode == NOTEPAD_VIEW) ? "View" : "Edit";
         C2D::Textf(5, 222, 0.40f, cfg.dark_theme ? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT,
             "L%d/%d C%d %s%s", data.cursor_line + 1, (int)data.lines.size(), data.cursor_col + 1, mode_str,
             data.modified ? " *" : "");
+
+        // Transient save feedback
+        if (osGetTime() < saved_flash) {
+            const char *msg = last_save_ok ? "Saved" : "Save failed";
+            u32 colour = last_save_ok ? SUCCESS_COLOUR : ERROR_COLOUR;
+            float msg_width = 0.0f;
+            C2D::GetTextSize(0.40f, &msg_width, nullptr, msg);
+            C2D::Text(395 - msg_width, 222, 0.40f, colour, msg);
+        }
     }
 
     void DisplayBottom(void) {
         if (!data.open) return;
 
         if (data.mode == NOTEPAD_VIEW) {
-            C2D::Text(10, 30, 0.45f, cfg.dark_theme ? WHITE : BLACK, "Lector de texto");
-            C2D::Text(10, 50, 0.40f, cfg.dark_theme ? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "A:Editar  X:Guardar");
-            C2D::Text(10, 66, 0.40f, cfg.dark_theme ? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "B:Volver  Pad:Mover");
+            C2D::Text(10, 30, 0.45f, cfg.dark_theme ? WHITE : BLACK, "Text Reader");
+            C2D::Text(10, 50, 0.40f, cfg.dark_theme ? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "A:Edit  X:Save");
+            C2D::Text(10, 66, 0.40f, cfg.dark_theme ? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "B:Back  Pad:Move");
 
             // Buttons
             C2D::Rect(10, 100, 90, 30, cfg.dark_theme ? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
-            C2D::Text(30, 107, 0.42f, cfg.dark_theme ? TITLE_COLOUR_DARK : TITLE_COLOUR, "Editar");
+            C2D::Text(30, 107, 0.42f, cfg.dark_theme ? TITLE_COLOUR_DARK : TITLE_COLOUR, "Edit");
             C2D::Rect(115, 100, 90, 30, cfg.dark_theme ? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
-            C2D::Text(128, 107, 0.42f, cfg.dark_theme ? TITLE_COLOUR_DARK : TITLE_COLOUR, "Guardar");
+            C2D::Text(128, 107, 0.42f, cfg.dark_theme ? TITLE_COLOUR_DARK : TITLE_COLOUR, "Save");
             C2D::Rect(10, 140, 90, 30, cfg.dark_theme ? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
-            C2D::Text(32, 147, 0.42f, cfg.dark_theme ? TITLE_COLOUR_DARK : TITLE_COLOUR, "Volver");
+            C2D::Text(32, 147, 0.42f, cfg.dark_theme ? TITLE_COLOUR_DARK : TITLE_COLOUR, "Back");
             if (data.modified)
-                C2D::Text(115, 147, 0.40f, cfg.dark_theme ? TITLE_COLOUR_DARK : TITLE_COLOUR, "* sin guardar");
+                C2D::Text(115, 147, 0.40f, cfg.dark_theme ? TITLE_COLOUR_DARK : TITLE_COLOUR, "* unsaved");
         } else {
             VirtualKeyboard::Display();
         }
@@ -352,15 +374,14 @@ namespace Notepad {
             }
 
             if (kDown & KEY_B) {
-                data.mode = NOTEPAD_VIEW; // volver a vista, conserva cambios
+                data.mode = NOTEPAD_VIEW; // back to view, keeps changes
             } else if (kDown & KEY_X || kDown & KEY_A) {
-                // En edicion con teclado fisico no hay, A guarda segun spec alternativa;
-                // Mantenemos X/A = guardar sin salir
+                // Physical keyboard has no on-screen input here; X/A = save without exiting
                 Save();
             } else if (kDown & KEY_SELECT) {
-                // Editar linea actual con teclado del sistema
+                // Edit current line with the system keyboard
                 std::string cur = data.lines[data.cursor_line];
-                std::string res = OSK::GetText(cur, "Editar linea");
+                std::string res = OSK::GetText(cur, "Edit line");
                 if (!res.empty() && res != cur) {
                     data.lines[data.cursor_line] = res;
                     data.cursor_col = (int)res.size();
