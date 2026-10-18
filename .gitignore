@@ -27,3 +27,7 @@ romfs/
 
 # 3DS executables
 3DShell.*
+
+# OS / local noise
+.DS_Store
+test.txt

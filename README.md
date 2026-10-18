@@ -13,8 +13,11 @@ Using as boot.3dsx (Homebrew Launcher replacement):
 3DShell can replace the stock Homebrew Launcher. Copy the `3DShell.3dsx` binary to the root of your SD card and rename it to `boot.3dsx` (`sdmc:/boot.3dsx`). It will now start instead of the Homebrew Launcher.
 
 On top of the file management features, it also acts as your homebrew menu:
-- Navigate to any `.3dsx` file and press A to run it.
-- Press SELECT in the file browser to open the netloader and send payloads from your PC over the network with `3dslink`. It waits for a Wi-Fi connection, shows the device `ip:port` and live transfer speed; received files are stored in `sdmc:/3ds/`.
+- Navigate to any `.3dsx` file and press A to run it. Chainloading uses Luma3DS's `hb:ldr` port (Homebrew Menu compatible), with a ninjhax 2.x fallback.
+- Press SELECT (or the NetLoader touch button) in the file browser to open the netloader and send payloads from your PC over the network with `3dslink`. It waits for a Wi-Fi connection, shows the device `ip:port` and live transfer speed; received files are stored in `sdmc:/3ds/`.
+- The browser shows homebrew icons and metadata (name, description, publisher) extracted from the SMDH data embedded in each `.3dsx`, exactly like the Homebrew Menu tiles.
+- A General Settings row filters the browser to show only `.3dsx` payloads.
+- The browser remembers the last session's folder, selection and scroll position; navigating back (B) restores where you were in each directory.
 
 Current features:
 --------------------------------------------------------------------------------
