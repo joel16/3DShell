@@ -38,6 +38,14 @@ namespace GUI {
     static const int start_y = 40;
     static const u32 max_entries = 10;
     static int start = 0;
+
+    /* Entry display cache: names + FileTypes computed once per directory
+     * listing (invalidated against FS::dirlist_epoch) so the draw loop
+     * never touches std::codecvt or FS per row. */
+    static u32 cache_epoch = 0;
+    static std::size_t cache_count = 0;
+    static std::vector<std::string> cache_names;
+    static std::vector<FileType> cache_types;
     static u64 timestamp = 0;
 
     /* Per-directory navigation anchors: pushing the current directory's
@@ -150,26 +158,34 @@ namespace GUI {
             C2D::Text(((400 - empty_dir_width) / 2), ((240 - empty_dir_height) / 2), 0.5f, cfg.dark_theme? WHITE : BLACK, empty_dir.c_str());
         }
 
-        for (u32 i = start; i < item->entries.size(); i++) {
-            const std::u16string entry_name_utf16 = reinterpret_cast<const char16_t *>(item->entries[i].name);
-            const std::string filename = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(entry_name_utf16.data());
+        int end = std::min(static_cast<int>(item->entries.size()), start + static_cast<int>(max_entries));
+        bool cwd_match = (item->checked_cwd.compare(cfg.cwd) == 0);
 
-            if (i == static_cast<u32>(item->selected))
+        for (int i = start; i < end; i++) {
+            /* The cache is built in the control phase; the very first
+             * frame after boot (or a huge listing refresh) can render
+             * before it filled — draw nothing for those rows instead
+             * of indexing an empty vector. */
+            if (i >= static_cast<int>(cache_names.size()))
+                continue;
+
+            const std::string &filename = cache_names[i];
+
+            if (i == item->selected)
                 C2D::Rect(0, start_y + (sel_dist * (i - start)), 400, sel_dist, cfg.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
 
-            if ((item->checked.at(i)) && (!item->checked_cwd.compare(cfg.cwd)))
+            if ((item->checked.at(i)) && cwd_match)
                 C2D::Image(cfg.dark_theme? icon_check_dark : icon_check, 0, start_y + (sel_dist * (i - start)));
             else
                 C2D::Image(cfg.dark_theme? icon_uncheck_dark : icon_uncheck, 0, start_y + (sel_dist * (i - start)));
 
-            FileType file_type = FS::GetFileType(filename);
             if (item->entries[i].attributes & FS_ATTRIBUTE_DIRECTORY)
                 C2D::Image(cfg.dark_theme? icon_dir_dark : icon_dir, 20, start_y + (sel_dist * (i - start)));
-            else if (file_type == FileType3dsx) {
+            else if ((i < static_cast<int>(cache_types.size())) && (cache_types[i] == FileType3dsx)) {
                 /* SMDH icon scaled to the list row (like hbmenu tiles, 48->16). */
                 SMDHMeta *meta = nullptr;
-                const char16_t *entry_name16 = reinterpret_cast<const char16_t *>(item->entries[i].name);
                 std::u16string path = smdh_cwd_u16;
+                const char16_t *entry_name16 = reinterpret_cast<const char16_t *>(item->entries[i].name);
                 path.append(entry_name16, u16len(item->entries[i].name));
 
                 if (SMDH::Peek(path, &meta) && meta->has_icon)
@@ -177,8 +193,8 @@ namespace GUI {
                 else
                     C2D::Image(file_icons[FileTypeNone], 20, start_y + (sel_dist * (i - start)));
             }
-            else
-                C2D::Image(file_icons[file_type], 20, start_y + (sel_dist * (i - start)));
+            else if ((i < static_cast<int>(cache_types.size())) && (cache_types[i] >= FileTypeNone) && (cache_types[i] <= FileType3dsx))
+                C2D::Image(file_icons[cache_types[i]], 20, start_y + (sel_dist * (i - start)));
 
             C2D::Textf(45, start_y + ((sel_dist - filename_height) / 2) + (i - start) * sel_dist, 0.45f, cfg.dark_theme? WHITE : BLACK,
                 filename.length() > 52? "%.52s..." : "%s", filename.c_str());
@@ -224,6 +240,27 @@ namespace GUI {
         return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(clean);
     }
 
+    static void ControlEntryCache(MenuItem *item) {
+        if ((cache_epoch == FS::dirlist_epoch) && (cache_count == item->entries.size()))
+            return;
+
+        cache_names.clear();
+        cache_types.clear();
+        cache_names.reserve(item->entries.size());
+        cache_types.reserve(item->entries.size());
+
+        for (const FS_DirectoryEntry &entry : item->entries) {
+            cache_names.push_back(SafeUtf16ToUtf8(reinterpret_cast<const char16_t *>(entry.name), u16len(entry.name)));
+            cache_types.push_back((entry.attributes & FS_ATTRIBUTE_DIRECTORY)?
+                FileTypeNone : FS::GetFileType(cache_names.back()));
+        }
+
+        cache_epoch = FS::dirlist_epoch;
+        cache_count = item->entries.size();
+    }
+
+
+
     /* ASCII-safe utf8 -> utf16 path builder for SMDH requests: cwd strings
      * come from config json; dropping non-ASCII bytes beats aborting the
      * whole app on a malformed cwd (devkitARM builds have no exceptions). */
@@ -252,14 +289,12 @@ namespace GUI {
         u32 last = (item->entries.size() < (u32)(start + max_entries))?
             item->entries.size() : (u32)(start + max_entries);
         for (u32 i = start; i < last; i++) {
-            if (item->entries[i].attributes & FS_ATTRIBUTE_DIRECTORY)
+            if ((item->entries[i].attributes & FS_ATTRIBUTE_DIRECTORY) || (cache_types[i] != FileType3dsx))
                 continue;
 
             std::u16string path = smdh_cwd_u16;
             const char16_t *name16 = reinterpret_cast<const char16_t *>(item->entries[i].name);
             path.append(name16, u16len(item->entries[i].name));
-            if (FS::GetFileType(SafeUtf16ToUtf8(reinterpret_cast<const char16_t *>(item->entries[i].name), u16len(item->entries[i].name))) != FileType3dsx)
-                continue;
 
             wanted.push_back(path);
         }
@@ -268,7 +303,8 @@ namespace GUI {
         std::u16string sel_path = smdh_cwd_u16;
         const char16_t *sel_name16 = reinterpret_cast<const char16_t *>(item->entries[item->selected].name);
         sel_path.append(sel_name16, u16len(item->entries[item->selected].name));
-        if (FS::GetFileType(SafeUtf16ToUtf8(reinterpret_cast<const char16_t *>(item->entries[item->selected].name), u16len(item->entries[item->selected].name))) == FileType3dsx) {
+        if (!(item->entries[item->selected].attributes & FS_ATTRIBUTE_DIRECTORY) &&
+            (cache_types[item->selected] == FileType3dsx)) {
             bool listed = false;
             for (const std::u16string &p : wanted)
                 if (p.compare(sel_path) == 0)
@@ -373,7 +409,7 @@ namespace GUI {
             std::u16string path_u16 = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(path.data());
             
             if (R_SUCCEEDED(FSUSER_CreateDirectory(archive, fsMakePath(PATH_UTF16, path_u16.c_str()), 0))) {
-                FS::GetDirList(cfg.cwd, item->entries);
+                FS::GetDirList(cfg.cwd, item->entries, cfg.filter);
                 GUI::ResetCheckbox(item);
             }
         }
@@ -387,7 +423,7 @@ namespace GUI {
         
         std::string new_name = OSK::GetText(filename, "Ingrese nuevo nombre");
         if (!new_name.empty() && R_SUCCEEDED(FS::Rename(&item->entries[item->selected], new_name.c_str()))) {
-            FS::GetDirList(cfg.cwd, item->entries);
+            FS::GetDirList(cfg.cwd, item->entries, cfg.filter);
             GUI::ResetCheckbox(item);
         }
     }
@@ -400,7 +436,7 @@ namespace GUI {
             std::u16string path_u16 = std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(path.data());
             
             if (R_SUCCEEDED(FSUSER_CreateFile(archive, fsMakePath(PATH_UTF16, path_u16.c_str()), 0, 0))) {
-                FS::GetDirList(cfg.cwd, item->entries);
+                FS::GetDirList(cfg.cwd, item->entries, cfg.filter);
                 GUI::ResetCheckbox(item);
             }
         }
@@ -452,8 +488,10 @@ namespace GUI {
     }
 
     void ControlFileBrowser(MenuItem *item, u32 *kDown, u32 *kHeld) {
-        /* Decode SMDH metadata/icon for the selected .3dsx (control phase
-         * only — the draw phase never touches FS/GX). */
+        /* Both run in the control phase (outside the C3D frame): the cache
+         * rebuild (names + FileTypes, one pass per directory listing) and
+         * the SMDH decode budget. */
+        ControlEntryCache(item);
         ControlSmdhPanel(item);
 
         u32 size = (item->entries.size() - 1);
@@ -539,7 +577,7 @@ namespace GUI {
 
                     case FileTypeZip:
                         if (R_SUCCEEDED(ArchiveHelper::Extract(path))) {
-                            FS::GetDirList(cfg.cwd, item->entries);
+                            FS::GetDirList(cfg.cwd, item->entries, cfg.filter);
                             GUI::ResetCheckbox(item);
                         }
 
