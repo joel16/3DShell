@@ -103,8 +103,11 @@ namespace Config {
         root = json_loads(buf, JSON_DISABLE_EOF_CHECK, &error);
         delete[] buf;
         
-        if (!root)
+        if (!root) {
             Log::Error("Failed to decode config.json!\n");
+            Config::SetDefault(&cfg);
+            return Config::Save(cfg);
+        }
         
         json_t *config_ver = json_object_get(root, "config_ver");
         config_version_holder = json_integer_value(config_ver);
@@ -119,7 +122,8 @@ namespace Config {
         cfg.dark_theme = json_integer_value(dark_theme);
         
         json_t *last_dir = json_object_get(root, "last_dir");
-        cfg.cwd = json_string_value(last_dir);
+        const char *last_dir_str = json_string_value(last_dir);
+        cfg.cwd = last_dir_str ? last_dir_str : "/";
 
         json_t *last_selected = json_object_get(root, "last_selected");
         json_int_t selected = json_integer_value(last_selected);
