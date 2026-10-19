@@ -1,14 +1,14 @@
 # UI Components & Screen Layout Report
 
 Scope: current state of the component-based UI (`source/ui/` framework +
-`source/app/gui/screens/` application screens). Verified against the code on
+`source/shell/gui/screens/` application screens). Verified against the code on
 this branch (`framework`).
 
 ## 1. Rendering pipeline
 
 | Layer | Class / function | File |
 |---|---|---|
-| GPU init, render targets | `Services::Init()` creates `top_screen` and `bottom_screen` via `C2D_CreateScreenTarget(GFX_TOP/GFX_BOTTOM, GFX_LEFT)` | `source/app/main.cpp` |
+| GPU init, render targets | `Services::Init()` creates `top_screen` and `bottom_screen` via `C2D_CreateScreenTarget(GFX_TOP/GFX_BOTTOM, GFX_LEFT)` | `source/shell/main.cpp` |
 | Drawing primitives | `C2D::Text / Textf / Rect / Image / ImageScale / GetTextSize / Render` (thin wrappers over citro2d) | `source/ui/c2d_helper.cpp` |
 | Frame loop | `UI::ScreenManager::Run()` | `source/ui/screen_manager.cpp` |
 | Text glyph buffers | `static_buf / dynamic_buf / size_buf` (`C2D_TextBuf`, 4096 each) | `source/ui/c2d_helper.cpp` |
@@ -47,12 +47,12 @@ Frame order inside `UI::ScreenManager::Run()` (every iteration):
 
 ## 3. Shared chrome (application controls)
 
-Both are real controls now, in `source/app/controls/` — application-level
+Both are real controls now, in `source/shell/controls/` — application-level
 because they depend on app assets and hardware services:
 
 ### 3.1 Status bar — `GUI::StatusBar` (gfx0 only, y = 0..15)
 
-Class: `source/app/controls/status_bar.h`. Drawn as part of each screen's
+Class: `source/shell/controls/status_bar.h`. Drawn as part of each screen's
 top chrome (`FileBrowserScreen`, `TextReaderScreen`).
 
 | Element | Position | Drawn with | Assets |
@@ -65,7 +65,7 @@ top chrome (`FileBrowserScreen`, `TextReaderScreen`).
 
 ### 3.2 Touch bar — `GUI::TouchBar` (gfx1 only, y = 0..20)
 
-Class: `source/app/controls/touch_bar.h`. A `UI::ContainerControl` holding
+Class: `source/shell/controls/touch_bar.h`. A `UI::ContainerControl` holding
 six `GUI::TouchButton` children (icon button with light/dark/active variants
 and a `Click` event), laid out by `UI::FlowLayout` in two groups: the LEFT
 group flows from the left edge, the RIGHT group is anchored to the right
@@ -89,7 +89,7 @@ dialogs / switches archives, the text reader closes the editor).
 ## 4. Screens
 
 Every screen is a class deriving from `UI::Screen` in
-`source/app/gui/screens/`. `UI::ScreenManager` keeps them in a stack; the
+`source/shell/gui/screens/`. `UI::ScreenManager` keeps them in a stack; the
 browser is the root and pushes dialogs with `OpenDialog()`.
 
 ### 4.1 FileBrowserScreen (root screen)
@@ -212,14 +212,14 @@ gfx1 — `TextReaderScreen::DrawBottom()`:
 |---|---|---|
 | Touch bar (no active section) | y = 0..20 | `touch_bar_.Draw()` — `GUI::TouchBar`, `SECTION_NONE` |
 | **View mode**: title "Text Reader", key hints (A:Edit X:Save B:Back Pad:Move), buttons Edit/Save/Back, `* unsaved` marker | (10, 30) onwards | `Notepad::DisplayBottom()` |
-| **Edit mode**: `VirtualKeyboard::Display()` on-screen keyboard | lower area | `VirtualKeyboard::Display()` (`source/app/osk/virtual_keyboard.cpp`) |
+| **Edit mode**: `VirtualKeyboard::Display()` on-screen keyboard | lower area | `VirtualKeyboard::Display()` (`source/shell/osk/virtual_keyboard.cpp`) |
 | Touch bar Home button closes the editor | y = 0..20, left zone | `TextReaderScreen` wires `touch_bar_.Home().Click` → `Notepad::Close()` |
 
 ### 4.8 Progress overlay (any screen, transfer-time only)
 
 | Element | Screen | Drawn by |
 |---|---|---|
-| Dialog texture + title + message + progress bar (240 px, fill by ratio) | gfx1, centered | `GUI::ProgressBar()` (`source/app/gui/gui.cpp`) — used by NetLoader (`GUI::DownloadProgressBar` thread) and the updater |
+| Dialog texture + title + message + progress bar (240 px, fill by ratio) | gfx1, centered | `GUI::ProgressBar()` (`source/shell/gui/gui.cpp`) — used by NetLoader (`GUI::DownloadProgressBar` thread) and the updater |
 
 ## 5. Component status / pending refactor
 
