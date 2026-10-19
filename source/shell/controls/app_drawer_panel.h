@@ -11,34 +11,29 @@
 #include <config.h>
 #include <utils.h>
 
+#include "apps.h"
+
 namespace GUI {
 
-/* GNOME-style app drawer (list mode): shows the installed applications
- * inside the bottom panel. Each entry carries its own launch callback. */
+/* GNOME-style app drawer (list mode): lists the applications from the
+ * system registry. Fullscreen apps are handed to LaunchScreen; panel
+ * apps to SwitchPanel (both wired by the desktop). */
 class AppDrawerPanel : public GUI::PanelApp {
 public:
-    struct AppEntry {
-        const char *name;
-        C2D_Image icon;
-        std::function<void()> launch;
-    };
-
-    void AddApp(const char *name, C2D_Image icon, std::function<void()> launch) {
-        AppEntry entry;
-        entry.name = name;
-        entry.icon = icon;
-        entry.launch = std::move(launch);
-        apps_.push_back(std::move(entry));
-    }
+    /* Host wiring. */
+    std::function<void(std::unique_ptr<UI::Screen>)> LaunchScreen;
+    std::function<void(Apps::Id, std::unique_ptr<GUI::PanelApp>)> SwitchPanel;
 
     void Draw() override {
         C2D::Rect(bounds_.x, bounds_.y, bounds_.w, bounds_.h, cfg.dark_theme? BLACK_BG : WHITE);
 
         C2D::Textf(10, bounds_.y + 10, 0.6f, cfg.dark_theme? WHITE : BLACK, "Apps");
 
+        const std::vector<Apps::Entry> &apps = Apps::List();
         float y = bounds_.y + 40;
-        for (int i = 0; i < static_cast<int>(apps_.size()); i++) {
-            const AppEntry &entry = apps_[i];
+
+        for (int i = 0; i < static_cast<int>(apps.size()); i++) {
+            const Apps::Entry &entry = apps[i];
 
             if (selection_ == i)
                 C2D::Rect(bounds_.x, y, bounds_.w, ROW_HEIGHT, cfg.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
@@ -55,7 +50,8 @@ public:
         else if (k_down & KEY_DDOWN)
             selection_++;
 
-        Utils::SetBounds(&selection_, 0, static_cast<int>(apps_.size()) - 1);
+        const int count = static_cast<int>(Apps::List().size());
+        Utils::SetBounds(&selection_, 0, count - 1);
 
         if (k_down & KEY_A)
             Launch();
@@ -74,8 +70,9 @@ public:
 
         touching_ = true;
 
+        const int count = static_cast<int>(Apps::List().size());
         int row = static_cast<int>((touch.py - (bounds_.y + 40)) / ROW_HEIGHT);
-        if ((row >= 0) && (row < static_cast<int>(apps_.size()))) {
+        if ((row >= 0) && (row < count)) {
             selection_ = row;
             Launch();
         }
@@ -83,11 +80,21 @@ public:
 
 private:
     void Launch() {
-        if (!apps_.empty())
-            apps_[selection_].launch();
+        const std::vector<Apps::Entry> &apps = Apps::List();
+        if (apps.empty())
+            return;
+
+        const Apps::Entry &entry = apps[selection_];
+
+        if (entry.is_fullscreen()) {
+            if (LaunchScreen)
+                LaunchScreen(entry.create_screen());
+        }
+        else if (SwitchPanel) {
+            SwitchPanel(entry.id, entry.create_panel());
+        }
     }
 
-    std::vector<AppEntry> apps_;
     int selection_ = 0;
     bool touching_ = false;
     static constexpr float ROW_HEIGHT = 40.0f;

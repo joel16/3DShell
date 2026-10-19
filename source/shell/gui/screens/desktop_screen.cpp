@@ -1,12 +1,14 @@
 #include "desktop_screen.h"
 
 #include "app_drawer_panel.h"
-#include "file_browser_screen.h"
+#include "file_explorer_screen.h"
 #include "hbloader.h"
 #include "log.h"
 #include "net_loader_panel.h"
 #include "settings_panel.h"
 #include "touch.h"
+
+#include "apps.h"
 
 namespace GUI {
 
@@ -21,16 +23,24 @@ DesktopScreen::DesktopScreen() {
 
     touch_bar_.AddButton(TouchBar::ICON_HOME, false).Click = [this]() {
         auto drawer = std::make_unique<AppDrawerPanel>();
-        drawer->AddApp("File Explorer", icon_dir, [this]() {
+
+        /* Fullscreen apps push onto the screen stack; panel apps replace
+         * the current bottom panel. */
+        drawer->LaunchScreen = [this](std::unique_ptr<UI::Screen> screen) {
             ClosePanel();
-            OpenExplorer();
-        });
-        drawer->AddApp("NetLoader", icon_ftp, [this]() {
-            TogglePanel(PanelType::NetLoader, std::make_unique<NetLoaderPanel>());
-        });
-        drawer->AddApp("Settings", icon_settings, [this]() {
-            TogglePanel(PanelType::Settings, std::make_unique<SettingsPanel>());
-        });
+            if (screen)
+                UI::ScreenManager::Instance().Push(std::move(screen));
+        };
+
+        drawer->SwitchPanel = [this](Apps::Id id, std::unique_ptr<GUI::PanelApp> panel) {
+            PanelType type = PanelType::Custom;
+            if (id == Apps::AppSettings)
+                type = PanelType::Settings;
+            else if (id == Apps::AppNetLoader)
+                type = PanelType::NetLoader;
+            TogglePanel(type, std::move(panel));
+        };
+
         TogglePanel(PanelType::Drawer, std::move(drawer));
     };
 
@@ -81,8 +91,15 @@ void DesktopScreen::OnTouch(const touchPosition &touch, bool down) {
 
     bar_touching_ = false;
 
-    if (panel_app_ && down)
-        panel_app_->OnTouch(touch, down);
+    /* The rest of the panel belongs to the open panel app; releases are
+     * forwarded too so its buttons complete their click. */
+    bool in_panel = down? (touch.py >= 20) : panel_touching_;
+
+    if (in_panel) {
+        if (panel_app_)
+            panel_app_->OnTouch(touch, down);
+        panel_touching_ = down;
+    }
 }
 
 void DesktopScreen::OnKeyDown(u32 k_down) {
@@ -96,7 +113,7 @@ void DesktopScreen::OnKeyDown(u32 k_down) {
 }
 
 void DesktopScreen::OpenExplorer() {
-    auto explorer = std::make_unique<FileBrowserScreen>();
+    auto explorer = std::make_unique<FileExplorerScreen>();
     if (R_SUCCEEDED(explorer->Init())) {
         ClosePanel();
         UI::ScreenManager::Instance().Push(std::move(explorer));

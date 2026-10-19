@@ -1,4 +1,4 @@
-#include "file_browser_screen.h"
+#include "file_explorer_screen.h"
 
 #include <algorithm>
 #include <codecvt>
@@ -32,14 +32,14 @@ namespace GUI {
     static const char *empty_dir = "This is an empty directory";
 
     /* UTF16 strlen (entries carry fixed 262-char name arrays). */
-    std::size_t FileBrowserScreen::u16len(const u16 *src) {
+    std::size_t FileExplorerScreen::u16len(const u16 *src) {
         std::size_t len = 0;
         while (src[len])
             len++;
         return len;
     }
 
-    FileBrowserScreen::FileBrowserScreen()
+    FileExplorerScreen::FileExplorerScreen()
         : scroll_bar_(UI::Rect{395.0f, 40.0f, 4.0f, 200.0f}, BAR_COLOUR, TITLE_COLOUR) {
         SetTopBackground(cfg.dark_theme? BLACK_BG : WHITE);
         SetBottomBackground(cfg.dark_theme? MENU_BAR_DARK : STATUS_BAR_LIGHT);
@@ -89,7 +89,7 @@ namespace GUI {
         };
     }
 
-    FileBrowserScreen::~FileBrowserScreen() {
+    FileExplorerScreen::~FileExplorerScreen() {
         item_.entries.clear();
 
         /* Persist the browse position for the next session. */
@@ -98,7 +98,7 @@ namespace GUI {
             Config::Save(cfg);
     }
 
-    Result FileBrowserScreen::Init() {
+    Result FileExplorerScreen::Init() {
         Result ret = FS::GetDirList(cfg.cwd, item_.entries, cfg.filter);
         if (R_FAILED(ret))
             return ret;
@@ -109,7 +109,7 @@ namespace GUI {
         return 0;
     }
 
-    void FileBrowserScreen::OnFrame(u64 delta_time) {
+    void FileExplorerScreen::OnFrame(u64 delta_time) {
         (void)delta_time;
 
         SetTopBackground(cfg.dark_theme? BLACK_BG : WHITE);
@@ -132,13 +132,13 @@ namespace GUI {
         }
     }
 
-    void FileBrowserScreen::OpenDialog(std::unique_ptr<UI::Screen> screen) {
+    void FileExplorerScreen::OpenDialog(std::unique_ptr<UI::Screen> screen) {
         pushed_filter_ = cfg.filter;
         dialog_open_ = true;
         UI::ScreenManager::Instance().Push(std::move(screen));
     }
 
-    std::string FileBrowserScreen::SafeUtf16ToUtf8(const char16_t *src, std::size_t len) {
+    std::string FileExplorerScreen::SafeUtf16ToUtf8(const char16_t *src, std::size_t len) {
         std::u16string clean;
         for (std::size_t i = 0; i < len; i++) {
             char16_t c = src[i];
@@ -150,7 +150,7 @@ namespace GUI {
         return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.to_bytes(clean);
     }
 
-    std::u16string FileBrowserScreen::ToUtf16Path(const std::string &path) {
+    std::u16string FileExplorerScreen::ToUtf16Path(const std::string &path) {
         std::u16string clean;
         for (std::size_t i = 0; i < path.length(); i++) {
             unsigned char c = (unsigned char)path[i];
@@ -161,7 +161,7 @@ namespace GUI {
         return clean;
     }
 
-    std::string FileBrowserScreen::FitText(const std::string &text, float size, float max_width) {
+    std::string FileExplorerScreen::FitText(const std::string &text, float size, float max_width) {
         if (text.empty())
             return std::string();
 
@@ -185,12 +185,12 @@ namespace GUI {
         return out;
     }
 
-    std::string FileBrowserScreen::EntryNameUtf8() {
+    std::string FileExplorerScreen::EntryNameUtf8() {
         return SafeUtf16ToUtf8(reinterpret_cast<const char16_t *>(item_.entries[item_.selected].name),
             u16len(item_.entries[item_.selected].name));
     }
 
-    void FileBrowserScreen::PushNavAnchor() {
+    void FileExplorerScreen::PushNavAnchor() {
         std::string cwd = cfg.cwd;
 
         /* Keep at most one anchor per directory (the freshest). */
@@ -211,7 +211,7 @@ namespace GUI {
             nav_anchors_.erase(nav_anchors_.begin());
     }
 
-    bool FileBrowserScreen::PeekNavAnchor(const std::string &cwd) {
+    bool FileExplorerScreen::PeekNavAnchor(const std::string &cwd) {
         for (std::size_t i = nav_anchors_.size(); i-- > 0;) {
             if (nav_anchors_[i].cwd.compare(cwd) == 0) {
                 pending_anchor_selected_ = nav_anchors_[i].selected;
@@ -224,7 +224,7 @@ namespace GUI {
     }
 
     /* Clamp the scroll window for a freshly (re)loaded directory. */
-    void FileBrowserScreen::SetBrowserStart() {
+    void FileExplorerScreen::SetBrowserStart() {
         int max_start = (int)item_.entries.size() - static_cast<int>(max_entries);
         if (max_start < 0)
             max_start = 0;
@@ -238,7 +238,7 @@ namespace GUI {
         }
     }
 
-    void FileBrowserScreen::RestoreLastBrowserPosition() {
+    void FileExplorerScreen::RestoreLastBrowserPosition() {
         if ((item_.entries.empty()) || (cfg.last_selected >= static_cast<int>(item_.entries.size())))
             return;
 
@@ -252,12 +252,12 @@ namespace GUI {
 
     /* Mirror the live position into the config cache (cheap; Config::Save
      * only happens on directory changes and app exit). */
-    void FileBrowserScreen::SaveBrowserPosition() {
+    void FileExplorerScreen::SaveBrowserPosition() {
         cfg.last_selected = item_.selected;
         cfg.last_scroll = start_;
     }
 
-    void FileBrowserScreen::ControlEntryCache() {
+    void FileExplorerScreen::ControlEntryCache() {
         if ((cache_epoch_ == FS::dirlist_epoch) && (cache_count_ == item_.entries.size()))
             return;
 
@@ -276,7 +276,7 @@ namespace GUI {
         cache_count_ = item_.entries.size();
     }
 
-    void FileBrowserScreen::ControlSmdhPanel() {
+    void FileExplorerScreen::ControlSmdhPanel() {
         smdh_cwd_u16_ = ToUtf16Path(cfg.cwd);
         if ((item_.entries.empty()) ||
             (item_.selected >= static_cast<int>(item_.entries.size())))
@@ -316,7 +316,7 @@ namespace GUI {
     }
 
     /* SMDH info panel for the selected .3dsx entry (icon + name/desc/publisher). */
-    void FileBrowserScreen::DisplaySmdhPanel() {
+    void FileExplorerScreen::DisplaySmdhPanel() {
         if ((item_.entries.empty()) || smdh_cwd_u16_.empty() ||
             (item_.selected >= static_cast<int>(item_.entries.size())))
             return;
@@ -347,7 +347,7 @@ namespace GUI {
             C2D::Text((meta->has_icon? x + 56 : x), 58, 0.35f, dim, FitText(meta->publisher, 0.35f, 232).c_str());
     }
 
-    void FileBrowserScreen::DisplayActionGrid() {
+    void FileExplorerScreen::DisplayActionGrid() {
         const char *button_texts[4] = {"New File", "New Folder", "Properties", "Rename"};
         static float button_widths[4] = {0};
         static float button_heights[4] = {0};
@@ -380,7 +380,7 @@ namespace GUI {
         }
     }
 
-    void FileBrowserScreen::DrawTop() {
+    void FileExplorerScreen::DrawTop() {
         status_bar_.Draw();
 
         C2D::Rect(0, 15, 400, 25, cfg.dark_theme? MENU_BAR_DARK : MENU_BAR_LIGHT);
@@ -448,7 +448,7 @@ namespace GUI {
         scroll_bar_.Draw();
     }
 
-    void FileBrowserScreen::DrawBottom() {
+    void FileExplorerScreen::DrawBottom() {
         touch_bar_.Draw();
 
         /* While a dialog is up, the browser grid stays hidden behind it. */
@@ -459,17 +459,17 @@ namespace GUI {
         DisplayActionGrid();
     }
 
-    void FileBrowserScreen::OnKeyHeld(u32 k_held) {
+    void FileExplorerScreen::OnKeyHeld(u32 k_held) {
         k_held_ = k_held;
         Touch::Update();
     }
 
-    void FileBrowserScreen::RefreshListing() {
+    void FileExplorerScreen::RefreshListing() {
         FS::GetDirList(cfg.cwd, item_.entries, cfg.filter);
         ResetCheckbox(&item_);
     }
 
-    void FileBrowserScreen::CreateFolder() {
+    void FileExplorerScreen::CreateFolder() {
         std::string path = cfg.cwd;
         std::string name = OSK::GetText("New Folder", "Enter folder name");
         if (!name.empty()) {
@@ -481,7 +481,7 @@ namespace GUI {
         }
     }
 
-    void FileBrowserScreen::RenameSelected() {
+    void FileExplorerScreen::RenameSelected() {
         if (item_.entries.empty() || item_.selected >= item_.entries.size()) return;
 
         std::string new_name = OSK::GetText(EntryNameUtf8(), "Enter new name");
@@ -489,7 +489,7 @@ namespace GUI {
             RefreshListing();
     }
 
-    void FileBrowserScreen::CreateFile() {
+    void FileExplorerScreen::CreateFile() {
         std::string path = cfg.cwd;
         std::string name = OSK::GetText("New File", "Enter file name");
         if (!name.empty()) {
@@ -501,12 +501,12 @@ namespace GUI {
         }
     }
 
-    void FileBrowserScreen::PushOptions() {
+    void FileExplorerScreen::PushOptions() {
         touch_bar_.SetSection(TouchBar::SECTION_ACTIONS);
         OpenDialog(std::make_unique<OptionsScreen>(this, &item_));
     }
 
-    void FileBrowserScreen::PushSettings() {
+    void FileExplorerScreen::PushSettings() {
         auto settings = std::make_unique<SettingsScreen>(this);
         settings->ListingChanged = [this]() {
             RefreshListing();
@@ -515,7 +515,7 @@ namespace GUI {
         OpenDialog(std::move(settings));
     }
 
-    void FileBrowserScreen::OnKeyDown(u32 k_down) {
+    void FileExplorerScreen::OnKeyDown(u32 k_down) {
         if (k_down & KEY_START) {
             UI::ScreenManager::Instance().Exit();
             return;
@@ -675,7 +675,7 @@ namespace GUI {
         SaveBrowserPosition();
     }
 
-    void FileBrowserScreen::HandleActionGrid(u32 k_down) {
+    void FileExplorerScreen::HandleActionGrid(u32 k_down) {
         if (!(k_down & KEY_TOUCH))
             return;
 
@@ -713,7 +713,7 @@ namespace GUI {
         }
     }
 
-    void FileBrowserScreen::OnTouch(const touchPosition &touch, bool down) {
+    void FileExplorerScreen::OnTouch(const touchPosition &touch, bool down) {
         /* Touch bar zones live at the top 20px of the bottom screen. Dialogs
          * forward touches there, so this works whether or not the browser is
          * the current screen. */

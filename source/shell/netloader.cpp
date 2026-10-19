@@ -377,10 +377,12 @@ static void NL_Task(void *arg) {
     if (listen(listenfd, 5) < 0)
         goto nl_fail;
 
+    char listen_msg[64];
     {
         struct in_addr self_addr;
         self_addr.s_addr = gethostid();
         Log::Error("NetLoader: listening on %s:%d\n", inet_ntoa(self_addr), NETLOADER_PORT);
+        snprintf(listen_msg, sizeof(listen_msg), "3dslink to %s:%d", inet_ntoa(self_addr), NETLOADER_PORT);
     }
 
     while (aptMainLoop()) {
@@ -409,7 +411,7 @@ static void NL_Task(void *arg) {
             break;
         }
 
-        NL_SetMessage("3dslink - waiting for host");
+        NL_SetMessage("%s", listen_msg);
         svcSleepThread(16000000ULL);
     }
 

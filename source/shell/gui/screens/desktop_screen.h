@@ -30,7 +30,8 @@ private:
         None,
         Drawer,
         Settings,
-        NetLoader
+        NetLoader,
+        Custom
     };
 
     void OpenExplorer();
@@ -40,6 +41,7 @@ private:
     StatusBar status_bar_;
     TouchBar touch_bar_;
     bool bar_touching_ = false;
+    bool panel_touching_ = false;
 
     std::unique_ptr<PanelApp> panel_app_;
     PanelType panel_type_ = PanelType::None;

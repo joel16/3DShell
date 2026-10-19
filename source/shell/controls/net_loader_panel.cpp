@@ -42,7 +42,32 @@ void NetLoaderPanel::Draw() {
     if (NetLoader::Busy())
         DrawProgressBar(bounds_.y + 100, NetLoader::Total(), NetLoader::Size());
 
+    /* BACK button (bottom-right corner of the panel). */
+    float back_width = 0.0f, back_height = 0.0f;
+    C2D::GetTextSize(0.42f, &back_width, &back_height, "BACK");
+    back_rect_ = UI::Rect{(bounds_.x + bounds_.w) - back_width - 15.0f,
+                          (bounds_.y + bounds_.h) - back_height - 15.0f,
+                          back_width + 10.0f, back_height + 10.0f};
+
+    C2D::Rect(back_rect_.x, back_rect_.y, back_rect_.w, back_rect_.h, cfg.dark_theme? SELECTOR_COLOUR_DARK : SELECTOR_COLOUR_LIGHT);
+    C2D::Text(back_rect_.x + 5, back_rect_.y + 5, 0.42f, cfg.dark_theme? TITLE_COLOUR_DARK : TITLE_COLOUR, "BACK");
+
     C2D::Text(10, bounds_.y + 180, 0.40f, cfg.dark_theme? TEXT_MIN_COLOUR_DARK : TEXT_MIN_COLOUR_LIGHT, "B: back");
+}
+
+void NetLoaderPanel::OnTouch(const touchPosition &touch, bool down) {
+    if (!down) {
+        touching_ = false;
+        return;
+    }
+
+    if (touching_)
+        return;
+
+    touching_ = true;
+
+    if (back_rect_.Contains(touch))
+        NetLoader::Cancel();
 }
 
 void NetLoaderPanel::OnKeyDown(u32 k_down) {

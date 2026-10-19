@@ -14,11 +14,14 @@ public:
     void OnFrame(u64 delta_time) override;
     void Draw() override;
     void OnKeyDown(u32 k_down) override;
+    void OnTouch(const touchPosition &touch, bool down) override;
 
 private:
     void DrawProgressBar(float y, s64 offset, s64 size);
 
     bool started_ = false;
+    bool touching_ = false;
+    UI::Rect back_rect_;
 };
 
 }

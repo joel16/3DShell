@@ -1,5 +1,5 @@
-#ifndef _3D_SHELL_FILE_BROWSER_SCREEN_H
-#define _3D_SHELL_FILE_BROWSER_SCREEN_H
+#ifndef _3D_SHELL_FILE_EXPLORER_SCREEN_H
+#define _3D_SHELL_FILE_EXPLORER_SCREEN_H
 
 #include "gui.h"
 
@@ -12,10 +12,10 @@
 
 namespace GUI {
 
-class FileBrowserScreen : public UI::Screen {
+class FileExplorerScreen : public UI::Screen {
 public:
-    FileBrowserScreen();
-    ~FileBrowserScreen() override;
+    FileExplorerScreen();
+    ~FileExplorerScreen() override;
 
     Result Init();
 
